@@ -8,3 +8,4 @@
 mod entry;
 mod instruction;
 mod processor;
+mod state;
