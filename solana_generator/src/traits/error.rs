@@ -1,3 +1,5 @@
+use crate::msg;
+use crate::solana_program::pubkey::PubkeyError;
 pub use solana_generator_derive::Error;
 use solana_program::program_error::ProgramError;
 
@@ -32,5 +34,15 @@ where
 impl From<std::io::Error> for Box<dyn Error> {
     fn from(from: std::io::Error) -> Self {
         ProgramError::from(from).into()
+    }
+}
+impl From<PubkeyError> for Box<dyn Error> {
+    fn from(from: PubkeyError) -> Self {
+        match from {
+            PubkeyError::MaxSeedLengthExceeded => msg!("PubkeyError::MaxSeedLengthExceeded"),
+            PubkeyError::InvalidSeeds => msg!("PubkeyError::InvalidSeeds"),
+            PubkeyError::IllegalOwner => msg!("PubkeyError::IllegalOwner"),
+        };
+        ProgramError::InvalidSeeds.into()
     }
 }

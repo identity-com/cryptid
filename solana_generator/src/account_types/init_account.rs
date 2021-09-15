@@ -6,15 +6,17 @@ use std::ops::{Deref, DerefMut};
 use borsh::BorshSerialize;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
-use solana_program::system_instruction::{allocate, assign};
+use solana_program::system_instruction::create_account;
 
 use crate::traits::AccountArgument;
 use crate::{
-    invoke, Account, AccountInfo, Discriminant, GeneratorError, GeneratorResult,
+    invoke, Account, AccountInfo, AllAny, Discriminant, GeneratorError, GeneratorResult,
     MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 
 use super::SYSTEM_PROGRAM_ID;
+use crate::solana_program::rent::Rent;
+use crate::solana_program::sysvar::Sysvar;
 use std::fmt::Debug;
 
 /// The size the account will be initialized to.
@@ -46,6 +48,8 @@ where
     data: T,
     /// The size the account will be given on write back, set it directly
     pub init_size: InitSize,
+    /// The account that will pay the rent for the new account
+    pub funder: Option<AccountInfo>,
 }
 impl<T> AccountArgument for InitAccount<T>
 where
@@ -56,6 +60,7 @@ where
     fn from_account_infos(
         _program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        _data: &mut &[u8],
         _arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
@@ -81,6 +86,7 @@ where
             info,
             data: T::default(),
             init_size: InitSize::default(),
+            funder: None,
         })
     }
 
@@ -116,14 +122,30 @@ where
             }
         };
 
-        invoke(
-            &allocate(&self.info.key, size),
-            &[&self.info, &system_program.info],
-        )?;
+        let self_key = self.info.key;
+        let payer = self
+            .funder
+            .ok_or(GeneratorError::NoPayerForInit { account: self_key })?;
+        match (payer.is_signer, payer.is_writable) {
+            (false, _) => {
+                return Err(GeneratorError::AccountIsNotSigner { account: payer.key }.into())
+            }
+            (_, false) => return Err(GeneratorError::CannotWrite { account: payer.key }.into()),
+            (true, true) => {}
+        }
+        let rent = Rent::get()?.minimum_balance(size as usize);
+        if **payer.lamports.borrow() < rent {
+            return Err(GeneratorError::NotEnoughLamports {
+                account: payer.key,
+                lamports: **payer.lamports.borrow(),
+                needed_lamports: rent,
+            }
+            .into());
+        }
 
         invoke(
-            &assign(&self.info.key, &program_id),
-            &[&self.info, &system_program.info],
+            &create_account(&payer.key, &self.info.key, rent, size, &program_id),
+            &[&self.info, &payer, &system_program.info],
         )?;
 
         let mut account_data_ref = self.info.data.borrow_mut();
@@ -137,35 +159,47 @@ where
         self.info.add_keys(add)
     }
 }
-impl<T, I> MultiIndexableAccountArgument<I> for InitAccount<T>
+impl<T> MultiIndexableAccountArgument<()> for InitAccount<T>
 where
     T: Account + Default,
-    AccountInfo: MultiIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn is_signer(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_signer(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_signer(indexer)
     }
 
-    fn is_writable(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_writable(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_writable(indexer)
     }
 
-    fn is_owner(&self, owner: Pubkey, indexer: I) -> GeneratorResult<bool> {
+    fn is_owner(&self, owner: Pubkey, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_owner(owner, indexer)
     }
 }
-impl<T, I> SingleIndexableAccountArgument<I> for InitAccount<T>
+impl<T> MultiIndexableAccountArgument<AllAny> for InitAccount<T>
 where
     T: Account + Default,
-    AccountInfo: SingleIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn owner(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn is_signer(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_signer(indexer)
+    }
+
+    fn is_writable(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_writable(indexer)
+    }
+
+    fn is_owner(&self, owner: Pubkey, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_owner(owner, indexer)
+    }
+}
+impl<T> SingleIndexableAccountArgument<()> for InitAccount<T>
+where
+    T: Account + Default,
+{
+    fn owner(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.owner(indexer)
     }
 
-    fn key(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn key(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.key(indexer)
     }
 }

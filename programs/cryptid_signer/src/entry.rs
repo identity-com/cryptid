@@ -17,10 +17,11 @@ fn entry(
     let instruction = Instruction::from_account_infos(
         program_id,
         &mut account_infos.into_iter(),
+        data,
         instruction_discriminant,
     )?;
 
     msg!("Instruction: {:?}", instruction);
 
-    process_instruction(instruction)
+    process_instruction(program_id, instruction)
 }
