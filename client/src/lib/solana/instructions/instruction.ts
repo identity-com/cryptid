@@ -7,11 +7,9 @@ export class DirectExecute extends Assignable {
 export class CryptidInstruction extends Enum {
   directExecute!: DirectExecute;
 
-  static directExecute(
-    transaction: Array<number>,
-  ): CryptidInstruction {
+  static directExecute(transaction: Array<number>): CryptidInstruction {
     return new CryptidInstruction({
-      directExecute: new DirectExecute({transaction}),
+      directExecute: new DirectExecute({ transaction }),
     });
   }
 }
@@ -19,13 +17,9 @@ export class CryptidInstruction extends Enum {
 SCHEMA.set(CryptidInstruction, {
   kind: 'enum',
   field: 'enum',
-  values: [
-    ['directExecute', DirectExecute],
-  ],
+  values: [['directExecute', DirectExecute]],
 });
 SCHEMA.set(DirectExecute, {
   kind: 'struct',
-  fields: [
-    ['transaction', 'string'],
-  ],
+  fields: [['transaction', 'string']],
 });

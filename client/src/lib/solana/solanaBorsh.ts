@@ -21,7 +21,6 @@ export abstract class Assignable {
   }
 }
 
-
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
 export abstract class Enum extends Assignable {
