@@ -28,28 +28,25 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid hello [FILE]`](#cryptid-hello-file)
+* [`cryptid config [SUBCOMMAND]`](#cryptid-config-subcommand)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
+* [`cryptid init [FILE]`](#cryptid-init-file)
+* [`cryptid token [FILE]`](#cryptid-token-file)
+* [`cryptid transfer [FILE]`](#cryptid-transfer-file)
 
-## `cryptid hello [FILE]`
+## `cryptid config [SUBCOMMAND]`
 
 describe the command here
 
 ```
 USAGE
-  $ cryptid hello [FILE]
+  $ cryptid config [SUBCOMMAND]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
-
-EXAMPLE
-  $ cryptid hello
-  hello world from ./src/hello.ts!
+  -h, --help  show CLI help
 ```
 
-_See code: [src/commands/hello.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/hello.ts)_
+_See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
 
 ## `cryptid help [COMMAND]`
 
@@ -67,4 +64,52 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3/src/commands/help.ts)_
+
+## `cryptid init [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid init [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
+
+## `cryptid token [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid token [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --from=from  name to print
+```
+
+_See code: [src/commands/token.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token.ts)_
+
+## `cryptid transfer [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid transfer [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/transfer.ts)_
 <!-- commandsstop -->

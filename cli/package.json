@@ -8,10 +8,14 @@
   },
   "bugs": "https://github.com/identity-com/cryptid/issues",
   "dependencies": {
+    "@identity.com/sol-did-client": "^0.1.10",
+    "@identity.com/cryptid": "0.1.0",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
-    "tslib": "^1"
+    "@solana/web3.js": "^1.27.0",
+    "tslib": "^1",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
@@ -57,7 +61,8 @@
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "cryptid": "./bin/run"
   },
   "types": "lib/index.d.ts"
 }
