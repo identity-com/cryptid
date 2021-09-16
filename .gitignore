@@ -12,3 +12,6 @@ target/
 
 ### Solana
 **/test-ledger
+
+### IDE
+.idea
