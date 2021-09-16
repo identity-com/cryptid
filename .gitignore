@@ -9,6 +9,7 @@ target/
 
 ### Yarn
 **/node_modules
+**/dist
 
 ### Solana
 **/test-ledger
