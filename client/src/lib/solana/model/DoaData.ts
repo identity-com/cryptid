@@ -1,11 +1,8 @@
-import {SCHEMA} from "../solanaBorsh";
+import { SCHEMA } from '../solanaBorsh';
 
-export class DoaData {
-
-}
+export class DoaData {}
 
 SCHEMA.set(DoaData, {
   kind: 'struct',
-  fields: [
-  ],
+  fields: [],
 });
