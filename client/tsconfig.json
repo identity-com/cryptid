@@ -34,6 +34,8 @@
     "types": ["mocha", "node"]
   },
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "compilerOptions": {
+      "module": "commonjs",
+    }
   }
 }
