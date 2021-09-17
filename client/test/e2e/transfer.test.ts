@@ -1,4 +1,4 @@
-import { Cryptid } from '../../src';
+import { build } from '../../src';
 import {
   Connection,
   Keypair,
@@ -21,9 +21,10 @@ describe('transfers', () => {
 
   context('a simple cryptid', () => {
     it('should sign a transaction from a DID', async () => {
-      const cryptid = await Cryptid.build(did, key, { connection });
+      const cryptid = await build(did, key, { connection });
 
-      const tx = new Transaction();
+      const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+      const tx = new Transaction({ recentBlockhash });
       tx.add(
         SystemProgram.transfer({
           fromPubkey: key.publicKey,
