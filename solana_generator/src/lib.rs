@@ -22,7 +22,11 @@ pub use util::*;
 
 pub use solana_program;
 pub use solana_program::msg;
-pub use solana_program::{clock::UnixTimestamp, pubkey::Pubkey};
+pub use solana_program::{
+    clock::UnixTimestamp,
+    instruction::{AccountMeta as SolanaAccountMeta, Instruction as SolanaInstruction},
+    pubkey::Pubkey,
+};
 
 /// The system program's pubkey
 #[inline]

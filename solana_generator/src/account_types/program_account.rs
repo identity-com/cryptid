@@ -40,7 +40,7 @@ where
             return Err(GeneratorError::AccountOwnerNotEqual {
                 account: info.key,
                 owner: **info.owner.borrow(),
-                expected_owner: program_id,
+                expected_owner: vec![program_id],
             }
             .into());
         }

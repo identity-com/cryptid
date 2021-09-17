@@ -2,12 +2,13 @@ use crate::msg;
 use crate::solana_program::pubkey::PubkeyError;
 pub use solana_generator_derive::Error;
 use solana_program::program_error::ProgramError;
+use std::fmt::Debug;
 
 /// A version of [`Result`] returned by many [`solana_generator`] functions.
 pub type GeneratorResult<T> = Result<T, Box<dyn Error>>;
 
 /// An error that can be returned on the chain
-pub trait Error {
+pub trait Error: Debug {
     /// The message the error represents
     fn message(&self) -> String;
     /// Turns this into a returnable error

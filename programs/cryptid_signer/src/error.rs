@@ -1,4 +1,4 @@
-use solana_generator::Error;
+use solana_generator::{Error, Pubkey};
 
 #[derive(Debug, Error)]
 pub enum CryptIdSignerError {
@@ -11,4 +11,10 @@ pub enum CryptIdSignerError {
         expiry_times_size: usize,
         signers_size: usize,
     },
+    #[error_msg("Not enough signers, expected `{}`, received `{}", expected, received)]
+    NotEnoughSigners { expected: u8, received: u8 },
+    #[error_msg("Wrong did, expected `{}`, received `{}`", expected, received)]
+    WrongDID { expected: Pubkey, received: Pubkey },
+    #[error_msg("Wrong did program, expected `{}`, received `{}`", expected, received)]
+    WrongDIDProgram { expected: Pubkey, received: Pubkey },
 }
