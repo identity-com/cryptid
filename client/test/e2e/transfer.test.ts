@@ -23,7 +23,9 @@ describe('transfers', () => {
     it('should sign a transaction from a DID', async () => {
       const cryptid = await build(did, key, { connection });
 
-      const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+      const {
+        blockhash: recentBlockhash,
+      } = await connection.getRecentBlockhash();
       const tx = new Transaction({ recentBlockhash });
       tx.add(
         SystemProgram.transfer({
