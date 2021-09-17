@@ -1,17 +1,21 @@
 import { expect, test } from "@oclif/test";
+import * as fs from "fs";
 
 describe("init", () => {
+  const configPath = "./tmp.yaml";
   test
     .stdout()
-    .command(["init"])
-    .it("runs hello", (ctx) => {
-      expect(ctx.stdout).to.contain("hello world");
-    });
-
-  test
-    .stdout()
-    .command(["init", "--name", "jeff"])
-    .it("runs hello --name jeff", (ctx) => {
-      expect(ctx.stdout).to.contain("hello jeff");
+    .command([
+      "init",
+      "--path",
+      configPath,
+      "--key",
+      `${__dirname}/../fixtures/id.json`,
+    ])
+    .finally(() => {
+      if (fs.existsSync(configPath)) fs.unlinkSync(configPath);
+    })
+    .it("runs init", (ctx) => {
+      expect(ctx.stdout).to.contain("Creating config");
     });
 });

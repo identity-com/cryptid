@@ -2,11 +2,11 @@ import { Command, flags } from "@oclif/command";
 import { Config as ConfigService } from "../service/config";
 
 export default class Config extends Command {
-  static description = "describe the command here";
+  static description = "Manage Cryptid configuration";
 
   static flags = {
     help: flags.help({ char: "h" }),
-    config: flags.string({ char: "c", description: "Path to config file" }),
+    path: flags.string({ char: "p", description: "Path to config file" }),
   };
 
   static args = [
@@ -16,7 +16,7 @@ export default class Config extends Command {
   async run(): Promise<void> {
     const { args, flags } = this.parse(Config);
 
-    const service = new ConfigService(flags.config);
+    const service = new ConfigService(flags.path);
 
     switch (args.subcommand) {
       case "show":

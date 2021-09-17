@@ -28,6 +28,6 @@ export default class Init extends Command {
   async run(): Promise<void> {
     const { flags } = this.parse(Init);
 
-    ConfigService.init(flags.overwrite, flags.path);
+    ConfigService.init(flags.overwrite, flags.path, flags.key);
   }
 }

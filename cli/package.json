@@ -67,8 +67,18 @@
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md",
-    "lint": "eslint src/**/*.ts test/**/*.ts --max-warnings 0",
+    "lint": "eslint . --ext .ts --max-warnings 0",
     "cryptid": "./bin/run"
+  },
+  "nyc": {
+    "skip-full": true,
+    "exclude": ["lib/", "test/"],
+    "all": true,
+    "check-coverage": true,
+    "branches": 25,
+    "lines": 93,
+    "functions": 80,
+    "statements": 93
   },
   "types": "lib/index.d.ts"
 }

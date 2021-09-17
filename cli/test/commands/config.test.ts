@@ -3,15 +3,15 @@ import { expect, test } from "@oclif/test";
 describe("config", () => {
   test
     .stdout()
-    .command(["config"])
-    .it("runs hello", (ctx) => {
-      expect(ctx.stdout).to.contain("hello world");
-    });
-
-  test
-    .stdout()
-    .command(["config", "--name", "jeff"])
-    .it("runs hello --name jeff", (ctx) => {
-      expect(ctx.stdout).to.contain("hello jeff");
+    .command([
+      "config",
+      "show",
+      "--path",
+      `${__dirname}/../fixtures/config.yml`,
+    ])
+    .it("runs show", (ctx) => {
+      expect(ctx.stdout).to.contain(
+        "did: did:sol:FtMiL5EHC9ap56ZKcLYZRtyAnKVJoEqhf5JysiZXgTEm"
+      );
     });
 });
