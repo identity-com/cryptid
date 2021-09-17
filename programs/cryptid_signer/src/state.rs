@@ -1,18 +1,39 @@
+use crate::error::CryptIdSignerError;
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_generator::UnixTimestamp;
-use solana_generator::{Account, Pubkey};
+use solana_generator::{Account, GeneratorResult, Pubkey, UnixTimestamp};
 
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [1])]
 pub struct DOAAccount {
     pub did: Pubkey,
+    pub did_program: Pubkey,
     pub signer_nonce: u8,
     pub key_threshold: u8,
     pub settings_sequence: u16,
+    // TODO: Implement when permissions added
     // pub sign_permissions: ?,
     // pub execute_permissions: ?,
     // pub remove_permissions: ?,
+}
+impl DOAAccount {
+    pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
+        if did != self.did {
+            Err(CryptIdSignerError::WrongDID {
+                expected: self.did,
+                received: did,
+            }
+            .into())
+        } else if did_program != self.did_program {
+            Err(CryptIdSignerError::WrongDIDProgram {
+                expected: self.did_program,
+                received: did_program,
+            }
+            .into())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]

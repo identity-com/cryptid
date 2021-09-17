@@ -2,7 +2,7 @@ use solana_program::pubkey::Pubkey;
 
 pub use solana_generator_derive::AccountArgument;
 
-use crate::{AccountInfo, GeneratorError, GeneratorResult, SystemProgram};
+use crate::{AccountInfo, GeneratorError, GeneratorResult, SolanaAccountMeta, SystemProgram};
 use std::fmt::Debug;
 
 /// A set of accounts that can be derived from an iterator over [`AccountInfo`]s and instruction data
@@ -30,6 +30,7 @@ use std::fmt::Debug;
 /// The struct macro is `account_argument` and contains a comma seperated list of arguments.
 /// ex:
 /// ```
+/// # use solana_generator::AccountArgument;
 ///  #[derive(AccountArgument)]
 ///  #[account_argument(instruction_data = (size: usize))]
 ///  pub struct ArgumentAccounts{}
@@ -44,7 +45,7 @@ use std::fmt::Debug;
 /// These arguments can access the top level `instruction_data` by name.
 /// ex:
 /// ```
-///#  use solana_generator::AccountInfo;
+///#  use solana_generator::{AccountInfo, AccountArgument};
 /// #[derive(AccountArgument)]
 ///  pub struct ArgumentAccounts{
 ///      #[account_argument(signer, writable)]
@@ -124,6 +125,14 @@ where
     fn owner(&self, indexer: I) -> GeneratorResult<Pubkey>;
     /// Gets the key of the account at index `indexer`.
     fn key(&self, indexer: I) -> GeneratorResult<Pubkey>;
+    /// Turns the account at index `indexer` to a [`SolanaAccountMeta`]
+    fn to_solana_account_meta(&self, indexer: I) -> GeneratorResult<SolanaAccountMeta> {
+        Ok(SolanaAccountMeta {
+            pubkey: self.key(indexer.clone())?,
+            is_signer: self.is_signer(indexer.clone())?,
+            is_writable: self.is_writable(indexer)?,
+        })
+    }
 }
 
 /// Asserts that the account at index `indexer` is a signer.

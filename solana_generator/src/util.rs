@@ -68,6 +68,8 @@ impl<'a, T> Take<'a> for &'a [T] {
             }
             .into());
         }
-        Ok(self[0..N].try_into().unwrap())
+        let out = self[0..N].try_into().unwrap();
+        *self = &self[N..];
+        Ok(out)
     }
 }

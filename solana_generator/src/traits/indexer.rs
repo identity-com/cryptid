@@ -91,8 +91,8 @@ impl AllAny {
     /// Returns [`true`] if is [`NotAll`] or [`NotAny`], [`false`] otherwise
     pub const fn is_not(self) -> bool {
         match self {
-            Self::All | Self::Any => true,
-            Self::NotAll | Self::NotAny => false,
+            Self::All | Self::Any => false,
+            Self::NotAll | Self::NotAny => true,
         }
     }
 }

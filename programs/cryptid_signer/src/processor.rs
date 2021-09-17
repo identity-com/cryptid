@@ -1,10 +1,16 @@
 use crate::error::CryptIdSignerError;
 use crate::instruction::{
-    CreateDOA, CreateDOAData, Instruction, ProposeTransaction, ProposeTransactionData,
+    CreateDOA, CreateDOAData, DirectExecuteTransaction, DirectExecuteTransactionData, Instruction,
+    ProposeTransaction, ProposeTransactionData,
 };
-use crate::DOA_SIGNER_SEED;
+use crate::state::AccountMeta;
+use crate::verify_doa_signer;
+use solana_generator::solana_program::instruction::{
+    AccountMeta as SolanaAccountMeta, Instruction as SolanaInstruction,
+};
 use solana_generator::{
-    msg, AccountArgument, GeneratorError, GeneratorResult, InitSize, Pubkey, UnixTimestamp,
+    invoke_signed_variable_size, msg, AccountArgument, GeneratorResult, InitSize, Pubkey,
+    UnixTimestamp,
 };
 use std::mem::{size_of, swap};
 use std::num::NonZeroU64;
@@ -26,6 +32,10 @@ pub fn process_instruction(
             propose_transaction(program_id, data, accounts)?;
             Some(accounts.system_program.clone())
         }
+        Instruction::DirectExecuteTransaction(data, accounts) => {
+            direct_execute_transaction(program_id, data, accounts)?;
+            None
+        }
     };
     instruction.write_back(program_id, system_program.as_ref())
 }
@@ -35,23 +45,16 @@ pub fn create_doa(
     data: &mut CreateDOAData,
     accounts: &mut CreateDOA,
 ) -> GeneratorResult<()> {
-    // TODO: Move this seeds check to `solana_generator`
-    let seeds = &[
-        DOA_SIGNER_SEED,
-        &accounts.doa.info.key.to_bytes(),
-        &[data.signer_nonce],
-    ];
-    if accounts.doa_signer.key != Pubkey::create_program_address(seeds, &program_id)? {
-        return Err(GeneratorError::AccountNotFromSeeds {
-            account: accounts.doa_signer.key,
-            seeds: format!("{:?}", seeds),
-            program_id,
-        }
-        .into());
-    }
+    verify_doa_signer(
+        program_id,
+        accounts.doa.info().key,
+        accounts.doa_signer.key,
+        data.signer_nonce,
+    )?;
 
-    accounts.doa.funder = Some(accounts.funder.clone());
+    accounts.doa.set_funder(accounts.funder.clone());
     accounts.doa.did = accounts.did.key;
+    accounts.doa.did_program = accounts.did_program.key;
     accounts.doa.signer_nonce = data.signer_nonce;
     accounts.doa.key_threshold = data.key_threshold;
     accounts.doa.settings_sequence = 1;
@@ -71,14 +74,18 @@ pub fn propose_transaction(
         .into());
     }
 
-    accounts.transaction_account.funder = Some(accounts.funder.clone());
-    accounts.transaction_account.init_size = match NonZeroU64::new(
-        (accounts.doa.key_threshold as u64 - data.signers as u64 + data.extra_keyspace as u64)
-            * size_of::<(Pubkey, UnixTimestamp)>() as u64,
-    ) {
-        None => InitSize::DataSize,
-        Some(non_zero) => InitSize::DataSizePlus(non_zero),
-    };
+    accounts
+        .transaction_account
+        .set_funder(accounts.funder.clone());
+    accounts.transaction_account.set_init_size(
+        match NonZeroU64::new(
+            (accounts.doa.key_threshold as u64 - data.signers as u64 + data.extra_keyspace as u64)
+                * size_of::<(Pubkey, UnixTimestamp)>() as u64,
+        ) {
+            None => InitSize::DataSize,
+            Some(non_zero) => InitSize::DataSizePlus(non_zero),
+        },
+    );
 
     accounts.transaction_account.doa = accounts.doa.info.key;
     accounts.transaction_account.transaction_instructions = vec![];
@@ -89,7 +96,7 @@ pub fn propose_transaction(
     accounts.transaction_account.has_executed = false;
     accounts.transaction_account.settings_sequence = accounts.doa.settings_sequence;
 
-    todo!("Verify keys against did program");
+    // TODO: Verify keys against did program
 
     accounts.transaction_account.signers = accounts
         .signer_keys
@@ -97,5 +104,53 @@ pub fn propose_transaction(
         .zip(data.expiry_times.iter())
         .map(|(signer, expiry_time)| (signer.key, *expiry_time))
         .collect();
+    Ok(())
+}
+
+pub fn direct_execute_transaction(
+    _program_id: Pubkey,
+    data: &mut DirectExecuteTransactionData,
+    accounts: &mut DirectExecuteTransaction,
+) -> GeneratorResult<()> {
+    accounts
+        .doa
+        .verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
+
+    if data.signers < accounts.doa.key_threshold {
+        return Err(CryptIdSignerError::NotEnoughSigners {
+            expected: accounts.doa.key_threshold,
+            received: data.signers,
+        }
+        .into());
+    }
+
+    // TODO: Verify keys against did program
+    let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
+    let signer_seeds = doa_signer_seeds!(accounts.doa.info.key, accounts.doa.signer_nonce);
+
+    let mut instructions = vec![];
+    swap(&mut instructions, &mut data.instructions);
+    for instruction in instructions {
+        let metas = instruction
+            .accounts
+            .iter()
+            .map(|meta| SolanaAccountMeta {
+                pubkey: meta.key,
+                is_signer: meta.meta.contains(AccountMeta::IS_SIGNER),
+                is_writable: meta.meta.contains(AccountMeta::IS_WRITABLE),
+            })
+            .collect::<Vec<_>>();
+
+        invoke_signed_variable_size(
+            &SolanaInstruction {
+                program_id: instruction.program_id,
+                accounts: metas,
+                data: instruction.data,
+            },
+            &instruction_accounts_ref,
+            &[signer_seeds],
+        )?;
+    }
+
     Ok(())
 }

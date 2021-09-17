@@ -4,14 +4,17 @@ use borsh::BorshSerialize;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
+use crate::solana_program::sysvar::Sysvar;
 use crate::traits::AccountArgument;
 use crate::{
     Account, AccountInfo, AllAny, GeneratorError, GeneratorResult, MultiIndexableAccountArgument,
     SingleIndexableAccountArgument, SystemProgram,
 };
+use solana_program::rent::Rent;
 use std::fmt::Debug;
 
 /// An account that will be initialized by this program, all data is checked to be zeroed and owner is this program.
+/// Account must be rent exempt.
 #[derive(Debug)]
 pub struct ZeroedAccount<T>
 where
@@ -39,7 +42,7 @@ where
             return Err(GeneratorError::AccountOwnerNotEqual {
                 account: info.key,
                 owner: **info.owner.borrow(),
-                expected_owner: program_id,
+                expected_owner: vec![program_id],
             }
             .into());
         }
@@ -50,6 +53,11 @@ where
 
         if !info.data.borrow().iter().all(|&byte| byte == 0) {
             return Err(GeneratorError::NonZeroedData { account: info.key }.into());
+        }
+
+        let rent = Rent::get()?.minimum_balance(info.data.borrow().len());
+        if **info.lamports.borrow() < rent {
+            return Err(ProgramError::AccountNotRentExempt.into());
         }
 
         Ok(Self {

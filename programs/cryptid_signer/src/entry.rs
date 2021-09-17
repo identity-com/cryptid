@@ -1,8 +1,6 @@
 use crate::instruction::Instruction;
 use crate::processor::process_instruction;
-use solana_generator::{
-    entrypoint, msg, AccountArgument, AccountInfo, GeneratorResult, Pubkey, Take,
-};
+use solana_generator::{entrypoint, AccountArgument, AccountInfo, GeneratorResult, Pubkey, Take};
 
 entrypoint!(entry);
 
@@ -20,8 +18,6 @@ fn entry(
         data,
         instruction_discriminant,
     )?;
-
-    msg!("Instruction: {:?}", instruction);
 
     process_instruction(program_id, instruction)
 }
