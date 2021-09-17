@@ -1,7 +1,7 @@
 {
   "private": true,
   "workspaces": [
-    "programs"
+    "programs", "client", "cli"
   ],
   "scripts": {
     "test": "yarn test-programs",

@@ -1,0 +1,73 @@
+{
+  "name": "@identity.com/cryptid",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why",
+    "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
+    "test-e2e-pattern": "tsdx test --runInBand --testPathPattern=e2e",
+    "start-validator": "solana-test-validator --bpf-program ??? ../programs/target/deploy/cryptid.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../program/tests/fixtures/sol_did_0.1.0.so --reset"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "author": "identity.com",
+  "module": "dist/client.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/client.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/client.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^5.0.3",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "chai-subset": "^1.6.0",
+    "husky": "^7.0.2",
+    "mocha": "^9.1.1",
+    "sinon": "^11.1.2",
+    "sinon-chai": "^3.7.0",
+    "size-limit": "^5.0.3",
+    "start-server-and-test": "^1.14.0",
+    "ts-mocha": "^8.0.0",
+    "ts-node": "^10.2.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "@identity.com/sol-did-client": "^0.1.10",
+    "@solana/web3.js": "^1.27.0",
+    "uint8arrays": "^3.0.0"
+  }
+}
