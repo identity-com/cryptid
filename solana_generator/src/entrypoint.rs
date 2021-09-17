@@ -34,9 +34,9 @@ macro_rules! entrypoint {
     };
 }
 
-/// This function can be called if the [`entrypoint`] macro can't be used. 
+/// This function can be called if the [`entrypoint`] macro can't be used.
 /// It is designed to deserialize into the custom [`AccountInfo`] structs and run a given function returning the error code.
-/// 
+///
 /// # Safety
 /// This must be called with the input from `pub unsafe extern "C" fn entrypoint`
 pub unsafe fn entry(
