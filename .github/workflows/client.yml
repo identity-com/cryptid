@@ -93,7 +93,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build-bpf
-          args: --manifest-path program/Cargo.toml
+          args: --manifest-path programs/cryptid-signer/Cargo.toml
 
       - name: Use Node ${{ matrix.node }}
         uses: actions/setup-node@v1
