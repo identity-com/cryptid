@@ -21,7 +21,7 @@
     "analyze": "size-limit --why",
     "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
     "test-e2e-pattern": "tsdx test --runInBand --testPathPattern=e2e",
-    "start-validator": "solana-test-validator --bpf-program ??? ../program/target/deploy/cryptid.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../program/tests/fixtures/sol_did_0.1.0.so --reset"
+    "start-validator": "solana-test-validator --bpf-program ??? ../programs/target/deploy/cryptid.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../program/tests/fixtures/sol_did_0.1.0.so --reset"
   },
   "peerDependencies": {},
   "husky": {

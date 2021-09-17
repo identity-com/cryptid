@@ -3,7 +3,6 @@ import * as path from "path";
 import * as yaml from 'yaml'
 import * as fs from "fs";
 import { Keypair } from '@solana/web3.js'
-import { util } from '@identity.com/cryptid'
 
 const DEFAULT_CONFIG_FILE = path.join(os.homedir(), '.config', 'cryptid', 'config.yml');
 const DEFAULT_ID_FILE = path.join(os.homedir(), '.config', 'solana', 'id.json');
