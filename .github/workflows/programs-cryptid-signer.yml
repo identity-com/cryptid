@@ -11,12 +11,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.54']
+        rust: ['1.55']
         os: [ubuntu-latest]
-
-    defaults:
-      run:
-        working-directory: ./programs/cryptid_signer
 
     steps:
       - name: Checkout repo
@@ -32,7 +28,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --all --manifest-path programs/cryptid-signer/Cargo.toml -- --check
 
       - name: Cache dependencies
         uses: actions/cache@v2
@@ -47,7 +43,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace --all-targets -- --deny=warnings
+          args: --workspace  --manifest-path programs/cryptid-signer/Cargo.toml --all-targets -- --deny=warnings
 
   program-unit-test:
     name: Unit test program on Rust ${{ matrix.rust }} and ${{ matrix.os }}
@@ -55,7 +51,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.54']
+        rust: ['1.55']
         os: [ubuntu-latest]
 
     steps:
@@ -80,6 +76,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --manifest-path programs/cryptid-signer/Cargo.toml
 
   program-build:
     name: Build and test the cryptid on-chain program on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
@@ -87,8 +84,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.54']
-        solana: ['v1.7.11']
+        rust: ['1.55']
+        solana: ['v1.7.12']
         os: [ubuntu-latest]
 
     steps:
@@ -125,3 +122,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test-bpf
+          args: --manifest-path programs/cryptid-signer/Cargo.toml

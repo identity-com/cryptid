@@ -1,6 +1,6 @@
 import { Signer } from '../types/crypto';
 import { Transaction } from '@solana/web3.js';
-import { Cryptid, CryptidOptions } from './Cryptid';
+import { Cryptid, CryptidOptions } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
 
 export class SimpleCryptid implements Cryptid {

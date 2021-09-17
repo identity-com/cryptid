@@ -14,10 +14,6 @@ jobs:
         node: ['16.x']
         os: [ubuntu-latest]
 
-    defaults:
-      run:
-        working-directory: ./cli
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -30,18 +26,20 @@ jobs:
       - name: Cache node dependencies
         uses: actions/cache@v2
         with:
-          path: |
-            ./cli/node_modules
-          key: yarn-cli-${{ hashFiles('cli/yarn.lock') }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install
-        run: yarn install
+        run: yarn
+
+      - name: Build Dependencies
+        run: yarn workspace @identity.com/cryptid build
 
       - name: Lint
-        run: yarn lint
+        run: yarn workspace @identity.com/cryptid-cli lint
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: yarn workspace @identity.com/cryptid-cli test --ci --coverage --maxWorkers=2
 
       - name: Build
-        run: yarn build
+        run: yarn workspace @identity.com/cryptid-cli pack

@@ -5,11 +5,11 @@ import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { Cryptid } from '../../../src';
-import { SimpleCryptid } from '../../../src/api/SimpleCryptid';
+import { SimpleCryptid } from '../../../src/api/simpleCryptid';
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
 import { did, makeKeypair } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
-import * as DirectExecute from '../../../src/lib/solana/transactions/DirectExecute';
+import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);

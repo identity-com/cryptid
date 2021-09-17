@@ -31,19 +31,20 @@ USAGE
 * [`cryptid config [SUBCOMMAND]`](#cryptid-config-subcommand)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init [FILE]`](#cryptid-init-file)
-* [`cryptid token [FILE]`](#cryptid-token-file)
-* [`cryptid transfer [FILE]`](#cryptid-transfer-file)
+* [`cryptid token [SUBCOMMAND]`](#cryptid-token-subcommand)
+* [`cryptid transfer`](#cryptid-transfer)
 
 ## `cryptid config [SUBCOMMAND]`
 
-describe the command here
+Manage Cryptid configuration
 
 ```
 USAGE
   $ cryptid config [SUBCOMMAND]
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help       show CLI help
+  -p, --path=path  Path to config file
 ```
 
 _See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
@@ -67,48 +68,51 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3
 
 ## `cryptid init [FILE]`
 
-describe the command here
+Initialise the cryptid library
 
 ```
 USAGE
   $ cryptid init [FILE]
 
 OPTIONS
-  -f, --force
   -h, --help       show CLI help
-  -n, --name=name  name to print
+  -k, --key=key    Path to a solana keypair
+  -o, --overwrite  Overwrite existing configuration
+  -p, --path=path  Configuration path
 ```
 
 _See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
 
-## `cryptid token [FILE]`
+## `cryptid token [SUBCOMMAND]`
 
 describe the command here
 
 ```
 USAGE
-  $ cryptid token [FILE]
+  $ cryptid token [SUBCOMMAND]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --from=from  name to print
+  -a, --amount=amount  (required) The amount in lamports to transfer
+  -h, --help           show CLI help
+  -m, --mint=mint      (required) The SPL-Token mint(base58)
+  -t, --to=to          (required) Recipient public key (base58)
 ```
 
 _See code: [src/commands/token.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token.ts)_
 
-## `cryptid transfer [FILE]`
+## `cryptid transfer`
 
 describe the command here
 
 ```
 USAGE
-  $ cryptid transfer [FILE]
+  $ cryptid transfer
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -a, --amount=amount  (required) The amount in lamports to transfer
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -t, --to=to          (required) Recipient public key (base58)
 ```
 
 _See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/transfer.ts)_
