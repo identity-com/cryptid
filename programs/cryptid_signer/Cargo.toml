@@ -1,0 +1,17 @@
+[package]
+name = "cryptid_signer"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana_generator = { path = "../../solana_generator" }
+
+[dev-dependencies]
+solana-client = "1.7.11"
+solana-sdk = "1.7.11"
+solana-transaction-status = "1.7.11"

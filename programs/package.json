@@ -1,0 +1,9 @@
+{
+  "name": "programs",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [],
+  "scripts": {
+    "test": "echo \"Test in packages!\""
+  }
+}

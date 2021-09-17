@@ -1,0 +1,9 @@
+[workspace]
+exclude = [
+    "solana_generator",
+]
+members = [
+    "programs/*",
+    "solana_generator",
+    "solana_generator/derive",
+]
