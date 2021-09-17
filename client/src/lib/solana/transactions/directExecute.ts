@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { create } from '../instructions/DirectExecute';
+import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
 
 /**

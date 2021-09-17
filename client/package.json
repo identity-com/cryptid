@@ -15,7 +15,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "nyc mocha  --exclude test/e2e/**/*.ts",
-    "lint": "tsdx lint",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
@@ -26,7 +26,10 @@
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
     "skip-full": true,
-    "exclude": ["dist/", "test/"],
+    "exclude": [
+      "dist/",
+      "test/"
+    ],
     "all": true,
     "check-coverage": true,
     "branches": 14,
@@ -71,6 +74,7 @@
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
+    "eslint": "^7.32.0",
     "husky": "^7.0.2",
     "mocha": "^9.1.1",
     "nyc": "^15.1.0",

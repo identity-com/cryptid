@@ -8,17 +8,17 @@ import * as u8a from 'uint8arrays';
 import { ExtendedCluster } from '../types/solana';
 import { DEFAULT_CLUSTER } from './constants';
 
-const defaultSignCallback = (
-  keypair: Keypair
-): SignCallback => async transaction => {
-  transaction.partialSign(keypair);
-  return transaction;
-};
+const defaultSignCallback =
+  (keypair: Keypair): SignCallback =>
+  async (transaction) => {
+    transaction.partialSign(keypair);
+    return transaction;
+  };
 
 export const publicKeyToDid = (
   publicKey: PublicKey,
   cluster?: ExtendedCluster
-) =>
+): string =>
   DecentralizedIdentifier.create(
     publicKey,
     ClusterType.parse(cluster || DEFAULT_CLUSTER)
