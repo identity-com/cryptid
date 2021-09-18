@@ -1,47 +1,57 @@
 import * as os from "os";
 import * as path from "path";
-import * as yaml from 'yaml'
+import * as yaml from "yaml";
 import * as fs from "fs";
-import { Keypair } from '@solana/web3.js'
+import { Keypair } from "@solana/web3.js";
 
-const DEFAULT_CONFIG_FILE = path.join(os.homedir(), '.config', 'cryptid', 'config.yml');
-const DEFAULT_ID_FILE = path.join(os.homedir(), '.config', 'solana', 'id.json');
+const DEFAULT_CONFIG_FILE = path.join(
+  os.homedir(),
+  ".config",
+  "cryptid",
+  "config.yml"
+);
+const DEFAULT_ID_FILE = path.join(os.homedir(), ".config", "solana", "id.json");
 
 type ConfigFile = {
-  did: string
-  keyFile: string
-}
+  did: string;
+  keyFile: string;
+};
 
-const loadKeyFile = (keyFile:string):Keypair => {
-  const keyFileJson = require(keyFile);
-  return Keypair.fromSecretKey(Buffer.from(keyFileJson, 'utf-8'));
-}
+const loadKeyFile = (keyFile: string): Keypair => {
+  const keyFileJson = JSON.parse(fs.readFileSync(keyFile, "utf-8"));
+  return Keypair.fromSecretKey(Buffer.from(keyFileJson, "utf-8"));
+};
 
 export class Config {
-  config: ConfigFile
+  config: ConfigFile;
 
   constructor(configPath: string = DEFAULT_CONFIG_FILE) {
-    if (!fs.existsSync(configPath)) throw new Error(`No config at ${configPath}`);
+    if (!fs.existsSync(configPath))
+      throw new Error(`No config at ${configPath}`);
 
-    const configFileString = fs.readFileSync(configPath, { encoding: 'utf-8'});
-    this.config = yaml.parse(configFileString)
+    const configFileString = fs.readFileSync(configPath, { encoding: "utf-8" });
+    this.config = yaml.parse(configFileString);
   }
 
-  static init(overwrite: boolean, configPath: string = DEFAULT_CONFIG_FILE, keyPath: string = DEFAULT_ID_FILE):Config {
+  static init(
+    overwrite: boolean,
+    configPath: string = DEFAULT_CONFIG_FILE,
+    keyPath: string = DEFAULT_ID_FILE
+  ): Config {
     const keypair = loadKeyFile(keyPath);
 
-    // TODO giving an error
-    // const did = util.publicKeyToDid(keypair.publicKey);
-    const configObject:ConfigFile = {
-      did: 'did:sol:' + keypair.publicKey.toBase58(),
+    const configObject: ConfigFile = {
+      did: "did:sol:" + keypair.publicKey.toBase58(),
       keyFile: keyPath,
-    }
+    };
 
     if (fs.existsSync(configPath)) {
-      if (!overwrite) throw new Error(`Config file at ${configPath} already exists.`)
+      if (!overwrite)
+        throw new Error(`Config file at ${configPath} already exists.`);
     } else {
-      console.log(`Creating config at path ${path.dirname(configPath)}`)
-      fs.mkdirSync(path.dirname(configPath))
+      console.log(`Creating config at path ${path.dirname(configPath)}`);
+      if (!fs.existsSync(path.dirname(configPath)))
+        fs.mkdirSync(path.dirname(configPath));
     }
 
     fs.writeFileSync(configPath, yaml.stringify(configObject));
@@ -50,14 +60,14 @@ export class Config {
   }
 
   show(): string {
-    return yaml.stringify(this.config)
+    return yaml.stringify(this.config);
   }
 
   get did(): string {
-    return this.config.did
+    return this.config.did;
   }
 
   get keypair(): Keypair {
-    return loadKeyFile(this.config.keyFile)
+    return loadKeyFile(this.config.keyFile);
   }
 }

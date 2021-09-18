@@ -8,8 +8,8 @@
   },
   "bugs": "https://github.com/identity-com/cryptid/issues",
   "dependencies": {
-    "@identity.com/sol-did-client": "^0.1.10",
     "@identity.com/cryptid": "0.1.0",
+    "@identity.com/sol-did-client": "^0.1.10",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
@@ -18,18 +18,26 @@
     "yaml": "^1.10.2"
   },
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@oclif/dev-cli": "^1",
     "@oclif/test": "^1",
     "@types/chai": "^4",
     "@types/mocha": "^5",
     "@types/node": "^10",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
     "chai": "^4",
-    "eslint": "^5.13",
+    "eslint": "^7.32.0",
     "eslint-config-oclif": "^3.1",
-    "eslint-config-oclif-typescript": "^0.1",
+    "eslint-config-oclif-typescript": "^0.2.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "globby": "^10",
     "mocha": "^5",
-    "nyc": "^14",
+    "nyc": "^15.1.0",
+    "prettier": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "source-map-support": "^0.5.20",
     "ts-node": "^8",
     "typescript": "^3.3"
   },
@@ -60,9 +68,26 @@
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "nyc --extension .ts mocha \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md",
+    "lint": "eslint . --ext .ts --max-warnings 0",
     "cryptid": "./bin/run"
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "extension": ".ts",
+    "cache": false,
+    "exclude": [
+      "lib/",
+      "test/"
+    ],
+    "all": true,
+    "skip-full": true,
+    "check-coverage": true,
+    "branches": 33,
+    "lines": 71,
+    "functions": 64,
+    "statements": 71
   },
   "types": "lib/index.d.ts"
 }

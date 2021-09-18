@@ -1,8 +1,8 @@
-import { Cryptid, CryptidOptions } from './Cryptid';
+import { Cryptid, CryptidOptions } from './cryptid';
 import { Signer } from '../types/crypto';
 import { Keypair } from '@solana/web3.js';
 import { normalizeSigner } from '../lib/util';
-import { SimpleCryptid } from './SimpleCryptid';
+import { SimpleCryptid } from './simpleCryptid';
 
 export class Builder {
   static async build(
