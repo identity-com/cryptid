@@ -4,14 +4,17 @@ use borsh::BorshSerialize;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
+use crate::solana_program::sysvar::Sysvar;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountInfo, GeneratorError, GeneratorResult, MultiIndexableAccountArgument,
+    Account, AccountInfo, AllAny, GeneratorError, GeneratorResult, MultiIndexableAccountArgument,
     SingleIndexableAccountArgument, SystemProgram,
 };
+use solana_program::rent::Rent;
 use std::fmt::Debug;
 
 /// An account that will be initialized by this program, all data is checked to be zeroed and owner is this program.
+/// Account must be rent exempt.
 #[derive(Debug)]
 pub struct ZeroedAccount<T>
 where
@@ -30,6 +33,7 @@ where
     fn from_account_infos(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        _data: &mut &[u8],
         _arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
@@ -38,7 +42,7 @@ where
             return Err(GeneratorError::AccountOwnerNotEqual {
                 account: info.key,
                 owner: **info.owner.borrow(),
-                expected_owner: program_id,
+                expected_owner: vec![program_id],
             }
             .into());
         }
@@ -49,6 +53,11 @@ where
 
         if !info.data.borrow().iter().all(|&byte| byte == 0) {
             return Err(GeneratorError::NonZeroedData { account: info.key }.into());
+        }
+
+        let rent = Rent::get()?.minimum_balance(info.data.borrow().len());
+        if **info.lamports.borrow() < rent {
+            return Err(ProgramError::AccountNotRentExempt.into());
         }
 
         Ok(Self {
@@ -73,35 +82,47 @@ where
         self.info.add_keys(add)
     }
 }
-impl<T, I> MultiIndexableAccountArgument<I> for ZeroedAccount<T>
+impl<T> MultiIndexableAccountArgument<()> for ZeroedAccount<T>
 where
     T: Account + Default,
-    AccountInfo: MultiIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn is_signer(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_signer(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_signer(indexer)
     }
 
-    fn is_writable(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_writable(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_writable(indexer)
     }
 
-    fn is_owner(&self, owner: Pubkey, indexer: I) -> GeneratorResult<bool> {
+    fn is_owner(&self, owner: Pubkey, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_owner(owner, indexer)
     }
 }
-impl<T, I> SingleIndexableAccountArgument<I> for ZeroedAccount<T>
+impl<T> MultiIndexableAccountArgument<AllAny> for ZeroedAccount<T>
 where
     T: Account + Default,
-    AccountInfo: SingleIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn owner(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn is_signer(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_signer(indexer)
+    }
+
+    fn is_writable(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_writable(indexer)
+    }
+
+    fn is_owner(&self, owner: Pubkey, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_owner(owner, indexer)
+    }
+}
+impl<T> SingleIndexableAccountArgument<()> for ZeroedAccount<T>
+where
+    T: Account + Default,
+{
+    fn owner(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.owner(indexer)
     }
 
-    fn key(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn key(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.key(indexer)
     }
 }

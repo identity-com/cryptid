@@ -94,7 +94,7 @@ pub enum GeneratorError<'a> {
     },
     /// Account owner was not equal to expected value.
     #[error_msg(
-        "Account (`{}`) owner (`{}`) not equal to `{}` when should be",
+        "Account (`{}`) owner (`{}`) not equal to `{:?}` when should be",
         account,
         owner,
         expected_owner
@@ -104,8 +104,8 @@ pub enum GeneratorError<'a> {
         account: Pubkey,
         /// The owner of the account
         owner: Pubkey,
-        /// The expected owner that was not matched
-        expected_owner: Pubkey,
+        /// The expected possible owners that were not matched
+        expected_owner: Vec<Pubkey>,
     },
     /// Expected a different account than given
     #[error_msg("Invalid account `{}`, expected `{}`", account, expected)]
@@ -128,7 +128,7 @@ pub enum GeneratorError<'a> {
         possible_range: String,
     },
     /// Not enough data
-    #[error_msg("Not enough data, expected: {}, found: {}", expected, found)]
+    #[error_msg("Not enough data, expected: `{}`, found: `{}`", expected, found)]
     NotEnoughData {
         /// What data was expected
         expected: String,
@@ -136,9 +136,45 @@ pub enum GeneratorError<'a> {
         found: String,
     },
     /// An unknown instruction was given
-    #[error_msg("Unknown instruction: {}", instruction)]
+    #[error_msg("Unknown instruction: `{}`", instruction)]
     UnknownInstruction {
         /// The unknown instruction
         instruction: String,
+    },
+    /// No payer on initialization
+    #[error_msg("No payer to init account: `{}`", account)]
+    NoPayerForInit {
+        /// The account needing a payer
+        account: Pubkey,
+    },
+    /// Not enough lamports in an account
+    #[error_msg(
+        "Not enough lamports in account `{}`. Need `{}`, have `{}`",
+        account,
+        needed_lamports,
+        lamports
+    )]
+    NotEnoughLamports {
+        /// Account with not enough lamports
+        account: Pubkey,
+        /// Lamports in `account`
+        lamports: u64,
+        /// Lamports needed
+        needed_lamports: u64,
+    },
+    /// Account not generated from expected seeds.
+    #[error_msg(
+        "Account `{}` not from seeds `{}` and program `{}`",
+        account,
+        seeds,
+        program_id
+    )]
+    AccountNotFromSeeds {
+        /// Account that is not from `seeds`
+        account: Pubkey,
+        /// Seeds that should have generated `account`
+        seeds: String,
+        /// The program id for seeding
+        program_id: Pubkey,
     },
 }

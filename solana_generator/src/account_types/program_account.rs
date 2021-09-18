@@ -7,7 +7,7 @@ use solana_program::pubkey::Pubkey;
 use crate::account_types::system_program::SystemProgram;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountInfo, Discriminant, GeneratorError, GeneratorResult,
+    Account, AccountInfo, AllAny, Discriminant, GeneratorError, GeneratorResult,
     MultiIndexableAccountArgument, SingleIndexableAccountArgument,
 };
 use std::fmt::Debug;
@@ -31,6 +31,7 @@ where
     fn from_account_infos(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        _data: &mut &[u8],
         _arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
@@ -39,7 +40,7 @@ where
             return Err(GeneratorError::AccountOwnerNotEqual {
                 account: info.key,
                 owner: **info.owner.borrow(),
-                expected_owner: program_id,
+                expected_owner: vec![program_id],
             }
             .into());
         }
@@ -78,35 +79,47 @@ where
         self.info.add_keys(add)
     }
 }
-impl<T, I> MultiIndexableAccountArgument<I> for ProgramAccount<T>
+impl<T> MultiIndexableAccountArgument<()> for ProgramAccount<T>
 where
     T: Account,
-    AccountInfo: MultiIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn is_signer(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_signer(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_signer(indexer)
     }
 
-    fn is_writable(&self, indexer: I) -> GeneratorResult<bool> {
+    fn is_writable(&self, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_writable(indexer)
     }
 
-    fn is_owner(&self, owner: Pubkey, indexer: I) -> GeneratorResult<bool> {
+    fn is_owner(&self, owner: Pubkey, indexer: ()) -> GeneratorResult<bool> {
         self.info.is_owner(owner, indexer)
     }
 }
-impl<T, I> SingleIndexableAccountArgument<I> for ProgramAccount<T>
+impl<T> MultiIndexableAccountArgument<AllAny> for ProgramAccount<T>
 where
     T: Account,
-    AccountInfo: SingleIndexableAccountArgument<I>,
-    I: Debug + Clone,
 {
-    fn owner(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn is_signer(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_signer(indexer)
+    }
+
+    fn is_writable(&self, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_writable(indexer)
+    }
+
+    fn is_owner(&self, owner: Pubkey, indexer: AllAny) -> GeneratorResult<bool> {
+        self.info.is_owner(owner, indexer)
+    }
+}
+impl<T> SingleIndexableAccountArgument<()> for ProgramAccount<T>
+where
+    T: Account,
+{
+    fn owner(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.owner(indexer)
     }
 
-    fn key(&self, indexer: I) -> GeneratorResult<Pubkey> {
+    fn key(&self, indexer: ()) -> GeneratorResult<Pubkey> {
         self.info.key(indexer)
     }
 }
