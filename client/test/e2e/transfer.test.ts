@@ -25,7 +25,7 @@ describe('transfers', () => {
 
       const { blockhash: recentBlockhash } =
         await connection.getRecentBlockhash();
-      const tx = new Transaction({ recentBlockhash });
+      const tx = new Transaction({ recentBlockhash, feePayer: key.publicKey });
       tx.add(
         SystemProgram.transfer({
           fromPubkey: key.publicKey,

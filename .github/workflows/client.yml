@@ -102,5 +102,5 @@ jobs:
           command: build-bpf
 
       - name: Test e2e
-        run: yarn workspaces @identity.com/cryptid run test-e2e
+        run: yarn workspace @identity.com/cryptid run test-e2e
 

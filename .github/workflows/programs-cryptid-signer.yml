@@ -28,7 +28,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all --manifest-path programs/cryptid-signer/Cargo.toml -- --check
+          args: --all -- --check
 
       - name: Cache dependencies
         uses: actions/cache@v2
@@ -43,10 +43,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace  --manifest-path programs/cryptid-signer/Cargo.toml --all-targets -- --deny=warnings
+          args: -- --deny=warnings
 
   program-unit-test:
-    name: Unit test program on Rust ${{ matrix.rust }} and ${{ matrix.os }}
+    name: Test program on Rust ${{ matrix.rust }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -76,10 +76,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path programs/cryptid-signer/Cargo.toml
 
-  program-build:
-    name: Build and test the cryptid on-chain program on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
+
+  program-integration-test:
+    name: Integration test the cryptid on-chain program on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -122,4 +122,3 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test-bpf
-          args: --manifest-path programs/cryptid-signer/Cargo.toml
