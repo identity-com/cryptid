@@ -8,7 +8,9 @@ use solana_program::pubkey::Pubkey;
 use solana_program::system_program::ID as SYSTEM_PROGRAM_ID;
 
 pub use init_account::*;
+pub use init_or_zeroed_account::*;
 pub use program_account::*;
+pub use rest::*;
 pub use system_program::*;
 pub use zeroed_account::*;
 
@@ -19,7 +21,9 @@ use crate::{
 };
 
 mod init_account;
+mod init_or_zeroed_account;
 mod program_account;
+mod rest;
 mod system_program;
 mod zeroed_account;
 
@@ -33,14 +37,20 @@ where
     fn from_account_infos(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        data: &mut &[u8],
         arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.0);
         if arg.0 != 0 {
             for _ in 0..arg.0 - 1 {
-                out.push(T::from_account_infos(program_id, infos, arg.1.clone())?);
+                out.push(T::from_account_infos(
+                    program_id,
+                    infos,
+                    data,
+                    arg.1.clone(),
+                )?);
             }
-            out.push(T::from_account_infos(program_id, infos, arg.1)?);
+            out.push(T::from_account_infos(program_id, infos, data, arg.1)?);
         }
         Ok(out)
     }
@@ -73,14 +83,20 @@ where
     fn from_account_infos(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        data: &mut &[u8],
         arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let mut out = VecDeque::with_capacity(arg.0);
         if arg.0 != 0 {
             for _ in 0..arg.0 - 1 {
-                out.push_back(T::from_account_infos(program_id, infos, arg.1.clone())?);
+                out.push_back(T::from_account_infos(
+                    program_id,
+                    infos,
+                    data,
+                    arg.1.clone(),
+                )?);
             }
-            out.push_back(T::from_account_infos(program_id, infos, arg.1)?);
+            out.push_back(T::from_account_infos(program_id, infos, data, arg.1)?);
         }
         Ok(out)
     }
@@ -112,10 +128,11 @@ where
     fn from_account_infos(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
+        data: &mut &[u8],
         arg: Self::InstructionArg,
     ) -> GeneratorResult<Self> {
         let mut iter = IntoIter::new(arg);
-        try_array_init(|_| T::from_account_infos(program_id, infos, iter.next().unwrap()))
+        try_array_init(|_| T::from_account_infos(program_id, infos, data, iter.next().unwrap()))
     }
 
     fn write_back(

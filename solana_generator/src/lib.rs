@@ -1,4 +1,4 @@
-#![deny(
+#![warn(
     unused_import_braces,
     unused_imports,
     missing_docs,
@@ -20,10 +20,19 @@ pub use program::*;
 pub use traits::*;
 pub use util::*;
 
-pub use borsh;
 pub use solana_program;
-pub use solana_program::pubkey::Pubkey;
 pub use solana_program::msg;
+pub use solana_program::{
+    clock::UnixTimestamp,
+    instruction::{AccountMeta as SolanaAccountMeta, Instruction as SolanaInstruction},
+    pubkey::Pubkey,
+};
+
+/// The system program's pubkey
+#[inline]
+pub fn system_program_id() -> Pubkey {
+    solana_program::system_program::id()
+}
 
 #[macro_use]
 mod macros;

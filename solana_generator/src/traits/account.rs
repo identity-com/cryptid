@@ -1,8 +1,8 @@
-use crate::borsh::maybestd::io::Write;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use solana_generator_derive::Account;
 use solana_program::pubkey::Pubkey;
 use std::borrow::Cow;
+use std::io::Write;
 use std::ops::Deref;
 
 /// The type of account discriminants

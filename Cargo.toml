@@ -3,7 +3,7 @@ exclude = [
     "solana_generator",
 ]
 members = [
-    "programs/*",
+    "programs/cryptid_signer",
     "solana_generator",
     "solana_generator/derive",
 ]

@@ -91,16 +91,12 @@ impl AllAny {
     /// Returns [`true`] if is [`NotAll`] or [`NotAny`], [`false`] otherwise
     pub const fn is_not(self) -> bool {
         match self {
-            Self::All | Self::Any => true,
-            Self::NotAll | Self::NotAny => false,
+            Self::All | Self::Any => false,
+            Self::NotAll | Self::NotAny => true,
         }
     }
 }
 impl_indexed_for_unit!(AllAny, yield no single[][]);
-impl_indexed_for_unit!(All, yield no single[][]);
-impl_indexed_for_unit!(NotAll, yield no single[][]);
-impl_indexed_for_unit!(Any, yield no single[][]);
-impl_indexed_for_unit!(NotAny, yield no single[][]);
 
 impl<T, I> MultiIndexableAccountArgument<(All, I)> for T
 where
@@ -117,6 +113,22 @@ where
 
     fn is_owner(&self, owner: Pubkey, indexer: (All, I)) -> GeneratorResult<bool> {
         self.is_owner(owner, (AllAny::All, indexer.1))
+    }
+}
+impl<T> MultiIndexableAccountArgument<All> for T
+where
+    T: MultiIndexableAccountArgument<AllAny>,
+{
+    fn is_signer(&self, _indexer: All) -> GeneratorResult<bool> {
+        self.is_signer(AllAny::All)
+    }
+
+    fn is_writable(&self, _indexer: All) -> GeneratorResult<bool> {
+        self.is_writable(AllAny::All)
+    }
+
+    fn is_owner(&self, owner: Pubkey, _indexer: All) -> GeneratorResult<bool> {
+        self.is_owner(owner, AllAny::All)
     }
 }
 impl<T, I> MultiIndexableAccountArgument<(NotAll, I)> for T
@@ -136,6 +148,22 @@ where
         self.is_owner(owner, (AllAny::NotAll, indexer.1))
     }
 }
+impl<T> MultiIndexableAccountArgument<NotAll> for T
+where
+    T: MultiIndexableAccountArgument<AllAny>,
+{
+    fn is_signer(&self, _indexer: NotAll) -> GeneratorResult<bool> {
+        self.is_signer(AllAny::NotAll)
+    }
+
+    fn is_writable(&self, _indexer: NotAll) -> GeneratorResult<bool> {
+        self.is_writable(AllAny::NotAll)
+    }
+
+    fn is_owner(&self, owner: Pubkey, _indexer: NotAll) -> GeneratorResult<bool> {
+        self.is_owner(owner, AllAny::NotAll)
+    }
+}
 impl<T, I> MultiIndexableAccountArgument<(Any, I)> for T
 where
     T: MultiIndexableAccountArgument<(AllAny, I)>,
@@ -153,6 +181,22 @@ where
         self.is_owner(owner, (AllAny::Any, indexer.1))
     }
 }
+impl<T> MultiIndexableAccountArgument<Any> for T
+where
+    T: MultiIndexableAccountArgument<AllAny>,
+{
+    fn is_signer(&self, _indexer: Any) -> GeneratorResult<bool> {
+        self.is_signer(AllAny::Any)
+    }
+
+    fn is_writable(&self, _indexer: Any) -> GeneratorResult<bool> {
+        self.is_writable(AllAny::Any)
+    }
+
+    fn is_owner(&self, owner: Pubkey, _indexer: Any) -> GeneratorResult<bool> {
+        self.is_owner(owner, AllAny::Any)
+    }
+}
 impl<T, I> MultiIndexableAccountArgument<(NotAny, I)> for T
 where
     T: MultiIndexableAccountArgument<(AllAny, I)>,
@@ -168,6 +212,22 @@ where
 
     fn is_owner(&self, owner: Pubkey, indexer: (NotAny, I)) -> GeneratorResult<bool> {
         self.is_owner(owner, (AllAny::NotAny, indexer.1))
+    }
+}
+impl<T> MultiIndexableAccountArgument<NotAny> for T
+where
+    T: MultiIndexableAccountArgument<AllAny>,
+{
+    fn is_signer(&self, _indexer: NotAny) -> GeneratorResult<bool> {
+        self.is_signer(AllAny::NotAny)
+    }
+
+    fn is_writable(&self, _indexer: NotAny) -> GeneratorResult<bool> {
+        self.is_writable(AllAny::NotAny)
+    }
+
+    fn is_owner(&self, owner: Pubkey, _indexer: NotAny) -> GeneratorResult<bool> {
+        self.is_owner(owner, AllAny::NotAny)
     }
 }
 

@@ -141,7 +141,7 @@ impl AccountArgumentDerive {
 
                     (
                         quote! {
-                            #(let #idents = <#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, #instruction_data)?;)*
+                            #(let #idents = <#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, data__, #instruction_data)?;)*
                             #(#verification)*
                             Ok(Self{
                                 #(#idents,)*
@@ -217,7 +217,7 @@ impl AccountArgumentDerive {
                     (
                         quote! {
                             let out = Self(
-                                #(<#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, #instruction_data)?,)*
+                                #(<#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, data__, #instruction_data)?,)*
                             );
                             #(#verification)*
                             Ok(out)
@@ -242,6 +242,7 @@ impl AccountArgumentDerive {
                 fn from_account_infos(
                     program_id: #crate_name::solana_program::pubkey::Pubkey,
                     infos__: &mut impl Iterator<Item = #crate_name::AccountInfo>,
+                    data__: &mut &[u8],
                     arg__: Self::InstructionArg,
                 ) -> #crate_name::GeneratorResult<Self>{
                     #instruction_naming
