@@ -6,19 +6,16 @@ export class InstructionData extends Assignable<
   InstructionData,
   'program_id' | 'accounts' | 'data'
 > {
-  program_id: PublicKey;
-  accounts: TransactionAccountMeta[];
-  data: Buffer;
+  program_id!: PublicKey;
+  accounts!: TransactionAccountMeta[];
+  data!: Buffer;
 
-  constructor(
-    program_id: PublicKey,
-    accounts: TransactionAccountMeta[],
-    data: Buffer
-  ) {
-    super();
-    this.program_id = program_id;
-    this.accounts = accounts;
-    this.data = data;
+  constructor(props: {
+    program_id: PublicKey;
+    accounts: TransactionAccountMeta[];
+    data: Buffer;
+  }) {
+    super(props);
   }
 }
 

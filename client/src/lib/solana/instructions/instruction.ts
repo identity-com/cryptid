@@ -10,13 +10,11 @@ export class DirectExecute extends Assignable<
   DirectExecute,
   'signers' | 'instructions'
 > {
-  signers: number;
-  instructions: InstructionData[];
+  signers!: number;
+  instructions!: InstructionData[];
 
-  constructor(signers: number, instructions: InstructionData[]) {
-    super();
-    this.signers = signers;
-    this.instructions = instructions;
+  constructor(props: { signers: number; instructions: InstructionData[] }) {
+    super(props);
   }
 }
 export class CryptidInstruction extends Enum<
@@ -28,16 +26,15 @@ export class CryptidInstruction extends Enum<
   | 'instruction4'
   | 'directExecute'
 > {
-  createDOA!: number; // Placeholder
-  proposeTransaction!: number; // Placeholder
-  instruction2!: number; // Placeholder
-  instruction3!: number; // Placeholder
-  instruction4!: number; // Placeholder
-  directExecute!: DirectExecute;
+  createDOA?: number; // Placeholder
+  proposeTransaction?: number; // Placeholder
+  instruction2?: number; // Placeholder
+  instruction3?: number; // Placeholder
+  instruction4?: number; // Placeholder
+  directExecute?: DirectExecute;
 
   constructor(props: { directExecute: DirectExecute }) {
-    super('directExecute');
-    this.directExecute = props.directExecute;
+    super(props);
   }
 
   static directExecute(
@@ -45,7 +42,7 @@ export class CryptidInstruction extends Enum<
     instructions: InstructionData[]
   ): CryptidInstruction {
     return new CryptidInstruction({
-      directExecute: new DirectExecute(signers, instructions),
+      directExecute: new DirectExecute({ signers, instructions }),
     });
   }
 }

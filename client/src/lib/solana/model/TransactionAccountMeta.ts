@@ -5,21 +5,19 @@ export class TransactionAccountMeta extends Assignable<
   TransactionAccountMeta,
   'key' | 'meta'
 > {
-  key: PublicKey;
-  meta: number;
+  key!: PublicKey;
+  meta!: number;
 
-  constructor(key: PublicKey, is_signer: boolean, is_writable: boolean) {
-    super();
-    this.key = key;
-    this.meta = (is_signer ? IS_SIGNER : 0) || (is_writable ? IS_WRITABLE : 0);
+  constructor(props: { key: PublicKey, meta: number}) {
+    super(props);
   }
 
-  static fromAccountMeta(meta: AccountMeta): TransactionAccountMeta{
-    return new TransactionAccountMeta(
-      meta.pubkey,
-      meta.isSigner,
-      meta.isWritable
-    );
+  static fromAccountMeta(meta: AccountMeta): TransactionAccountMeta {
+    return new TransactionAccountMeta({
+      key: meta.pubkey,
+      meta:
+        (meta.isSigner ? IS_SIGNER : 0) || (meta.isWritable ? IS_WRITABLE : 0),
+    });
   }
 }
 

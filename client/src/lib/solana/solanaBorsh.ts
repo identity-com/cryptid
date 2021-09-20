@@ -3,8 +3,15 @@ import { serialize, deserialize } from 'borsh';
 import { PublicKey } from '@solana/web3.js';
 
 // Class wrapping a plain object
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export abstract class Assignable<Self, _V extends keyof Self & string> {
+export abstract class Assignable<Self, V extends keyof Self & string> {
+  constructor(props: { [P in V]: Self[P] }) {
+    (Object.keys(props) as (V & keyof this)[]).forEach(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore this is okay as long as Self == this
+      key => (this[key] = props[key])
+    );
+  }
+
   encode(): Buffer {
     return Buffer.from(serialize(SCHEMA, this));
   }
@@ -19,14 +26,38 @@ export abstract class Assignable<Self, _V extends keyof Self & string> {
 
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
-export abstract class Enum<
-  Self,
-  V extends keyof Self & string
-> extends Assignable<Self, V> {
+export abstract class Enum<Self, V extends keyof Self & string> {
   enum: V;
-  protected constructor(variant: V) {
-    super();
-    this.enum = variant;
+  //TODO: Find a way to do the one property check with types
+  protected constructor(props: { [P in V]?: Self[P] }) {
+    let key: (V & keyof this & keyof Self) | null = null;
+    for (const prop in Object.keys(props) as V[]) {
+      if (prop) {
+        if (key) {
+          throw new Error('Multiple variants for enum');
+        } else {
+          key = prop as V & keyof this & keyof Self;
+        }
+      }
+    }
+    if (!key) {
+      throw new Error('No variants passed to enum');
+    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore this is okay as long as Self == this
+    this[key] = props[key];
+    this.enum = key;
+  }
+
+  encode(): Buffer {
+    return Buffer.from(serialize(SCHEMA, this));
+  }
+
+  static decode<T extends Enum<T, V>, V extends keyof T & string>(
+    data: Buffer,
+    tCons: Cons<T>
+  ): T {
+    return deserialize(SCHEMA, tCons, data);
   }
 }
 export type Cons<T> = new (...args: any[]) => T;
@@ -67,7 +98,7 @@ export function add_struct_to_schema<
 >(cons: Cons<T>, fields: { [P in V]: FieldType | ArrayedFieldType }): void {
   SCHEMA.set(cons, {
     kind: 'struct',
-    fields: (Object.keys(fields) as Array<V>).map(key => [key, fields[key]]),
+    fields: (Object.keys(fields) as V[]).map(key => [key, fields[key]]),
   });
 }
 
@@ -78,6 +109,6 @@ export function add_enum_to_schema<
   SCHEMA.set(cons, {
     kind: 'enum',
     field: 'enum',
-    values: (Object.keys(values) as Array<V>).map(key => [key, values[key]]),
+    values: (Object.keys(values) as V[]).map(key => [key, values[key]]),
   });
 }

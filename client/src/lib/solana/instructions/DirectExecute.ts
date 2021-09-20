@@ -64,11 +64,11 @@ export const create = async (
 
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
     instruction =>
-      new InstructionData(
-        instruction.programId,
-        instruction.keys.map(TransactionAccountMeta.fromAccountMeta),
-        instruction.data
-      )
+      new InstructionData({
+        program_id: instruction.programId,
+        accounts: instruction.keys.map(TransactionAccountMeta.fromAccountMeta),
+        data: instruction.data,
+      })
   );
 
   const data = CryptidInstruction.directExecute(
