@@ -1,160 +1,83 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
+import { serialize, deserialize } from 'borsh';
 import { PublicKey } from '@solana/web3.js';
-import { bytesToBase58 } from '../util';
 
 // Class wrapping a plain object
-export abstract class Assignable {
-  constructor(properties: { [key: string]: any }) {
-    Object.keys(properties).forEach((key: string) => {
-      // @ts-ignore
-      this[key] = properties[key];
-    });
-  }
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export abstract class Assignable<Self, _V extends keyof Self & string> {
   encode(): Buffer {
     return Buffer.from(serialize(SCHEMA, this));
   }
 
-  static decode<T extends Assignable>(data: Buffer): T {
-    return deserializeExtraBytes(SCHEMA, this, data);
+  static decode<T extends Assignable<T, V>, V extends keyof T & string>(
+    data: Buffer,
+    tCons: Cons<T>
+  ): T {
+    return deserialize(SCHEMA, tCons, data);
   }
 }
 
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
-export abstract class Enum extends Assignable {
-  enum: string;
-  constructor(properties: any) {
-    super(properties);
-    if (Object.keys(properties).length !== 1) {
-      throw new Error('Enum can only take single value');
-    }
-    this.enum = '';
-    Object.keys(properties).forEach(key => {
-      this.enum = key;
-    });
+export abstract class Enum<
+  Self,
+  V extends keyof Self & string
+> extends Assignable<Self, V> {
+  enum: V;
+  protected constructor(variant: V) {
+    super();
+    this.enum = variant;
   }
 }
+export type Cons<T> = new (...args: any[]) => T;
+export type FieldType =
+  | 'u8'
+  | 'u16'
+  | 'u32'
+  | 'u64'
+  | 'u128'
+  | 'u256'
+  | 'u512'
+  | 'buffer'
+  | 'string'
+  | Cons<any>;
+export type ArrayedFieldType = [FieldType] | [number];
 
-export const SCHEMA: Schema = new Map();
-
-// TODO PR for leaving extra bytes, a lot of code copied from
-// https://github.com/near/borsh-js/blob/master/borsh-ts/index.ts
-
-const capitalizeFirstLetter = (s: string): string =>
-  s.charAt(0).toUpperCase() + s.slice(1);
-
-function deserializeField(
-  schema: Schema,
-  fieldName: string,
-  fieldType: any,
-  reader: BinaryReader
-): any {
-  try {
-    if (typeof fieldType === 'string') {
-      // @ts-ignore
-      return reader[`read${capitalizeFirstLetter(fieldType)}`]();
+const SCHEMA: Map<
+  Cons<any>,
+  | {
+      kind: 'struct';
+      fields: ([number] | [string, FieldType | ArrayedFieldType])[];
     }
-
-    if (fieldType instanceof Array) {
-      if (typeof fieldType[0] === 'number') {
-        return reader.readFixedArray(fieldType[0]);
-      }
-
-      return reader.readArray(() =>
-        deserializeField(schema, fieldName, fieldType[0], reader)
-      );
+  | {
+      kind: 'enum';
+      field: 'enum';
+      values: ([number] | [string, FieldType | ArrayedFieldType])[];
     }
+> = new Map();
 
-    return deserializeStruct(schema, fieldType, reader);
-  } catch (error) {
-    if (error instanceof BorshError) {
-      error.addToFieldPath(fieldName);
-    }
-    throw error;
-  }
-}
-
-function deserializeStruct(
-  schema: Schema,
-  classType: any,
-  reader: BinaryReader
-): any {
-  const structSchema = schema.get(classType);
-  if (!structSchema) {
-    throw new BorshError(`Class ${classType.name} is missing in schema`);
-  }
-
-  if (structSchema.kind === 'struct') {
-    const result = {};
-    for (const [fieldName, fieldType] of schema.get(classType).fields) {
-      // @ts-ignore
-      result[fieldName] = deserializeField(
-        schema,
-        fieldName,
-        fieldType,
-        reader
-      );
-    }
-    return new classType(result);
-  }
-
-  if (structSchema.kind === 'enum') {
-    const idx = reader.readU8();
-    if (idx >= structSchema.values.length) {
-      throw new BorshError(`Enum index: ${idx} is out of range`);
-    }
-    const [fieldName, fieldType] = structSchema.values[idx];
-    const fieldValue = deserializeField(schema, fieldName, fieldType, reader);
-    return new classType({ [fieldName]: fieldValue });
-  }
-
-  throw new BorshError(
-    `Unexpected schema kind: ${structSchema.kind} for ${classType.constructor.name}`
-  );
-}
-
-/// Deserializes object from bytes using schema.
-export function deserializeExtraBytes<T extends Assignable>(
-  schema: Schema,
-  classType: any,
-  buffer: Buffer
-): T {
-  const reader = new BinaryReader(buffer);
-  return deserializeStruct(schema, classType, reader);
-}
-
-export class AssignablePublicKey extends Assignable {
-  // The public key bytes
-  public bytes!: number[];
-
-  toPublicKey(): PublicKey {
-    return new PublicKey(this.bytes);
-  }
-
-  toString(): string {
-    return bytesToBase58(Uint8Array.from(this.bytes));
-  }
-
-  static parse(pubkey: string): AssignablePublicKey {
-    return AssignablePublicKey.fromPublicKey(new PublicKey(pubkey));
-  }
-
-  static fromPublicKey(publicKey: PublicKey): AssignablePublicKey {
-    return new AssignablePublicKey({
-      bytes: Uint8Array.from(publicKey.toBuffer()),
-    });
-  }
-
-  static empty(): AssignablePublicKey {
-    const bytes = new Array(32);
-    bytes.fill(0);
-    return new AssignablePublicKey({ bytes });
-  }
-}
-
-SCHEMA.set(AssignablePublicKey, {
+SCHEMA.set(PublicKey, {
   kind: 'struct',
-  fields: [['bytes', [32]]],
+  fields: [[32]],
 });
+
+export function add_struct_to_schema<
+  T extends Assignable<T, any>,
+  V extends keyof T & string
+>(cons: Cons<T>, fields: { [P in V]: FieldType | ArrayedFieldType }): void {
+  SCHEMA.set(cons, {
+    kind: 'struct',
+    fields: (Object.keys(fields) as Array<V>).map(key => [key, fields[key]]),
+  });
+}
+
+export function add_enum_to_schema<
+  T extends Enum<T, V>,
+  V extends keyof T & string
+>(cons: Cons<T>, values: { [P in V]: FieldType | ArrayedFieldType }): void {
+  SCHEMA.set(cons, {
+    kind: 'enum',
+    field: 'enum',
+    values: (Object.keys(values) as Array<V>).map(key => [key, values[key]]),
+  });
+}

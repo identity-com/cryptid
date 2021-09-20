@@ -15,7 +15,7 @@ export class SimpleCryptid implements Cryptid {
       this.options.connection,
       transaction,
       this.did,
-      this.signer
+      [this.signer]
     );
     return [wrappedTransaction];
   }
