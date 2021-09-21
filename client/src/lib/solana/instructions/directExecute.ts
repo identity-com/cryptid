@@ -7,14 +7,12 @@ import {
 import { Signer } from '../../../types/crypto';
 import { deriveDefaultDOA } from '../util';
 import { CryptidInstruction } from './instruction';
-import { DOA_PROGRAM_ID } from '../../constants';
+import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 import { TransactionAccountMeta } from '../model/TransactionAccountMeta';
-import {AssignablePublicKey} from "../model/AssignablePublicKey";
-
-const SOL_DID_PROGRAM_ID = new PublicKey('ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV');
+import { AssignablePublicKey } from '../model/AssignablePublicKey';
 
 export const create = async (
   unsignedTransaction: Transaction,

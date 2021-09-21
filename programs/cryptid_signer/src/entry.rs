@@ -1,6 +1,6 @@
-use crate::instruction::Instruction;
+use crate::instruction::CryptidInstruction;
 use crate::processor::process_instruction;
-use solana_generator::{entrypoint, AccountArgument, AccountInfo, GeneratorResult, Pubkey, Take};
+use solana_generator::*;
 
 entrypoint!(entry);
 
@@ -11,13 +11,15 @@ fn entry(
 ) -> GeneratorResult<()> {
     let data = &mut data;
     let instruction_discriminant = *data.take_single()?;
+    msg!("instruction_discriminant = {}", instruction_discriminant);
 
-    let instruction = Instruction::from_account_infos(
+    let mut iter = account_infos.into_iter();
+    let instruction = CryptidInstruction::from_account_infos(
         program_id,
-        &mut account_infos.into_iter(),
+        &mut iter,
         data,
         instruction_discriminant,
     )?;
 
-    process_instruction(program_id, instruction)
+    process_instruction(program_id, instruction, data, &mut iter)
 }

@@ -23,9 +23,10 @@ export const directExecute = async (
   );
   const { blockhash: recentBlockhash } = await recentBlockhashPromise;
 
-  let transaction = new Transaction({ recentBlockhash, feePayer: signers[0].publicKey }).add(
-    directExecuteInstruction
-  );
+  let transaction = new Transaction({
+    recentBlockhash,
+    feePayer: signers[0].publicKey,
+  }).add(directExecuteInstruction);
 
   for (const signer of signers) {
     transaction = await signer.sign(transaction);

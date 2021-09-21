@@ -36,6 +36,52 @@ pub fn derive_error(ts: TokenStream) -> TokenStream {
     stream.into()
 }
 
+/// The derive macro is implemented for structs only. Each field must implement [`AccountArgument`].
+///
+/// ## Struct Macros
+/// The struct macro is `account_argument` and contains a comma seperated list of arguments.
+/// ex:
+/// ```
+/// # use solana_generator::AccountArgument;
+///  #[derive(AccountArgument)]
+///  #[account_argument(instruction_data = (size: usize))]
+///  pub struct ArgumentAccounts{}
+/// ```
+/// ### `instruction_data`
+/// format: `instruction_data = ($($name:ident: $ty:ty,)*)`
+///
+/// This is the types (`$ty`) that the [`InstructionArg`](AccountArgument::InstructionArg) tuple will be created from and the names (`$name`) that can be used to access them.
+///
+/// ## Field Macros
+/// The field macro is `account_argument` and contains a comma seperated list of arguments.
+/// These arguments can access the top level `instruction_data` by name.
+/// ex:
+/// ```
+///#  use solana_generator::{AccountInfo, AccountArgument};
+/// #[derive(AccountArgument)]
+///  pub struct ArgumentAccounts{
+///      #[account_argument(signer, writable)]
+///      account: AccountInfo,
+///  }
+/// ```
+///
+/// ### `signer`, `writable`, and `owner`
+/// format: `$(signer|writable|owner)$(($optional_index:expr))? $(= $owner:expr)?
+///
+/// Requires the argument implement [`MultiIndexableAccountArgument`].
+/// These allow restrictions to be added to the arguments they are added to.
+/// `signer` verifies that the index is a signer
+/// `writable` verifies that the index is writable
+/// `owner` verifies that the index's owner is `$owner`. This is the only valid argument with `$owner`
+///
+/// `$optional_index` is an optional index (type `T`) where the argument must implement [`MultiIndexableAccountArgument<T>`].
+/// Defaults to [`All`](crate::All)
+///
+/// ### `instruction_data`
+/// format: `instruction_data = $data:expr`
+///
+/// This is optional and allows the setting of the [`InstructionArg`](AccountArgument::InstructionArg) passed to this field.
+/// If not used calls [`Default::default`] instead.
 #[proc_macro_error]
 #[proc_macro_derive(AccountArgument, attributes(account_argument))]
 pub fn derive_account_argument(ts: TokenStream) -> TokenStream {

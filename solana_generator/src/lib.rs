@@ -10,7 +10,6 @@ extern crate self as solana_generator;
 
 use array_init::array_init;
 use solana_program::entrypoint::ProgramResult;
-use solana_program::instruction::Instruction;
 use solana_program::program::{invoke as solana_invoke, invoke_signed as solana_invoke_signed};
 
 pub use account_info::*;
@@ -48,7 +47,7 @@ mod util;
 /// Invokes another solana program.
 /// Equivalent to [`solana_program::program::invoke`] but with custom [`AccountInfo`].
 pub fn invoke<const N: usize>(
-    instruction: &Instruction,
+    instruction: &SolanaInstruction,
     account_infos: &[&AccountInfo; N],
 ) -> ProgramResult {
     solana_invoke(
@@ -60,7 +59,7 @@ pub fn invoke<const N: usize>(
 /// Invokes another solana program, signing with seeds.
 /// Equivalent to [`solana_program::program::invoke_signed`] but with custom [`AccountInfo`].
 pub fn invoke_signed<const N: usize>(
-    instruction: &Instruction,
+    instruction: &SolanaInstruction,
     account_infos: &[&AccountInfo; N],
     signer_seeds: &[&[&[u8]]],
 ) -> ProgramResult {
@@ -75,7 +74,7 @@ pub fn invoke_signed<const N: usize>(
 /// Less efficient than [`invoke`].
 /// Equivalent to [`solana_program::program::invoke`] but with custom [`AccountInfo`].
 pub fn invoke_variable_size(
-    instruction: &Instruction,
+    instruction: &SolanaInstruction,
     account_infos: &[&AccountInfo],
 ) -> ProgramResult {
     solana_invoke(
@@ -91,7 +90,7 @@ pub fn invoke_variable_size(
 /// Less efficient than [`invoke_signed`].
 /// Equivalent to [`solana_program::program::invoke_signed`] but with custom [`AccountInfo`].
 pub fn invoke_signed_variable_size(
-    instruction: &Instruction,
+    instruction: &SolanaInstruction,
     account_infos: &[&AccountInfo],
     signer_seeds: &[&[&[u8]]],
 ) -> ProgramResult {

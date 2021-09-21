@@ -1,6 +1,6 @@
 import { bytesToBase58 } from '../../util';
 import { PublicKey } from '@solana/web3.js';
-import {add_struct_to_schema, Assignable} from "../solanaBorsh";
+import { add_struct_to_schema, Assignable } from '../solanaBorsh';
 
 export class AssignablePublicKey extends Assignable<AssignablePublicKey> {
   // The public key bytes

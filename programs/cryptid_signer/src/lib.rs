@@ -5,6 +5,7 @@ use solana_generator::{GeneratorError, GeneratorResult, Pubkey};
 #[macro_use]
 mod macros;
 
+pub mod account;
 mod entry;
 pub mod error;
 pub mod instruction;

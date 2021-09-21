@@ -94,7 +94,7 @@ pub enum GeneratorError<'a> {
     },
     /// Account owner was not equal to expected value.
     #[error_msg(
-        "Account (`{}`) owner (`{}`) not equal to `{:?}` when should be",
+        "Account (`{}`) owner (`{}`) not equal to any of `{:?}` when should be",
         account,
         owner,
         expected_owner
