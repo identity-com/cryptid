@@ -14,10 +14,6 @@ jobs:
         node: ['16.x']
         os: [ubuntu-latest]
 
-    defaults:
-      run:
-        working-directory: ./client
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -30,21 +26,20 @@ jobs:
       - name: Cache node dependencies
         uses: actions/cache@v2
         with:
-          path: |
-            ./client/node_modules
-          key: yarn-client-${{ hashFiles('client/yarn.lock') }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install
-        run: yarn install
+        run: yarn
 
       - name: Lint
-        run: yarn lint
+        run: yarn workspace @identity.com/cryptid lint
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: yarn workspace @identity.com/cryptid test --ci --coverage --maxWorkers=2
 
       - name: Build
-        run: yarn build
+        run: yarn workspace @identity.com/cryptid build
 
   E2E:
     name: Test the cryptid client against the on-chain program on Solana ${{ matrix.solana }}, Node ${{ matrix.node }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
@@ -54,8 +49,8 @@ jobs:
       matrix:
         node: ['16.x']
         os: [ubuntu-latest]
-        solana: ['v1.7.6']
-        rust: ['1.50']
+        solana: ['v1.7.12']
+        rust: ['1.55']
 
     steps:
       - name: Checkout repo
@@ -65,8 +60,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
-          profile: minimal
 
       - name: Cache build dependencies
         uses: actions/cache@v2
@@ -74,8 +67,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ./program/target
-          key: cargo-build-${{ hashFiles('program/Cargo.lock') }}
+            ./target
+          key: cargo-build-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache Solana version
         uses: actions/cache@v2
@@ -89,12 +82,6 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/${{ matrix.solana }}/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Build program
-        uses: actions-rs/cargo@v1
-        with:
-          command: build-bpf
-          args: --manifest-path program/Cargo.toml
-
       - name: Use Node ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
@@ -103,15 +90,17 @@ jobs:
       - name: Cache node dependencies
         uses: actions/cache@v2
         with:
-          path: |
-            ./client/node_modules
-          key: yarn-client-${{ hashFiles('client/yarn.lock') }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Install client dependencies
-        run: yarn install
-        working-directory: client
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build program
+        uses: actions-rs/cargo@v1
+        with:
+          command: build-bpf
 
       - name: Test e2e
-        run: yarn test-e2e
-        working-directory: client
+        run: yarn workspace @identity.com/cryptid run test-e2e
 
