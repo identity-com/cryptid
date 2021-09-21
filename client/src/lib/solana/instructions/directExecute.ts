@@ -9,10 +9,12 @@ import { deriveDefaultDOA } from '../util';
 import { CryptidInstruction } from './instruction';
 import { DOA_PROGRAM_ID } from '../../constants';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
-import { PROGRAM_ID } from '@identity.com/sol-did-client/dist/lib/constants';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 import { TransactionAccountMeta } from '../model/TransactionAccountMeta';
+import {AssignablePublicKey} from "../model/AssignablePublicKey";
+
+const SOL_DID_PROGRAM_ID = new PublicKey('ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV');
 
 export const create = async (
   unsignedTransaction: Transaction,
@@ -53,7 +55,7 @@ export const create = async (
       isSigner: false,
       isWritable: false,
     },
-    { pubkey: PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
     ...signers.map(signer => ({
       pubkey: signer.publicKey,
       isSigner: true,
@@ -65,7 +67,7 @@ export const create = async (
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
     instruction =>
       new InstructionData({
-        program_id: instruction.programId,
+        program_id: AssignablePublicKey.fromPublicKey(instruction.programId),
         accounts: instruction.keys.map(TransactionAccountMeta.fromAccountMeta),
         data: instruction.data,
       })

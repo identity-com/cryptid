@@ -1,17 +1,14 @@
-import { PublicKey } from '@solana/web3.js';
 import { TransactionAccountMeta } from './TransactionAccountMeta';
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
+import {AssignablePublicKey} from "./AssignablePublicKey";
 
-export class InstructionData extends Assignable<
-  InstructionData,
-  'program_id' | 'accounts' | 'data'
-> {
-  program_id!: PublicKey;
+export class InstructionData extends Assignable<InstructionData> {
+  program_id!: AssignablePublicKey;
   accounts!: TransactionAccountMeta[];
   data!: Buffer;
 
   constructor(props: {
-    program_id: PublicKey;
+    program_id: AssignablePublicKey;
     accounts: TransactionAccountMeta[];
     data: Buffer;
   }) {
@@ -20,7 +17,7 @@ export class InstructionData extends Assignable<
 }
 
 add_struct_to_schema(InstructionData, {
-  program_id: PublicKey,
+  program_id: AssignablePublicKey,
   accounts: [TransactionAccountMeta],
   data: 'buffer',
 });
