@@ -12,6 +12,7 @@ import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 import { TransactionAccountMeta } from '../model/TransactionAccountMeta';
+import {AssignablePublicKey} from "../model/AssignablePublicKey";
 
 const SOL_DID_PROGRAM_ID = new PublicKey('ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV');
 
@@ -66,7 +67,7 @@ export const create = async (
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
     instruction =>
       new InstructionData({
-        program_id: instruction.programId,
+        program_id: AssignablePublicKey.fromPublicKey(instruction.programId),
         accounts: instruction.keys.map(TransactionAccountMeta.fromAccountMeta),
         data: instruction.data,
       })

@@ -6,10 +6,7 @@ import {
 } from '../solanaBorsh';
 import { InstructionData } from '../model/InstructionData';
 
-export class DirectExecute extends Assignable<
-  DirectExecute,
-  'signers' | 'instructions'
-> {
+export class DirectExecute extends Assignable<DirectExecute> {
   signers!: number;
   instructions!: InstructionData[];
 
@@ -47,4 +44,7 @@ add_enum_to_schema(CryptidInstruction, {
   instruction4: 'u8',
   directExecute: DirectExecute,
 });
-add_struct_to_schema(DirectExecute, {});
+add_struct_to_schema(DirectExecute, {
+  signers: 'u8',
+  instructions: [InstructionData]
+});

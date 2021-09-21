@@ -12,7 +12,7 @@ export const airdrop = async (
     const airdropSignature = await connection.requestAirdrop(publicKey, lamports);
     await connection.confirmTransaction(airdropSignature);
     const balance = await connection.getBalance(publicKey);
-    console.log("balance " + balance);
+    console.log("Balance: " + balance);
     if (lamports <= balance) return;
     if (--retries <= 0) break;
   }

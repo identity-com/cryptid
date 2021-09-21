@@ -3,9 +3,9 @@ import { serialize, deserialize } from 'borsh';
 import { PublicKey } from '@solana/web3.js';
 
 // Class wrapping a plain object
-export abstract class Assignable<Self, V extends keyof Self & string> {
-  constructor(props: { [P in V]: Self[P] }) {
-    (Object.keys(props) as (V & keyof this)[]).forEach(
+export abstract class Assignable<Self> {
+  constructor(props: { [P in keyof Self]?: Self[P] }) {
+    (Object.keys(props) as Array<keyof this>).forEach(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore this is okay as long as Self == this
       key => (this[key] = props[key])
@@ -16,7 +16,7 @@ export abstract class Assignable<Self, V extends keyof Self & string> {
     return Buffer.from(serialize(SCHEMA, this));
   }
 
-  static decode<T extends Assignable<T, V>, V extends keyof T & string>(
+  static decode<T extends Assignable<T>>(
     data: Buffer,
     tCons: Cons<T>
   ): T {
@@ -77,7 +77,7 @@ export type FieldType =
 export type ArrayedFieldType = [FieldType] | [number];
 
 export function add_struct_to_schema<
-  T extends Assignable<T, any>,
+  T extends Assignable<T>,
   V extends keyof T & string
   >(cons: Cons<T>, fields: { [P in V]: FieldType | ArrayedFieldType }): void {
   SCHEMA.set(cons, {
