@@ -1,12 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import { Config } from "../service/config";
-import {
-  clusterApiUrl,
-  Connection,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { build } from "../service/cryptid";
 
 export default class Transfer extends Command {
@@ -34,10 +28,10 @@ export default class Transfer extends Command {
     const { flags } = this.parse(Transfer);
 
     const config = new Config(flags.config);
-    const connection = new Connection(clusterApiUrl("devnet"));
+    const cryptid = await build(config);
 
     const { blockhash: recentBlockhash } =
-      await connection.getRecentBlockhash();
+      await config.connection.getRecentBlockhash();
     const tx = new Transaction({
       recentBlockhash,
       feePayer: config.keypair.publicKey,
@@ -50,11 +44,10 @@ export default class Transfer extends Command {
       })
     );
 
-    const cryptid = await build(config, connection);
-
     const [signedTx] = await cryptid.sign(tx);
-
-    const txSignature = await connection.sendTransaction(signedTx, []);
+    const txSignature = await config.connection.sendRawTransaction(
+      signedTx.serialize()
+    );
 
     this.log(
       `Transaction sent: https://explorer.identity.com/tx/${txSignature}`

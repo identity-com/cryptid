@@ -1,6 +1,8 @@
 use crate::instruction::Instruction;
 use crate::processor::process_instruction;
-use solana_generator::{entrypoint, AccountArgument, AccountInfo, GeneratorResult, Pubkey, Take};
+use solana_generator::{
+  entrypoint, AccountArgument, AccountInfo, GeneratorResult, Pubkey, Take, msg
+};
 
 entrypoint!(entry);
 
@@ -11,6 +13,10 @@ fn entry(
 ) -> GeneratorResult<()> {
     let data = &mut data;
     let instruction_discriminant = *data.take_single()?;
+
+  // msg!("instruction_discriminant {}", instruction_discriminant);
+  // msg!("data {:?}", data);
+  // msg!("accounts: {:?}", account_infos);
 
     let instruction = Instruction::from_account_infos(
         program_id,

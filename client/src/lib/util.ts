@@ -7,13 +7,14 @@ import {
 import * as u8a from 'uint8arrays';
 import { ExtendedCluster } from '../types/solana';
 import { DEFAULT_CLUSTER } from './constants';
+import { complement, isNil } from 'ramda';
 
-const defaultSignCallback =
-  (keypair: Keypair): SignCallback =>
-  async (transaction) => {
-    transaction.partialSign(keypair);
-    return transaction;
-  };
+const defaultSignCallback = (
+  keypair: Keypair
+): SignCallback => async transaction => {
+  transaction.partialSign(keypair);
+  return transaction;
+};
 
 export const publicKeyToDid = (
   publicKey: PublicKey,
@@ -25,7 +26,7 @@ export const publicKeyToDid = (
   ).toString();
 
 export const didToPublicKey = (did: string): PublicKey =>
-  DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
+  DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
 
 export const toSigner = (keypair: Keypair): Signer => ({
   publicKey: keypair.publicKey,
@@ -40,3 +41,6 @@ export const normalizeSigner = (keypairOrSigner: Keypair | Signer): Signer =>
 
 export const bytesToBase58 = (b: Uint8Array): string =>
   u8a.toString(b, 'base58btc');
+
+export const notNil = <T>(entries: (T | null | undefined)[]): T[] =>
+  entries.filter(complement(isNil)) as T[];

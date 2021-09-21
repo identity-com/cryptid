@@ -112,6 +112,7 @@ pub fn direct_execute_transaction(
     data: &mut DirectExecuteTransactionData,
     accounts: &mut DirectExecuteTransaction,
 ) -> GeneratorResult<()> {
+  msg!("direct_execute_transaction");
     accounts
         .doa
         .verify_did_and_program(accounts.did.key, accounts.did_program.key)?;

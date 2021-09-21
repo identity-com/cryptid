@@ -31,6 +31,7 @@ USAGE
 * [`cryptid config [SUBCOMMAND]`](#cryptid-config-subcommand)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init [FILE]`](#cryptid-init-file)
+* [`cryptid key [FILE]`](#cryptid-key-file)
 * [`cryptid token [SUBCOMMAND]`](#cryptid-token-subcommand)
 * [`cryptid transfer`](#cryptid-transfer)
 
@@ -82,6 +83,22 @@ OPTIONS
 ```
 
 _See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
+
+## `cryptid key [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid key [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/key.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key.ts)_
 
 ## `cryptid token [SUBCOMMAND]`
 
