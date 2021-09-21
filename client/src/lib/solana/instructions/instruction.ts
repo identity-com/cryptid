@@ -17,15 +17,7 @@ export class DirectExecute extends Assignable<
     super(props);
   }
 }
-export class CryptidInstruction extends Enum<
-  CryptidInstruction,
-  | 'createDOA'
-  | 'proposeTransaction'
-  | 'instruction2'
-  | 'instruction3'
-  | 'instruction4'
-  | 'directExecute'
-> {
+export class CryptidInstruction extends Enum<CryptidInstruction> {
   createDOA?: number; // Placeholder
   proposeTransaction?: number; // Placeholder
   instruction2?: number; // Placeholder

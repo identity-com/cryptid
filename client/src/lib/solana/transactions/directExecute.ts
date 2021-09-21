@@ -12,6 +12,8 @@ export const directExecute = async (
   signers: Signer[],
   doa?: PublicKey
 ): Promise<Transaction> => {
+  if (signers.length <= 0) throw new Error("DirectExecute must be called with at least one signer.")
+
   const recentBlockhashPromise = connection.getRecentBlockhash();
   const directExecuteInstruction = await create(
     unsignedTransaction,
@@ -21,7 +23,7 @@ export const directExecute = async (
   );
   const { blockhash: recentBlockhash } = await recentBlockhashPromise;
 
-  let transaction = new Transaction({ recentBlockhash }).add(
+  let transaction = new Transaction({ recentBlockhash, feePayer: signers[0].publicKey }).add(
     directExecuteInstruction
   );
 
