@@ -1,4 +1,4 @@
-use crate::{AccountArgument, GeneratorResult, Pubkey, SolanaAccountMeta, SystemProgram};
+use crate::{AccountArgument, GeneratorResult, Pubkey, SolanaInstruction, SystemProgram};
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 /// An instruction for a program with it's accounts and data.
@@ -8,7 +8,7 @@ pub trait Instruction: Sized {
     /// The list of accounts for this instruction.
     type Accounts: AccountArgument;
     /// The argument for creating this instruction.
-    type CreateArg;
+    type BuildArg;
 
     /// Turns the [`Self::Data`] into the instruction arg for [`Self::Accounts`].
     fn data_to_instruction_arg(
@@ -22,8 +22,9 @@ pub trait Instruction: Sized {
     ) -> GeneratorResult<Option<SystemProgram>>;
 
     /// Creates this instruction from a given discriminant and argument
-    fn create_instruction(
+    fn build_instruction(
+        program_id: Pubkey,
         discriminant: &[u8],
-        arg: Self::CreateArg,
-    ) -> GeneratorResult<(Vec<u8>, Vec<SolanaAccountMeta>)>;
+        arg: Self::BuildArg,
+    ) -> GeneratorResult<SolanaInstruction>;
 }

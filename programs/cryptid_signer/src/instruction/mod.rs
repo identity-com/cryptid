@@ -13,76 +13,95 @@ use borsh::BorshDeserialize;
 use solana_generator::*;
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum CryptidInstruction {
     Test,
     CreateDOA, // TODO: Somehow make these not tuples, kind of awkward
-    ProposeTransaction(ProposeTransactionData, ProposeTransaction),
-    DirectExecuteTransaction(DirectExecuteTransactionData, DirectExecuteTransaction),
+    ProposeTransaction,
+    DirectExecute,
 }
-impl AccountArgument for CryptidInstruction {
-    type InstructionArg = u8;
+impl InstructionList for CryptidInstruction {
+    type BuildEnum = BuildCryptidInstruction;
 
-    fn from_account_infos(
+    fn process_instruction(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        data: &mut &[u8],
-        arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        match arg {
-            CreateDOAAccounts::DISCRIMINANT => Ok(Self::CreateDOA),
-            ProposeTransaction::DISCRIMINANT => {
-                let instruction_data: ProposeTransactionData = BorshDeserialize::deserialize(data)?;
-                let accounts = ProposeTransaction::from_account_infos(
+        accounts: &mut impl Iterator<Item = AccountInfo>,
+        mut data: &[u8],
+    ) -> GeneratorResult<()> {
+        let data = &mut data;
+        match *data.take_single()? {
+            0 => {
+                let mut instruction_data = BorshDeserialize::deserialize(data)?;
+                let instruction_arg = CreateDOA::data_to_instruction_arg(&mut instruction_data)?;
+                let mut accounts = AccountArgument::from_account_infos(
                     program_id,
-                    infos,
+                    accounts,
                     data,
-                    (instruction_data.signers,),
+                    instruction_arg,
                 )?;
-                Ok(Self::ProposeTransaction(instruction_data, accounts))
+                let system_program =
+                    CreateDOA::process(program_id, instruction_data, &mut accounts)?;
+                AccountArgument::write_back(accounts, program_id, system_program.as_ref())
             }
-            DirectExecuteTransaction::DISCRIMINANT => {
-                let instruction_data: DirectExecuteTransactionData =
-                    BorshDeserialize::deserialize(data)?;
-                let accounts = DirectExecuteTransaction::from_account_infos(
+            1 => {
+                let mut instruction_data = BorshDeserialize::deserialize(data)?;
+                let instruction_arg =
+                    ProposeTransaction::data_to_instruction_arg(&mut instruction_data)?;
+                let mut accounts = AccountArgument::from_account_infos(
                     program_id,
-                    infos,
+                    accounts,
                     data,
-                    (instruction_data.signers,),
+                    instruction_arg,
                 )?;
-                Ok(Self::DirectExecuteTransaction(instruction_data, accounts))
+                let system_program =
+                    ProposeTransaction::process(program_id, instruction_data, &mut accounts)?;
+                AccountArgument::write_back(accounts, program_id, system_program.as_ref())
             }
-            254 => Ok(Self::Test),
-            _ => Err(GeneratorError::UnknownInstruction {
-                instruction: arg.to_string(),
+            5 => {
+                let mut instruction_data = BorshDeserialize::deserialize(data)?;
+                let instruction_arg =
+                    DirectExecute::data_to_instruction_arg(&mut instruction_data)?;
+                let mut accounts = AccountArgument::from_account_infos(
+                    program_id,
+                    accounts,
+                    data,
+                    instruction_arg,
+                )?;
+                let system_program =
+                    DirectExecute::process(program_id, instruction_data, &mut accounts)?;
+                AccountArgument::write_back(accounts, program_id, system_program.as_ref())
+            }
+            254 => {
+                msg!("Test successful!");
+                Ok(())
+            }
+            x => Err(GeneratorError::UnknownInstruction {
+                instruction: x.to_string(),
             }
             .into()),
         }
     }
 
-    fn write_back(
-        self,
+    fn build_instruction(
         program_id: Pubkey,
-        system_program: Option<&SystemProgram>,
-    ) -> GeneratorResult<()> {
-        match self {
-            CryptidInstruction::Test => Ok(()),
-            CryptidInstruction::CreateDOA => Ok(()),
-            CryptidInstruction::ProposeTransaction(_, accounts) => {
-                accounts.write_back(program_id, system_program)
+        build_enum: Self::BuildEnum,
+    ) -> GeneratorResult<SolanaInstruction> {
+        match build_enum {
+            BuildCryptidInstruction::CreateDOA(build) => {
+                CreateDOA::build_instruction(program_id, &[0], build)
             }
-            CryptidInstruction::DirectExecuteTransaction(_, accounts) => {
-                accounts.write_back(program_id, system_program)
+            BuildCryptidInstruction::ProposeTransaction(build) => {
+                ProposeTransaction::build_instruction(program_id, &[1], build)
+            }
+            BuildCryptidInstruction::DirectExecute(build) => {
+                DirectExecute::build_instruction(program_id, &[5], build)
             }
         }
     }
-
-    fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
-        match self {
-            CryptidInstruction::Test => Ok(()),
-            CryptidInstruction::CreateDOA => Ok(()),
-            CryptidInstruction::ProposeTransaction(_, accounts) => accounts.add_keys(add),
-            CryptidInstruction::DirectExecuteTransaction(_, accounts) => accounts.add_keys(add),
-        }
-    }
+}
+#[derive(Debug)]
+pub enum BuildCryptidInstruction {
+    CreateDOA(<CreateDOA as Instruction>::BuildArg),
+    ProposeTransaction(<ProposeTransaction as Instruction>::BuildArg),
+    DirectExecute(<DirectExecute as Instruction>::BuildArg),
 }

@@ -10,7 +10,7 @@ pub struct CreateDOA;
 impl Instruction for CreateDOA {
     type Data = CreateDOAData;
     type Accounts = CreateDOAAccounts;
-    type CreateArg = CreateDOAInstruction;
+    type BuildArg = CreateDOABuild;
 
     fn data_to_instruction_arg(
         _data: &mut Self::Data,
@@ -41,11 +41,13 @@ impl Instruction for CreateDOA {
         Ok(Some(accounts.system_program.clone()))
     }
 
-    fn create_instruction(
+    fn build_instruction(
+        program_id: Pubkey,
         discriminant: &[u8],
-        arg: Self::CreateArg,
-    ) -> GeneratorResult<(Vec<u8>, Vec<SolanaAccountMeta>)> {
-        let (doa_signer, signer_nonce) = generate_doa_signer(arg.program_id, arg.doa);
+        arg: Self::BuildArg,
+    ) -> GeneratorResult<SolanaInstruction> {
+        let mut data = discriminant.to_vec();
+        let (doa_signer, signer_nonce) = generate_doa_signer(program_id, arg.doa);
         let accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.doa, !arg.doa_is_zeroed),
@@ -55,13 +57,18 @@ impl Instruction for CreateDOA {
             SolanaAccountMeta::new_readonly(arg.signing_key, true),
             SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
-        let data = CreateDOAData {
-            signer_nonce,
-            key_threshold: arg.key_threshold,
-        };
-        let mut data_bytes = discriminant.to_vec();
-        BorshSerialize::serialize(&data, &mut data_bytes)?;
-        Ok((data_bytes, accounts))
+        BorshSerialize::serialize(
+            &CreateDOAData {
+                signer_nonce,
+                key_threshold: arg.key_threshold,
+            },
+            &mut data,
+        )?;
+        Ok(SolanaInstruction {
+            program_id,
+            accounts,
+            data,
+        })
     }
 }
 
@@ -81,8 +88,7 @@ impl CreateDOAAccounts {
     pub const DISCRIMINANT: u8 = 0;
 }
 #[derive(Debug)]
-pub struct CreateDOAInstruction {
-    pub program_id: Pubkey,
+pub struct CreateDOABuild {
     pub funder: Pubkey,
     pub doa: Pubkey,
     pub doa_is_zeroed: bool,

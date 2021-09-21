@@ -2,12 +2,12 @@
 
 use borsh::BorshDeserialize;
 use cryptid_signer::generate_doa_signer;
-use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOAInstruction};
+use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOABuild};
 use cryptid_signer::state::DOAAccount;
 use log::{info, trace};
 use rand::{random, Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
-use solana_generator::{Instruction, SolanaAccountMeta, SolanaInstruction};
+use solana_generator::{Instruction, SolanaAccountMeta};
 use solana_program_test::ProgramTest;
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
@@ -35,10 +35,10 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     let (signer, signer_nonce) = generate_doa_signer(program_id, doa.pubkey());
     trace!(target: "cryptid_signer", "(signer, nonce): ({}, {})", signer, signer_nonce);
 
-    let (data, accounts) = CreateDOA::create_instruction(
+    let create_doa = CreateDOA::build_instruction(
+        program_id,
         &[CreateDOAAccounts::DISCRIMINANT],
-        CreateDOAInstruction {
-            program_id,
+        CreateDOABuild {
             funder: funder.pubkey(),
             doa: doa.pubkey(),
             did_program,
@@ -49,12 +49,6 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
         },
     )
     .expect("Could not create instruction");
-
-    let create_doa = SolanaInstruction {
-        program_id,
-        accounts,
-        data,
-    };
 
     let transaction = Transaction::new_signed_with_payer(
         &[create_doa],
