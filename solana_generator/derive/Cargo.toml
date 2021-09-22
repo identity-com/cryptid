@@ -11,7 +11,8 @@ default = []
 debug_account = []
 debug_error = []
 debug_account_argument = []
-debug = ["debug_account", "debug_error", "debug_account_argument"]
+debug_instruction_list = []
+debug = ["debug_account", "debug_error", "debug_account_argument", "debug_instruction_list"]
 
 [dependencies]
 proc-macro2 = "1.0.27"

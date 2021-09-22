@@ -1,25 +1,50 @@
-import { Enum, Assignable, SCHEMA } from '../solanaBorsh';
+import {
+  Enum,
+  Assignable,
+  add_enum_to_schema,
+  add_struct_to_schema,
+} from '../solanaBorsh';
+import { InstructionData } from '../model/InstructionData';
 
-export class DirectExecute extends Assignable {
-  transaction!: Array<number>; // borsh prefers Array<number> to Uint8Array
+export class DirectExecute extends Assignable<DirectExecute> {
+  signers!: number;
+  instructions!: InstructionData[];
+
+  constructor(props: { signers: number; instructions: InstructionData[] }) {
+    super(props);
+  }
 }
+export class CryptidInstruction extends Enum<CryptidInstruction> {
+  createDOA?: number; // Placeholder
+  proposeTransaction?: number; // Placeholder
+  instruction2?: number; // Placeholder
+  instruction3?: number; // Placeholder
+  instruction4?: number; // Placeholder
+  directExecute?: DirectExecute;
 
-export class CryptidInstruction extends Enum {
-  directExecute!: DirectExecute;
+  constructor(props: { directExecute: DirectExecute }) {
+    super(props);
+  }
 
-  static directExecute(transaction: Array<number>): CryptidInstruction {
+  static directExecute(
+    signers: number,
+    instructions: InstructionData[]
+  ): CryptidInstruction {
     return new CryptidInstruction({
-      directExecute: new DirectExecute({ transaction }),
+      directExecute: new DirectExecute({ signers, instructions }),
     });
   }
 }
 
-SCHEMA.set(CryptidInstruction, {
-  kind: 'enum',
-  field: 'enum',
-  values: [['directExecute', DirectExecute]],
+add_enum_to_schema(CryptidInstruction, {
+  createDOA: 'u8',
+  proposeTransaction: 'u8',
+  instruction2: 'u8',
+  instruction3: 'u8',
+  instruction4: 'u8',
+  directExecute: DirectExecute,
 });
-SCHEMA.set(DirectExecute, {
-  kind: 'struct',
-  fields: [['transaction', 'string']],
+add_struct_to_schema(DirectExecute, {
+  signers: 'u8',
+  instructions: [InstructionData],
 });

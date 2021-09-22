@@ -5,10 +5,10 @@ use solana_generator::{GeneratorError, GeneratorResult, Pubkey};
 #[macro_use]
 mod macros;
 
+pub mod account;
 mod entry;
 pub mod error;
 pub mod instruction;
-mod processor;
 pub mod state;
 
 pub const DOA_SIGNER_SEED: &[u8] = b"doa_signer";
