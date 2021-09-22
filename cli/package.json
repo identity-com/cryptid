@@ -87,8 +87,8 @@
     "check-coverage": true,
     "branches": 41,
     "lines": 69,
-    "functions": 55,
-    "statements": 70
+    "functions": 53,
+    "statements": 69
   },
   "types": "lib/index.d.ts"
 }

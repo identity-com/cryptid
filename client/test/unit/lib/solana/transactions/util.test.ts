@@ -11,6 +11,8 @@ import {pubkey} from "../../../../utils/solana";
 import {normalizeSigner} from "../../../../../src/lib/util";
 import {complement, isNil, pluck, toString} from "ramda";
 import {publicKeyToDid} from "../../../../../src/lib/solana/util";
+import {SOL_DID_PROGRAM_ID} from "../../../../../src/lib/constants";
+import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -18,6 +20,7 @@ chai.use(sinonChai);
 chai.use(chaiThings);
 const { expect, should } = chai;
 
+// chai-things requires "should"
 should();
 
 const sandbox = sinon.createSandbox();
@@ -34,6 +37,8 @@ describe('transactions/util', () => {
       feeCalculator: { lamportsPerSignature: 0 }
     })
   });
+
+  afterEach(sandbox.restore);
 
   context('createAndSignTransaction', () => {
     it('should sign the transaction with all passed-in signers', async () => {
@@ -58,18 +63,45 @@ describe('transactions/util', () => {
     })
   })
 
-  // in progress
-  context.skip('registerInstructionIfNeeded', () => {
+  context('registerInstructionIfNeeded', () => {
+    const sender = Keypair.generate();
+    const did = publicKeyToDid(sender.publicKey);
+
+    const dummyDIDAccountInfo = {
+      data: Buffer.from([]),
+      executable: false,
+      lamports: 0,
+      owner: SOL_DID_PROGRAM_ID
+    };
+
     it('should return null if the DID is registered', async () => {
-      const sender = Keypair.generate();
+      const pdaAddress = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey()
+      sandbox.stub(Connection.prototype, 'getAccountInfo')
+        .withArgs(pdaAddress)
+        .resolves(dummyDIDAccountInfo)
 
       const instruction = await Util.registerInstructionIfNeeded(
         connection(),
-        publicKeyToDid(sender.publicKey),
+        did,
         normalizeSigner(sender),
       );
 
-      console.log(instruction);
+      expect(instruction).to.be.null
+    });
+
+    it('should return an instruction if the DID is not registered', async () => {
+      const pdaAddress = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey()
+      sandbox.stub(Connection.prototype, 'getAccountInfo')
+        .withArgs(pdaAddress)
+        .resolves(null)
+
+      const instruction = await Util.registerInstructionIfNeeded(
+        connection(),
+        did,
+        normalizeSigner(sender),
+      );
+
+      expect(instruction!.programId.toString()).to.equal(SOL_DID_PROGRAM_ID.toString())
     })
   })
 });
