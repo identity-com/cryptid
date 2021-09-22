@@ -1,8 +1,8 @@
 import { build } from '../../src';
 import { Connection, Keypair } from '@solana/web3.js';
-import { publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
+import { publicKeyToDid } from '../../src/lib/solana/util';
 
 describe('DID operations', function () {
   this.timeout(20_000);
