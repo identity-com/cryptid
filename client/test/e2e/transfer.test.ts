@@ -16,7 +16,7 @@ describe('transfers', function() {
   let did: string;
 
   before(async () => {
-    connection = new Connection('http://localhost:8899');
+    connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey);
 
@@ -32,6 +32,8 @@ describe('transfers', function() {
       } = await connection.getRecentBlockhash();
       const tx = new Transaction({ recentBlockhash, feePayer: key.publicKey });
       tx.add(
+        // Not actually using the doa signer here, need to transfer from the doa_signer address, not from the did itself.
+        // This works only because the did is signing the transaction.
         SystemProgram.transfer({
           fromPubkey: key.publicKey,
           toPubkey: key.publicKey,

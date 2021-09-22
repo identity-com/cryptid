@@ -46,5 +46,5 @@ add_enum_to_schema(CryptidInstruction, {
 });
 add_struct_to_schema(DirectExecute, {
   signers: 'u8',
-  instructions: [InstructionData]
+  instructions: [InstructionData],
 });

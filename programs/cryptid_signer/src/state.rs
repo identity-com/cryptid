@@ -17,6 +17,12 @@ pub struct DOAAccount {
     // pub remove_permissions: ?,
 }
 impl DOAAccount {
+    pub const GENERATIVE_DOA_KEY_THRESHOLD: u8 = 1;
+
+    pub const LOCKED_DOA_SETTINGS_SEQUENCE: u16 = 0;
+    pub const GENERATIVE_DOA_SETTINGS_SEQUENCE: u16 = 1;
+    pub const SETTINGS_SEQUENCE_START: u16 = 2;
+
     pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
         if did != self.did {
             Err(CryptIdSignerError::WrongDID {

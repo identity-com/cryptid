@@ -19,6 +19,7 @@ export const directExecute = async (
     signers,
     doa
   );
+  const { blockhash: recentBlockhash } = await recentBlockhashPromise;
 
   return createAndSignTransaction(
     connection,

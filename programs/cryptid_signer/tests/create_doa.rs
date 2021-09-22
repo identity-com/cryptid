@@ -2,12 +2,12 @@
 
 use borsh::BorshDeserialize;
 use cryptid_signer::generate_doa_signer;
-use cryptid_signer::instruction::CreateDOA;
+use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOABuild};
 use cryptid_signer::state::DOAAccount;
 use log::{info, trace};
 use rand::{random, Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
-use solana_generator::SolanaAccountMeta;
+use solana_generator::{Instruction, SolanaAccountMeta};
 use solana_program_test::ProgramTest;
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
@@ -26,8 +26,8 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
 
     let doa = Keypair::generate(&mut rng);
     trace!(target: "cryptid_signer", "doa: {}", doa.pubkey());
-    let did = Keypair::generate(&mut rng).pubkey();
-    trace!(target: "cryptid_signer", "did: {}", did);
+    let did = Keypair::generate(&mut rng);
+    trace!(target: "cryptid_signer", "did: {}", did.pubkey());
     let did_program = Keypair::generate(&mut rng).pubkey(); // TODO: Replace with actual did program
     trace!(target: "cryptid_signer", "did_program: {}", did_program);
     let key_threshold = rng.gen();
@@ -35,20 +35,25 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     let (signer, signer_nonce) = generate_doa_signer(program_id, doa.pubkey());
     trace!(target: "cryptid_signer", "(signer, nonce): ({}, {})", signer, signer_nonce);
 
-    let create_doa = CreateDOA::create_instruction(
+    let create_doa = CreateDOA::build_instruction(
         program_id,
-        funder.pubkey(),
-        doa.pubkey(),
-        false,
-        SolanaAccountMeta::new_readonly(did, false),
-        did_program,
-        key_threshold,
+        &[CreateDOAAccounts::DISCRIMINANT],
+        CreateDOABuild {
+            funder: funder.pubkey(),
+            doa: doa.pubkey(),
+            did_program,
+            key_threshold,
+            doa_is_zeroed: false,
+            signing_key: did.pubkey(), // Sign as generative
+            did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
+        },
     )
     .expect("Could not create instruction");
+
     let transaction = Transaction::new_signed_with_payer(
         &[create_doa],
         Some(&funder.pubkey()),
-        &[&funder, &doa],
+        &[&funder, &doa, &did],
         banks.get_recent_blockhash().await?,
     );
     banks.process_transaction(transaction).await?;
@@ -59,7 +64,7 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
         .unwrap_or_else(|| panic!("Could not find account {}", doa.pubkey()));
     let data: DOAAccount = BorshDeserialize::deserialize(&mut &account.data.as_slice()[2..])?; // TODO: This slice index skips the discriminant. Should find a better way to do this.
     trace!(target: "cryptid_signer", "data: {:?}", data);
-    assert_eq!(data.did, did);
+    assert_eq!(data.did, did.pubkey());
     assert_eq!(data.did_program, did_program);
 
     assert_eq!(data.signer_nonce, signer_nonce);
