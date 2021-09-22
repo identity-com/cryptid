@@ -9,7 +9,7 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import { airdrop } from '../utils/solana';
-import {publicKeyToDid} from "../../src/lib/solana/util";
+import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
 

@@ -55,7 +55,10 @@ export default class Key extends Command {
         ),
         key: verificationMethod.publicKeyBase58,
       }))
-      .map(({ alias, key }: { alias: string, key: string}) => `${alias}: ${key}`);
+      .map(
+        ({ alias, key }: { alias: string; key: string | undefined }) =>
+          `${alias}: ${key}`
+      );
 
     this.log(keys.join("\n"));
   }
