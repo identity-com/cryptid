@@ -14,21 +14,16 @@ export default class Airdrop extends Command {
       description: "Path to config file",
       default: process.env.CRYPTID_CONFIG,
     }),
-    amount: flags.integer({
-      char: "a",
-      description: "The amount in lamports to airdrop",
-      default: DEFAULT_AIRDROP_LAMPORTS,
-    }),
   };
 
-  static args = [{ name: "file" }];
+  static args = [{ name: "amount", default: DEFAULT_AIRDROP_LAMPORTS, parse: (amountStr: string) => parseInt(amountStr, 10) }];
 
   async run(): Promise<void> {
-    const { flags } = this.parse(Airdrop);
+    const { flags, args } = this.parse(Airdrop);
 
     const config = new Config(flags.config);
     const cryptid = await build(config);
 
-    await airdrop(cryptid, config, flags.amount);
+    await airdrop(cryptid, config, args.amount);
   }
 }

@@ -1,4 +1,4 @@
-import { PublicKey, Connection } from '@solana/web3.js';
+import { PublicKey, Connection, Keypair } from '@solana/web3.js';
 
 const AIRDROP_LAMPORTS = 20_000_000;
 export const airdrop = async (
@@ -21,3 +21,5 @@ export const airdrop = async (
   }
   throw new Error(`Airdrop of ${lamports} failed`);
 };
+
+export const pubkey = (): PublicKey => Keypair.generate().publicKey;
