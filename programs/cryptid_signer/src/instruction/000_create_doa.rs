@@ -2,9 +2,9 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use solana_generator::*;
 
+use crate::instruction::verify_keys;
 use crate::state::DOAAccount;
 use crate::{generate_doa_signer, verify_doa_signer};
-use crate::instruction::verify_keys;
 use std::iter::once;
 
 #[derive(Debug)]
@@ -32,7 +32,11 @@ impl Instruction for CreateDOA {
             data.signer_nonce,
         )?;
 
-        verify_keys(accounts.did_program.key, &accounts.did, once(&accounts.signing_key))?;
+        verify_keys(
+            accounts.did_program.key,
+            &accounts.did,
+            once(&accounts.signing_key),
+        )?;
 
         accounts.doa.set_funder(accounts.funder.clone());
         accounts.doa.did = accounts.did.key;
