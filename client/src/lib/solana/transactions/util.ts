@@ -7,14 +7,15 @@ import {DIDDocument} from "did-resolver";
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
  * @param connection The solana connection object to obtain the recent blockhash from
+ * @param payer The fee payer for the transaction
  * @param signers A sorted list of signers. The first one will be the fee payer for the transaction
  */
-export const makeEmptyTransaction = async (connection: Connection, signers: Signer[]) => {
+export const makeEmptyTransaction = async (connection: Connection, payer: PublicKey, signers: Signer[]) => {
   if (signers.length <= 0) throw new Error("The transaction must be initialised with at least one signer.")
   const recentBlockhashPromise = connection.getRecentBlockhash();
   const { blockhash: recentBlockhash } = await recentBlockhashPromise;
 
-  return new Transaction({ recentBlockhash, feePayer: signers[0].publicKey });
+  return new Transaction({ recentBlockhash, feePayer: payer });
 }
 
 /**
@@ -23,9 +24,10 @@ export const makeEmptyTransaction = async (connection: Connection, signers: Sign
 export const createAndSignTransaction = async (
   connection: Connection,
   instructions: TransactionInstruction[],
+  payer: PublicKey,
   signers: Signer[],
 ): Promise<Transaction> => {
-  let transaction = await makeEmptyTransaction(connection, signers);
+  let transaction = await makeEmptyTransaction(connection, payer, signers);
 
   transaction = transaction.add(...instructions);
 

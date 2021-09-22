@@ -10,12 +10,12 @@ import { DEFAULT_CLUSTER } from './constants';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
 
-const defaultSignCallback = (
-  keypair: Keypair
-): SignCallback => async transaction => {
-  transaction.partialSign(keypair);
-  return transaction;
-};
+const defaultSignCallback =
+  (keypair: Keypair): SignCallback =>
+  async (transaction) => {
+    transaction.partialSign(keypair);
+    return transaction;
+  };
 
 export const publicKeyToDid = (
   publicKey: PublicKey,

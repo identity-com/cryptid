@@ -14,6 +14,7 @@ import {notNil} from "../../../util";
 export const addKey = async (
   connection: Connection,
   did: string,
+  payer: PublicKey,
   newKey: PublicKey,
   alias: string,
   signers: Signer[],
@@ -43,6 +44,7 @@ export const addKey = async (
   return createAndSignTransaction(
     connection,
     notNil(instructions),
+    payer,
     signers
   );
 };

@@ -4,7 +4,7 @@ import { publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
-describe('DID operations', function() {
+describe('DID operations', function () {
   this.timeout(20_000);
   let connection: Connection;
 

@@ -32,6 +32,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
+      this.signer.publicKey,
       publicKey,
       alias,
       [this.signer]

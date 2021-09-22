@@ -23,8 +23,8 @@ export const directExecute = async (
 
   return createAndSignTransaction(
     connection,
-    payer
     [directExecuteInstruction],
+    payer,
     signers
   );
 };

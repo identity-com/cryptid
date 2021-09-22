@@ -13,7 +13,7 @@ import { airdrop } from '../utils/solana';
 
 const { expect } = chai;
 
-describe('transfers', function() {
+describe('transfers', function () {
   this.timeout(20_000);
   let connection: Connection;
 
@@ -44,9 +44,8 @@ describe('transfers', function() {
       const recipient = Keypair.generate();
       const cryptid = await build(did, key, { connection });
 
-      const {
-        blockhash: recentBlockhash,
-      } = await connection.getRecentBlockhash();
+      const { blockhash: recentBlockhash } =
+        await connection.getRecentBlockhash();
       const tx = new Transaction({ recentBlockhash, feePayer: doaSigner }).add(
         SystemProgram.transfer({
           fromPubkey: doaSigner,
