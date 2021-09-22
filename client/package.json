@@ -21,7 +21,7 @@
     "analyze": "size-limit --why",
     "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
     "test-e2e-pattern": "mocha test/e2e/**",
-    "start-validator": "solana-test-validator --bpf-program CFE6uDuLK7Hd9HVQqWkXU3nTmdZUm5KCEtFcEfbSTZLy ../target/deploy/cryptid_signer.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../programs/cryptid_signer/tests/fixtures/sol_did_0.1.0.so --reset"
+    "start-validator": "solana-test-validator --bpf-program CFE6uDuLK7Hd9HVQqWkXU3nTmdZUm5KCEtFcEfbSTZLy ../target/deploy/cryptid_signer.so --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../programs/cryptid_signer/tests/fixtures/sol_did_0.2.0.so --reset"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
@@ -32,10 +32,10 @@
     ],
     "all": true,
     "check-coverage": true,
-    "branches": 10,
-    "lines": 58,
-    "functions": 34,
-    "statements": 58
+    "branches": 6,
+    "lines": 53,
+    "functions": 26,
+    "statements": 52
   },
   "peerDependencies": {},
   "prettier": {
@@ -70,8 +70,9 @@
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
-    "eslint": "^7.32.0",
-    "husky": "^7.0.2",
+    "eslint": "^7.31.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "mocha": "^9.1.1",
     "nyc": "^15.1.0",
     "sinon": "^11.1.2",
@@ -85,9 +86,10 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@identity.com/sol-did-client": "^0.1.10",
+    "@identity.com/sol-did-client": "^0.2.0",
     "@solana/web3.js": "^1.27.0",
     "@types/ramda": "^0.27.1",
+    "did-resolver": "^3.1.0",
     "uint8arrays": "^3.0.0"
   }
 }

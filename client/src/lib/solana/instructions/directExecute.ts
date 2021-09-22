@@ -7,7 +7,7 @@ import {
 import { Signer } from '../../../types/crypto';
 import { deriveDefaultDOA } from '../util';
 import { CryptidInstruction } from './instruction';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import {DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
@@ -41,7 +41,10 @@ export const create = async (
         found.isSigner = found.isSigner || account.isSigner;
         found.isWritable = found.isWritable || account.isWritable;
       } else {
-        instruction_accounts.push(account);
+        instruction_accounts.push({
+          ...account,
+          isSigner: false
+        });
       }
     });
   });
@@ -49,7 +52,7 @@ export const create = async (
   const keys: AccountMeta[] = [
     { pubkey: sendingDoa, isSigner: false, isWritable: false },
     {
-      pubkey: did_identifier.pubkey.toPublicKey(),
+      pubkey: did_identifier.authorityPubkey.toPublicKey(),
       isSigner: false,
       isWritable: false,
     },

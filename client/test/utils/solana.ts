@@ -1,6 +1,6 @@
 import { PublicKey, Connection } from '@solana/web3.js';
 
-const AIRDROP_LAMPORTS = 1000000;
+const AIRDROP_LAMPORTS = 20_000_000;
 export const airdrop = async (
   connection: Connection,
   publicKey: PublicKey,
@@ -8,7 +8,7 @@ export const airdrop = async (
 ): Promise<void> => {
   let retries = 30;
   for (;;) {
-    console.log(`Airdropping to ${publicKey}`);
+    console.log(`Airdropping ${AIRDROP_LAMPORTS} Lamports to ${publicKey}`);
     const airdropSignature = await connection.requestAirdrop(
       publicKey,
       lamports
