@@ -1,6 +1,6 @@
 import chai from 'chai';
 
-import { build } from '../../src';
+import { build, Cryptid } from '../../src';
 import {
   Connection,
   Keypair,
@@ -8,7 +8,7 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { didToDefaultDOASigner, publicKeyToDid } from '../../src/lib/util';
+import { publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
 
 const { expect } = chai;
@@ -21,11 +21,16 @@ describe('transfers', function () {
   let did: string;
   let doaSigner: PublicKey;
 
+  let cryptid: Cryptid;
+
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey);
-    doaSigner = await didToDefaultDOASigner(did);
+
+    cryptid = await build(did, key, { connection });
+
+    doaSigner = await cryptid.address();
 
     console.log(`Wallet: ${key.publicKey}`);
     console.log(`DID: ${did}`);

@@ -86,8 +86,8 @@
     "skip-full": true,
     "check-coverage": true,
     "branches": 41,
-    "lines": 70,
-    "functions": 52,
+    "lines": 69,
+    "functions": 55,
     "statements": 70
   },
   "types": "lib/index.d.ts"

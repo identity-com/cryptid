@@ -5,6 +5,7 @@ import { directExecute } from '../lib/solana/transactions/directExecute';
 import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
 import { DIDDocument } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
+import { didToDefaultDOASigner } from '../lib/util';
 
 export class SimpleCryptid implements Cryptid {
   constructor(
@@ -15,6 +16,10 @@ export class SimpleCryptid implements Cryptid {
 
   document(): Promise<DIDDocument> {
     return resolve(this.did);
+  }
+
+  address(): Promise<PublicKey> {
+    return didToDefaultDOASigner(this.did);
   }
 
   async sign(transaction: Transaction): Promise<Transaction[]> {

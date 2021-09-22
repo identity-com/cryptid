@@ -1,5 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import { Config as ConfigService } from "../service/config";
+import { build } from "../service/cryptid";
 
 enum Subcommand {
   SHOW = "show",
@@ -13,7 +14,11 @@ export default class Config extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
-    path: flags.string({ char: "p", description: "Path to config file" }),
+    config: flags.string({
+      char: "c",
+      description: "Path to config file",
+      default: process.env.CRYPTID_CONFIG,
+    }),
   };
 
   static args = [
@@ -25,11 +30,15 @@ export default class Config extends Command {
   async run(): Promise<void> {
     const { args, flags } = this.parse(Config);
 
-    const service = new ConfigService(flags.path);
+    const service = new ConfigService(flags.config);
+    const cryptid = await build(service);
+
+    const address = await cryptid.address();
 
     switch (args.subcommand) {
       case Subcommand.SHOW:
         this.log(service.configPath);
+        this.log(`Address: ${address}`);
         this.log(service.show());
         break;
       case Subcommand.SET:
