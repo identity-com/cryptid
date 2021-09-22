@@ -1,4 +1,4 @@
-import { PublicKey, Connection } from "@solana/web3.js";
+import { PublicKey, Connection } from '@solana/web3.js';
 
 const AIRDROP_LAMPORTS = 1000000;
 export const airdrop = async (
@@ -9,12 +9,15 @@ export const airdrop = async (
   let retries = 30;
   for (;;) {
     console.log(`Airdropping to ${publicKey}`);
-    const airdropSignature = await connection.requestAirdrop(publicKey, lamports);
+    const airdropSignature = await connection.requestAirdrop(
+      publicKey,
+      lamports
+    );
     await connection.confirmTransaction(airdropSignature);
     const balance = await connection.getBalance(publicKey);
-    console.log("Balance: " + balance);
+    console.log('Balance: ' + balance);
     if (lamports <= balance) return;
     if (--retries <= 0) break;
   }
   throw new Error(`Airdrop of ${lamports} failed`);
-}
+};

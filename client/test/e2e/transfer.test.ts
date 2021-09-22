@@ -8,7 +8,7 @@ import {
 import { publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
 
-describe('transfers', function() {
+describe('transfers', function () {
   this.timeout(20_000);
   let connection: Connection;
 
@@ -27,9 +27,8 @@ describe('transfers', function() {
     it('should sign a transaction from a DID', async () => {
       const cryptid = await build(did, key, { connection });
 
-      const {
-        blockhash: recentBlockhash,
-      } = await connection.getRecentBlockhash();
+      const { blockhash: recentBlockhash } =
+        await connection.getRecentBlockhash();
       const tx = new Transaction({ recentBlockhash, feePayer: key.publicKey });
       tx.add(
         // Not actually using the doa signer here, need to transfer from the doa_signer address, not from the did itself.
