@@ -5,6 +5,7 @@ use solana_generator::*;
 use crate::account::DOAAddress;
 use crate::error::CryptIdSignerError;
 use crate::generate_doa_signer;
+use crate::instruction::verify_keys;
 use crate::state::{AccountMeta, InstructionData};
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
@@ -59,7 +60,11 @@ impl Instruction for DirectExecute {
             .into());
         }
 
-        // TODO: Verify keys against did program
+        verify_keys(
+            accounts.did_program.key,
+            &accounts.did,
+            accounts.signing_keys.iter(),
+        )?;
 
         let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
         let signer_seeds = doa_signer_seeds!(accounts.doa.info().key, signer_nonce);
