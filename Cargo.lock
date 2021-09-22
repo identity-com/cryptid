@@ -454,6 +454,7 @@ dependencies = [
  "log",
  "rand 0.7.3",
  "rand_chacha 0.2.2",
+ "sol-did",
  "solana-program-test",
  "solana-sdk",
  "solana_generator",
@@ -2034,6 +2035,18 @@ checksum = "5dc90fe6c7be1a323296982db1836d1ea9e47b6839496dde9a541bc496df3516"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "sol-did"
+version = "0.2.0"
+source = "git+https://github.com/identity-com/sol-did#e28badd889719068c0156d5974998f8c2d568ef1"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]

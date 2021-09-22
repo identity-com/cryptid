@@ -26,3 +26,26 @@ pub enum CryptidInstruction {
     #[instruction_list(instruction = DirectExecute, discriminant = 5)]
     DirectExecute,
 }
+
+pub fn verify_keys<'a>(
+    did_program: Pubkey,
+    did: &AccountInfo,
+    signing_keys: impl Iterator<Item = &'a AccountInfo>,
+) -> GeneratorResult<()> {
+    // TODO: Handle higher key threshold than 1
+    if did_program == sol_did::id() {
+        unsafe {
+            let account_infos = signing_keys
+                .map(|account| account.to_solana_account_info())
+                .collect::<Vec<_>>();
+            sol_did::validate_owner(
+                &did.to_solana_account_info(),
+                &account_infos.iter().collect::<Vec<_>>(),
+            )?;
+        }
+        Ok(())
+    } else {
+        //TODO: Verify signing key against did using interface
+        Ok(()) // Allows all other did programs through
+    }
+}

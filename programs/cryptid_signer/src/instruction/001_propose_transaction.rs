@@ -7,6 +7,7 @@ use solana_generator::*;
 
 use crate::account::DOAAddress;
 use crate::error::CryptIdSignerError;
+use crate::instruction::verify_keys;
 use crate::state::{DOAAccount, InstructionData, TransactionAccount};
 
 #[derive(Debug)]
@@ -73,7 +74,11 @@ impl Instruction for ProposeTransaction {
         accounts.transaction_account.has_executed = false;
         accounts.transaction_account.settings_sequence = settings_sequence;
 
-        // TODO: Verify keys against did program
+        verify_keys(
+            accounts.did_program.key,
+            &accounts.did,
+            accounts.signer_keys.iter(),
+        )?;
 
         accounts.transaction_account.signers = accounts
             .signer_keys

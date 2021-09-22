@@ -5,9 +5,9 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
-import { deriveDefaultDOA } from '../util';
+import { deriveDefaultDOA, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
-import {DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
@@ -22,6 +22,9 @@ export const create = async (
 ): Promise<TransactionInstruction> => {
   const sendingDoa = doa || (await deriveDefaultDOA(did));
   const did_identifier = DecentralizedIdentifier.parse(did);
+  const doa_signer_key = await deriveDOASigner(sendingDoa).then(
+    signer => signer[0]
+  );
 
   const instruction_accounts: AccountMeta[] = [];
   unsignedTransaction.instructions.forEach(instruction => {
@@ -38,12 +41,14 @@ export const create = async (
         propEq('pubkey', account.pubkey)
       )(instruction_accounts);
       if (found) {
-        found.isSigner = found.isSigner || account.isSigner;
+        found.isSigner =
+          found.isSigner ||
+          (account.pubkey != doa_signer_key && account.isSigner);
         found.isWritable = found.isWritable || account.isWritable;
       } else {
         instruction_accounts.push({
           ...account,
-          isSigner: false
+          isSigner: false,
         });
       }
     });
