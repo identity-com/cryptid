@@ -8,7 +8,11 @@ export default class Transfer extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
-    config: flags.string({ char: "c", description: "Path to config file" }),
+    config: flags.string({
+      char: "c",
+      description: "Path to config file",
+      default: process.env.CRYPTID_CONFIG,
+    }),
     to: flags.build<PublicKey>({
       char: "t",
       description: "Recipient public key (base58)",
@@ -29,16 +33,17 @@ export default class Transfer extends Command {
 
     const config = new Config(flags.config);
     const cryptid = await build(config);
+    const address = await cryptid.address();
 
     const { blockhash: recentBlockhash } =
       await config.connection.getRecentBlockhash();
+
     const tx = new Transaction({
       recentBlockhash,
       feePayer: config.keypair.publicKey,
-    });
-    tx.add(
+    }).add(
       SystemProgram.transfer({
-        fromPubkey: config.keypair.publicKey,
+        fromPubkey: address,
         toPubkey: flags.to as PublicKey,
         lamports: flags.amount,
       })

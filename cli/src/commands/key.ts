@@ -18,7 +18,11 @@ export default class Key extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
-    config: flags.string({ char: "c", description: "Path to config file" }),
+    config: flags.string({
+      char: "c",
+      description: "Path to config file",
+      default: process.env.CRYPTID_CONFIG,
+    }),
     key: flags.build<PublicKey>({
       char: "k",
       description: "Key (base58)",
@@ -28,7 +32,12 @@ export default class Key extends Command {
   };
 
   static args = [
-    { name: "subcommand", options: subcommands, required: true },
+    {
+      name: "subcommand",
+      options: subcommands,
+      required: true,
+      default: "show",
+    },
     {
       name: "key",
       required: false,

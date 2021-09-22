@@ -54,7 +54,7 @@ export class Config {
     const keypair = loadKeyFile(keyPath);
 
     const configObject: ConfigFile = {
-      did: "did:sol:" + keypair.publicKey.toBase58(),
+      did: `did:sol:${cluster}:${keypair.publicKey.toBase58()}`,
       keyFile: keyPath,
       cluster,
     };

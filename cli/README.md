@@ -28,24 +28,57 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid config [SUBCOMMAND]`](#cryptid-config-subcommand)
+* [`cryptid airdrop [FILE]`](#cryptid-airdrop-file)
+* [`cryptid balance [FILE]`](#cryptid-balance-file)
+* [`cryptid config [SUBCOMMAND] [KEY] [VALUE]`](#cryptid-config-subcommand-key-value)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init [FILE]`](#cryptid-init-file)
-* [`cryptid key [FILE]`](#cryptid-key-file)
+* [`cryptid key SUBCOMMAND [KEY] [ALIAS]`](#cryptid-key-subcommand-key-alias)
 * [`cryptid token [SUBCOMMAND]`](#cryptid-token-subcommand)
 * [`cryptid transfer`](#cryptid-transfer)
 
-## `cryptid config [SUBCOMMAND]`
+## `cryptid airdrop [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid airdrop [FILE]
+
+OPTIONS
+  -a, --amount=amount  [default: 100000] The amount in lamports to airdrop
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/airdrop.ts)_
+
+## `cryptid balance [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid balance [FILE]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/balance.ts)_
+
+## `cryptid config [SUBCOMMAND] [KEY] [VALUE]`
 
 Manage Cryptid configuration
 
 ```
 USAGE
-  $ cryptid config [SUBCOMMAND]
+  $ cryptid config [SUBCOMMAND] [KEY] [VALUE]
 
 OPTIONS
-  -h, --help       show CLI help
-  -p, --path=path  Path to config file
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
 ```
 
 _See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
@@ -76,26 +109,28 @@ USAGE
   $ cryptid init [FILE]
 
 OPTIONS
-  -h, --help       show CLI help
-  -k, --key=key    Path to a solana keypair
-  -o, --overwrite  Overwrite existing configuration
-  -p, --path=path  Configuration path
+  -h, --help             show CLI help
+  -k, --key=key          Path to a solana keypair
+  -o, --overwrite        Overwrite existing configuration
+  -p, --path=path        Configuration path
+  -z, --cluster=cluster  Cluster
 ```
 
 _See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
 
-## `cryptid key [FILE]`
+## `cryptid key SUBCOMMAND [KEY] [ALIAS]`
 
-describe the command here
+Manage cryptid keys
 
 ```
 USAGE
-  $ cryptid key [FILE]
+  $ cryptid key SUBCOMMAND [KEY] [ALIAS]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -a, --alias=alias    Key alias
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -k, --key=key        Key (base58)
 ```
 
 _See code: [src/commands/key.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key.ts)_
@@ -110,6 +145,7 @@ USAGE
 
 OPTIONS
   -a, --amount=amount  (required) The amount in lamports to transfer
+  -c, --config=config  Path to config file
   -h, --help           show CLI help
   -m, --mint=mint      (required) The SPL-Token mint(base58)
   -t, --to=to          (required) Recipient public key (base58)
