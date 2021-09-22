@@ -145,3 +145,28 @@ where
         .into())
     }
 }
+
+impl AccountArgument for () {
+    type InstructionArg = ();
+
+    fn from_account_infos(
+        _program_id: Pubkey,
+        _infos: &mut impl Iterator<Item = AccountInfo>,
+        _data: &mut &[u8],
+        _arg: Self::InstructionArg,
+    ) -> GeneratorResult<Self> {
+        Ok(())
+    }
+
+    fn write_back(
+        self,
+        _program_id: Pubkey,
+        _system_program: Option<&SystemProgram>,
+    ) -> GeneratorResult<()> {
+        Ok(())
+    }
+
+    fn add_keys(&self, _add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
+        Ok(())
+    }
+}

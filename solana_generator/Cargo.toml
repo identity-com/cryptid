@@ -9,6 +9,7 @@ no_entrypoint = []
 derive_debug_account = ["solana_generator_derive/debug_account"]
 derive_debug_error = ["solana_generator_derive/debug_error"]
 derive_debug_account_argument = ["solana_generator_derive/debug_account_argument"]
+derive_debug_instruction_list = ["solana_generator_derive/debug_instruction_list"]
 
 [dependencies]
 solana_generator_derive = { path = "./derive" }
@@ -25,8 +26,4 @@ crate-type = ["cdylib", "lib"]
 
 [[example]]
 name = "account_derive"
-crate-type = ["cdylib", "lib"]
-
-[[example]]
-name = "program"
 crate-type = ["cdylib", "lib"]

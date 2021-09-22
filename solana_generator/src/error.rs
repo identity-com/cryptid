@@ -177,4 +177,7 @@ pub enum GeneratorError<'a> {
         /// The program id for seeding
         program_id: Pubkey,
     },
+    /// Interface is not yet supported.
+    #[error_msg("Interfaces are not yet supported")]
+    UnsupportedInterface,
 }

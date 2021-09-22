@@ -87,7 +87,7 @@ impl Instruction for ProposeTransaction {
     fn build_instruction(
         program_id: Pubkey,
         discriminant: &[u8],
-        mut arg: Self::BuildArg,
+        arg: Self::BuildArg,
     ) -> GeneratorResult<SolanaInstruction> {
         let mut data = discriminant.to_vec();
         BorshSerialize::serialize(
@@ -111,14 +111,12 @@ impl Instruction for ProposeTransaction {
             SolanaAccountMeta::new_readonly(arg.did_program, false),
             SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
-        accounts.append(
-            &mut arg
-                .signers
+        accounts.extend(
+            arg.signers
                 .into_iter()
-                .map(|(key, _)| SolanaAccountMeta::new_readonly(key, true))
-                .collect(),
+                .map(|(key, _)| SolanaAccountMeta::new_readonly(key, true)),
         );
-        accounts.append(&mut arg.extra_accounts);
+        accounts.extend(arg.extra_accounts);
         Ok(SolanaInstruction {
             program_id,
             accounts,

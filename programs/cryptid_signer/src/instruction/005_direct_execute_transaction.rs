@@ -130,15 +130,15 @@ impl Instruction for DirectExecute {
                     .or_insert_with(AccountMeta::empty) |= meta_value; // Take the strongest value for each account
             }
         }
-        // recombine `instruction_accounts` into a `Vec<SolanaAccountMeta>`
-        let mut instruction_accounts = instruction_accounts
-            .into_iter()
-            .map(|(pubkey, value)| SolanaAccountMeta {
-                pubkey,
-                is_signer: value.contains(AccountMeta::IS_SIGNER),
-                is_writable: value.contains(AccountMeta::IS_WRITABLE),
-            })
-            .collect();
+        // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
+        let instruction_accounts =
+            instruction_accounts
+                .into_iter()
+                .map(|(pubkey, value)| SolanaAccountMeta {
+                    pubkey,
+                    is_signer: value.contains(AccountMeta::IS_SIGNER),
+                    is_writable: value.contains(AccountMeta::IS_WRITABLE),
+                });
 
         let mut data = discriminant.to_vec();
         BorshSerialize::serialize(
@@ -153,14 +153,12 @@ impl Instruction for DirectExecute {
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
         ];
-        accounts.append(
-            &mut arg
-                .signing_keys
+        accounts.extend(
+            arg.signing_keys
                 .into_iter()
-                .map(|key| SolanaAccountMeta::new_readonly(key, true))
-                .collect(),
+                .map(|key| SolanaAccountMeta::new_readonly(key, true)),
         );
-        accounts.append(&mut instruction_accounts);
+        accounts.extend(instruction_accounts);
         Ok(SolanaInstruction {
             program_id,
             accounts,
