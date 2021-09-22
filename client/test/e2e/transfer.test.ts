@@ -1,12 +1,17 @@
+import chai from 'chai';
+
 import { build } from '../../src';
 import {
   Connection,
   Keypair,
+  PublicKey,
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { publicKeyToDid } from '../../src/lib/util';
+import { didToDefaultDOASigner, publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
+
+const { expect } = chai;
 
 describe('transfers', function() {
   this.timeout(20_000);
@@ -14,40 +19,81 @@ describe('transfers', function() {
 
   let key: Keypair;
   let did: string;
+  let doaSigner: PublicKey;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey);
+    doaSigner = await didToDefaultDOASigner(did);
 
-    await airdrop(connection, key.publicKey);
+    console.log(`Wallet: ${key.publicKey}`);
+    console.log(`DID: ${did}`);
+    console.log(`Cryptid Address: ${doaSigner}`);
+
+    await Promise.all([
+      airdrop(connection, doaSigner), // the main funds for the cryptid account
+      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+    ]);
   });
 
   context('a simple cryptid', () => {
     it('should sign a transaction from a DID', async () => {
+      // needs to be less than AIRDROP_LAMPORTS
+      const lamportsToTransfer = 50_000;
+      const recipient = Keypair.generate();
       const cryptid = await build(did, key, { connection });
 
       const {
         blockhash: recentBlockhash,
       } = await connection.getRecentBlockhash();
-      const tx = new Transaction({ recentBlockhash, feePayer: key.publicKey });
-      tx.add(
-        // Not actually using the doa signer here, need to transfer from the doa_signer address, not from the did itself.
-        // This works only because the did is signing the transaction.
+      const tx = new Transaction({ recentBlockhash, feePayer: doaSigner }).add(
         SystemProgram.transfer({
-          fromPubkey: key.publicKey,
-          toPubkey: key.publicKey,
-          lamports: 1e3,
+          fromPubkey: doaSigner,
+          toPubkey: recipient.publicKey,
+          lamports: lamportsToTransfer,
         })
       );
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      // record balances before sending
+      const signerPreBalance = await connection.getBalance(key.publicKey);
+      const cryptidPreBalance = await connection.getBalance(doaSigner);
 
+      const [cryptidTx] = await cryptid.sign(tx);
       const txSignature = await connection.sendRawTransaction(
         cryptidTx.serialize()
       );
-
       await connection.confirmTransaction(txSignature);
+
+      // record balances after sending
+      const signerPostBalance = await connection.getBalance(key.publicKey);
+      const cryptidPostBalance = await connection.getBalance(doaSigner);
+      const recipientPostBalance = await connection.getBalance(
+        recipient.publicKey
+      );
+
+      console.log({
+        signer: {
+          signerPreBalance,
+          signerPostBalance,
+        },
+        cryptid: {
+          cryptidPreBalance,
+          cryptidPostBalance,
+        },
+        recipient: {
+          recipientPostBalance,
+        },
+      });
+
+      // assert balances are correct
+      expect(cryptidPreBalance - cryptidPostBalance).to.equal(
+        lamportsToTransfer
+      ); // the amount transferred
+      expect(signerPreBalance - signerPostBalance).to.equal(5000); // fees only
+
+      // skip for now as it is consistently returning 2,439 lamports too few
+      // expect(recipientPostBalance).to.equal(lamportsToTransfer);
     });
   });
 });

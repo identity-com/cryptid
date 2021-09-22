@@ -7,6 +7,7 @@ import {
 import * as u8a from 'uint8arrays';
 import { ExtendedCluster } from '../types/solana';
 import { DEFAULT_CLUSTER } from './constants';
+import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
 
 const defaultSignCallback = (
@@ -39,8 +40,16 @@ export const isKeypair = (
 export const normalizeSigner = (keypairOrSigner: Keypair | Signer): Signer =>
   isKeypair(keypairOrSigner) ? toSigner(keypairOrSigner) : keypairOrSigner;
 
-export const bytesToBase58 = (b: Uint8Array): string =>
-  u8a.toString(b, 'base58btc');
+export const bytesToBase58 = (bytes: Uint8Array): string =>
+  u8a.toString(bytes, 'base58btc');
+
+export const didToDefaultDOASigner = async (
+  did: string
+): Promise<PublicKey> => {
+  const doa = await deriveDefaultDOA(did);
+  const [doaSigner] = await deriveDOASigner(doa);
+  return doaSigner;
+};
 
 export const notNil = <T>(entries: (T | null | undefined)[]): T[] =>
   entries.filter(complement(isNil)) as T[];
