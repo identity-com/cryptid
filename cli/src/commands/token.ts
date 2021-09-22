@@ -6,6 +6,11 @@ export default class Token extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
+    config: flags.string({
+      char: "c",
+      description: "Path to config file",
+      default: process.env.CRYPTID_CONFIG,
+    }),
     to: flags.build<PublicKey>({
       char: "t",
       description: "Recipient public key (base58)",

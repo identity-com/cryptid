@@ -10,4 +10,5 @@ export interface Cryptid {
   sign(transaction: Transaction): Promise<Transaction[]>;
   addKey(publicKey: PublicKey, alias: string): Promise<string>;
   document(): Promise<DIDDocument>;
+  address(): Promise<PublicKey>;
 }

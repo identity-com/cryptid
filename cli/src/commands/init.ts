@@ -16,6 +16,7 @@ export default class Init extends Command {
       char: "p",
       description: "Configuration path",
       required: false,
+      default: process.env.CRYPTID_CONFIG,
     }),
     key: flags.string({
       char: "k",
@@ -23,7 +24,7 @@ export default class Init extends Command {
       required: false,
     }),
     cluster: flags.string({
-      char: "c",
+      char: "z",
       description: "Cluster",
       required: false,
     }),

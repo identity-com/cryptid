@@ -6,7 +6,7 @@ describe("config", () => {
     .command([
       "config",
       "show",
-      "--path",
+      "--config",
       `${__dirname}/../fixtures/config.yml`,
     ])
     .it("runs show", (ctx) => {
