@@ -1,6 +1,5 @@
-import { publicKeyToDid } from './lib/util';
-
 import { Builder } from './api/builder';
+import {publicKeyToDid} from "./lib/solana/util";
 export { ExtendedCluster } from "./types/solana";
 export { Cryptid } from './api/cryptid';
 
