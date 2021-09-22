@@ -8,8 +8,8 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { publicKeyToDid } from '../../src/lib/util';
 import { airdrop } from '../utils/solana';
+import {publicKeyToDid} from "../../src/lib/solana/util";
 
 const { expect } = chai;
 
