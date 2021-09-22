@@ -41,7 +41,10 @@ export const create = async (
         found.isSigner = found.isSigner || account.isSigner;
         found.isWritable = found.isWritable || account.isWritable;
       } else {
-        instruction_accounts.push(account);
+        instruction_accounts.push({
+          ...account,
+          isSigner: false
+        });
       }
     });
   });

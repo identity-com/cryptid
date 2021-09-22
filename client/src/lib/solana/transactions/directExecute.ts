@@ -9,6 +9,7 @@ export const directExecute = async (
   connection: Connection,
   unsignedTransaction: Transaction,
   did: string,
+  payer: PublicKey,
   signers: Signer[],
   doa?: PublicKey
 ): Promise<Transaction> => {
@@ -21,11 +22,12 @@ export const directExecute = async (
     signers,
     doa
   );
-  const { blockhash: recentBlockhash } = await recentBlockhashPromise;
+  const { blockhash: recentBlockhash } =
+    await recentBlockhashPromise;
 
   let transaction = new Transaction({
     recentBlockhash,
-    feePayer: signers[0].publicKey,
+    feePayer: payer,
   }).add(directExecuteInstruction);
 
   for (const signer of signers) {
