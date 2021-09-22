@@ -1,12 +1,6 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { SignCallback, Signer } from '../types/crypto';
-import {
-  ClusterType,
-  DecentralizedIdentifier,
-} from '@identity.com/sol-did-client';
 import * as u8a from 'uint8arrays';
-import { ExtendedCluster } from '../types/solana';
-import { DEFAULT_CLUSTER } from './constants';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
 
@@ -16,18 +10,6 @@ const defaultSignCallback =
     transaction.partialSign(keypair);
     return transaction;
   };
-
-export const publicKeyToDid = (
-  publicKey: PublicKey,
-  cluster?: ExtendedCluster
-): string =>
-  DecentralizedIdentifier.create(
-    publicKey,
-    ClusterType.parse(cluster || DEFAULT_CLUSTER)
-  ).toString();
-
-export const didToPublicKey = (did: string): PublicKey =>
-  DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
 
 export const toSigner = (keypair: Keypair): Signer => ({
   publicKey: keypair.publicKey,
