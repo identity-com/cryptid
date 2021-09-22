@@ -10,7 +10,7 @@ import {DIDDocument} from "did-resolver";
  * @param payer The fee payer for the transaction
  * @param signers A sorted list of signers. The first one will be the fee payer for the transaction
  */
-export const makeEmptyTransaction = async (connection: Connection, payer: PublicKey, signers: Signer[]) => {
+const makeEmptyTransaction = async (connection: Connection, payer: PublicKey, signers: Signer[]) => {
   if (signers.length <= 0) throw new Error("The transaction must be initialised with at least one signer.")
   const recentBlockhashPromise = connection.getRecentBlockhash();
   const { blockhash: recentBlockhash } = await recentBlockhashPromise;
@@ -19,7 +19,7 @@ export const makeEmptyTransaction = async (connection: Connection, payer: Public
 }
 
 /**
- * Creates a Direct_Execute transaction, that signs and sends a transaction from a DID
+ * Creates and signs a transaction from an array of instructions
  */
 export const createAndSignTransaction = async (
   connection: Connection,
