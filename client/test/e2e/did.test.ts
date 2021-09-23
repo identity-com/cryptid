@@ -22,7 +22,7 @@ describe('DID operations', function () {
   context('with a generative DID', () => {
     context('update', () => {
       it('should register the DID and add a key', async () => {
-        const cryptid = await build(did, key, {
+        const cryptid = build(did, key, {
           connection,
           waitForConfirmation: true,
         });

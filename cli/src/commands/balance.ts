@@ -20,7 +20,7 @@ export default class Balance extends Command {
     const { flags } = this.parse(Balance);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
 
     const address = await cryptid.address();
     const cryptidBalance = await balance(cryptid, config);

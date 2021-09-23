@@ -28,7 +28,7 @@ describe('transfers', function () {
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey);
 
-    cryptid = await build(did, key, { connection });
+    cryptid = build(did, key, { connection });
 
     doaSigner = await cryptid.address();
 
@@ -47,7 +47,7 @@ describe('transfers', function () {
       // needs to be less than AIRDROP_LAMPORTS
       const lamportsToTransfer = 50_000;
       const recipient = Keypair.generate();
-      const cryptid = await build(did, key, { connection });
+      const cryptid = build(did, key, { connection });
 
       const { blockhash: recentBlockhash } =
         await connection.getRecentBlockhash();
