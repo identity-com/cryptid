@@ -28,6 +28,7 @@ import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { WalletProviderFactory } from './walletProvider/factory';
 import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
+import {build as buildCryptid} from "@identity.com/cryptid";
 
 const DEFAULT_WALLET_SELECTOR = {
   walletIndex: 0,
@@ -40,16 +41,35 @@ export class Wallet {
     this.connection = connection;
     this.type = type;
     this.provider = WalletProviderFactory.getProvider(type, args);
+    this.cryptid = null;
+    this.publicKey = null;
   }
 
   static create = async (connection, type, args) => {
     const instance = new Wallet(connection, type, args);
     await instance.provider.init();
+
+    // build and attach cryptid
+    const signer = {
+      publicKey: instance.provider.publicKey,
+      sign: instance.signTransaction
+    }
+    instance.cryptid = await buildCryptid(instance.did, signer, {
+      connection,
+    })
+    instance.publicKey = await instance.cryptid.address()
+
+
+    console.log(`Init Wallet with Cryptid! DOA address: ${await instance.doaAddress}`)
+    console.log(`Init Wallet with Cryptid! ${instance.cryptid}`)
+
+
     return instance;
   };
 
-  get publicKey() {
-    return this.provider.publicKey;
+  get did() {
+    const cluster = 'localnet' // TODO: Where to get this?
+    return `did:sol:${cluster}:${this.provider.publicKey.toBase58()}`
   }
 
   get allowsExport() {
