@@ -14,7 +14,7 @@ export const airdrop = async (
 ): Promise<void> => {
   let retries = 30;
   for (;;) {
-    console.log(`Airdropping ${AIRDROP_LAMPORTS} Lamports to ${publicKey}`);
+    console.log(`Airdropping ${lamports} Lamports to ${publicKey}`);
     const airdropSignature = await connection.requestAirdrop(
       publicKey,
       lamports

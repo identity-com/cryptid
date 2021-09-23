@@ -2,7 +2,7 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import {makeVerificationMethod} from "../../../did";
 import {createUpdateInstruction} from "@identity.com/sol-did-client";
 import {Signer} from "../../../../types/crypto";
-import {createAndSignTransaction, registerInstructionIfNeeded} from "../util";
+import {createTransaction, registerInstructionIfNeeded} from "../util";
 import {notNil} from "../../../util";
 
 /**
@@ -27,7 +27,7 @@ export const addKey = async (
 
   // if the did is not registered, register it with the new key
   // if the did is registered, this will return null
-  const registerInstruction = await registerInstructionIfNeeded(connection, did, signers[0], document)
+  const registerInstruction = await registerInstructionIfNeeded(connection, did, payer, document)
 
   let instructions = [registerInstruction];
 
@@ -41,7 +41,7 @@ export const addKey = async (
     instructions = [updateInstruction];
   }
 
-  return createAndSignTransaction(
+  return createTransaction(
     connection,
     notNil(instructions),
     payer,

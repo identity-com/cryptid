@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
-import {createAndSignTransaction, didIsRegistered} from "./util";
+import {createTransaction, didIsRegistered} from "./util";
 import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
 
 /**
@@ -27,7 +27,7 @@ export const directExecute = async (
     doa
   );
 
-  return createAndSignTransaction(
+  return createTransaction(
     connection,
     [directExecuteInstruction],
     payer,

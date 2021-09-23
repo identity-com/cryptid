@@ -34,17 +34,22 @@ export class SimpleCryptid implements Cryptid {
   }
 
   async addKey(publicKey: PublicKey, alias: string): Promise<string> {
+    // use Cryptid to sign and send the tx, so that rent is paid by the cryptid account
+    const cryptidAddress = await this.address();
+
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
-      this.signer.publicKey,
+      cryptidAddress,
       publicKey,
       alias,
-      [this.signer]
+      [] //     [this.signer]
     );
 
+    const [cryptidTx] = await this.sign(transaction);
+
     const signature = await this.options.connection.sendRawTransaction(
-      transaction.serialize()
+      cryptidTx.serialize()
     );
     if (this.options.waitForConfirmation)
       await this.options.connection.confirmTransaction(signature);

@@ -52,7 +52,7 @@ describe('transactions/util', () => {
         lamports: 0,
       })
 
-      const transaction = await Util.createAndSignTransaction(connection(), [instruction], feePayer.publicKey, signers);
+      const transaction = await Util.createTransaction(connection(), [instruction], feePayer.publicKey, signers);
 
       expect(transaction.signatures).to.have.length(2);
       // map to strings to compare public keys without worrying about internal structure (chai .members does not support .equals())
@@ -83,7 +83,7 @@ describe('transactions/util', () => {
       const instruction = await Util.registerInstructionIfNeeded(
         connection(),
         did,
-        normalizeSigner(sender),
+        sender.publicKey,
       );
 
       expect(instruction).to.be.null
@@ -98,7 +98,7 @@ describe('transactions/util', () => {
       const instruction = await Util.registerInstructionIfNeeded(
         connection(),
         did,
-        normalizeSigner(sender),
+        sender.publicKey,
       );
 
       expect(instruction!.programId.toString()).to.equal(SOL_DID_PROGRAM_ID.toString())
