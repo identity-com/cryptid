@@ -60,7 +60,7 @@ export class Wallet {
     instance.publicKey = await instance.cryptid.address()
 
 
-    console.log(`Init Wallet with Cryptid! DOA address: ${await instance.doaAddress}`)
+    console.log(`Init Wallet with Cryptid! DOA address: ${await instance.publicKey}`)
     console.log(`Init Wallet with Cryptid! ${instance.cryptid}`)
 
 
