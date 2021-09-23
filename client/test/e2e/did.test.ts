@@ -12,7 +12,7 @@ describe('DID operations', function () {
   let did: string;
 
   before(async () => {
-    connection = new Connection('http://localhost:8899');
+    connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey, 'localnet');
 
