@@ -3,6 +3,7 @@ import { SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
+import { NonEmptyArray } from '../types/lang';
 
 const defaultSignCallback =
   (keypair: Keypair): SignCallback =>
@@ -35,3 +36,5 @@ export const didToDefaultDOASigner = async (
 
 export const notNil = <T>(entries: (T | null | undefined)[]): T[] =>
   entries.filter(complement(isNil)) as T[];
+
+export const headNonEmpty = <T>(t: NonEmptyArray<T>): T => t[0];
