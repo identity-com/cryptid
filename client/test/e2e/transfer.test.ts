@@ -92,16 +92,18 @@ describe('transfers', function () {
       // expect(recipientPostBalance).to.equal(lamportsToTransfer);
     });
 
-    // Fails due to https://civicteam.slack.com/archives/C01361EBHU1/p1632384991242400?thread_ts=1632382952.242200&cid=C01361EBHU1
-    // TODO @brett
-    it.skip('should sign a transaction from a DID with a second key', async () => {
+    it('should sign a transaction from a DID with a second key', async () => {
       // record balance at the start
       const cryptidPreBalance = await connection.getBalance(doaSigner);
 
       // the initial key held by device 1
       const device1Key = key;
       // the cryptid client for device 1 that will add the new key
-      const cryptidForDevice1 = cryptid;
+      const cryptidForDevice1 = build(did, key, {
+        connection,
+        waitForConfirmation: true,
+        rentPayer: 'SIGNER_PAYS',
+      });
 
       // the new key that will be added to the DID
       const device2Key = Keypair.generate();
@@ -136,7 +138,6 @@ describe('transfers', function () {
 
       // record balances after sending
       const cryptidPostBalance = await connection.getBalance(doaSigner);
-
       // assert balances are correct
       expect(cryptidPreBalance - cryptidPostBalance).to.equal(
         lamportsToTransfer
