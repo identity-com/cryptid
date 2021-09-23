@@ -103,5 +103,23 @@ describe('transactions/util', () => {
 
       expect(instruction!.programId.toString()).to.equal(SOL_DID_PROGRAM_ID.toString())
     })
+
+    it('should throw an error if the derived address is registered to another program', async () => {
+      const pdaAddress = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey()
+      sandbox.stub(Connection.prototype, 'getAccountInfo')
+        .withArgs(pdaAddress)
+        .resolves({
+          ...dummyDIDAccountInfo,
+          owner: pubkey()
+        })
+
+      const shouldFail = Util.registerInstructionIfNeeded(
+        connection(),
+        did,
+        sender.publicKey,
+      );
+
+      return expect(shouldFail).to.be.rejectedWith(/registered to another program/);
+    })
   })
 });

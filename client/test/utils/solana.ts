@@ -54,3 +54,50 @@ export const sendAndConfirmCryptidTransaction = async (
   await connection.confirmTransaction(txSignature);
   return txSignature;
 };
+
+class Balance {
+  private balanceBefore = 0;
+  private balanceAfter = 0;
+
+  constructor(readonly address: PublicKey, private connection: Connection) {}
+  async registerBefore(): Promise<void> {
+    this.balanceBefore = await this.connection.getBalance(this.address);
+  }
+
+  async registerAfter(): Promise<void> {
+    this.balanceAfter = await this.connection.getBalance(this.address);
+  }
+
+  difference(): number {
+    return this.balanceAfter - this.balanceBefore;
+  }
+}
+
+export class Balances {
+  private balances: Balance[];
+
+  constructor(private connection: Connection) {
+    this.balances = [];
+  }
+
+  async register(...address: PublicKey[]): Promise<Balances> {
+    this.balances.push(
+      ...address.map((address) => new Balance(address, this.connection))
+    );
+
+    await this.recordBefore();
+    return this;
+  }
+
+  async recordBefore(): Promise<void> {
+    await Promise.all(this.balances.map((b) => b.registerBefore()));
+  }
+
+  async recordAfter(): Promise<void> {
+    await Promise.all(this.balances.map((b) => b.registerAfter()));
+  }
+
+  for(address: PublicKey): number | undefined {
+    return this.balances.find((b) => b.address.equals(address))?.difference();
+  }
+}

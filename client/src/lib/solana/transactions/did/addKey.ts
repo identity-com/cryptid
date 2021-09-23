@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import {makeVerificationMethod} from "../../../did";
-import {createUpdateInstruction} from "@identity.com/sol-did-client";
+import {createUpdateInstruction, resolve} from "@identity.com/sol-did-client";
 import {Signer} from "../../../../types/crypto";
 import {createTransaction, registerInstructionIfNeeded} from "../util";
 import {notNil} from "../../../util";
@@ -19,10 +19,13 @@ export const addKey = async (
   alias: string,
   signers: Signer[],
 ): Promise<Transaction> => {
+  // resolve the existing document so that any existing capability invocation keys can be included in the registered version
+  // if this is missed, registering with a new key removes the old key, which we don't want in this case.
+  const existingDocument = await resolve(did);
   const verificationMethod = makeVerificationMethod(did, newKey, alias)
   const document = {
     verificationMethod: [verificationMethod],
-    capabilityInvocation: [verificationMethod.id],
+    capabilityInvocation: [...(existingDocument.capabilityInvocation || []), verificationMethod.id],
   };
 
   // if the did is not registered, register it with the new key
