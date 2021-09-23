@@ -31,7 +31,7 @@ describe('transfers', function () {
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
 
-    cryptid = await build(did, key, { connection, waitForConfirmation: true });
+    cryptid = build(did, key, { connection, waitForConfirmation: true });
 
     doaSigner = await cryptid.address();
 
@@ -47,7 +47,7 @@ describe('transfers', function () {
 
   context('a simple cryptid', () => {
     it('should sign a transaction from a DID', async () => {
-      const cryptid = await build(did, key, { connection });
+      const cryptid = build(did, key, { connection });
 
       const tx = await createTransferTransaction(
         connection,

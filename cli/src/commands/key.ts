@@ -67,7 +67,7 @@ export default class Key extends Command {
     const { args, flags } = this.parse(Key);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
 
     switch (args.subcommand) {
       case Subcommand.SHOW:

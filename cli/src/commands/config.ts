@@ -31,7 +31,7 @@ export default class Config extends Command {
     const { args, flags } = this.parse(Config);
 
     const service = new ConfigService(flags.config);
-    const cryptid = await build(service);
+    const cryptid = build(service);
 
     const address = await cryptid.address();
 
