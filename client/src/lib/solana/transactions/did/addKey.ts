@@ -3,7 +3,7 @@ import {makeVerificationMethod} from "../../../did";
 import {createUpdateInstruction, resolve} from "@identity.com/sol-did-client";
 import {Signer} from "../../../../types/crypto";
 import {createTransaction, registerInstructionIfNeeded} from "../util";
-import {notNil} from "../../../util";
+import {filterNotNil} from "../../../util";
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -46,7 +46,7 @@ export const addKey = async (
 
   return createTransaction(
     connection,
-    notNil(instructions),
+    filterNotNil(instructions),
     payer,
     signers
   );

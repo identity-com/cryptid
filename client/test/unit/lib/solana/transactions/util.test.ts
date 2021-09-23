@@ -99,6 +99,8 @@ describe('transactions/util', () => {
         connection(),
         did,
         sender.publicKey,
+        {},
+        10_000_000
       );
 
       expect(instruction!.programId.toString()).to.equal(SOL_DID_PROGRAM_ID.toString())
@@ -116,7 +118,7 @@ describe('transactions/util', () => {
       const shouldFail = Util.registerInstructionIfNeeded(
         connection(),
         did,
-        sender.publicKey,
+        sender.publicKey
       );
 
       return expect(shouldFail).to.be.rejectedWith(/registered to another program/);

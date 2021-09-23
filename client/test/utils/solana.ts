@@ -55,6 +55,8 @@ export const sendAndConfirmCryptidTransaction = async (
   return txSignature;
 };
 
+export const connection = () => new Connection('http://whatever.test')
+
 class Balance {
   private balanceBefore = 0;
   private balanceAfter = 0;
