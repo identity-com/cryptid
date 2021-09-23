@@ -18,8 +18,14 @@ export const publicKeyToDid = (
 export const didToPublicKey = (did: string): PublicKey =>
   DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
 
-export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
-  const didKey = didToPublicKey(did);
+/**
+ *
+ * Given a key representing either a DID or a DID's PDA
+ * (TODO @brett https://civicteam.slack.com/archives/C01361EBHU1/p1632382952242200),
+ * derive the default DOA
+ * @param didKey
+ */
+export const deriveDefaultDOAFromKey = async (didKey: PublicKey):Promise<PublicKey> => {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [
       SOL_DID_PROGRAM_ID.toBuffer(),
@@ -29,6 +35,11 @@ export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
     DOA_PROGRAM_ID
   );
   return publicKeyNonce[0];
+}
+
+export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
+  const didKey = await DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
+  return deriveDefaultDOAFromKey(didKey)
 };
 
 export const deriveDOASigner = async (

@@ -45,7 +45,7 @@ const registerInstruction = async (payer: PublicKey, authority: PublicKey, docum
     document
   })
 
-const didIsRegistered = async (connection: Connection, did: string):Promise<boolean> => {
+export const didIsRegistered = async (connection: Connection, did: string):Promise<boolean> => {
   const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
   const pda = await decentralizedIdentifier.pdaSolanaPubkey();
 

@@ -5,10 +5,9 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
-import { deriveDefaultDOA, deriveDOASigner } from '../util';
+import {deriveDefaultDOAFromKey, deriveDOASigner} from '../util';
 import { CryptidInstruction } from './instruction';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { any, find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 import { TransactionAccountMeta } from '../model/TransactionAccountMeta';
@@ -16,12 +15,12 @@ import { AssignablePublicKey } from '../model/AssignablePublicKey';
 
 export const create = async (
   unsignedTransaction: Transaction,
-  did: string,
+  didKey: PublicKey,
   signers: Signer[],
   doa?: PublicKey
 ): Promise<TransactionInstruction> => {
-  const sendingDoa = doa || (await deriveDefaultDOA(did));
-  const did_identifier = DecentralizedIdentifier.parse(did);
+  const sendingDoa = doa || (await deriveDefaultDOAFromKey(didKey));
+
   const doa_signer_key = await deriveDOASigner(sendingDoa).then(
     signer => signer[0]
   );
@@ -57,7 +56,7 @@ export const create = async (
   const keys: AccountMeta[] = [
     { pubkey: sendingDoa, isSigner: false, isWritable: false },
     {
-      pubkey: did_identifier.authorityPubkey.toPublicKey(),
+      pubkey: didKey,
       isSigner: false,
       isWritable: false,
     },

@@ -1,8 +1,10 @@
 import { build } from '../../src';
 import { Connection, Keypair } from '@solana/web3.js';
 import { airdrop } from '../utils/solana';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { publicKeyToDid } from '../../src/lib/solana/util';
+import chai from 'chai';
+
+const { expect } = chai;
 
 describe('DID operations', function () {
   this.timeout(20_000);
@@ -30,18 +32,14 @@ describe('DID operations', function () {
         const newKey = Keypair.generate().publicKey;
         const alias = 'key2';
 
-        const txSignature = await cryptid.addKey(newKey, alias);
-
-        console.log('txSignature', txSignature);
+        await cryptid.addKey(newKey, alias);
 
         const document = await cryptid.document();
-
-        const pda = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
-
-        console.log(pda.toBase58());
-
-        console.log(document);
-        // expect(document)
+        expect(
+          document.verificationMethod?.map(
+            (verificationMethod) => verificationMethod.publicKeyBase58
+          )
+        ).to.include(newKey.toString());
       });
     });
   });
