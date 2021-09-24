@@ -1,9 +1,13 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import {makeVerificationMethod} from "../../../did";
-import {createUpdateInstruction} from "@identity.com/sol-did-client";
-import {Signer} from "../../../../types/crypto";
-import {createAndSignTransaction, registerInstructionIfNeeded} from "../util";
-import {notNil} from "../../../util";
+import { makeVerificationMethod } from '../../../did';
+import {
+  createUpdateInstruction,
+  DecentralizedIdentifier,
+  resolve,
+} from '@identity.com/sol-did-client';
+import { Signer } from '../../../../types/crypto';
+import { createTransaction, registerInstructionIfNeeded } from '../util';
+import { notNil } from '../../../util';
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -17,34 +21,43 @@ export const addKey = async (
   payer: PublicKey,
   newKey: PublicKey,
   alias: string,
-  signers: Signer[],
+  signers: Signer[]
 ): Promise<Transaction> => {
-  const verificationMethod = makeVerificationMethod(did, newKey, alias)
+  // resolve the existing document so that any existing capability invocation keys can be included in the registered version
+  // if this is missed, registering with a new key removes the old key, which we don't want in this case.
+  const existingDocument = await resolve(did);
+  const verificationMethod = makeVerificationMethod(did, newKey, alias);
   const document = {
     verificationMethod: [verificationMethod],
-    capabilityInvocation: [verificationMethod.id],
+    capabilityInvocation: [
+      ...(existingDocument.capabilityInvocation || []),
+      verificationMethod.id,
+    ],
   };
 
   // if the did is not registered, register it with the new key
   // if the did is registered, this will return null
-  const registerInstruction = await registerInstructionIfNeeded(connection, did, signers[0], document)
+  const registerInstruction = await registerInstructionIfNeeded(
+    connection,
+    did,
+    payer,
+    document
+  );
 
   let instructions = [registerInstruction];
 
   // if the did is registered, update it
   if (!registerInstruction) {
     const updateInstruction = await createUpdateInstruction({
-      authority: signers[0].publicKey,
+      //TODO: @daniel
+      authority: await DecentralizedIdentifier.parse(
+        did
+      ).authorityPubkey.toPublicKey(),
       identifier: did,
       document,
     });
     instructions = [updateInstruction];
   }
 
-  return createAndSignTransaction(
-    connection,
-    notNil(instructions),
-    payer,
-    signers
-  );
+  return createTransaction(connection, notNil(instructions), payer, signers);
 };

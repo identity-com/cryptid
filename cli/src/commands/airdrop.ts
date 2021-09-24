@@ -16,13 +16,19 @@ export default class Airdrop extends Command {
     }),
   };
 
-  static args = [{ name: "amount", default: DEFAULT_AIRDROP_LAMPORTS, parse: (amountStr: string) => parseInt(amountStr, 10) }];
+  static args = [
+    {
+      name: "amount",
+      default: DEFAULT_AIRDROP_LAMPORTS,
+      parse: (amountStr: string): number => parseInt(amountStr, 10),
+    },
+  ];
 
   async run(): Promise<void> {
     const { flags, args } = this.parse(Airdrop);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
 
     await airdrop(cryptid, config, args.amount);
   }

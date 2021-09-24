@@ -5,11 +5,11 @@ import { normalizeSigner } from '../lib/util';
 import { SimpleCryptid } from './simpleCryptid';
 
 export class Builder {
-  static async build(
+  static build(
     did: string,
     signer: Keypair | Signer,
     options: CryptidOptions
-  ): Promise<Cryptid> {
+  ): Cryptid {
     return new SimpleCryptid(did, normalizeSigner(signer), options);
   }
 }

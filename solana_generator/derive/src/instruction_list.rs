@@ -85,7 +85,8 @@ impl InstructionListDerive {
         };
 
         quote! {
-            impl #impl_generics #crate_name::InstructionList for #ident #ty_generics #where_clause{
+            #[automatically_derived]
+            impl #impl_generics InstructionList for #ident #ty_generics #where_clause{
                 type BuildEnum = #enum_ident;
 
                 fn process_instruction(
@@ -100,7 +101,7 @@ impl InstructionListDerive {
                             #variant_discriminant => {
                                 let mut instruction_data = ::borsh::BorshDeserialize::deserialize(data)?;
                                 let instruction_arg = <#variant_instruction_type as #crate_name::Instruction>::data_to_instruction_arg(&mut instruction_data)?;
-                                let mut accounts = #crate_name::AccountArgument::from_account_infos(program_id, accounts, data, instruction_arg)?;
+                                let mut accounts = #crate_name::FromAccounts::<_>::from_accounts(program_id, accounts, instruction_arg)?;
                                 let system_program = <#variant_instruction_type as #crate_name::Instruction>::process(program_id, instruction_data, &mut accounts)?;
                                 #crate_name::AccountArgument::write_back(accounts, program_id, system_program.as_ref())
                             }

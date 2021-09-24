@@ -1,7 +1,8 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
-import {createAndSignTransaction} from "./util";
+import { createTransaction } from './util';
+import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 /**
  * Creates a Direct_Execute transaction, that signs and sends a transaction from a DID
@@ -14,14 +15,17 @@ export const directExecute = async (
   signers: Signer[],
   doa?: PublicKey
 ): Promise<Transaction> => {
+  const parsedDID = DecentralizedIdentifier.parse(did);
+  const didPDAKey = await parsedDID.pdaSolanaPubkey();
+
   const directExecuteInstruction = await create(
     unsignedTransaction,
-    did,
+    didPDAKey,
     signers,
     doa
   );
 
-  return createAndSignTransaction(
+  return createTransaction(
     connection,
     [directExecuteInstruction],
     payer,

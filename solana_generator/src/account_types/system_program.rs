@@ -1,10 +1,9 @@
-use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
 use crate::traits::AccountArgument;
 use crate::{
-    AccountInfo, AllAny, GeneratorError, GeneratorResult, MultiIndexableAccountArgument,
-    SingleIndexableAccountArgument,
+    AccountInfo, AllAny, FromAccounts, GeneratorError, GeneratorResult,
+    MultiIndexableAccountArgument, SingleIndexableAccountArgument,
 };
 
 use super::SYSTEM_PROGRAM_ID;
@@ -19,28 +18,6 @@ pub struct SystemProgram {
     pub info: AccountInfo,
 }
 impl AccountArgument for SystemProgram {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        _program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        _data: &mut &[u8],
-        _arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        let info = match infos.next() {
-            None => return Err(ProgramError::NotEnoughAccountKeys.into()),
-            Some(info) => info,
-        };
-        if info.key != SYSTEM_PROGRAM_ID {
-            return Err(GeneratorError::InvalidAccount {
-                account: info.key,
-                expected: SYSTEM_PROGRAM_ID,
-            }
-            .into());
-        }
-        Ok(Self { info })
-    }
-
     fn write_back(
         self,
         _program_id: Pubkey,
@@ -51,6 +28,26 @@ impl AccountArgument for SystemProgram {
 
     fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
         self.info.add_keys(add)
+    }
+}
+impl<A> FromAccounts<A> for SystemProgram
+where
+    AccountInfo: FromAccounts<A>,
+{
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: A,
+    ) -> GeneratorResult<Self> {
+        let info = AccountInfo::from_accounts(program_id, infos, arg)?;
+        if info.key != SYSTEM_PROGRAM_ID {
+            return Err(GeneratorError::InvalidAccount {
+                account: info.key,
+                expected: SYSTEM_PROGRAM_ID,
+            }
+            .into());
+        }
+        Ok(Self { info })
     }
 }
 impl MultiIndexableAccountArgument<()> for SystemProgram {

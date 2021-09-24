@@ -2,7 +2,7 @@
 
 use borsh::BorshDeserialize;
 use cryptid_signer::generate_doa_signer;
-use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOABuild};
+use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOABuild, SigningKeyBuild};
 use cryptid_signer::state::DOAAccount;
 use log::{info, trace};
 use rand::{random, Rng, SeedableRng};
@@ -44,7 +44,10 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
             did_program,
             key_threshold,
             doa_is_zeroed: false,
-            signing_key: did.pubkey(), // Sign as generative
+            signing_key: SigningKeyBuild {
+                signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
+                extra_accounts: vec![],
+            }, // Sign as generative
             did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
         },
     )

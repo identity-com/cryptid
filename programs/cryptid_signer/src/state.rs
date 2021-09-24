@@ -1,7 +1,7 @@
-use crate::error::CryptIdSignerError;
+use crate::error::CryptidSignerError;
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_generator::{Account, GeneratorResult, Pubkey, UnixTimestamp};
+use solana_generator::{Account, GeneratorResult, Pubkey, SolanaAccountMeta, UnixTimestamp};
 
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [1])]
@@ -25,13 +25,13 @@ impl DOAAccount {
 
     pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
         if did != self.did {
-            Err(CryptIdSignerError::WrongDID {
+            Err(CryptidSignerError::WrongDID {
                 expected: self.did,
                 received: did,
             }
             .into())
         } else if did_program != self.did_program {
-            Err(CryptIdSignerError::WrongDIDProgram {
+            Err(CryptidSignerError::WrongDIDProgram {
                 expected: self.did_program,
                 received: did_program,
             }
@@ -59,10 +59,19 @@ pub struct InstructionData {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct TransactionAccountMeta {
     pub key: Pubkey,
     pub meta: AccountMeta,
+}
+impl From<TransactionAccountMeta> for SolanaAccountMeta {
+    fn from(from: TransactionAccountMeta) -> Self {
+        SolanaAccountMeta {
+            pubkey: from.key,
+            is_signer: from.meta.contains(AccountMeta::IS_SIGNER),
+            is_writable: from.meta.contains(AccountMeta::IS_WRITABLE),
+        }
+    }
 }
 
 bitflags! {

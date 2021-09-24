@@ -48,31 +48,38 @@ impl AccountArgumentDerive {
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
 
         let instruction_arg = {
-            let types = self
-                .account_argument_attribute
-                .instruction_data
-                .iter()
-                .map(|field| field.ty.clone());
-            quote! {
-                (#(#types,)*)
+            match &self.account_argument_attribute.instruction_data {
+                None => quote! { () },
+                Some(InstructionData::Single(attribute::InstructionField { ty, .. })) => {
+                    quote! { #ty }
+                }
+                Some(InstructionData::Multi(fields)) => {
+                    let types = fields.iter().map(|field| field.ty.clone());
+                    quote! {
+                        (#(#types,)*)
+                    }
+                }
             }
         };
 
         let instruction_naming = {
-            let naming = self
-                .account_argument_attribute
-                .instruction_data
-                .into_iter()
-                .enumerate()
-                .map(|(index, field)| {
-                    let ident = field.ident;
-                    let index = Index::from(index);
+            match self.account_argument_attribute.instruction_data {
+                None => quote! {},
+                Some(InstructionData::Single(attribute::InstructionField { ident, .. })) => {
+                    quote! { let #ident = arg__; }
+                }
+                Some(InstructionData::Multi(fields)) => {
+                    let naming = fields.into_iter().enumerate().map(|(index, field)| {
+                        let ident = field.ident;
+                        let index = Index::from(index);
+                        quote! {
+                            let #ident = arg__.#index;
+                        }
+                    });
                     quote! {
-                        let #ident = arg__.#index;
+                        #(#naming)*
                     }
-                });
-            quote! {
-                #(#naming)*
+                }
             }
         };
 
@@ -141,7 +148,7 @@ impl AccountArgumentDerive {
 
                     (
                         quote! {
-                            #(let #idents = <#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, data__, #instruction_data)?;)*
+                            #(let #idents = <#types as #crate_name::FromAccounts<_>>::from_accounts(program_id, infos__, #instruction_data)?;)*
                             #(#verification)*
                             Ok(Self{
                                 #(#idents,)*
@@ -217,7 +224,7 @@ impl AccountArgumentDerive {
                     (
                         quote! {
                             let out = Self(
-                                #(<#types as #crate_name::AccountArgument>::from_account_infos(program_id, infos__, data__, #instruction_data)?,)*
+                                #(<#types as #crate_name::FromAccounts<_>>::from_accounts(program_id, infos__, #instruction_data)?,)*
                             );
                             #(#verification)*
                             Ok(out)
@@ -236,19 +243,7 @@ impl AccountArgumentDerive {
 
         quote! {
             #[automatically_derived]
-            impl #impl_generics #crate_name::AccountArgument for #ident #ty_generics #where_clause{
-                type InstructionArg = #instruction_arg;
-
-                fn from_account_infos(
-                    program_id: #crate_name::solana_program::pubkey::Pubkey,
-                    infos__: &mut impl Iterator<Item = #crate_name::AccountInfo>,
-                    data__: &mut &[u8],
-                    arg__: Self::InstructionArg,
-                ) -> #crate_name::GeneratorResult<Self>{
-                    #instruction_naming
-                    #fields_and_creation
-                }
-
+            impl #impl_generics AccountArgument for #ident #ty_generics #where_clause{
                 fn write_back(
                     self,
                     program_id: #crate_name::solana_program::pubkey::Pubkey,
@@ -264,6 +259,18 @@ impl AccountArgumentDerive {
                 ) -> #crate_name::GeneratorResult<()>{
                     #keys
                     Ok(())
+                }
+            }
+
+            #[automatically_derived]
+            impl #impl_generics #crate_name::FromAccounts<#instruction_arg> for #ident #where_clause{
+                fn from_accounts(
+                    program_id: #crate_name::solana_program::pubkey::Pubkey,
+                    infos__: &mut impl Iterator<Item = #crate_name::AccountInfo>,
+                    arg__: #instruction_arg,
+                ) -> #crate_name::GeneratorResult<Self>{
+                    #instruction_naming
+                    #fields_and_creation
                 }
             }
         }
@@ -354,7 +361,7 @@ impl TryFrom<Fields> for AccountArgumentDeriveStruct {
 }
 
 struct AccountArgumentAttribute {
-    instruction_data: Vec<attribute::InstructionField>,
+    instruction_data: Option<InstructionData>,
 }
 impl AccountArgumentAttribute {
     const IDENT: &'static str = "account_argument";
@@ -375,24 +382,31 @@ impl Parse for AccountArgumentAttribute {
         let mut instruction_data = None;
         for item in punctuated {
             if let Some((scope, name)) = match item {
-                attribute::Items::InstructionData { ident, fields, .. } => instruction_data
-                    .replace(fields.into_iter().collect())
+                attribute::Items::InstructionData { ident, field, .. } => instruction_data
+                    .replace(InstructionData::Single(field))
+                    .map(|_| (ident, attribute::Items::INSTRUCTION_DATA_IDENT)),
+                attribute::Items::InstructionDataTupple { ident, fields, .. } => instruction_data
+                    .replace(InstructionData::Multi(fields.into_iter().collect()))
                     .map(|_| (ident, attribute::Items::INSTRUCTION_DATA_IDENT)),
             } {
                 abort!(scope, "Multiple `{}` arguments for `{}`", name, Self::IDENT);
             }
         }
-        Ok(Self {
-            instruction_data: instruction_data.unwrap_or_default(),
-        })
+        Ok(Self { instruction_data })
     }
 }
 impl Default for AccountArgumentAttribute {
     fn default() -> Self {
         Self {
-            instruction_data: Vec::new(),
+            instruction_data: None,
         }
     }
+}
+
+#[allow(clippy::large_enum_variant)]
+enum InstructionData {
+    Multi(Vec<attribute::InstructionField>),
+    Single(attribute::InstructionField),
 }
 
 mod attribute {
@@ -400,6 +414,11 @@ mod attribute {
 
     pub enum Items {
         InstructionData {
+            ident: Ident,
+            equals: Token![=],
+            field: InstructionField,
+        },
+        InstructionDataTupple {
             ident: Ident,
             equals: Token![=],
             paren: token::Paren,
@@ -411,20 +430,30 @@ mod attribute {
     }
     impl Parse for Items {
         fn parse(input: ParseStream) -> syn::Result<Self> {
-            let fork = input.fork();
-            let ident: Ident = fork.parse()?;
+            let ident: Ident = input.parse()?;
             if ident == Self::INSTRUCTION_DATA_IDENT {
-                let content;
-                let ident = input.parse()?;
                 let equals = input.parse()?;
-                let paren = parenthesized!(content in input);
-                let fields = content.parse_terminated(InstructionField::parse)?;
-                Ok(Self::InstructionData {
-                    ident,
-                    equals,
-                    paren,
-                    fields,
-                })
+                let lookahead = input.lookahead1();
+                if lookahead.peek(token::Paren) {
+                    let content;
+                    let paren = parenthesized!(content in input);
+                    let fields = content.parse_terminated(InstructionField::parse)?;
+                    Ok(Self::InstructionDataTupple {
+                        ident,
+                        equals,
+                        paren,
+                        fields,
+                    })
+                } else if lookahead.peek(Ident) {
+                    let field = input.parse()?;
+                    Ok(Self::InstructionData {
+                        ident,
+                        equals,
+                        field,
+                    })
+                } else {
+                    Err(lookahead.error())
+                }
             } else {
                 abort!(
                     ident,

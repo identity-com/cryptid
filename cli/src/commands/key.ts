@@ -55,7 +55,10 @@ export default class Key extends Command {
         ),
         key: verificationMethod.publicKeyBase58,
       }))
-      .map(({ alias, key }: { alias: string, key: string}) => `${alias}: ${key}`);
+      .map(
+        ({ alias, key }: { alias: string; key: string | undefined }) =>
+          `${alias}: ${key}`
+      );
 
     this.log(keys.join("\n"));
   }
@@ -64,7 +67,7 @@ export default class Key extends Command {
     const { args, flags } = this.parse(Key);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
 
     switch (args.subcommand) {
       case Subcommand.SHOW:

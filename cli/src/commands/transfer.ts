@@ -32,7 +32,7 @@ export default class Transfer extends Command {
     const { flags } = this.parse(Transfer);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
     const address = await cryptid.address();
 
     const { blockhash: recentBlockhash } =
