@@ -2,9 +2,10 @@ use crate::traits::Error;
 use crate::Discriminant;
 use solana_program::pubkey::Pubkey;
 use std::fmt::Debug;
+use strum::EnumDiscriminants;
 
 /// General errors issued by the generator.
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug, Error, EnumDiscriminants)]
 #[error(start = 0)]
 pub enum GeneratorError<'a> {
     /// Discriminant mismatch for accounts. Usually caused by passing the wrong account for a slot

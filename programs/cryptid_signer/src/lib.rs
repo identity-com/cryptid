@@ -1,17 +1,21 @@
 #![warn(unused_import_braces, missing_debug_implementations)]
 
-use solana_generator::{GeneratorError, GeneratorResult, Pubkey};
+use solana_generator::{entrypoint_list, GeneratorError, GeneratorResult, Pubkey};
+
+use crate::instruction::CryptidInstruction;
 
 #[macro_use]
 mod macros;
 
 pub mod account;
-mod entry;
 pub mod error;
 pub mod instruction;
 pub mod state;
 
 pub const DOA_SIGNER_SEED: &[u8] = b"doa_signer";
+
+#[cfg(not(feature = "no-entrypoint"))]
+entrypoint_list!(CryptidInstruction);
 
 pub fn get_doa_signer(
     program_id: Pubkey,

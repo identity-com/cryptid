@@ -1,44 +1,44 @@
 #![cfg(feature = "test-bpf")]
 
+mod constants;
+use constants::{CRYPTID_SIGNER_PROGRAM_NAME, LOG_TARGET};
+
 use borsh::BorshDeserialize;
 use cryptid_signer::generate_doa_signer;
-use cryptid_signer::instruction::{CreateDOA, CreateDOAAccounts, CreateDOABuild, SigningKeyBuild};
+use cryptid_signer::instruction::{CreateDOABuild, CryptidInstruction, SigningKeyBuild};
 use cryptid_signer::state::DOAAccount;
-use log::{info, trace};
-use rand::{random, Rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
-use solana_generator::{Instruction, SolanaAccountMeta};
-use solana_program_test::ProgramTest;
+use log::trace;
+use solana_generator::{InstructionList, SolanaAccountMeta};
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
 use std::error::Error;
+use test_utils::rand::Rng;
+use test_utils::start_tests;
 
 #[tokio::test]
 async fn create_doa() -> Result<(), Box<dyn Error>> {
-    let seed = random();
-    let mut rng = ChaCha20Rng::seed_from_u64(seed);
-    let program_id = Keypair::generate(&mut rng).pubkey();
-    let test = ProgramTest::new("cryptid_signer", program_id, None);
-    info!(target: "cryptid_signer", "create_doa seed: {}", seed);
-    info!(target: "cryptid_signer", "create_doa program_id: {}", program_id);
-   
-    let (mut banks, funder, _genesis_hash) = test.start().await;
-    trace!(target: "cryptid_signer", "funder: {}", funder.pubkey());
-    let doa = Keypair::generate(&mut rng);
-    trace!(target: "cryptid_signer", "doa: {}", doa.pubkey());
-    let did = Keypair::generate(&mut rng);
-    trace!(target: "cryptid_signer", "did: {}", did.pubkey());
-    let did_program = Keypair::generate(&mut rng).pubkey(); // TODO: Replace with actual did program
-    trace!(target: "cryptid_signer", "did_program: {}", did_program);
-    let key_threshold = rng.gen();
-    trace!(target: "cryptid_signer", "key_threshold: {}", key_threshold);
-    let (signer, signer_nonce) = generate_doa_signer(program_id, doa.pubkey());
-    trace!(target: "cryptid_signer", "(signer, nonce): ({}, {})", signer, signer_nonce);
+    let (mut banks, funder, _genesis_hash, mut rng, [cryptid_id]) =
+        start_tests(LOG_TARGET, [CRYPTID_SIGNER_PROGRAM_NAME]).await;
 
-    let create_doa = CreateDOA::build_instruction(
-        program_id,
-        &[CreateDOAAccounts::DISCRIMINANT],
-        CreateDOABuild {
+    let doa = Keypair::generate(&mut rng);
+    trace!(target: LOG_TARGET, "doa: {}", doa.pubkey());
+    let did = Keypair::generate(&mut rng);
+    trace!(target: LOG_TARGET, "did: {}", did.pubkey());
+    let did_program = Keypair::generate(&mut rng).pubkey(); // TODO: Replace with actual did program
+    trace!(target: LOG_TARGET, "did_program: {}", did_program);
+    let key_threshold = rng.gen();
+    trace!(target: LOG_TARGET, "key_threshold: {}", key_threshold);
+    let (signer, signer_nonce) = generate_doa_signer(cryptid_id, doa.pubkey());
+    trace!(
+        target: LOG_TARGET,
+        "(signer, nonce): ({}, {})",
+        signer,
+        signer_nonce
+    );
+
+    let create_doa = CryptidInstruction::build_instruction(
+        cryptid_id,
+        <CryptidInstruction as InstructionList>::BuildEnum::CreateDOA(CreateDOABuild {
             funder: funder.pubkey(),
             doa: doa.pubkey(),
             did_program,
@@ -49,7 +49,7 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
                 extra_accounts: vec![],
             }, // Sign as generative
             did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
-        },
+        }),
     )
     .expect("Could not create instruction");
 

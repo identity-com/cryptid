@@ -91,9 +91,6 @@ pub struct CreateDOAAccounts {
     pub signing_key: SigningKey,
     pub system_program: SystemProgram,
 }
-impl CreateDOAAccounts {
-    pub const DISCRIMINANT: u8 = 0;
-}
 #[derive(Debug)]
 pub struct CreateDOABuild {
     pub funder: Pubkey,

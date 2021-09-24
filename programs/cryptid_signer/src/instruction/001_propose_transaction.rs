@@ -134,9 +134,6 @@ pub struct ProposeTransactionAccounts {
     #[account_argument(instruction_data = signers)]
     pub signer_keys: Vec<SigningKey>,
 }
-impl ProposeTransactionAccounts {
-    pub const DISCRIMINANT: u8 = 1;
-}
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct ProposeTransactionData {
     pub signers: Vec<(u8, UnixTimestamp)>,

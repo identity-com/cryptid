@@ -6,8 +6,8 @@ use std::convert::{TryFrom, TryInto};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{
-    bracketed, Attribute, Data, DeriveInput, Expr, Fields, Generics, Ident, Token, Type, Variant,
-    Visibility,
+    bracketed, Attribute, Data, DeriveInput, Expr, Fields, Generics, Ident, LitStr, Token, Type,
+    Variant, Visibility,
 };
 
 pub struct InstructionListDerive {
@@ -84,6 +84,10 @@ impl InstructionListDerive {
             )
         };
 
+        let instruction_prints = variant_ident
+            .iter()
+            .map(|ident| LitStr::new(&format!("Instruction: {}", ident.to_string()), ident.span()));
+
         quote! {
             #[automatically_derived]
             impl #impl_generics InstructionList for #ident #ty_generics #where_clause{
@@ -99,6 +103,7 @@ impl InstructionListDerive {
                     match *#crate_name::Take::take_single(data)?{
                         #(
                             #variant_discriminant => {
+                                #crate_name::msg!(#instruction_prints);
                                 let mut instruction_data = ::borsh::BorshDeserialize::deserialize(data)?;
                                 let instruction_arg = <#variant_instruction_type as #crate_name::Instruction>::data_to_instruction_arg(&mut instruction_data)?;
                                 let mut accounts = #crate_name::FromAccounts::<_>::from_accounts(program_id, accounts, instruction_arg)?;
@@ -122,6 +127,12 @@ impl InstructionListDerive {
                         #(
                             Self::BuildEnum::#variant_ident(build) => <#variant_instruction_type as #crate_name::Instruction>::build_instruction(program_id, &[#variant_discriminant], build),
                         )*
+                    }
+                }
+
+                fn discriminant(self) -> u8{
+                    match self{
+                        #(Self::#variant_ident => #variant_discriminant,)*
                     }
                 }
             }
