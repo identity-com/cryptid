@@ -10,3 +10,17 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 solana_generator = { path = "../../solana_generator" }
+borsh = "0.9.1"
+
+[dev-dependencies]
+solana-sdk = "1.7.12"
+solana-program-test = "1.7.12"
+tokio = "1.11.0"
+log = "0.4.14"
+# These are older as solana sdk relies on rand_core 0.5.1
+rand = "0.7.3"
+rand_chacha = "0.2.2"
+
+[features]
+default = []
+test-bpf = []

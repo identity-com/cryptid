@@ -7,9 +7,11 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{
     bracketed, Attribute, Data, DeriveInput, Expr, Fields, Generics, Ident, Token, Type, Variant,
+    Visibility,
 };
 
 pub struct InstructionListDerive {
+    vis: Visibility,
     ident: Ident,
     generics: Generics,
     attribute: InstructionListAttribute,
@@ -34,6 +36,7 @@ impl Parse for InstructionListDerive {
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Self {
+            vis: derive_input.vis,
             ident: derive_input.ident,
             generics: derive_input.generics,
             attribute,
@@ -53,6 +56,7 @@ impl InstructionListDerive {
             }
         };
 
+        let vis = self.vis;
         let ident = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
 
@@ -81,7 +85,6 @@ impl InstructionListDerive {
         };
 
         quote! {
-            #[automatically_derived]
             impl #impl_generics #crate_name::InstructionList for #ident #ty_generics #where_clause{
                 type BuildEnum = #enum_ident;
 
@@ -124,7 +127,7 @@ impl InstructionListDerive {
 
             /// The build enum for [`#ident`]
             #[derive(Debug)]
-            pub enum #enum_ident #impl_generics #where_clause{
+            #vis enum #enum_ident #impl_generics #where_clause{
                 #(
                     #variant_ident(<#variant_instruction_type as #crate_name::Instruction>::BuildArg),
                 )*

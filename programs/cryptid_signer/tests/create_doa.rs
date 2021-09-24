@@ -16,14 +16,14 @@ use std::error::Error;
 #[tokio::test]
 async fn create_doa() -> Result<(), Box<dyn Error>> {
     let seed = random();
-    info!(target: "cryptid_signer", "create_doa seed: {}", seed);
     let mut rng = ChaCha20Rng::seed_from_u64(seed);
     let program_id = Keypair::generate(&mut rng).pubkey();
-    info!(target: "cryptid_signer", "create_doa program_id: {}", program_id);
     let test = ProgramTest::new("cryptid_signer", program_id, None);
+    info!(target: "cryptid_signer", "create_doa seed: {}", seed);
+    info!(target: "cryptid_signer", "create_doa program_id: {}", program_id);
+   
     let (mut banks, funder, _genesis_hash) = test.start().await;
     trace!(target: "cryptid_signer", "funder: {}", funder.pubkey());
-
     let doa = Keypair::generate(&mut rng);
     trace!(target: "cryptid_signer", "doa: {}", doa.pubkey());
     let did = Keypair::generate(&mut rng);

@@ -13,11 +13,12 @@ use std::error::Error;
 #[tokio::test]
 async fn sanity_check() -> Result<(), Box<dyn Error>> {
     let seed = random();
-    info!(target: "cryptid_signer", "sanity_check seed: {}", seed);
     let mut rng = ChaCha20Rng::seed_from_u64(seed);
     let program_id = Keypair::generate(&mut rng).pubkey();
-    info!(target: "cryptid_signer", "sanity_check program_id: {}", program_id);
     let test = ProgramTest::new("cryptid_signer", program_id, None);
+    info!(target: "cryptid_signer", "create_doa seed: {}", seed);
+    info!(target: "cryptid_signer", "create_doa program_id: {}", program_id);
+    
     let (mut banks, payer, _genesis_hash) = test.start().await;
 
     let transaction = Transaction::new_signed_with_payer(
