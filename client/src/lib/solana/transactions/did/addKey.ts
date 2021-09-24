@@ -49,7 +49,6 @@ export const addKey = async (
   // if the did is registered, update it
   if (!registerInstruction) {
     const updateInstruction = await createUpdateInstruction({
-      //TODO: @daniel
       authority: await DecentralizedIdentifier.parse(
         did
       ).authorityPubkey.toPublicKey(),
