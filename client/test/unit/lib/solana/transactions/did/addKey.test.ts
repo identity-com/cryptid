@@ -5,12 +5,13 @@ import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {addKey} from "../../../../../../src/lib/solana/transactions/did/addKey";
-import {connection} from "../../../../../utils/solana";
+import {connection, dummyDIDAccountInfo} from "../../../../../utils/solana";
 import {Connection, Keypair} from "@solana/web3.js";
 import {publicKeyToDid} from "../../../../../../src/lib/solana/util";
 import {normalizeSigner} from "../../../../../../src/lib/util";
 import * as SolDid from "@identity.com/sol-did-client";
 import {didDocument} from "../../../../../utils/did";
+import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -18,6 +19,21 @@ chai.use(sinonChai);
 // const { expect } = chai;
 
 const sandbox = sinon.createSandbox();
+
+// stub a registered DID i.e. a DID that has an account (pdaAddress) on-chain
+// note - dummyDIDAccountInfo should officially contain a serialized SolData object, but atm
+// it just contains an empty data buffer. This is primarily because sol-did does not expose SolData.
+const stubRegisteredDID = async (did: string, key: Keypair) => {
+  const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
+  const pdaAddress = await decentralizedIdentifier.pdaSolanaPubkey()
+  sandbox.stub(SolDid, 'resolve').withArgs(did).resolves(didDocument(key.publicKey))
+
+  // we need both for this test (stub SolDid and Connection) as the code resolves the doc
+  // and checks if the DID is registered as separate operations. This could be optimised later.
+  sandbox.stub(Connection.prototype, 'getAccountInfo')
+    .withArgs(pdaAddress)
+    .resolves(dummyDIDAccountInfo)
+};
 
 describe('transactions/did/addKey', () => {
   const key = Keypair.generate();
@@ -36,19 +52,7 @@ describe('transactions/did/addKey', () => {
   afterEach(sandbox.restore);
 
   it('should create an update instruction if the DID is registered', async () => {
-    // const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
-    // const pdaAddress = await decentralizedIdentifier.pdaSolanaPubkey()
-    sandbox.stub(SolDid, 'resolve').withArgs(did).resolves(didDocument(key.publicKey))
-    // sandbox.stub(Connection.prototype, 'getAccountInfo')
-    //   .withArgs(pdaAddress)
-    //   .resolves({
-    //     ...dummyDIDAccountInfo,
-    //     data: SolData.sparse(
-    //       pdaAddress,
-    //       key.publicKey,
-    //       decentralizedIdentifier.clusterType
-    //     ).encode()
-    //   })
+    await stubRegisteredDID(did, key);
 
     await addKey(connection(), did, key.publicKey, newKey.publicKey, 'newKey', [normalizeSigner(key)]);
   })

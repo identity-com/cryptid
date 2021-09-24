@@ -8,7 +8,6 @@ import {DIDDocument} from "did-resolver";
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
  * @param connection The solana connection object to obtain the recent blockhash from
  * @param payer The fee payer for the transaction
- * @param signers A sorted list of signers. The first one will be the fee payer for the transaction
  */
 const makeEmptyTransaction = async (connection: Connection, payer: PublicKey) => {
   const recentBlockhashPromise = connection.getRecentBlockhash();

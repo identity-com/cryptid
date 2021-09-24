@@ -14,7 +14,7 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "nyc mocha  --exclude test/e2e/**/*.ts",
+    "test": "nyc mocha --exclude test/e2e/**/*.ts",
     "lint": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "tsdx build",
     "size": "size-limit",
