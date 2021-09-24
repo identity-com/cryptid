@@ -28,7 +28,7 @@ export default class Airdrop extends Command {
     const { flags, args } = this.parse(Airdrop);
 
     const config = new Config(flags.config);
-    const cryptid = await build(config);
+    const cryptid = build(config);
 
     await airdrop(cryptid, config, args.amount);
   }
