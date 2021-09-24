@@ -5,6 +5,7 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
+import {SOL_DID_PROGRAM_ID} from "../../src/lib/constants";
 
 const AIRDROP_LAMPORTS = 20_000_000;
 export const airdrop = async (
@@ -56,6 +57,13 @@ export const sendAndConfirmCryptidTransaction = async (
 };
 
 export const connection = () => new Connection('http://whatever.test')
+
+export const dummyDIDAccountInfo = {
+  data: Buffer.from([]),
+  executable: false,
+  lamports: 0,
+  owner: SOL_DID_PROGRAM_ID
+};
 
 class Balance {
   private balanceBefore = 0;

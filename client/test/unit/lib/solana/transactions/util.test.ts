@@ -7,7 +7,7 @@ import sinonChai from 'sinon-chai';
 
 import * as Util from '../../../../../src/lib/solana/transactions/util';
 import {Connection, Keypair, SystemProgram} from "@solana/web3.js";
-import {pubkey} from "../../../../utils/solana";
+import {pubkey, dummyDIDAccountInfo} from "../../../../utils/solana";
 import {normalizeSigner} from "../../../../../src/lib/util";
 import {complement, isNil, pluck, toString} from "ramda";
 import {publicKeyToDid} from "../../../../../src/lib/solana/util";
@@ -66,13 +66,6 @@ describe('transactions/util', () => {
   context('registerInstructionIfNeeded', () => {
     const sender = Keypair.generate();
     const did = publicKeyToDid(sender.publicKey);
-
-    const dummyDIDAccountInfo = {
-      data: Buffer.from([]),
-      executable: false,
-      lamports: 0,
-      owner: SOL_DID_PROGRAM_ID
-    };
 
     it('should return null if the DID is registered', async () => {
       const pdaAddress = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey()

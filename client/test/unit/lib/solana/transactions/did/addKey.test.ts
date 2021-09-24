@@ -1,24 +1,29 @@
 import chai from 'chai';
 import chaiSubset from 'chai-subset';
 import chaiAsPromised from 'chai-as-promised';
-import chaiThings from 'chai-things';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {addKey} from "../../../../../../src/lib/solana/transactions/did/addKey";
+import {connection} from "../../../../../utils/solana";
+import {Connection, Keypair} from "@solana/web3.js";
+import {publicKeyToDid} from "../../../../../../src/lib/solana/util";
+import {normalizeSigner} from "../../../../../../src/lib/util";
+import * as SolDid from "@identity.com/sol-did-client";
+import {didDocument} from "../../../../../utils/did";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
-chai.use(chaiThings);
-const { expect, should } = chai;
-
-// chai-things requires "should"
-should();
+// const { expect } = chai;
 
 const sandbox = sinon.createSandbox();
 
 describe('transactions/did/addKey', () => {
+  const key = Keypair.generate();
+  const newKey = Keypair.generate();
+  const did = publicKeyToDid(key.publicKey);
+
   beforeEach(() => {
     sandbox.stub(Connection.prototype, 'sendRawTransaction').resolves('txSig')
     // stub getRecentBlockhash to return a valid blockhash from mainnet, to avoid going to the blockchain
@@ -30,26 +35,21 @@ describe('transactions/did/addKey', () => {
 
   afterEach(sandbox.restore);
 
-    it('should create an update instruction if the DID is registered', async () => {
-      await addKey(connection())
+  it('should create an update instruction if the DID is registered', async () => {
+    // const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
+    // const pdaAddress = await decentralizedIdentifier.pdaSolanaPubkey()
+    sandbox.stub(SolDid, 'resolve').withArgs(did).resolves(didDocument(key.publicKey))
+    // sandbox.stub(Connection.prototype, 'getAccountInfo')
+    //   .withArgs(pdaAddress)
+    //   .resolves({
+    //     ...dummyDIDAccountInfo,
+    //     data: SolData.sparse(
+    //       pdaAddress,
+    //       key.publicKey,
+    //       decentralizedIdentifier.clusterType
+    //     ).encode()
+    //   })
 
-      const feePayer = Keypair.generate();
-      const sender = Keypair.generate();
-      const signers = [feePayer, sender].map(normalizeSigner)
-
-      const instruction = SystemProgram.transfer({
-        fromPubkey: sender.publicKey,
-        toPubkey: pubkey(),
-        lamports: 0,
-      })
-
-      const transaction = await Util.createTransaction(connection(), [instruction], feePayer.publicKey, signers);
-
-      expect(transaction.signatures).to.have.length(2);
-      // map to strings to compare public keys without worrying about internal structure (chai .members does not support .equals())
-      expect(pluck('publicKey', transaction.signatures).map(toString)).to.have.members([feePayer.publicKey, sender.publicKey].map(toString))
-
-      // chai-things requires "should"
-      pluck('signature', transaction.signatures).should.all.satisfy(notNil)
-    })
+    await addKey(connection(), did, key.publicKey, newKey.publicKey, 'newKey', [normalizeSigner(key)]);
+  })
 });
