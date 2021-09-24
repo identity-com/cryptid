@@ -13,6 +13,7 @@ pub use propose_transaction::*;
 pub use test_instruction::*;
 
 use solana_generator::*;
+use std::iter::once;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Copy, Clone, InstructionList)]
@@ -30,13 +31,13 @@ pub enum CryptidInstruction {
 pub fn verify_keys<'a>(
     did_program: Pubkey,
     did: &AccountInfo,
-    signing_keys: impl Iterator<Item = &'a AccountInfo>,
+    signing_keys: impl Iterator<Item = &'a SigningKey>,
 ) -> GeneratorResult<()> {
     // TODO: Handle higher key threshold than 1
     if did_program == sol_did::id() {
         unsafe {
             let account_infos = signing_keys
-                .map(|account| account.to_solana_account_info())
+                .map(|account| account.signing_key.to_solana_account_info())
                 .collect::<Vec<_>>();
             sol_did::validate_owner(
                 &did.to_solana_account_info(),
@@ -47,5 +48,37 @@ pub fn verify_keys<'a>(
     } else {
         //TODO: Verify signing key against did using interface
         Ok(()) // Allows all other did programs through
+    }
+}
+
+#[derive(Debug, AccountArgument)]
+#[account_argument(instruction_data = extra_accounts: u8)]
+pub struct SigningKey {
+    pub signing_key: AccountInfo,
+    #[account_argument(instruction_data = vec![(); extra_accounts as usize])]
+    pub extra_accounts: Vec<AccountInfo>,
+}
+impl SigningKey {
+    pub fn to_key_string(&self) -> String {
+        format!(
+            "({}, {:?})",
+            self.signing_key.key,
+            self.extra_accounts.iter().map(|extra| extra.key)
+        )
+    }
+}
+
+#[derive(Debug)]
+pub struct SigningKeyBuild {
+    pub signing_key: SolanaAccountMeta,
+    pub extra_accounts: Vec<SolanaAccountMeta>,
+}
+impl SigningKeyBuild {
+    pub fn to_metas(&self) -> impl Iterator<Item = SolanaAccountMeta> + '_ {
+        once(self.signing_key.clone()).chain(self.extra_accounts.iter().cloned())
+    }
+
+    pub fn extra_count(&self) -> u8 {
+        self.extra_accounts.len() as u8
     }
 }

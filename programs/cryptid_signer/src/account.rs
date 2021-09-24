@@ -62,35 +62,6 @@ impl DOAAddress {
     }
 }
 impl AccountArgument for DOAAddress {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        data: &mut &[u8],
-        arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        let account = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
-        let owner = **account.owner.borrow();
-        if owner == program_id {
-            Ok(Self::OnChain(ProgramAccount::from_account_infos(
-                program_id,
-                &mut once(account),
-                data,
-                arg,
-            )?))
-        } else if owner == system_program_id() {
-            Ok(Self::Generative(account))
-        } else {
-            Err(GeneratorError::AccountOwnerNotEqual {
-                account: account.key,
-                owner,
-                expected_owner: vec![program_id, system_program_id()],
-            }
-            .into())
-        }
-    }
-
     fn write_back(
         self,
         program_id: Pubkey,
@@ -106,6 +77,32 @@ impl AccountArgument for DOAAddress {
         match self {
             DOAAddress::OnChain(account) => account.add_keys(add),
             DOAAddress::Generative(account) => account.add_keys(add),
+        }
+    }
+}
+impl FromAccounts<()> for DOAAddress {
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: (),
+    ) -> GeneratorResult<Self> {
+        let account = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let owner = **account.owner.borrow();
+        if owner == program_id {
+            Ok(Self::OnChain(ProgramAccount::from_accounts(
+                program_id,
+                &mut once(account),
+                arg,
+            )?))
+        } else if owner == system_program_id() {
+            Ok(Self::Generative(account))
+        } else {
+            Err(GeneratorError::AccountOwnerNotEqual {
+                account: account.key,
+                owner,
+                expected_owner: vec![program_id, system_program_id()],
+            }
+            .into())
         }
     }
 }

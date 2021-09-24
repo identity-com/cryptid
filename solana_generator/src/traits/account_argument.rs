@@ -23,19 +23,9 @@ use std::fmt::Debug;
 /// It's instruction argument is `[T::InstructionArg; N]`.
 /// Each index will be passed its corresponding argument.
 pub trait AccountArgument: Sized {
-    /// The data passed for this argument to be parsed.
-    type InstructionArg;
+    // /// The data passed for this argument to be parsed.
+    // type InstructionArg;
 
-    /// Creates this argument from an [`AccountInfo`] iterator and [`InstructionArg`](AccountArgument::InstructionArg).
-    /// - `program_id` is the current program's id.
-    /// - `infos` is the iterator of [`AccountInfo`]s
-    /// - `arg` is the [`InstructionArg`](AccountArgument::InstructionArg)
-    fn from_account_infos(
-        program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        data: &mut &[u8],
-        arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self>;
     /// Writes the accounts back to the chain.
     /// - `program_id` is the current program's id.
     /// - `system_program` is an option reference to the system program's account info.
@@ -56,6 +46,19 @@ pub trait AccountArgument: Sized {
         Ok(out)
     }
 }
+/// Automatically derived with [`AccountArgument`]. Allows this set of accounts to be created from an argument `A`.
+pub trait FromAccounts<A>: Sized + AccountArgument {
+    /// Creates this argument from an [`AccountInfo`] iterator and [`InstructionArg`](AccountArgument::InstructionArg).
+    /// - `program_id` is the current program's id.
+    /// - `infos` is the iterator of [`AccountInfo`]s
+    /// - `arg` is the [`InstructionArg`](AccountArgument::InstructionArg)
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: A,
+    ) -> GeneratorResult<Self>;
+}
+
 /// An account set that can be indexed by 0+ accounts at time with index `I`.
 pub trait MultiIndexableAccountArgument<I>: AccountArgument
 where
@@ -147,17 +150,6 @@ where
 }
 
 impl AccountArgument for () {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        _program_id: Pubkey,
-        _infos: &mut impl Iterator<Item = AccountInfo>,
-        _data: &mut &[u8],
-        _arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        Ok(())
-    }
-
     fn write_back(
         self,
         _program_id: Pubkey,
@@ -167,6 +159,15 @@ impl AccountArgument for () {
     }
 
     fn add_keys(&self, _add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
+        Ok(())
+    }
+}
+impl FromAccounts<()> for () {
+    fn from_accounts(
+        _program_id: Pubkey,
+        _infos: &mut impl Iterator<Item = AccountInfo>,
+        _arg: (),
+    ) -> GeneratorResult<Self> {
         Ok(())
     }
 }

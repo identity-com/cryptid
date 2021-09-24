@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use solana_generator::*;
 
-use crate::instruction::verify_keys;
+use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::DOAAccount;
 use crate::{generate_doa_signer, verify_doa_signer};
 use std::iter::once;
@@ -11,13 +11,12 @@ use std::iter::once;
 pub struct CreateDOA;
 impl Instruction for CreateDOA {
     type Data = CreateDOAData;
+    type FromAccountsData = u8;
     type Accounts = CreateDOAAccounts;
     type BuildArg = CreateDOABuild;
 
-    fn data_to_instruction_arg(
-        _data: &mut Self::Data,
-    ) -> GeneratorResult<<Self::Accounts as AccountArgument>::InstructionArg> {
-        Ok(())
+    fn data_to_instruction_arg(data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
+        Ok(data.extra_signer_accounts)
     }
 
     fn process(
@@ -50,21 +49,22 @@ impl Instruction for CreateDOA {
     fn build_instruction(
         program_id: Pubkey,
         discriminant: &[u8],
-        arg: Self::BuildArg,
+        arg: CreateDOABuild,
     ) -> GeneratorResult<SolanaInstruction> {
         let mut data = discriminant.to_vec();
         let (doa_signer, signer_nonce) = generate_doa_signer(program_id, arg.doa);
-        let accounts = vec![
+        let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.doa, !arg.doa_is_zeroed),
             SolanaAccountMeta::new_readonly(doa_signer, false),
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
-            SolanaAccountMeta::new_readonly(arg.signing_key, true),
-            SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
+        accounts.extend(arg.signing_key.to_metas());
+        accounts.push(SolanaAccountMeta::new_readonly(system_program_id(), false));
         BorshSerialize::serialize(
             &CreateDOAData {
+                extra_signer_accounts: arg.signing_key.extra_count(),
                 signer_nonce,
                 key_threshold: arg.key_threshold,
             },
@@ -79,6 +79,7 @@ impl Instruction for CreateDOA {
 }
 
 #[derive(Debug, AccountArgument)]
+#[account_argument(instruction_data = extra_signer_accounts: u8)]
 pub struct CreateDOAAccounts {
     #[account_argument(signer, writable, owner = system_program_id())]
     pub funder: AccountInfo,
@@ -86,8 +87,8 @@ pub struct CreateDOAAccounts {
     pub doa_signer: AccountInfo,
     pub did: AccountInfo,
     pub did_program: AccountInfo,
-    #[account_argument(signer)]
-    pub signing_key: AccountInfo,
+    #[account_argument(instruction_data = extra_signer_accounts)]
+    pub signing_key: SigningKey,
     pub system_program: SystemProgram,
 }
 impl CreateDOAAccounts {
@@ -100,12 +101,13 @@ pub struct CreateDOABuild {
     pub doa_is_zeroed: bool,
     pub did: SolanaAccountMeta,
     pub did_program: Pubkey,
-    pub signing_key: Pubkey,
+    pub signing_key: SigningKeyBuild,
     pub key_threshold: u8,
 }
 
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct CreateDOAData {
+    pub extra_signer_accounts: u8,
     pub signer_nonce: u8,
     pub key_threshold: u8,
     // TODO: Add when permissions added
