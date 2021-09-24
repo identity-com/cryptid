@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { DIDDocument } from 'did-resolver';
+import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 
 export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {
@@ -15,6 +15,9 @@ export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
 export interface Cryptid {
   sign(transaction: Transaction): Promise<Transaction[]>;
   addKey(publicKey: PublicKey, alias: string): Promise<string>;
+  removeKey(alias: string): Promise<string>;
+  addService(service: ServiceEndpoint): Promise<string>;
+  removeService(alias: string): Promise<string>;
   document(): Promise<DIDDocument>;
   address(): Promise<PublicKey>;
 }

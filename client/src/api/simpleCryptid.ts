@@ -3,7 +3,10 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
 import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
-import { DIDDocument } from 'did-resolver';
+import { removeKey as removeKeyTransaction } from '../lib/solana/transactions/did/removeKey';
+import { addService as addServiceTransaction } from '../lib/solana/transactions/did/addService';
+import { removeService as removeServiceTransaction } from '../lib/solana/transactions/did/removeService';
+import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
@@ -96,6 +99,48 @@ export class SimpleCryptid implements Cryptid {
       this.did,
       signer.publicKey,
       publicKey,
+      alias,
+      [signer]
+    );
+
+    return this.send(transaction);
+  }
+
+  async removeKey(alias: string): Promise<string> {
+    const signer = await this.getPayerForInternalTransaction();
+
+    const transaction = await removeKeyTransaction(
+      this.options.connection,
+      this.did,
+      signer.publicKey,
+      alias,
+      [signer]
+    );
+
+    return this.send(transaction);
+  }
+
+  async addService(service: ServiceEndpoint): Promise<string> {
+    const signer = await this.getPayerForInternalTransaction();
+
+    const transaction = await addServiceTransaction(
+      this.options.connection,
+      this.did,
+      signer.publicKey,
+      service,
+      [signer]
+    );
+
+    return this.send(transaction);
+  }
+
+  async removeService(alias: string): Promise<string> {
+    const signer = await this.getPayerForInternalTransaction();
+
+    const transaction = await removeServiceTransaction(
+      this.options.connection,
+      this.did,
+      signer.publicKey,
       alias,
       [signer]
     );
