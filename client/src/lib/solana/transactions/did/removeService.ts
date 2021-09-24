@@ -21,7 +21,7 @@ export const removeService = async (
   const existingDocument = await resolve(did);
   const serviceToRemove = findServiceWithAlias(existingDocument, alias);
 
-  if (!serviceToRemove) throw new Error(`Key ${alias} not found on ${did}`);
+  if (!serviceToRemove) throw new Error(`Service ${alias} not found on ${did}`);
 
   const document: Partial<DIDDocument> = {
     service: existingDocument.service && without([serviceToRemove], existingDocument.service)
