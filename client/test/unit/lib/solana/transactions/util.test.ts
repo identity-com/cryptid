@@ -52,7 +52,7 @@ describe('transactions/util', () => {
         lamports: 0,
       })
 
-      const transaction = await Util.createAndSignTransaction(connection(), [instruction], feePayer.publicKey, signers);
+      const transaction = await Util.createTransaction(connection(), [instruction], feePayer.publicKey, signers);
 
       expect(transaction.signatures).to.have.length(2);
       // map to strings to compare public keys without worrying about internal structure (chai .members does not support .equals())
@@ -83,7 +83,7 @@ describe('transactions/util', () => {
       const instruction = await Util.registerInstructionIfNeeded(
         connection(),
         did,
-        normalizeSigner(sender),
+        sender.publicKey,
       );
 
       expect(instruction).to.be.null
@@ -98,10 +98,28 @@ describe('transactions/util', () => {
       const instruction = await Util.registerInstructionIfNeeded(
         connection(),
         did,
-        normalizeSigner(sender),
+        sender.publicKey,
       );
 
       expect(instruction!.programId.toString()).to.equal(SOL_DID_PROGRAM_ID.toString())
+    })
+
+    it('should throw an error if the derived address is registered to another program', async () => {
+      const pdaAddress = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey()
+      sandbox.stub(Connection.prototype, 'getAccountInfo')
+        .withArgs(pdaAddress)
+        .resolves({
+          ...dummyDIDAccountInfo,
+          owner: pubkey()
+        })
+
+      const shouldFail = Util.registerInstructionIfNeeded(
+        connection(),
+        did,
+        sender.publicKey,
+      );
+
+      return expect(shouldFail).to.be.rejectedWith(/registered to another program/);
     })
   })
 });

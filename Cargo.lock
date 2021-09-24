@@ -1100,9 +1100,9 @@ dependencies = [
 
 [[package]]
 name = "instant"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
+checksum = "716d3d89f35ac6a34fd0eed635395f4c3b76fa889338a4632e5231a8684216bd"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -2040,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "sol-did"
 version = "0.2.0"
-source = "git+https://github.com/identity-com/sol-did#e28badd889719068c0156d5974998f8c2d568ef1"
+source = "git+https://github.com/identity-com/sol-did?rev=b51bf82af14e3b5917d231a255f5fdb390b96eda#b51bf82af14e3b5917d231a255f5fdb390b96eda"
 dependencies = [
  "borsh",
  "num-derive",
