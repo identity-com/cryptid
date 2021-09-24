@@ -6,6 +6,8 @@ import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addK
 import { removeKey as removeKeyTransaction } from '../lib/solana/transactions/did/removeKey';
 import { addService as addServiceTransaction } from '../lib/solana/transactions/did/addService';
 import { removeService as removeServiceTransaction } from '../lib/solana/transactions/did/removeService';
+import { addController as addControllerTransaction } from '../lib/solana/transactions/did/addController';
+import { removeController as removeControllerTransaction } from '../lib/solana/transactions/did/removeController';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
@@ -142,6 +144,34 @@ export class SimpleCryptid implements Cryptid {
       this.did,
       signer.publicKey,
       alias,
+      [signer]
+    );
+
+    return this.send(transaction);
+  }
+
+  async addController(controller: string): Promise<string> {
+    const signer = await this.getPayerForInternalTransaction();
+
+    const transaction = await addControllerTransaction(
+      this.options.connection,
+      this.did,
+      signer.publicKey,
+      controller,
+      [signer]
+    );
+
+    return this.send(transaction);
+  }
+
+  async removeController(controller: string): Promise<string> {
+    const signer = await this.getPayerForInternalTransaction();
+
+    const transaction = await removeControllerTransaction(
+      this.options.connection,
+      this.did,
+      signer.publicKey,
+      controller,
       [signer]
     );
 
