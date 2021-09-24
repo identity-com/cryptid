@@ -1,13 +1,8 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { makeVerificationMethod } from '../../../did';
-import {
-  createUpdateInstruction,
-  DecentralizedIdentifier,
-  resolve,
-} from '@identity.com/sol-did-client';
+import { resolve } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
-import { createTransaction, registerInstructionIfNeeded } from '../util';
-import { filterNotNil } from '../../../util';
+import {registerOrUpdate} from "./util";
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -35,28 +30,5 @@ export const addKey = async (
     ],
   };
 
-  // if the did is not registered, register it with the new key
-  // if the did is registered, this will return null
-  const registerInstruction = await registerInstructionIfNeeded(
-    connection,
-    did,
-    payer,
-    document
-  );
-
-  let instructions = [registerInstruction];
-
-  // if the did is registered, update it
-  if (!registerInstruction) {
-    const updateInstruction = await createUpdateInstruction({
-      authority: await DecentralizedIdentifier.parse(
-        did
-      ).authorityPubkey.toPublicKey(),
-      identifier: did,
-      document,
-    });
-    instructions = [updateInstruction];
-  }
-
-  return createTransaction(connection, filterNotNil(instructions), payer, signers);
+  return registerOrUpdate(did, document, connection, payer, signers);
 };
