@@ -79,7 +79,7 @@ describe('DID operations', function () {
       });
 
       it('should charge rent to the signer key, if SIGNER_PAYS is set', async () => {
-        cryptid = await build(did, key, {
+        cryptid = build(did, key, {
           connection,
           waitForConfirmation: true,
           rentPayer: 'SIGNER_PAYS',

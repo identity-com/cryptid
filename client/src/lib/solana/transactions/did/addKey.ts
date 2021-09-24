@@ -7,7 +7,7 @@ import {
 } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
 import { createTransaction, registerInstructionIfNeeded } from '../util';
-import { notNil } from '../../../util';
+import { filterNotNil } from '../../../util';
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -58,5 +58,5 @@ export const addKey = async (
     instructions = [updateInstruction];
   }
 
-  return createTransaction(connection, notNil(instructions), payer, signers);
+  return createTransaction(connection, filterNotNil(instructions), payer, signers);
 };
