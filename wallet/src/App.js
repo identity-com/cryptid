@@ -6,7 +6,7 @@ import {
   ThemeProvider,
   unstable_createMuiStrictModeTheme as createMuiTheme,
 } from '@material-ui/core/styles';
-import blue from '@material-ui/core/colors/blue';
+import red from '@material-ui/core/colors/red';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -35,7 +35,7 @@ export default function App() {
       createMuiTheme({
         palette: {
           type: prefersDarkMode ? 'dark' : 'light',
-          primary: blue,
+          primary: red,
         },
         // TODO consolidate popup dimensions
         ext: '450',
@@ -84,7 +84,7 @@ export default function App() {
 function PageContents() {
   const wallet = useWallet();
   const [page] = usePage();
-  const [showWalletSuggestion, setShowWalletSuggestion] = useState(true);
+  const [showWalletSuggestion, setShowWalletSuggestion] = useState(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
   if (!wallet) {
@@ -131,7 +131,7 @@ function WalletSuggestionDialog({ open, onClose, onIgnore }) {
       <DialogTitle>Looking for a Wallet?</DialogTitle>
       <DialogContent>
         <Typography>
-          Sollet is an{' '}
+          Cryptid is an{' '}
           <a
             style={{ color: 'inherit' }}
             href="https://github.com/project-serum/spl-token-wallet"
