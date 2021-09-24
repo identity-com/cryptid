@@ -1,7 +1,14 @@
 import { PublicKey } from '@solana/web3.js';
-import {DEFAULT_CLUSTER, DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID} from '../constants';
-import {ExtendedCluster} from "../../types/solana";
-import {ClusterType, DecentralizedIdentifier} from "@identity.com/sol-did-client";
+import {
+  DEFAULT_CLUSTER,
+  DOA_PROGRAM_ID,
+  SOL_DID_PROGRAM_ID,
+} from '../constants';
+import { ExtendedCluster } from '../../types/solana';
+import {
+  ClusterType,
+  DecentralizedIdentifier,
+} from '@identity.com/sol-did-client';
 
 const DOA_SEED = 'cryptid_doa';
 const DOA_SIGNER_SEED = 'doa_signer';
@@ -15,31 +22,28 @@ export const publicKeyToDid = (
     ClusterType.parse(cluster || DEFAULT_CLUSTER)
   ).toString();
 
-export const didToPublicKey = (did: string): PublicKey =>
-  DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
-
 /**
- *
  * Given a key representing either a DID or a DID's PDA
- * (TODO @brett https://civicteam.slack.com/archives/C01361EBHU1/p1632382952242200),
  * derive the default DOA
- * @param didKey
+ * @param didPDAKey the key to the didPDA
  */
-export const deriveDefaultDOAFromKey = async (didKey: PublicKey):Promise<PublicKey> => {
+export const deriveDefaultDOAFromKey = async (
+  didPDAKey: PublicKey
+): Promise<PublicKey> => {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [
       SOL_DID_PROGRAM_ID.toBuffer(),
-      didKey.toBuffer(),
+      didPDAKey.toBuffer(),
       Buffer.from(DOA_SEED, 'utf8'),
     ],
     DOA_PROGRAM_ID
   );
   return publicKeyNonce[0];
-}
+};
 
 export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
-  const didKey = await DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
-  return deriveDefaultDOAFromKey(didKey)
+  const didKey = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
+  return deriveDefaultDOAFromKey(didKey);
 };
 
 export const deriveDOASigner = async (

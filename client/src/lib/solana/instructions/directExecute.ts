@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
-import {deriveDefaultDOAFromKey, deriveDOASigner} from '../util';
+import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { any, find, propEq } from 'ramda';
@@ -15,18 +15,18 @@ import { AssignablePublicKey } from '../model/AssignablePublicKey';
 
 export const create = async (
   unsignedTransaction: Transaction,
-  didKey: PublicKey,
+  didPDAKey: PublicKey,
   signers: Signer[],
   doa?: PublicKey
 ): Promise<TransactionInstruction> => {
-  const sendingDoa = doa || (await deriveDefaultDOAFromKey(didKey));
+  const sendingDoa = doa || (await deriveDefaultDOAFromKey(didPDAKey));
 
   const doa_signer_key = await deriveDOASigner(sendingDoa).then(
-    signer => signer[0]
+    (signer) => signer[0]
   );
 
   const instruction_accounts: AccountMeta[] = [];
-  unsignedTransaction.instructions.forEach(instruction => {
+  unsignedTransaction.instructions.forEach((instruction) => {
     if (!any(propEq('pubkey', instruction.programId))(instruction_accounts)) {
       instruction_accounts.push({
         pubkey: instruction.programId,
@@ -35,7 +35,7 @@ export const create = async (
       });
     }
 
-    instruction.keys.forEach(account => {
+    instruction.keys.forEach((account) => {
       const found: AccountMeta | undefined = find<AccountMeta>(
         propEq('pubkey', account.pubkey)
       )(instruction_accounts);
@@ -56,12 +56,12 @@ export const create = async (
   const keys: AccountMeta[] = [
     { pubkey: sendingDoa, isSigner: false, isWritable: false },
     {
-      pubkey: didKey,
+      pubkey: didPDAKey,
       isSigner: false,
       isWritable: false,
     },
     { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
-    ...signers.map(signer => ({
+    ...signers.map((signer) => ({
       pubkey: signer.publicKey,
       isSigner: true,
       isWritable: false,
@@ -70,7 +70,7 @@ export const create = async (
   ];
 
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
-    instruction =>
+    (instruction) =>
       new InstructionData({
         program_id: AssignablePublicKey.fromPublicKey(instruction.programId),
         accounts: instruction.keys.map(TransactionAccountMeta.fromAccountMeta),

@@ -110,9 +110,7 @@ describe('DID operations', function () {
         await balances.recordBefore();
       });
 
-      // Fails due to https://civicteam.slack.com/archives/C01361EBHU1/p1632384991242400?thread_ts=1632382952.242200&cid=C01361EBHU1
-      // TODO @brett
-      it.skip('should add a new key', async () => {
+      it('should add a new key', async () => {
         await cryptid.addKey(newKey, newKeyAlias);
 
         await balances.recordAfter();
