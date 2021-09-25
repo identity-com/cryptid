@@ -44,8 +44,8 @@
     "web3": "^1.2.11"
   },
   "scripts": {
-    "predeploy": "git pull --ff-only && yarn && yarn build",
-    "deploy": "gh-pages -d build",
+    "predeploy": "SKIP_PREFLIGHT_CHECK=true yarn build",
+    "deploy": "STAGE={STAGE:-dev} etc/deploy/deploy-site.sh",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.js\" \"extension/src/*.js\" --write",
     "start": "react-scripts start",
