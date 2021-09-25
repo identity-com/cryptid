@@ -410,7 +410,8 @@ function ApproveConnectionForm({ origin, onApprove }) {
         <div className={classes.connection}>
           <Typography>{origin}</Typography>
           <ImportExportIcon fontSize="large" />
-          <Typography>{account.name}</Typography>
+          {/* TODO @martin*/}
+          <Typography>{account?.name}</Typography> 
           <Typography variant="caption">
             ({wallet.publicKey.toBase58()})
           </Typography>

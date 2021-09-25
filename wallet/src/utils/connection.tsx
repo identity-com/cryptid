@@ -9,6 +9,7 @@ import tuple from 'immutable-tuple';
 import * as anchor from '@project-serum/anchor';
 import { useLocalStorageState, useRefEqual } from './utils';
 import { refreshCache, setCache, useAsyncData } from './fetch-loop';
+import {CLUSTERS, MAINNET_BACKUP_URL, MAINNET_URL} from "./clusters";
 
 const ConnectionContext = React.createContext<{
   endpoint: string;
@@ -16,10 +17,7 @@ const ConnectionContext = React.createContext<{
   connection: Connection;
 } | null>(null);
 
-export const MAINNET_URL = 'https://solana-api.projectserum.com';
-// No backup url for now. Leave the variable to not break wallets that
-// have saved the url in their local storage, previously.
-export const MAINNET_BACKUP_URL = 'https://solana-api.projectserum.com/';
+
 export function ConnectionProvider({ children }) {
   const [endpoint, setEndpoint] = useLocalStorageState(
     'connectionEndpoint',
@@ -73,6 +71,17 @@ export function useSolanaExplorerUrlSuffix() {
     return '?cluster=testnet';
   }
   return '';
+}
+
+export function useCluster() {
+  const context = useContext(ConnectionContext);
+  if (!context) {
+    throw new Error('Missing connection context');
+  }
+  const endpoint = context.endpoint;
+  
+  const cluster = CLUSTERS.find(cluster => cluster.apiUrl === endpoint)
+  return cluster?.name;
 }
 
 export function useAccountInfo(publicKey?: PublicKey) {

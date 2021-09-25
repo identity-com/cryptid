@@ -10,11 +10,11 @@ import { abbreviateAddress, sleep } from '../utils/utils';
 import {
   refreshAccountInfo,
   useConnectionConfig,
-  MAINNET_URL,
 } from '../utils/connection';
 import { createAndInitializeMint } from '../utils/tokens';
 import { Tooltip, Button } from '@material-ui/core';
 import React from 'react';
+import { MAINNET_URL } from "../utils/clusters";
 
 export default function DebugButtons() {
   const wallet = useWallet();
