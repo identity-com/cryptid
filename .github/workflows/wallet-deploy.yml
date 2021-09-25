@@ -4,7 +4,6 @@ on:
     paths:
       - 'wallet/**'
     branches:
-      - feature/wallet-deploy # temp
       - develop
       - main
 jobs:
