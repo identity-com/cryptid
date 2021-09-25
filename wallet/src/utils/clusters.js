@@ -40,7 +40,7 @@ export const CLUSTERS = [
     name: 'civic',
     apiUrl: 'https://d3ab7dlfud2b5u.cloudfront.net',
     label: null,
-    clusterSlug: 'civic',
+    clusterSlug: 'civicnet',
   }
 ];
 
