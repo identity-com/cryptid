@@ -218,6 +218,7 @@ export function WalletProvider({ children }) {
             derivationPath: walletSelector.derivationPath,
             account: walletSelector.account,
             change: walletSelector.change,
+            cluster
           };
           wallet = await Wallet.create(connection, 'ledger', args);
         } catch (e) {

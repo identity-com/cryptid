@@ -81,7 +81,7 @@ export function useCluster() {
   const endpoint = context.endpoint;
   
   const cluster = CLUSTERS.find(cluster => cluster.apiUrl === endpoint)
-  return cluster?.name;
+  return cluster?.clusterSlug;
 }
 
 export function useAccountInfo(publicKey?: PublicKey) {
