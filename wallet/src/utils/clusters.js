@@ -1,5 +1,9 @@
 import { clusterApiUrl } from '@solana/web3.js';
-import { MAINNET_URL, MAINNET_BACKUP_URL } from '../utils/connection';
+
+export const MAINNET_URL = 'https://solana-api.projectserum.com';
+// No backup url for now. Leave the variable to not break wallets that
+// have saved the url in their local storage, previously.
+export const MAINNET_BACKUP_URL = 'https://solana-api.projectserum.com/';
 
 export const CLUSTERS = [
   {
@@ -31,6 +35,12 @@ export const CLUSTERS = [
     apiUrl: 'http://localhost:8899',
     label: null,
     clusterSlug: 'localnet',
+  },
+  {
+    name: 'civic',
+    apiUrl: 'https://d3ab7dlfud2b5u.cloudfront.net',
+    label: null,
+    clusterSlug: 'civicnet',
   }
 ];
 
