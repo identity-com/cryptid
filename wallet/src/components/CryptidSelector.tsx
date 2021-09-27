@@ -17,10 +17,10 @@ import React, { useState } from "react";
 import { useStyles } from "./NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
-import { useCryptidAccounts } from "../utils/cryptid";
+import { useCryptid } from "../utils/cryptid";
 
 export const CryptidSelector = () => {
-  const cryptidAccounts = useCryptidAccounts()
+  const { cryptidAccounts } = useCryptid()
 
   const [anchorEl, setAnchorEl] = useState<Element | null>(null);
   const classes = useStyles();

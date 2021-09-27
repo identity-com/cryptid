@@ -13,7 +13,7 @@ import {
 import { findAssociatedTokenAddress } from '../utils/tokens';
 import LoadingIndicator from './LoadingIndicator';
 import Collapse from '@material-ui/core/Collapse';
-import { Typography } from '@material-ui/core';
+import {Card, CardContent, Typography} from '@material-ui/core';
 import TokenInfoDialog from './TokenInfoDialog';
 import FtxPayDialog from './FtxPay/FtxPayDialog';
 import Link from '@material-ui/core/Link';
@@ -65,6 +65,8 @@ import MergeAccountsDialog from './MergeAccountsDialog';
 import SwapButton from './SwapButton';
 import DnsIcon from '@material-ui/icons/Dns';
 import DomainsList from './DomainsList';
+import {useCryptid, useCryptidPublicKeys} from "../utils/cryptid";
+import {CryptidDetails} from "./CryptidDetails";
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 4,
@@ -107,8 +109,24 @@ function fairsIsLoaded(publicKeys) {
 }
 
 export default function BalancesList() {
-  const wallet = useWallet();
-  const [publicKeys, loaded] = useWalletPublicKeys();
+
+  // Updated Crytpid Stuff (from a state POV)
+  const { selectedCryptidAccount } = useCryptid()
+  const [publicKeys, setPublicKeys] = useState([]);
+
+
+  useEffect(() => {
+    if (!selectedCryptidAccount) {
+      setPublicKeys([])
+    } else {
+      setPublicKeys([selectedCryptidAccount.address])
+    }
+  },[selectedCryptidAccount])
+
+  // End Cryptid Stuff
+
+  // const wallet = useWallet();
+  // const [publicKeys, loaded] = useWalletPublicKeys();
 
   const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
   const [showEditAccountNameDialog, setShowEditAccountNameDialog] = useState(
@@ -116,7 +134,7 @@ export default function BalancesList() {
   );
   const [showMergeAccounts, setShowMergeAccounts] = useState(false);
   const [showFtxPayDialog, setShowFtxPayDialog] = useState(false);
-  const [sortAccounts, setSortAccounts] = useState(SortAccounts.None);
+  // const [sortAccounts, setSortAccounts] = useState(SortAccounts.None);
   const [showDomains, setShowDomains] = useState(false);
   const { accounts, setAccountName } = useWalletSelector();
   const [isCopied, setIsCopied] = useState(false);
@@ -125,35 +143,35 @@ export default function BalancesList() {
   const [, setForceUpdate] = useState(false);
   const region = useRegion();
   const selectedAccount = accounts.find((a) => a.isSelected);
-  const allTokensLoaded = loaded && fairsIsLoaded(publicKeys);
-  let sortedPublicKeys = publicKeys;
-  if (allTokensLoaded && sortAccounts !== SortAccounts.None) {
-    sortedPublicKeys = [...publicKeys];
-    sortedPublicKeys.sort((a, b) => {
-      const aVal = usdValues[a.toString()];
-      const bVal = usdValues[b.toString()];
-
-      a = aVal === undefined || aVal === null ? -1 : aVal;
-      b = bVal === undefined || bVal === null ? -1 : bVal;
-      if (sortAccounts === SortAccounts.Descending) {
-        if (a < b) {
-          return -1;
-        } else if (a > b) {
-          return 1;
-        } else {
-          return 0;
-        }
-      } else {
-        if (b < a) {
-          return -1;
-        } else if (b > a) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
-    });
-  }
+  // const allTokensLoaded = loaded && fairsIsLoaded(publicKeys);
+  // let sortedPublicKeys = publicKeys;
+  // if (allTokensLoaded && sortAccounts !== SortAccounts.None) {
+  //   sortedPublicKeys = [...publicKeys];
+  //   sortedPublicKeys.sort((a, b) => {
+  //     const aVal = usdValues[a.toString()];
+  //     const bVal = usdValues[b.toString()];
+  //
+  //     a = aVal === undefined || aVal === null ? -1 : aVal;
+  //     b = bVal === undefined || bVal === null ? -1 : bVal;
+  //     if (sortAccounts === SortAccounts.Descending) {
+  //       if (a < b) {
+  //         return -1;
+  //       } else if (a > b) {
+  //         return 1;
+  //       } else {
+  //         return 0;
+  //       }
+  //     } else {
+  //       if (b < a) {
+  //         return -1;
+  //       } else if (b > a) {
+  //         return 1;
+  //       } else {
+  //         return 0;
+  //       }
+  //     }
+  //   });
+  // }
   const totalUsdValue = publicKeys
     .filter((pk) => usdValues[pk.toString()])
     .map((pk) => usdValues[pk.toString()])
@@ -185,7 +203,7 @@ export default function BalancesList() {
     [publicKeys],
   );
   const balanceListItemsMemo = useMemo(() => {
-    return sortedPublicKeys.map((pk) => {
+    return publicKeys.map((pk) => {
       return React.memo((props) => {
         return (
           <BalanceListItem
@@ -196,7 +214,7 @@ export default function BalancesList() {
         );
       });
     });
-  }, [sortedPublicKeys, setUsdValuesCallback]);
+  }, [publicKeys, setUsdValuesCallback]);
 
   const iconSize = isExtensionWidth ? 'small' : 'medium';
 
@@ -205,7 +223,7 @@ export default function BalancesList() {
       <AppBar position="static" color="default" elevation={1}>
         <Toolbar>
           <CopyToClipboard
-            text={wallet && wallet.did}
+            text={selectedCryptidAccount && selectedCryptidAccount.did}
             onCopy={() => {
               setIsCopied(true);
               setTimeout(() => {
@@ -235,12 +253,12 @@ export default function BalancesList() {
                 {isExtensionWidth
                   ? ''
                   : ` (${
-                      wallet &&
-                      shortenAddress(wallet.did)
+                    selectedCryptidAccount &&
+                      shortenAddress(selectedCryptidAccount.did)
                     })`}{' '}
-                {allTokensLoaded && (
-                  <>({numberFormat.format(totalUsdValue.toFixed(2))})</>
-                )}
+                {/*{allTokensLoaded && (*/}
+                {/*  <>({numberFormat.format(totalUsdValue.toFixed(2))})</>*/}
+                {/*)}*/}
               </Typography>
             </Tooltip>
           </CopyToClipboard>
@@ -295,49 +313,50 @@ export default function BalancesList() {
               <AddIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Sort Tokens" arrow>
-            <IconButton
-              size={iconSize}
-              onClick={() => {
-                switch (sortAccounts) {
-                  case SortAccounts.None:
-                    setSortAccounts(SortAccounts.Ascending);
-                    return;
-                  case SortAccounts.Ascending:
-                    setSortAccounts(SortAccounts.Descending);
-                    return;
-                  case SortAccounts.Descending:
-                    setSortAccounts(SortAccounts.None);
-                    return;
-                  default:
-                    console.error('invalid sort type', sortAccounts);
-                }
-              }}
-            >
-              <SortIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Refresh" arrow>
-            <IconButton
-              size={iconSize}
-              onClick={() => {
-                refreshWalletPublicKeys(wallet);
-                publicKeys.map((publicKey) =>
-                  refreshAccountInfo(wallet.connection, publicKey, true),
-                );
-              }}
-              style={{ marginRight: -12 }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
+          {/*<Tooltip title="Sort Tokens" arrow>*/}
+          {/*  <IconButton*/}
+          {/*    size={iconSize}*/}
+          {/*    onClick={() => {*/}
+          {/*      switch (sortAccounts) {*/}
+          {/*        case SortAccounts.None:*/}
+          {/*          setSortAccounts(SortAccounts.Ascending);*/}
+          {/*          return;*/}
+          {/*        case SortAccounts.Ascending:*/}
+          {/*          setSortAccounts(SortAccounts.Descending);*/}
+          {/*          return;*/}
+          {/*        case SortAccounts.Descending:*/}
+          {/*          setSortAccounts(SortAccounts.None);*/}
+          {/*          return;*/}
+          {/*        default:*/}
+          {/*          console.error('invalid sort type', sortAccounts);*/}
+          {/*      }*/}
+          {/*    }}*/}
+          {/*  >*/}
+          {/*    <SortIcon />*/}
+          {/*  </IconButton>*/}
+          {/*</Tooltip>*/}
+          {/*<Tooltip title="Refresh" arrow>*/}
+          {/*  <IconButton*/}
+          {/*    size={iconSize}*/}
+          {/*    onClick={() => {*/}
+          {/*      refreshWalletPublicKeys(wallet);*/}
+          {/*      publicKeys.map((publicKey) =>*/}
+          {/*        refreshAccountInfo(wallet.connection, publicKey, true),*/}
+          {/*      );*/}
+          {/*    }}*/}
+          {/*    style={{ marginRight: -12 }}*/}
+          {/*  >*/}
+          {/*    <RefreshIcon />*/}
+          {/*  </IconButton>*/}
+          {/*</Tooltip>*/}
         </Toolbar>
       </AppBar>
+      {selectedCryptidAccount && <CryptidDetails crytidAccount={selectedCryptidAccount}/>}
       <List disablePadding>
         {balanceListItemsMemo.map((Memoized) => (
           <Memoized />
         ))}
-        {loaded ? null : <LoadingIndicator />}
+        {selectedCryptidAccount ? null : <LoadingIndicator />}
       </List>
       <AddTokenDialog
         open={showAddTokenDialog}
@@ -753,30 +772,6 @@ function BalanceListItemDetails({
             onClick={() => setSendDialogOpen(true)}
           >
             Send
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddKeyIcon />}
-            onClick={() => alert('Add Key clicked')}
-          >
-            Add Key
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddServiceIcon />}
-            onClick={() => alert('Add Service clicked')}
-          >
-            Add Service
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddControllerIcon />}
-            onClick={() => alert('Add Controller clicked')}
-          >
-            Add Controller
           </Button>
           {localStorage.getItem('warning-close-account') &&
           mint &&
