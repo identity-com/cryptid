@@ -37,6 +37,7 @@ import { parseTokenAccountData } from '../utils/tokens/data';
 import { Switch, Tooltip } from '@material-ui/core';
 import { EthFeeEstimate } from './EthFeeEstimate';
 import { resolveDomainName, resolveTwitterHandle } from '../utils/name-service';
+import {useCryptid} from "../utils/cryptid";
 
 const WUSDC_MINT = new PublicKey(
   'BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW',
@@ -209,7 +210,8 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     !balanceInfo.mint || balanceInfo.mint.equals(WRAPPED_SOL_MINT)
       ? 'Enter Solana Address'
       : 'Enter SPL token or Solana address';
-  const wallet = useWallet();
+  // const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid()
   const [sendTransaction, sending] = useSendTransaction();
   const [addressHelperText, setAddressHelperText] = useState(
     defaultAddressHelperText,
@@ -234,7 +236,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     (async () => {
       if (destinationAddress.startsWith('@')) {
         const twitterOwner = await resolveTwitterHandle(
-          wallet.connection,
+          selectedCryptidAccount.connection,
           destinationAddress.slice(1),
         );
         if (!twitterOwner) {
@@ -248,7 +250,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
       }
       if (destinationAddress.endsWith('.sol')) {
         const domainOwner = await resolveDomainName(
-          wallet.connection,
+          selectedCryptidAccount.connection,
           destinationAddress.slice(0, -4),
         );
         if (!domainOwner) {
@@ -267,7 +269,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
         return;
       }
       try {
-        const destinationAccountInfo = await wallet.connection.getAccountInfo(
+        const destinationAccountInfo = await selectedCryptidAccount.connection.getAccountInfo(
           new PublicKey(isDomainName ? domainOwner : destinationAddress),
         );
         setShouldShowOverride(false);
@@ -299,7 +301,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [destinationAddress, wallet, mintString, isDomainName, domainOwner]);
+  }, [destinationAddress, selectedCryptidAccount, mintString, isDomainName, domainOwner]);
   useEffect(() => {
     return () => {
       setOverrideDestinationCheck(false);
@@ -310,7 +312,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     if (!amount || amount <= 0) {
       throw new Error('Invalid amount');
     }
-    return wallet.transferToken(
+    return selectedCryptidAccount.transferToken(
       publicKey,
       new PublicKey(isDomainName ? domainOwner : destinationAddress),
       amount,
@@ -369,7 +371,8 @@ function SendSwapDialog({
   usdcToSplWUsdc = false,
   onSubmitRef,
 }) {
-  const wallet = useWallet();
+  // const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
   const [sendTransaction, sending] = useSendTransaction();
   const [signature, setSignature] = useState(null);
   const {
@@ -470,7 +473,7 @@ function SendSwapDialog({
     if (swapInfo.blockchain !== 'sol') {
       throw new Error('Unexpected blockchain');
     }
-    return wallet.transferToken(
+    return selectedCryptidAccount.transferToken(
       publicKey,
       new PublicKey(swapInfo.address),
       amount,

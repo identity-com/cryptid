@@ -14,12 +14,13 @@ import { setInitialAccountInfo, useCluster, useConnection } from "./connection";
 import { Account } from "./cryptid-external-types";
 import { useAsyncData } from "./fetch-loop";
 import { useRefEqual } from "./utils";
-import { getOwnedTokenAccounts } from "./tokens";
+import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "./tokens";
 import { parseTokenAccountData } from "./tokens/data";
 
 export class CryptidAccount {
   public did: string
   public connection: Connection
+  private signer: Signer;
   private cryptid: Cryptid;
   public address: PublicKey | null = null;
   public document: DIDDocument | null = null;
@@ -27,6 +28,7 @@ export class CryptidAccount {
   constructor(did: string, signer: Signer, connection: Connection) {
     this.did = did
     this.connection = connection
+    this.signer = signer
 
     this.cryptid = buildCryptid(did, signer, {
       connection,
@@ -53,15 +55,63 @@ export class CryptidAccount {
   }
 
   updateSigner(signer: Signer) {
+    this.signer = signer
     this.cryptid = buildCryptid(this.did, signer, {
       connection: this.connection,
     })
   }
 
-  async addKey(address: PublicKey, alias: string) {
+  addKey = async(address: PublicKey, alias: string) => {
     return await this.cryptid.addKey(address, alias)
   }
+
+  transferToken = async (
+    source,
+    destination,
+    amount,
+    mint,
+    decimals,
+    memo = null,
+    overrideDestinationCheck = false,
+  ) => {
+    if (source.equals(this.address)) {
+      if (memo) {
+        throw new Error('Memo not implemented');
+      }
+      return this.transferSol(destination, amount);
+    }
+    return await transferTokens({
+      connection: this.connection,
+      owner: this,
+      sourcePublicKey: source,
+      destinationPublicKey: destination,
+      amount,
+      memo,
+      mint,
+      decimals,
+      overrideDestinationCheck,
+    });
+  };
+
+  transferSol = async (destination, amount) => {
+    // The Tokens Interfaces expect a wallet with
+    // interface Wallet {
+    //   publicKey: PublicKey
+    //   signTransaction: (transaction: Transaction) => Promise<Transaction>
+    // }
+    const signingWrapper = {
+      // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
+      publicKey: this.address,
+      signTransaction: (transaction: Transaction) => this.cryptid.sign(transaction).then(transactions => transactions.pop())
+    }
+
+    console.log(`Doing native transfer with ${this.signer.publicKey}`)
+
+    return nativeTransfer(this.connection, signingWrapper, destination, amount);
+  };
 }
+
+
 
 interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
