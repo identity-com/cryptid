@@ -1,3 +1,5 @@
+//! The account address types for cryptid
+
 use std::iter::once;
 
 use solana_generator::solana_program::program_error::ProgramError;
@@ -6,12 +8,16 @@ use solana_generator::*;
 use crate::state::DOAAccount;
 use crate::GenerativeDOASeeder;
 
+/// A DOA address, supporting generative (derived from inputs) or on-chain (data stored on-chain)
 #[derive(Debug)]
 pub enum DOAAddress {
+    /// DOA Data is stored on-chain
     OnChain(ProgramAccount<DOAAccount>),
+    /// DOA is not on-chain, deriving fields
     Generative(AccountInfo),
 }
 impl DOAAddress {
+    /// The [`AccountInfo`] of the DOA
     pub fn info(&self) -> &AccountInfo {
         match self {
             DOAAddress::OnChain(account) => &account.info,
@@ -19,7 +25,7 @@ impl DOAAddress {
         }
     }
 
-    /// Returns the nonce
+    /// Verifies that the account came from the proper seeds returning the nonce
     pub fn verify_seeds(
         account: Pubkey,
         program_id: Pubkey,

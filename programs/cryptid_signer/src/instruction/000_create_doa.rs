@@ -7,6 +7,7 @@ use crate::state::DOAAccount;
 use crate::DOASignerSeeder;
 use std::iter::once;
 
+/// Creates a new DOA on-chain
 #[derive(Debug)]
 pub struct CreateDOA;
 impl Instruction for CreateDOA {
@@ -24,17 +25,17 @@ impl Instruction for CreateDOA {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        // Verify the doa_signer
+        // Verify the doa_signer can be made from the nonce
         PDAGenerator::new(
             program_id,
             DOASignerSeeder {
                 doa: accounts.doa.info().key,
             },
         )
-        .verify_address_with_nonce(accounts.doa_signer.key, data.signer_nonce)?;
+        .create_address(data.signer_nonce)?;
 
         verify_keys(
-            accounts.did_program.key,
+            &accounts.did_program,
             &accounts.did,
             once(&accounts.signing_key),
         )?;
@@ -81,34 +82,54 @@ impl Instruction for CreateDOA {
     }
 }
 
+/// The accounts for [`CreateDOA`]
 #[derive(Debug, AccountArgument)]
 #[account_argument(instruction_data = extra_signer_accounts: u8)]
 pub struct CreateDOAAccounts {
+    /// The funder that will pay rent
     #[account_argument(signer, writable, owner = system_program_id())]
     pub funder: AccountInfo,
+    /// The doa that will be initialized.
+    /// Can either be a un-allocated account owned by the system program (must sign or be generative) or an allocated rent-free account owned by this program.
     pub doa: InitOrZeroedAccount<DOAAccount>,
-    pub doa_signer: AccountInfo,
+    /// The DID for the DOA
     pub did: AccountInfo,
+    /// The program for the DID
     pub did_program: AccountInfo,
+    /// The key that is valid for the DID to create the DOA
     #[account_argument(instruction_data = extra_signer_accounts)]
     pub signing_key: SigningKey,
+    /// The system program
     pub system_program: SystemProgram,
 }
+/// The build arguments for [`CreateDOA`]
 #[derive(Debug)]
 pub struct CreateDOABuild {
+    /// The funder that will pay rent
     pub funder: Pubkey,
+    /// The doa that will be initialized.
+    /// Can either be a un-allocated account owned by the system program (must sign or be generative) or an allocated rent-free account owned by this program.
     pub doa: Pubkey,
+    /// [`true`] if the DOA should be treated as zeroed, [`false`] if init
     pub doa_is_zeroed: bool,
+    /// The DID for the DOA
     pub did: SolanaAccountMeta,
+    /// The program for the DID
     pub did_program: Pubkey,
+    /// The key that is valid for the DID to create the DOA
     pub signing_key: SigningKeyBuild,
+    /// The number of keys needed to sign transactions with the DOA
     pub key_threshold: u8,
 }
 
+/// The instruction data for [`CreateDOA`]
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct CreateDOAData {
+    /// The number of extra accounts the signer has
     pub extra_signer_accounts: u8,
+    /// The nonce of the DOA signer generated
     pub signer_nonce: u8,
+    /// The number of keys needed to sign transactions with the DOA
     pub key_threshold: u8,
     // TODO: Add when permissions added
     // pub sign_permissions: ?,

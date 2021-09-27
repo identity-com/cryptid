@@ -30,6 +30,20 @@ where
             .unwrap_or(Ok(()))
     }
 }
+impl<T> FromAccounts<usize> for Vec<T>
+where
+    T: FromAccounts<()>,
+{
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: usize,
+    ) -> GeneratorResult<Self> {
+        (0..arg)
+            .map(|_| T::from_accounts(program_id, infos, ()))
+            .collect::<Result<Vec<_>, _>>()
+    }
+}
 impl<A, T> FromAccounts<Vec<A>> for Vec<T>
 where
     T: FromAccounts<A>,

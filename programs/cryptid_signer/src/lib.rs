@@ -1,4 +1,5 @@
-#![warn(unused_import_braces, missing_debug_implementations)]
+#![warn(unused_import_braces, missing_debug_implementations, missing_docs)]
+//! A signer that supports did-interfaces for signing (rotatable multi-key)
 
 use solana_generator::*;
 
@@ -16,11 +17,15 @@ pub mod state;
 #[cfg(not(feature = "no-entrypoint"))]
 entrypoint_list!(CryptidInstruction);
 
+/// The seed for the DOA signer
 pub const DOA_SIGNER_SEED: &str = "cryptid_signer";
+/// The seed for generative DOAs
 pub const GENERATIVE_DOA_SEED: &str = "cryptid_doa";
 
+/// The seeder for DOA signers
 #[derive(Debug)]
 pub struct DOASignerSeeder {
+    /// The key of the doa for this signer
     pub doa: Pubkey,
 }
 impl<'a> PDASeeder<'a> for DOASignerSeeder {
@@ -32,9 +37,12 @@ impl<'a> PDASeeder<'a> for DOASignerSeeder {
     }
 }
 
+/// The seeder for generative DOAs
 #[derive(Debug)]
 pub struct GenerativeDOASeeder {
+    /// The DID program's key for this DOA
     pub did_program: Pubkey,
+    /// The DID's key for this DOA
     pub did: Pubkey,
 }
 impl<'a> PDASeeder<'a> for GenerativeDOASeeder {

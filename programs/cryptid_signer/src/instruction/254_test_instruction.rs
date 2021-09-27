@@ -1,5 +1,6 @@
 use solana_generator::*;
 
+/// A test instruction that logs a success message
 #[derive(Debug)]
 pub struct TestInstruction;
 impl Instruction for TestInstruction {

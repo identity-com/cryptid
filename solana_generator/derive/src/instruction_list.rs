@@ -138,6 +138,7 @@ impl InstructionListDerive {
             }
 
             /// The build enum for [`#ident`]
+            #[allow(missing_docs)]
             #[derive(Debug)]
             #vis enum #enum_ident #impl_generics #where_clause{
                 #(

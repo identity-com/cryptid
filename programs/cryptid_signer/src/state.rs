@@ -1,3 +1,5 @@
+//! The types that are stored in accounts for `cryptid_signer`
+
 use crate::error::CryptidSignerError;
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -5,13 +7,19 @@ use solana_generator::{
     Account, GeneratorResult, Pubkey, SolanaAccountMeta, SolanaInstruction, UnixTimestamp,
 };
 
+/// The data for an on-chain DOA
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [1])]
 pub struct DOAAccount {
+    /// The DID for this DOA
     pub did: Pubkey,
+    /// The program for the DID
     pub did_program: Pubkey,
+    /// The nonce of tje DOA Signer
     pub signer_nonce: u8,
+    /// The number of keys needed for transactions to be executed
     pub key_threshold: u8,
+    /// A tracker to invalidate transactions when DOA settings change
     pub settings_sequence: u16,
     // TODO: Implement when permissions added
     // pub sign_permissions: ?,
@@ -19,12 +27,17 @@ pub struct DOAAccount {
     // pub remove_permissions: ?,
 }
 impl DOAAccount {
+    /// The value for [`DOAAccount::key_threshold`] on a generative DOA
     pub const GENERATIVE_DOA_KEY_THRESHOLD: u8 = 1;
 
+    /// The [`DOAAccount::settings_sequence`] value when the DOA is locked
     pub const LOCKED_DOA_SETTINGS_SEQUENCE: u16 = 0;
+    /// The [`DOAAccount::settings_sequence`] value when the DOA is generative
     pub const GENERATIVE_DOA_SETTINGS_SEQUENCE: u16 = 1;
+    /// The [`DOAAccount::settings_sequence`] start value
     pub const SETTINGS_SEQUENCE_START: u16 = 2;
 
+    /// Verifies that this DOA comes from the DID and DID Program
     pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
         if did != self.did {
             Err(CryptidSignerError::WrongDID {
@@ -44,20 +57,30 @@ impl DOAAccount {
     }
 }
 
+/// The data to store about a proposed transaction
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [2])]
 pub struct TransactionAccount {
+    /// The DOA for the transaction
     pub doa: Pubkey,
+    /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
+    /// The signers of the transaction with their expiry times
     pub signers: Vec<(Pubkey, UnixTimestamp)>,
+    /// Whether or not this has executed
     pub has_executed: bool,
+    /// The value of [`DOAAccount::settings_sequence`] when this was proposed, only claid while that's the same
     pub settings_sequence: u16,
 }
 
+/// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct InstructionData {
+    /// The program to execute
     pub program_id: Pubkey,
+    /// The accounts to send to the program
     pub accounts: Vec<TransactionAccountMeta>,
+    /// The data for the instruction
     pub data: Vec<u8>,
 }
 impl From<SolanaInstruction> for InstructionData {
@@ -87,9 +110,12 @@ impl From<InstructionData> for SolanaInstruction {
     }
 }
 
+/// An account for an instruction, similar to Solana's [`AccountMeta`](SolanaAccountMeta)
 #[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct TransactionAccountMeta {
+    /// The key of the account
     pub key: Pubkey,
+    /// Information about the account
     pub meta: AccountMeta,
 }
 impl From<SolanaAccountMeta> for TransactionAccountMeta {
@@ -111,13 +137,17 @@ impl From<TransactionAccountMeta> for SolanaAccountMeta {
 }
 
 bitflags! {
+    /// The meta information about an instruction account
     #[derive(BorshSerialize, BorshDeserialize, BorshSchema)]
     pub struct AccountMeta: u8{
+        /// The account is a signer
         const IS_SIGNER = 1 << 0;
+        /// The account is writable
         const IS_WRITABLE = 1 << 1;
     }
 }
 impl AccountMeta {
+    /// Creates a new [`AccountMeta`] from the given arguments
     pub fn new(is_signer: bool, is_writable: bool) -> Self {
         Self::from_bits(
             ((is_signer as u8) * Self::IS_SIGNER.bits)

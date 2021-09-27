@@ -10,6 +10,7 @@ use crate::DOASignerSeeder;
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
 
+/// Executes a transaction directly if all required keys sign
 #[derive(Debug)]
 pub struct DirectExecute;
 impl Instruction for DirectExecute {
@@ -63,7 +64,7 @@ impl Instruction for DirectExecute {
         msg!("Verifying keys");
         // Verify the keys sent, this only checks that one is valid for now but will use the threshold eventually
         verify_keys(
-            accounts.did_program.key,
+            &accounts.did_program,
             &accounts.did,
             accounts.signing_keys.iter(),
         )?;
@@ -188,22 +189,25 @@ impl Instruction for DirectExecute {
     }
 }
 
+/// The accounts for [`DirectExecute`]
 #[derive(Debug, AccountArgument)]
 #[account_argument(instruction_data = signers_extras: Vec<u8>)]
 pub struct DirectExecuteAccounts {
+    /// The DOA to execute with
     pub doa: DOAAddress,
+    /// The DID on the DOA
     pub did: AccountInfo,
+    /// The program for the DID
     pub did_program: AccountInfo,
-    // TODO: Same as propose transaction
+    /// The set of keys that sign for this transaction
     #[account_argument(instruction_data = signers_extras)]
     pub signing_keys: Vec<SigningKey>,
-    /// Each account should only appear once
+    /// Accounts for the instructions, each should only appear once
     pub instruction_accounts: Rest<AccountInfo>,
 }
 impl DirectExecuteAccounts {
-    pub const DISCRIMINANT: u8 = 5;
-
-    fn print_keys(&self) {
+    /// Prints all the keys to the program log (compute budget intensive)
+    pub fn print_keys(&self) {
         msg!("doa: {}", self.doa.info().key);
         msg!("did: {}", self.did.key);
         msg!("did_program: {}", self.did_program.key);
@@ -225,17 +229,26 @@ impl DirectExecuteAccounts {
     }
 }
 
+/// The instruction data for [`DirectExecute`]
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct DirectExecuteData {
+    /// A vector of the number of extras for each signer, signer count is the length
     pub signers_extras: Vec<u8>,
+    /// The instructions to execute
     pub instructions: Vec<InstructionData>,
 }
 
+/// The build argument for [`DirectExecute`]
 #[derive(Debug)]
 pub struct DirectExecuteBuild {
+    /// The DOA to execute with
     pub doa: Pubkey,
+    /// The DID for the DOA
     pub did: SolanaAccountMeta,
+    /// The program for the DID
     pub did_program: Pubkey,
+    /// The signing keys for this transaction
     pub signing_keys: Vec<SigningKeyBuild>,
+    /// The instructions to execute
     pub instructions: Vec<InstructionData>,
 }
