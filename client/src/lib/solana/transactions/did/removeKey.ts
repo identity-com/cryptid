@@ -2,7 +2,7 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import {
   resolve,
 } from '@identity.com/sol-did-client';
-import { Signer } from '../../../../types/crypto';
+import { DynamicSigner } from '../../../../types/crypto';
 import {DIDDocument, VerificationMethod} from "did-resolver";
 import {pick, without} from "ramda";
 import {hasAlias, registerOrUpdate} from "./util";
@@ -21,7 +21,7 @@ export const removeKey = async (
   did: string,
   payer: PublicKey,
   alias: string,
-  signers: Signer[]
+  signers: DynamicSigner[]
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did);
   const verificationMethodToRemove = findVerificationMethodWithAlias(existingDocument, alias);

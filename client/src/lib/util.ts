@@ -1,5 +1,5 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { SignCallback, Signer } from '../types/crypto';
+import { DynamicSigner, SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
@@ -12,16 +12,34 @@ const defaultSignCallback =
     return transaction;
   };
 
-export const toSigner = (keypair: Keypair): Signer => ({
-  publicKey: keypair.publicKey,
+export const keypairToDynamicSigner = (keypair: Keypair): DynamicSigner => ({
+  publicKey: () => keypair.publicKey,
   sign: defaultSignCallback(keypair),
 });
 
+export const staticSignerToDynamicSigner = (
+  staticSigner: Signer
+): DynamicSigner => ({
+  publicKey: () => staticSigner.publicKey,
+  sign: staticSigner.sign,
+});
+
 export const isKeypair = (
-  keypairOrSigner: Keypair | Signer
+  keypairOrSigner: Keypair | Signer | DynamicSigner
 ): keypairOrSigner is Keypair => keypairOrSigner instanceof Keypair;
-export const normalizeSigner = (keypairOrSigner: Keypair | Signer): Signer =>
-  isKeypair(keypairOrSigner) ? toSigner(keypairOrSigner) : keypairOrSigner;
+
+export const isStaticSigner = (
+  signer: Signer | DynamicSigner
+): signer is Signer => signer.publicKey instanceof PublicKey;
+
+export const normalizeSigner = (
+  keypairOrSigner: Keypair | Signer | DynamicSigner
+): DynamicSigner =>
+  isKeypair(keypairOrSigner)
+    ? keypairToDynamicSigner(keypairOrSigner)
+    : isStaticSigner(keypairOrSigner)
+    ? staticSignerToDynamicSigner(keypairOrSigner)
+    : keypairOrSigner;
 
 export const bytesToBase58 = (bytes: Uint8Array): string =>
   u8a.toString(bytes, 'base58btc');

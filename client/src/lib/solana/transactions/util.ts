@@ -4,7 +4,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Signer } from '../../../types/crypto';
+import {DynamicSigner} from '../../../types/crypto';
 import {
   createRegisterInstruction,
   DecentralizedIdentifier,
@@ -34,7 +34,7 @@ export const createTransaction = async (
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  signers: Signer[]
+  signers: DynamicSigner[]
 ): Promise<Transaction> => {
   let transaction = await makeEmptyTransaction(connection, payer);
 

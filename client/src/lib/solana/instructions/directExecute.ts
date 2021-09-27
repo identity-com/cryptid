@@ -4,7 +4,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Signer } from '../../../types/crypto';
+import {DynamicSigner} from '../../../types/crypto';
 import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
@@ -16,7 +16,7 @@ import { AssignablePublicKey } from '../model/AssignablePublicKey';
 export const create = async (
   unsignedTransaction: Transaction,
   didPDAKey: PublicKey,
-  signers: Signer[],
+  signers: DynamicSigner[],
   doa?: PublicKey
 ): Promise<TransactionInstruction> => {
   const sendingDoa = doa || (await deriveDefaultDOAFromKey(didPDAKey));
@@ -62,7 +62,7 @@ export const create = async (
     },
     { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
     ...signers.map((signer) => ({
-      pubkey: signer.publicKey,
+      pubkey: signer.publicKey(),
       isSigner: true,
       isWritable: false,
     })),

@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Signer } from '../../../../types/crypto';
+import { DynamicSigner } from '../../../../types/crypto';
 import {registerOrUpdate} from "./util";
 import {DIDDocument, ServiceEndpoint} from "did-resolver";
 
@@ -14,7 +14,7 @@ export const addService = async (
   did: string,
   payer: PublicKey,
   service: ServiceEndpoint,
-  signers: Signer[]
+  signers: DynamicSigner[]
 ): Promise<Transaction> => {
   const document: Partial<DIDDocument> = {
     service: [service]

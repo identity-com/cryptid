@@ -1,4 +1,4 @@
-import { Signer } from '../types/crypto';
+import { DynamicSigner } from '../types/crypto';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
@@ -18,7 +18,7 @@ export class SimpleCryptid implements Cryptid {
 
   constructor(
     private did: string,
-    private signer: Signer,
+    private signer: DynamicSigner,
     options: CryptidOptions
   ) {
     // combine default options and user-specified options
@@ -42,7 +42,7 @@ export class SimpleCryptid implements Cryptid {
       this.options.connection,
       transaction,
       this.did,
-      this.signer.publicKey,
+      this.signer.publicKey(),
       [this.signer]
     );
     return [wrappedTransaction];
@@ -71,16 +71,16 @@ export class SimpleCryptid implements Cryptid {
    * that can be used when sending arbitrary transactions
    * @private
    */
-  private async asSigner(): Promise<Signer> {
+  private async asSigner(): Promise<DynamicSigner> {
     const publicKey = await this.address();
     return {
-      publicKey,
+      publicKey: () => publicKey,
       sign: (transaction: Transaction) =>
         this.sign(transaction).then(headNonEmpty),
     };
   }
 
-  private async getPayerForInternalTransaction(): Promise<Signer> {
+  private async getPayerForInternalTransaction(): Promise<DynamicSigner> {
     switch (this.options.rentPayer) {
       // use Cryptid to sign and send the tx, so that any rent  is paid by the cryptid account
       case 'DID_PAYS':
@@ -99,7 +99,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       publicKey,
       alias,
       [signer]
@@ -114,7 +114,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await removeKeyTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       alias,
       [signer]
     );
@@ -128,7 +128,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await addServiceTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       service,
       [signer]
     );
@@ -142,7 +142,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await removeServiceTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       alias,
       [signer]
     );
@@ -156,7 +156,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await addControllerTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       controller,
       [signer]
     );
@@ -170,7 +170,7 @@ export class SimpleCryptid implements Cryptid {
     const transaction = await removeControllerTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer.publicKey(),
       controller,
       [signer]
     );

@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Signer } from '../../../../types/crypto';
+import {DynamicSigner} from '../../../../types/crypto';
 import {hasAlias, registerOrUpdate} from "./util";
 import {DIDDocument, ServiceEndpoint} from "did-resolver";
 import {resolve} from "@identity.com/sol-did-client";
@@ -16,7 +16,7 @@ export const removeService = async (
   did: string,
   payer: PublicKey,
   alias: string,
-  signers: Signer[]
+  signers: DynamicSigner[]
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did);
   const serviceToRemove = findServiceWithAlias(existingDocument, alias);

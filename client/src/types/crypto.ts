@@ -5,3 +5,8 @@ export type Signer = {
   publicKey: PublicKey;
   sign: SignCallback;
 };
+
+export type DynamicSigner = {
+  publicKey: () => PublicKey;
+  sign: SignCallback;
+};

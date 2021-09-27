@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Signer } from '../../../../types/crypto';
+import {DynamicSigner} from '../../../../types/crypto';
 import {registerOrUpdate} from "./util";
 import {DIDDocument} from "did-resolver";
 import {resolve} from "@identity.com/sol-did-client";
@@ -17,7 +17,7 @@ export const addController = async (
   did: string,
   payer: PublicKey,
   controller: string,
-  signers: Signer[]
+  signers: DynamicSigner[]
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did);
 

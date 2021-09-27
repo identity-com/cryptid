@@ -3,7 +3,7 @@ import {createTransaction, registerInstructionIfNeeded} from "../util";
 import {createUpdateInstruction, DecentralizedIdentifier, MergeBehaviour} from "@identity.com/sol-did-client";
 import {filterNotNil} from "../../../util";
 import {Connection, PublicKey, Transaction} from "@solana/web3.js";
-import {Signer} from "../../../../types/crypto";
+import {DynamicSigner} from "../../../../types/crypto";
 
 /**
  * Creates a transaction that updates a DID Document.
@@ -17,7 +17,7 @@ import {Signer} from "../../../../types/crypto";
  * @param signers
  * @param mergeBehaviour
  */
-export const registerOrUpdate = async (did: string, document: Partial<DIDDocument>, connection: Connection, payer: PublicKey, signers: Signer[], mergeBehaviour: MergeBehaviour = 'Append'):Promise<Transaction> => {
+export const registerOrUpdate = async (did: string, document: Partial<DIDDocument>, connection: Connection, payer: PublicKey, signers: DynamicSigner[], mergeBehaviour: MergeBehaviour = 'Append'):Promise<Transaction> => {
   // if the did is not registered, register it with the new document
   // if the did is registered, this will return null
   const registerInstruction = await registerInstructionIfNeeded(
