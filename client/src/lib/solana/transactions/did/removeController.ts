@@ -4,7 +4,7 @@ import {registerOrUpdate} from "./util";
 import {DIDDocument} from "did-resolver";
 import {resolve} from "@identity.com/sol-did-client";
 import {filterNotNil} from "../../../util";
-import {flatten, without} from "ramda";
+import {flatten, pick, without} from "ramda";
 
 const hasController = (document: DIDDocument, controller: string):boolean => {
   if (!document.controller) return false;
@@ -37,8 +37,18 @@ export const removeController = async (
   const newControllers = without([controller], filterNotNil(flatten([existingDocument.controller])));
 
   const document: Partial<DIDDocument> = {
-    controller: newControllers
+    ...(pick([
+      'verificationMethod',
+      'authentication',
+      'assertionMethod',
+      'keyAgreement',
+      'capabilityInvocation',
+      'capabilityDelegation',
+      'service',
+    ], existingDocument)),
+    // remove the controller property if empty. note this works only with mergeBehaviour "Overwrite"
+    controller: newControllers.length ? newControllers : undefined
   };
 
-  return registerOrUpdate(did, document, connection, payer, signers);
+  return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };

@@ -4,7 +4,7 @@ import {
 } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
 import {DIDDocument, VerificationMethod} from "did-resolver";
-import {without} from "ramda";
+import {pick, without} from "ramda";
 import {hasAlias, registerOrUpdate} from "./util";
 
 const findVerificationMethodWithAlias = (document: DIDDocument, alias:string):VerificationMethod|undefined =>
@@ -30,13 +30,17 @@ export const removeKey = async (
 
   // to save space on-chain, do not register properties that were unchanged or not registered in the existing doc
   const document:Partial<DIDDocument> = {
-    assertionMethod: existingDocument.assertionMethod && without([verificationMethodToRemove.id], existingDocument.assertionMethod || []),
-    authentication: existingDocument.authentication && without([verificationMethodToRemove.id], existingDocument.authentication || []),
-    capabilityInvocation: existingDocument.capabilityInvocation && without([verificationMethodToRemove.id], existingDocument.capabilityInvocation || []),
-    capabilityDelegation: existingDocument.capabilityDelegation && without([verificationMethodToRemove.id], existingDocument.capabilityDelegation || []),
-    keyAgreement: existingDocument.keyAgreement && without([verificationMethodToRemove.id], existingDocument.keyAgreement || []),
-    verificationMethod: existingDocument.verificationMethod && without([verificationMethodToRemove], existingDocument.verificationMethod || []),
+    ...(pick([
+      'controller',
+      'service'
+    ],existingDocument)),
+    assertionMethod: existingDocument.assertionMethod && without([verificationMethodToRemove.id], existingDocument.assertionMethod),
+    authentication: existingDocument.authentication && without([verificationMethodToRemove.id], existingDocument.authentication),
+    capabilityInvocation: existingDocument.capabilityInvocation && without([verificationMethodToRemove.id], existingDocument.capabilityInvocation),
+    capabilityDelegation: existingDocument.capabilityDelegation && without([verificationMethodToRemove.id], existingDocument.capabilityDelegation),
+    keyAgreement: existingDocument.keyAgreement && without([verificationMethodToRemove.id], existingDocument.keyAgreement),
+    verificationMethod: existingDocument.verificationMethod && without([verificationMethodToRemove], existingDocument.verificationMethod),
   };
 
-  return registerOrUpdate(did, document, connection, payer, signers);
+  return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };
