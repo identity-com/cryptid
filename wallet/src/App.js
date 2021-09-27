@@ -26,6 +26,7 @@ import LoginPage from './pages/LoginPage';
 import ConnectionsPage from './pages/ConnectionsPage';
 import { isExtension } from './utils/utils';
 import { PageProvider, usePage } from './utils/page';
+import {CryptidProvider} from "./utils/cryptid";
 
 export default function App() {
   // TODO: add toggle for dark mode
@@ -72,7 +73,9 @@ export default function App() {
         <ConnectionProvider>
           <TokenRegistryProvider>
             <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-              <WalletProvider>{appElement}</WalletProvider>
+              <WalletProvider>
+                <CryptidProvider>{appElement}</CryptidProvider>
+              </WalletProvider>
             </SnackbarProvider>
           </TokenRegistryProvider>
         </ConnectionProvider>
