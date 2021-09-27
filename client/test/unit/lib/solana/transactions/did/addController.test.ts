@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import {addKey} from "../../../../../../src/lib/solana/transactions/did/addKey";
+import {addController} from "../../../../../../src/lib/solana/transactions/did/addController";
 import {connection, pubkey, stubConnection} from "../../../../../utils/solana";
 import {Keypair, TransactionInstruction} from "@solana/web3.js";
 import {publicKeyToDid} from "../../../../../../src/lib/solana/util";
@@ -12,6 +12,7 @@ import {normalizeSigner} from "../../../../../../src/lib/util";
 import * as SolDid from "@identity.com/sol-did-client";
 import {stubResolveDID as stubResolve} from "../../../../../utils/did";
 import {SOL_DID_PROGRAM_ID} from "../../../../../../src/lib/constants";
+import * as DIDUtil from "../../../../../../src/lib/solana/transactions/did/util";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -22,10 +23,10 @@ const sandbox = sinon.createSandbox();
 
 const stubResolveDID = stubResolve(sandbox)
 
-describe('transactions/did/addKey', () => {
+describe('transactions/did/addController', () => {
   const key = Keypair.generate();
-  const newKey = Keypair.generate();
   const did = publicKeyToDid(key.publicKey);
+  const controller = "did:sol:controller";
 
   beforeEach(() => stubConnection(sandbox));
 
@@ -36,7 +37,7 @@ describe('transactions/did/addKey', () => {
     const dummyUpdateInstruction = new TransactionInstruction({keys: [], programId: SOL_DID_PROGRAM_ID});
     sandbox.stub(SolDid, 'createUpdateInstruction').resolves(dummyUpdateInstruction);
 
-    const transaction = await addKey(connection(), did, key.publicKey, newKey.publicKey, 'newKey', [normalizeSigner(key)]);
+    const transaction = await addController(connection(), did, key.publicKey, controller, [normalizeSigner(key)]);
 
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyUpdateInstruction);
@@ -47,9 +48,21 @@ describe('transactions/did/addKey', () => {
     const dummyRegisterInstruction = new TransactionInstruction({keys: [], programId: SOL_DID_PROGRAM_ID});
     sandbox.stub(SolDid, 'createRegisterInstruction').resolves([dummyRegisterInstruction, pubkey()]);
 
-    const transaction = await addKey(connection(), did, key.publicKey, newKey.publicKey, 'newKey', [normalizeSigner(key)]);
+    const transaction = await addController(connection(), did, key.publicKey, controller, [normalizeSigner(key)]);
 
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyRegisterInstruction);
+  })
+
+  it('should add the controller', async () => {
+    await stubResolveDID(did, key, false);
+
+    const expectedDocument = sinon.match({ controller: [controller]})
+
+    const expectation = sandbox.mock(DIDUtil).expects('registerOrUpdate').withArgs(did, expectedDocument)
+
+    await addController(connection(), did, key.publicKey, controller, [normalizeSigner(key)]);
+
+    expectation.verify();
   })
 });

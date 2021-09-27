@@ -1,21 +1,15 @@
-import { build, Cryptid } from '../../src';
+import { build, Cryptid } from '../../../src';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { airdrop, Balances } from '../utils/solana';
-import { publicKeyToDid } from '../../src/lib/solana/util';
+import { airdrop, Balances } from '../../utils/solana';
+import { publicKeyToDid } from '../../../src/lib/solana/util';
 import chai from 'chai';
-import { pluck } from 'ramda';
-import { DIDDocument } from 'did-resolver';
+import {expectDocumentNotToIncludeKey, expectDocumentToIncludeKey} from "../../utils/did";
 
 const { expect } = chai;
 
 const TRANSACTION_FEE = 5000;
 
-const expectDocumentToIncludeKey = (document: DIDDocument, newKey: PublicKey) =>
-  expect(
-    pluck('publicKeyBase58', document.verificationMethod || [])
-  ).to.include(newKey.toString());
-
-describe('DID operations', function () {
+describe('DID Key operations', function () {
   this.timeout(60_000);
 
   let connection: Connection;
@@ -140,7 +134,64 @@ describe('DID operations', function () {
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
-        // signer paid fee and rent
+        // signer paid fee
+        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+      });
+    });
+  });
+
+  context('removeKey', () => {
+    beforeEach(async () => {
+      balances = await new Balances(connection).register(
+        doaSigner,
+        key.publicKey,
+      );
+    });
+
+    // TODO Unskip when the sol-did program supports this
+    context.skip('with a generative DID', () => {
+      const [expectedFee, expectedRent] = [5000, 11330880];
+
+      it('should register the DID to remove the default key', async () => {
+        await cryptid.removeKey('default');
+
+        await balances.recordAfter();
+
+        const document = await cryptid.document();
+
+        console.log(document);
+        expectDocumentNotToIncludeKey(document, key.publicKey);
+
+        // cryptid account paid rent
+        expect(balances.for(doaSigner)).to.equal(-expectedRent);
+        // signer paid fee
+        expect(balances.for(key.publicKey)).to.equal(-expectedFee);
+      });
+    });
+
+    context('with an anchored DID', () => {
+      let ledgerKey: PublicKey;
+
+      beforeEach(async () => {
+        // add a key to upgrade (anchor) the did
+        ledgerKey = Keypair.generate().publicKey;
+        await cryptid.addKey(ledgerKey, 'ledger');
+
+        // re-record the before balances, now that everything is set up
+        await balances.recordBefore();
+      });
+
+      it('should remove the added key', async () => {
+        await cryptid.removeKey('ledger');
+
+        await balances.recordAfter();
+
+        const document = await cryptid.document();
+        expectDocumentNotToIncludeKey(document, ledgerKey);
+
+        // cryptid account paid nothing
+        expect(balances.for(doaSigner)).to.equal(0);
+        // signer paid fee
         expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
       });
     });
