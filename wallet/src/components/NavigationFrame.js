@@ -37,8 +37,9 @@ import { useConnectedWallets } from '../utils/connected-wallets';
 import { usePage } from '../utils/page';
 import { MonetizationOn, OpenInNew } from '@material-ui/icons';
 import AddCustomClusterDialog from "./AddCustomClusterDialog";
+import {CryptidSelector} from "./CryptidSelector";
 
-const useStyles = makeStyles((theme) => ({
+export const useStyles = makeStyles((theme) => ({
   content: {
     flexGrow: 1,
     paddingBottom: theme.spacing(3),
@@ -113,6 +114,7 @@ function NavigationButtons() {
   if (page === 'wallet') {
     elements = [
       isExtension && <ConnectionsButton />,
+      <CryptidSelector />,
       <WalletSelector />,
       <NetworkSelector />,
     ];

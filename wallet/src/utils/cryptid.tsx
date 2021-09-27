@@ -5,7 +5,7 @@
  * - Generative Method from Wallet keys
  * -
  */
-import React, { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "./wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
@@ -95,4 +95,8 @@ export const CryptidProvider:FC = ({ children }) => {
   >
     {children}
   </CryptidContext.Provider>);
+}
+
+export function useCryptidAccounts() {
+  return useContext(CryptidContext).cryptidAccounts;
 }
