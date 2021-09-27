@@ -17,16 +17,25 @@ export const directExecute = async (
   unsignedTransaction: Transaction,
   did: string,
   payer: PublicKey,
-  signers: [Signer, (PublicKey | AccountMeta)[]][],
+  signers: ([Signer, (PublicKey | AccountMeta)[]] | Signer)[],
   doa?: PublicKey
 ): Promise<Transaction> => {
+  const signersNormalized: [Signer, (PublicKey | AccountMeta)[]][] =
+    signers.map((signer) => {
+      if (signer instanceof Array) {
+        return signer;
+      } else {
+        return [signer, []];
+      }
+    });
+
   const parsedDID = DecentralizedIdentifier.parse(did);
   const didPDAKey = await parsedDID.pdaSolanaPubkey();
 
   const directExecuteInstruction = await create(
     unsignedTransaction,
     didPDAKey,
-    signers,
+    signersNormalized,
     doa
   );
 
@@ -34,6 +43,6 @@ export const directExecute = async (
     connection,
     [directExecuteInstruction],
     payer,
-    signers.map(([signer]) => signer)
+    signersNormalized.map(([signer]) => signer)
   );
 };

@@ -32,10 +32,10 @@
     ],
     "all": true,
     "check-coverage": true,
-    "branches": 64,
-    "lines": 87,
+    "branches": 62,
+    "lines": 86,
     "functions": 76,
-    "statements": 89
+    "statements": 88
   },
   "peerDependencies": {},
   "prettier": {
