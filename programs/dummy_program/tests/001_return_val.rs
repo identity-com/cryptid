@@ -45,5 +45,7 @@ async fn return_val_should_succeed() -> Result<(), Box<dyn Error>> {
     );
     banks.process_transaction(transaction).await?;
 
+    assert_eq!(banks.get_account(return_account.pubkey()).await?, None);
+
     Ok(())
 }

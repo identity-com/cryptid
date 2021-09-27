@@ -10,10 +10,12 @@ use dummy_program::DummyInstruction;
 use log::trace;
 use sol_did::id as sol_did_id;
 use sol_did::state::get_sol_address_with_seed;
+use solana_generator::solana_program::system_instruction::transfer;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::Transaction;
+use std::array::IntoIter;
 use std::error::Error;
 use test_utils::start_tests;
 
@@ -27,6 +29,21 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
 
     let did = Keypair::generate(&mut rng);
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
+    let return_account = Keypair::generate(&mut rng);
+    trace!(
+        target: LOG_TARGET,
+        "return_account: {}",
+        return_account.pubkey()
+    );
+    let rent = banks.get_rent().await?.minimum_balance(9);
+    let transaction = Transaction::new_signed_with_payer(
+        &[transfer(&funder.pubkey(), &return_account.pubkey(), rent)],
+        Some(&funder.pubkey()),
+        &[&funder],
+        banks.get_recent_blockhash().await?,
+    );
+    banks.send_transaction(transaction).await?;
+
     let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
     let (doa, _doa_nonce) = PDAGenerator::new(
@@ -42,19 +59,37 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         PDAGenerator::new(cryptid_id, DOASignerSeeder { doa }).find_address();
     trace!(target: LOG_TARGET, "doa_signer: {}", doa_signer);
 
-    let dummy_instruction: SolanaInstruction = build_instruction!(
+    let dummy_instruction1: SolanaInstruction = build_instruction!(
         dummy_program_id,
         DummyInstruction,
         RequireSigner(doa_signer)
     )
-    .expect("Could not create dummy instruction");
+    .expect("Could not create dummy instruction 1");
     trace!(
         target: LOG_TARGET,
         "dummy_instruction.accounts: {:?}",
-        dummy_instruction.accounts
+        dummy_instruction1.accounts
     );
 
-    let instruction_data = InstructionData::from(dummy_instruction);
+    let data = vec![1, 1, 2, 3, 5, 8, 13, 21, 34];
+    let dummy_instruction2: SolanaInstruction = build_instruction!(
+        dummy_program_id,
+        DummyInstruction,
+        ReturnVal((return_account.pubkey(), data.clone()))
+    )
+    .expect("Could not create dummy instruction 2");
+
+    let dummy_instruction3: SolanaInstruction = build_instruction!(
+        dummy_program_id,
+        DummyInstruction,
+        AssertAccountData((return_account.pubkey(), data.clone()))
+    )
+    .expect("Could not create dummy instruction 3");
+
+    let instruction_data =
+        IntoIter::new([dummy_instruction1, dummy_instruction2, dummy_instruction3])
+            .map(InstructionData::from)
+            .collect();
     trace!(
         target: LOG_TARGET,
         "instruction_data: {:?}",
@@ -69,7 +104,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
             signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
             extra_accounts: vec![],
         }],
-        instructions: vec![instruction_data],
+        instructions: instruction_data,
     };
     let direct_execute_instruction = build_instruction!(
         cryptid_id,
@@ -81,9 +116,18 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
     let transaction = Transaction::new_signed_with_payer(
         &[direct_execute_instruction],
         Some(&funder.pubkey()),
-        &[&funder, &did],
+        &[&funder, &did, &return_account],
         banks.get_recent_blockhash().await?,
     );
     banks.process_transaction(transaction).await?;
+
+    assert_eq!(
+        banks
+            .get_account(return_account.pubkey())
+            .await?
+            .unwrap()
+            .data,
+        data
+    );
     Ok(())
 }
