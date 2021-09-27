@@ -12,9 +12,12 @@ use sol_did::id as sol_did_id;
 use sol_did::state::get_sol_address_with_seed;
 use solana_generator::solana_program::system_instruction::transfer;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
+use solana_sdk::instruction::InstructionError;
+use solana_sdk::program_error::ProgramError;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
-use solana_sdk::transaction::Transaction;
+use solana_sdk::transaction::{Transaction, TransactionError};
+use solana_sdk::transport::TransportError;
 use std::array::IntoIter;
 use std::error::Error;
 use test_utils::start_tests;
@@ -129,5 +132,74 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
             .data,
         data
     );
+    Ok(())
+}
+
+#[tokio::test]
+async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
+    let (mut banks, funder, _genesis_hash, mut rng, [cryptid_id, dummy_program_id]) = start_tests(
+        LOG_TARGET,
+        [CRYPTID_SIGNER_PROGRAM_NAME, DUMMY_PROGRAM_NAME],
+    )
+    .await;
+
+    let did = Keypair::generate(&mut rng);
+    trace!(target: LOG_TARGET, "did: {}", did.pubkey());
+    let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
+    trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
+    let (doa, _doa_nonce) = PDAGenerator::new(
+        cryptid_id,
+        GenerativeDOASeeder {
+            did_program: sol_did_id(),
+            did: did_pda,
+        },
+    )
+    .find_address();
+    trace!(target: LOG_TARGET, "doa: {}", doa);
+    let (doa_signer, _doa_signer_nonce) =
+        PDAGenerator::new(cryptid_id, DOASignerSeeder { doa }).find_address();
+    trace!(target: LOG_TARGET, "doa_signer: {}", doa_signer);
+
+    let dummy_instruction1: SolanaInstruction = build_instruction!(
+        dummy_program_id,
+        DummyInstruction,
+        RequireSigner(doa_signer)
+    )
+    .expect("Could not create dummy instruction 1");
+
+    let instruction_data = IntoIter::new([dummy_instruction1])
+        .map(InstructionData::from)
+        .collect();
+    let direct_execute_data = DirectExecuteBuild {
+        doa,
+        did: SolanaAccountMeta::new_readonly(did_pda, false),
+        did_program: sol_did_id(),
+        signing_keys: vec![SigningKeyBuild {
+            signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), false),
+            extra_accounts: vec![],
+        }],
+        instructions: instruction_data,
+    };
+    let direct_execute_instruction = build_instruction!(
+        cryptid_id,
+        CryptidInstruction,
+        DirectExecute(direct_execute_data)
+    )
+    .expect("Could not create cryptid instruction");
+
+    let transaction = Transaction::new_signed_with_payer(
+        &[direct_execute_instruction],
+        Some(&funder.pubkey()),
+        &[&funder],
+        banks.get_recent_blockhash().await?,
+    );
+    let error = banks.process_transaction(transaction).await.unwrap_err();
+    match error {
+        TransportError::TransactionError(TransactionError::InstructionError(
+            0,
+            InstructionError::MissingRequiredSignature,
+        )) => {}
+        error => panic!("Error `{:?}` not what was expected", error),
+    }
     Ok(())
 }
