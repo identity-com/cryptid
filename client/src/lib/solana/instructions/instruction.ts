@@ -7,10 +7,10 @@ import {
 import { InstructionData } from '../model/InstructionData';
 
 export class DirectExecute extends Assignable<DirectExecute> {
-  signers!: number;
+  signers!: number[];
   instructions!: InstructionData[];
 
-  constructor(props: { signers: number; instructions: InstructionData[] }) {
+  constructor(props: { signers: number[]; instructions: InstructionData[] }) {
     super(props);
   }
 }
@@ -27,7 +27,7 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
   }
 
   static directExecute(
-    signers: number,
+    signers: number[],
     instructions: InstructionData[]
   ): CryptidInstruction {
     return new CryptidInstruction({
@@ -45,6 +45,6 @@ add_enum_to_schema(CryptidInstruction, {
   directExecute: DirectExecute,
 });
 add_struct_to_schema(DirectExecute, {
-  signers: 'u8',
+  signers: ['u8'],
   instructions: [InstructionData],
 });

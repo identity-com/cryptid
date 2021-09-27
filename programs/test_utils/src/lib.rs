@@ -1,3 +1,6 @@
+//! Default logging:
+//! `RUST_LOG=solana_rbpf::vm=debug,solana_runtime::message_processor=debug,solana_runtime::system_instruction_processor=trace,solana_program_test=info`
+
 pub extern crate rand;
 
 use array_init::array_init;

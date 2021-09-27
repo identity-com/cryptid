@@ -35,7 +35,6 @@ impl Instruction for ProposeTransaction {
                     program_id,
                     accounts.did_program.key,
                     accounts.did.key,
-                    None,
                 )?;
                 (
                     DOAAccount::GENERATIVE_DOA_KEY_THRESHOLD,

@@ -1,7 +1,9 @@
 use crate::error::CryptidSignerError;
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_generator::{Account, GeneratorResult, Pubkey, SolanaAccountMeta, UnixTimestamp};
+use solana_generator::{
+    Account, GeneratorResult, Pubkey, SolanaAccountMeta, SolanaInstruction, UnixTimestamp,
+};
 
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [1])]
@@ -58,11 +60,45 @@ pub struct InstructionData {
     pub accounts: Vec<TransactionAccountMeta>,
     pub data: Vec<u8>,
 }
+impl From<SolanaInstruction> for InstructionData {
+    fn from(from: SolanaInstruction) -> Self {
+        Self {
+            program_id: from.program_id,
+            accounts: from
+                .accounts
+                .into_iter()
+                .map(TransactionAccountMeta::from)
+                .collect(),
+            data: from.data,
+        }
+    }
+}
+impl From<InstructionData> for SolanaInstruction {
+    fn from(from: InstructionData) -> Self {
+        Self {
+            program_id: from.program_id,
+            accounts: from
+                .accounts
+                .into_iter()
+                .map(SolanaAccountMeta::from)
+                .collect(),
+            data: from.data,
+        }
+    }
+}
 
 #[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct TransactionAccountMeta {
     pub key: Pubkey,
     pub meta: AccountMeta,
+}
+impl From<SolanaAccountMeta> for TransactionAccountMeta {
+    fn from(from: SolanaAccountMeta) -> Self {
+        Self {
+            key: from.pubkey,
+            meta: AccountMeta::new(from.is_signer, from.is_writable),
+        }
+    }
 }
 impl From<TransactionAccountMeta> for SolanaAccountMeta {
     fn from(from: TransactionAccountMeta) -> Self {
@@ -79,5 +115,27 @@ bitflags! {
     pub struct AccountMeta: u8{
         const IS_SIGNER = 1 << 0;
         const IS_WRITABLE = 1 << 1;
+    }
+}
+impl AccountMeta {
+    pub fn new(is_signer: bool, is_writable: bool) -> Self {
+        Self::from_bits(
+            ((is_signer as u8) * Self::IS_SIGNER.bits)
+                | ((is_writable as u8) * Self::IS_WRITABLE.bits),
+        )
+        .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::state::AccountMeta;
+
+    #[test]
+    fn account_meta_from_bools() {
+        assert_eq!(AccountMeta::new(false, false), AccountMeta::empty());
+        assert_eq!(AccountMeta::new(true, false), AccountMeta::IS_SIGNER);
+        assert_eq!(AccountMeta::new(false, true), AccountMeta::IS_WRITABLE);
+        assert_eq!(AccountMeta::new(true, true), AccountMeta::all());
     }
 }

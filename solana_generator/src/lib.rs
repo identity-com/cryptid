@@ -16,6 +16,7 @@ pub use account_info::*;
 pub use account_types::*;
 pub use error::*;
 pub use traits::*;
+pub use pda_seeds::*;
 pub use util::*;
 
 pub use solana_program;
@@ -41,6 +42,7 @@ pub mod entrypoint;
 mod error;
 mod impls;
 mod traits;
+mod pda_seeds;
 mod util;
 
 /// Invokes another solana program.

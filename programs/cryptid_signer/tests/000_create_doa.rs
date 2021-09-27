@@ -4,11 +4,11 @@ mod constants;
 use constants::{CRYPTID_SIGNER_PROGRAM_NAME, LOG_TARGET};
 
 use borsh::BorshDeserialize;
-use cryptid_signer::generate_doa_signer;
 use cryptid_signer::instruction::{CreateDOABuild, CryptidInstruction, SigningKeyBuild};
 use cryptid_signer::state::DOAAccount;
+use cryptid_signer::DOASignerSeeder;
 use log::trace;
-use solana_generator::{InstructionList, SolanaAccountMeta};
+use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta};
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
 use std::error::Error;
@@ -28,7 +28,8 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     trace!(target: LOG_TARGET, "did_program: {}", did_program);
     let key_threshold = rng.gen();
     trace!(target: LOG_TARGET, "key_threshold: {}", key_threshold);
-    let (signer, signer_nonce) = generate_doa_signer(cryptid_id, doa.pubkey());
+    let (signer, signer_nonce) =
+        PDAGenerator::new(cryptid_id, DOASignerSeeder { doa: doa.pubkey() }).find_address();
     trace!(
         target: LOG_TARGET,
         "(signer, nonce): ({}, {})",
@@ -36,25 +37,24 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
         signer_nonce
     );
 
-    let create_doa = CryptidInstruction::build_instruction(
-        cryptid_id,
-        <CryptidInstruction as InstructionList>::BuildEnum::CreateDOA(CreateDOABuild {
-            funder: funder.pubkey(),
-            doa: doa.pubkey(),
-            did_program,
-            key_threshold,
-            doa_is_zeroed: false,
-            signing_key: SigningKeyBuild {
-                signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
-                extra_accounts: vec![],
-            }, // Sign as generative
-            did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
-        }),
-    )
-    .expect("Could not create instruction");
-
     let transaction = Transaction::new_signed_with_payer(
-        &[create_doa],
+        &[build_instruction!(
+            cryptid_id,
+            CryptidInstruction,
+            CreateDOA(CreateDOABuild {
+                funder: funder.pubkey(),
+                doa: doa.pubkey(),
+                did_program,
+                key_threshold,
+                doa_is_zeroed: false,
+                signing_key: SigningKeyBuild {
+                    signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
+                    extra_accounts: vec![],
+                }, // Sign as generative
+                did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
+            })
+        )
+        .expect("Could not create instruction")],
         Some(&funder.pubkey()),
         &[&funder, &doa, &did],
         banks.get_recent_blockhash().await?,

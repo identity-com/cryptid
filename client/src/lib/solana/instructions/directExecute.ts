@@ -16,7 +16,7 @@ import { AssignablePublicKey } from '../model/AssignablePublicKey';
 export const create = async (
   unsignedTransaction: Transaction,
   didPDAKey: PublicKey,
-  signers: Signer[],
+  signers: [Signer, (PublicKey | AccountMeta)[]][],
   doa?: PublicKey
 ): Promise<TransactionInstruction> => {
   const sendingDoa = doa || (await deriveDefaultDOAFromKey(didPDAKey));
@@ -61,11 +61,24 @@ export const create = async (
       isWritable: false,
     },
     { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
-    ...signers.map((signer) => ({
-      pubkey: signer.publicKey,
-      isSigner: true,
-      isWritable: false,
-    })),
+    ...signers.flatMap(([signer, extras]) => [
+      {
+        pubkey: signer.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+      ...extras.map((extra): AccountMeta => {
+        if (extra instanceof PublicKey) {
+          return {
+            pubkey: extra,
+            isSigner: false,
+            isWritable: false,
+          };
+        } else {
+          return extra;
+        }
+      }),
+    ]),
     ...instruction_accounts,
   ];
 
@@ -79,7 +92,7 @@ export const create = async (
   );
 
   const data = CryptidInstruction.directExecute(
-    signers.length,
+    signers.map((extra_accounts) => extra_accounts[1].length),
     instructions
   ).encode();
 

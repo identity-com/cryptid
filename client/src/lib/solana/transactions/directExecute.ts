@@ -1,4 +1,9 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import {
+  AccountMeta,
+  Connection,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
 import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
 import { createTransaction } from './util';
@@ -12,7 +17,7 @@ export const directExecute = async (
   unsignedTransaction: Transaction,
   did: string,
   payer: PublicKey,
-  signers: Signer[],
+  signers: [Signer, (PublicKey | AccountMeta)[]][],
   doa?: PublicKey
 ): Promise<Transaction> => {
   const parsedDID = DecentralizedIdentifier.parse(did);
@@ -29,6 +34,6 @@ export const directExecute = async (
     connection,
     [directExecuteInstruction],
     payer,
-    signers
+    signers.map(([signer]) => signer)
   );
 };

@@ -4,7 +4,7 @@ use solana_generator::*;
 
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::DOAAccount;
-use crate::{generate_doa_signer, verify_doa_signer};
+use crate::DOASignerSeeder;
 use std::iter::once;
 
 #[derive(Debug)]
@@ -24,12 +24,14 @@ impl Instruction for CreateDOA {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        verify_doa_signer(
+        // Verify the doa_signer
+        PDAGenerator::new(
             program_id,
-            accounts.doa.info().key,
-            accounts.doa_signer.key,
-            data.signer_nonce,
-        )?;
+            DOASignerSeeder {
+                doa: accounts.doa.info().key,
+            },
+        )
+        .verify_address_with_nonce(accounts.doa_signer.key, data.signer_nonce)?;
 
         verify_keys(
             accounts.did_program.key,
@@ -52,7 +54,8 @@ impl Instruction for CreateDOA {
         arg: CreateDOABuild,
     ) -> GeneratorResult<SolanaInstruction> {
         let mut data = discriminant.to_vec();
-        let (doa_signer, signer_nonce) = generate_doa_signer(program_id, arg.doa);
+        let (doa_signer, signer_nonce) =
+            PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa }).find_address();
         let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.doa, !arg.doa_is_zeroed),

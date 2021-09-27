@@ -1,3 +1,5 @@
+#![warn(missing_debug_implementations, unused_import_braces)]
+
 use solana_generator::solana_program::system_instruction::{allocate, assign};
 use solana_generator::*;
 use std::array::IntoIter;
@@ -7,6 +9,8 @@ entrypoint_list!(DummyInstruction);
 
 #[derive(Debug, Copy, Clone, InstructionList)]
 pub enum DummyInstruction {
+    #[instruction_list(instruction = Test, discriminant = 254)]
+    Test,
     #[instruction_list(instruction = RequireSigner, discriminant = 0)]
     RequireSigner,
     #[instruction_list(instruction = ReturnVal, discriminant = 1)]
@@ -14,7 +18,39 @@ pub enum DummyInstruction {
     #[instruction_list(instruction = AssertAccountData, discriminant = 2)]
     AssertAccountData,
 }
+#[derive(Debug)]
+pub struct Test;
+impl Instruction for Test {
+    type Data = ();
+    type FromAccountsData = ();
+    type Accounts = ();
+    type BuildArg = ();
 
+    fn data_to_instruction_arg(_data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
+        Ok(())
+    }
+
+    fn process(
+        _program_id: Pubkey,
+        _data: Self::Data,
+        _accounts: &mut Self::Accounts,
+    ) -> GeneratorResult<Option<SystemProgram>> {
+        msg!("Test succeeded!");
+        Ok(None)
+    }
+
+    fn build_instruction(
+        program_id: Pubkey,
+        discriminant: &[u8],
+        _arg: Self::BuildArg,
+    ) -> GeneratorResult<SolanaInstruction> {
+        Ok(SolanaInstruction {
+            program_id,
+            accounts: vec![],
+            data: discriminant.to_vec(),
+        })
+    }
+}
 #[derive(Debug)]
 pub struct RequireSigner;
 impl Instruction for RequireSigner {
@@ -117,6 +153,7 @@ pub struct ReturnValAccounts {
     system_program: SystemProgram,
 }
 
+#[derive(Debug)]
 pub struct AssertAccountData;
 impl Instruction for AssertAccountData {
     type Data = Vec<u8>;

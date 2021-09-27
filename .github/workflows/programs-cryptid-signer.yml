@@ -118,7 +118,12 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/${{ matrix.solana }}/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Build program and run integration tests
+      - name: Build programs
+        uses: actions-rs/cargo@v1
+        with:
+          command: build-bpf
+
+      - name: Run integration tests
         uses: actions-rs/cargo@v1
         with:
           command: test-bpf

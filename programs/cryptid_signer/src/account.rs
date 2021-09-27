@@ -1,10 +1,10 @@
-use crate::state::DOAAccount;
-use solana_generator::solana_program::program_error::ProgramError;
-use solana_generator::*;
 use std::iter::once;
 
-pub const DOA_NONCE_STR: &str = "cryptid_doa";
-pub const DOA_NONCE: &[u8] = DOA_NONCE_STR.as_bytes();
+use solana_generator::solana_program::program_error::ProgramError;
+use solana_generator::*;
+
+use crate::state::DOAAccount;
+use crate::GenerativeDOASeeder;
 
 #[derive(Debug)]
 pub enum DOAAddress {
@@ -25,40 +25,9 @@ impl DOAAddress {
         program_id: Pubkey,
         did_program: Pubkey,
         did: Pubkey,
-        nonce: Option<u8>,
-    ) -> GeneratorResult<()> {
-        match nonce {
-            None => {
-                let (key, _) = Pubkey::find_program_address(
-                    &[did_program.as_ref(), did.as_ref(), DOA_NONCE],
-                    &program_id,
-                );
-                if account != key {
-                    return Err(GeneratorError::AccountNotFromSeeds {
-                        account,
-                        seeds: format!("{:?} no nonce", (did_program, did, DOA_NONCE_STR)),
-                        program_id,
-                    }
-                    .into());
-                }
-                Ok(())
-            }
-            Some(nonce) => {
-                let created_key = Pubkey::create_program_address(
-                    &[did_program.as_ref(), did.as_ref(), DOA_NONCE, &[nonce]],
-                    &program_id,
-                );
-                if created_key.is_err() || account != created_key? {
-                    return Err(GeneratorError::AccountNotFromSeeds {
-                        account,
-                        seeds: format!("{:?}", (did_program, did, DOA_NONCE_STR, nonce)),
-                        program_id,
-                    }
-                    .into());
-                }
-                Ok(())
-            }
-        }
+    ) -> GeneratorResult<u8> {
+        PDAGenerator::new(program_id, GenerativeDOASeeder { did_program, did })
+            .verify_address_without_nonce(account)
     }
 }
 impl AccountArgument for DOAAddress {

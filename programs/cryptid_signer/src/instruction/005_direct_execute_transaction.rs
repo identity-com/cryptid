@@ -4,9 +4,9 @@ use solana_generator::*;
 
 use crate::account::DOAAddress;
 use crate::error::CryptidSignerError;
-use crate::generate_doa_signer;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{AccountMeta, InstructionData};
+use crate::DOASignerSeeder;
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
 
@@ -27,15 +27,16 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        accounts.print_keys();
+        // accounts.print_keys();
 
         // Retrieve needed data from doa
-        let (key_threshold, signer_key, signer_nonce) = match &accounts.doa {
+        let (key_threshold, signer_generator, signer_key, signer_nonce) = match &accounts.doa {
             DOAAddress::OnChain(doa) => {
                 doa.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
-                let signer_seeds = doa_signer_seeds!(doa.info.key, doa.signer_nonce);
-                let signer_key = Pubkey::create_program_address(signer_seeds, &program_id)?;
-                (doa.key_threshold, signer_key, doa.signer_nonce)
+                let generator =
+                    PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.info.key });
+                let signer_key = generator.create_address(doa.signer_nonce)?;
+                (doa.key_threshold, generator, signer_key, [doa.signer_nonce])
             }
             DOAAddress::Generative(doa) => {
                 DOAAddress::verify_seeds(
@@ -43,12 +44,10 @@ impl Instruction for DirectExecute {
                     program_id,
                     accounts.did_program.key,
                     accounts.did.key,
-                    None,
                 )?;
-                let signer_seeds = doa_signer_seeds!(doa.key);
-                let (signer_key, signer_nonce) =
-                    Pubkey::find_program_address(signer_seeds, &program_id);
-                (1, signer_key, signer_nonce)
+                let generator = PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.key });
+                let (signer_key, signer_nonce) = generator.find_address();
+                (1, generator, signer_key, [signer_nonce])
             }
         };
 
@@ -61,6 +60,7 @@ impl Instruction for DirectExecute {
             .into());
         }
 
+        msg!("Verifying keys");
         // Verify the keys sent, this only checks that one is valid for now but will use the threshold eventually
         verify_keys(
             accounts.did_program.key,
@@ -69,8 +69,9 @@ impl Instruction for DirectExecute {
         )?;
 
         let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
-        let signer_seeds = doa_signer_seeds!(accounts.doa.info().key, signer_nonce);
+        let signer_seeds = signer_generator.seeds_to_bytes(Some(&signer_nonce));
 
+        msg!("Executing instructions");
         // Execute instructions
         for (index, instruction) in data.instructions.into_iter().enumerate() {
             // Convert the metas
@@ -86,6 +87,7 @@ impl Instruction for DirectExecute {
 
             // Check if the metas contain a the signer and run relevant invoke
             let sub_instruction_result = if metas.iter().any(|meta| meta.pubkey == signer_key) {
+                msg!("Invoking signed");
                 invoke_signed_variable_size(
                     &SolanaInstruction {
                         program_id: instruction.program_id,
@@ -93,9 +95,10 @@ impl Instruction for DirectExecute {
                         data: instruction.data,
                     },
                     &instruction_accounts_ref,
-                    &[signer_seeds],
+                    &[&signer_seeds],
                 )
             } else {
+                msg!("Invoking without signature");
                 invoke_variable_size(
                     &SolanaInstruction {
                         program_id: instruction.program_id,
@@ -120,7 +123,9 @@ impl Instruction for DirectExecute {
         discriminant: &[u8],
         arg: Self::BuildArg,
     ) -> GeneratorResult<SolanaInstruction> {
-        let signer_key = generate_doa_signer(program_id, arg.doa).0;
+        let signer_key = PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa })
+            .find_address()
+            .0;
         let mut instruction_accounts = HashMap::new();
 
         // Go through all the instructions and collect all the accounts together
@@ -207,6 +212,7 @@ impl DirectExecuteAccounts {
             self.signing_keys
                 .iter()
                 .map(|signing_keys| signing_keys.to_key_string())
+                .collect::<Vec<_>>()
         );
         msg!(
             "instruction_accounts: {:?}",
@@ -231,6 +237,5 @@ pub struct DirectExecuteBuild {
     pub did: SolanaAccountMeta,
     pub did_program: Pubkey,
     pub signing_keys: Vec<SigningKeyBuild>,
-    pub did_program_accounts: Vec<Pubkey>,
     pub instructions: Vec<InstructionData>,
 }

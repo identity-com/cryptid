@@ -63,7 +63,10 @@ impl SigningKey {
         format!(
             "({}, {:?})",
             self.signing_key.key,
-            self.extra_accounts.iter().map(|extra| extra.key)
+            self.extra_accounts
+                .iter()
+                .map(|extra| extra.key)
+                .collect::<Vec<_>>()
         )
     }
 }
