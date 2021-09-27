@@ -59,14 +59,16 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
         &[&funder, &doa, &did],
         banks.get_recent_blockhash().await?,
     );
+    trace!(target: LOG_TARGET, "transaction built");
     banks.process_transaction(transaction).await?;
 
     let account = banks
         .get_account(doa.pubkey())
         .await?
         .unwrap_or_else(|| panic!("Could not find account {}", doa.pubkey()));
-    let data: DOAAccount = BorshDeserialize::deserialize(&mut &account.data.as_slice()[2..])?; // TODO: This slice index skips the discriminant. Should find a better way to do this.
-    trace!(target: "cryptid_signer", "data: {:?}", data);
+    let data: DOAAccount = BorshDeserialize::deserialize(&mut &account.data.as_slice()[2..])?;
+    // TODO: This slice index skips the discriminant. Should find a better way to do this.
+    trace!(target: LOG_TARGET, "data: {:?}", data);
     assert_eq!(data.did, did.pubkey());
     assert_eq!(data.did_program, did_program);
 

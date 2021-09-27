@@ -28,7 +28,7 @@ pub async fn start_tests<const N: usize>(
     let (test, program_map, rng) = generate_test(log_target, programs);
 
     let (banks, funder, genesis_hash) = test.start().await;
-    trace!("funder: {}", funder.pubkey());
+    trace!(target: log_target, "funder: {}", funder.pubkey());
     let mut programs_iter = IntoIter::new(programs);
 
     (

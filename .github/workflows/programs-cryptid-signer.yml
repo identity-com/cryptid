@@ -127,3 +127,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test-bpf
+        env:
+          RUST_LOG: solana_rbpf::vm=debug,solana_runtime::message_processor=debug,solana_runtime::system_instruction_processor=trace,solana_program_test=info,cryptid_signer=trace
+          RUST_BACKTRACE: 1

@@ -20,7 +20,7 @@ solana-program-test = "1.7.12"
 tokio = "1.11.0"
 log = "0.4.14"
 test_utils = { path = "../test_utils" }
-dummy_program = { path = "../dummy_program" }
+dummy_program = { path = "../dummy_program", features = ["no-entrypoint"] }
 
 [features]
 default = []

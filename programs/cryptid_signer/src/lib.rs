@@ -32,7 +32,6 @@ impl<'a> PDASeeder<'a> for DOASignerSeeder {
     type Iterator = IntoIter<&'a dyn PDASeed, 2>;
 
     fn seeds(&'a self) -> Self::Iterator {
-        msg!("Seeds: [{}, {}]", DOA_SIGNER_SEED, self.doa);
         IntoIter::new([&DOA_SIGNER_SEED, &self.doa])
     }
 }

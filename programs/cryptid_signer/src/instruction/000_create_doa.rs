@@ -55,12 +55,11 @@ impl Instruction for CreateDOA {
         arg: CreateDOABuild,
     ) -> GeneratorResult<SolanaInstruction> {
         let mut data = discriminant.to_vec();
-        let (doa_signer, signer_nonce) =
+        let (_doa_signer, signer_nonce) =
             PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa }).find_address();
         let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.doa, !arg.doa_is_zeroed),
-            SolanaAccountMeta::new_readonly(doa_signer, false),
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
         ];
