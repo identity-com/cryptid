@@ -20,6 +20,11 @@ export default class TokenTransfer extends Command {
       required: true,
       parse: (address: string): PublicKey => new PublicKey(address),
     })(),
+    allowUnfundedRecipient: flags.boolean({
+      char: 'f',
+      description: 'Create a token account for the recipient if needed',
+      default: false
+    })
   };
 
   static args = [
@@ -44,30 +49,61 @@ export default class TokenTransfer extends Command {
 
     const to = await resolveRecipient(args.to, config);
     this.log(`${args.to} resolved to ${to}`);
+    this.log('mint: ' + flags.mint!.toBase58())
 
     const { blockhash: recentBlockhash } =
       await config.connection.getRecentBlockhash();
 
-    const associatedTokenAccount = await Token.getAssociatedTokenAddress(
+    const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       flags.mint as PublicKey,
       address,
       true
     );
+    const recipientAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      flags.mint as PublicKey,
+      to,
+      true
+    );
+
+    const instructions = [];
+
+    if (flags.allowUnfundedRecipient) {
+      // check if the recipient ATA exists:
+      const recipientATAAccount = await config.connection.getAccountInfo(recipientAssociatedTokenAccount);
+
+      if (!recipientATAAccount) {
+        this.log("Creating a token account for " + to)
+        const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          flags.mint as PublicKey,
+          recipientAssociatedTokenAccount,
+          to,
+          address
+        )
+
+        instructions.push(createATAInstruction)
+      }
+    }
+
     const transferInstruction = Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
-      associatedTokenAccount,
-      to,
+      senderAssociatedTokenAccount,
+      recipientAssociatedTokenAccount,
       address,
       [],
       args.amount
     );
+    instructions.push(transferInstruction)
 
     const tx = new Transaction({
       recentBlockhash,
-      feePayer: config.keypair.publicKey,
-    }).add(transferInstruction);
+      feePayer: address//config.keypair.publicKey,
+    }).add(...instructions);
 
     const [signedTx] = await cryptid.sign(tx);
     console.log(

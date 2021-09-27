@@ -37,10 +37,6 @@ describe('transfers', function () {
 
     doaSigner = await cryptid.address();
 
-    console.log(`Wallet: ${key.publicKey}`);
-    console.log(`DID: ${did}`);
-    console.log(`Cryptid Address: ${doaSigner}`);
-
     await Promise.all([
       airdrop(connection, doaSigner), // the main funds for the cryptid account
       airdrop(connection, key.publicKey, 100_000), // to cover fees only
