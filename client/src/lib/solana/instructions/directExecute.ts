@@ -41,8 +41,8 @@ export const create = async (
       )(instruction_accounts);
       if (found) {
         found.isSigner =
-          found.isSigner ||
-          (account.pubkey != doa_signer_key && account.isSigner);
+            found.isSigner ||
+            (!account.pubkey.equals(doa_signer_key) && account.isSigner);
         found.isWritable = found.isWritable || account.isWritable;
       } else {
         instruction_accounts.push({
