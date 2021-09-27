@@ -7,13 +7,18 @@ import sinonChai from 'sinon-chai';
 import { Cryptid } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
-import { did, makeKeypair } from '../../utils/did';
+import {did, makeKeypair, makeService} from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
 import * as AddKey from '../../../src/lib/solana/transactions/did/addKey';
+import * as RemoveKey from '../../../src/lib/solana/transactions/did/removeKey';
+import * as AddService from '../../../src/lib/solana/transactions/did/addService';
+import * as RemoveService from '../../../src/lib/solana/transactions/did/removeService';
+import * as AddController from '../../../src/lib/solana/transactions/did/addController';
+import * as RemoveController from '../../../src/lib/solana/transactions/did/removeController';
 import { pubkey } from '../../utils/solana';
 import { decode } from 'bs58';
-import { CryptidOptions } from '../../../src/api/cryptid';
+import {CryptidOptions, PayerOption} from '../../../src/api/cryptid';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -64,7 +69,7 @@ describe('SimpleCryptid', () => {
       expectation.verify();
     });
 
-    it('should wait for the confirmation if cryptid is configured too do so', async () => {
+    it('should wait for the confirmation if cryptid is configured to do so', async () => {
       const expectation = sandbox
         .mock(Connection.prototype)
         .expects('confirmTransaction');
@@ -73,6 +78,86 @@ describe('SimpleCryptid', () => {
       cryptid = makeCryptid(keypair, { waitForConfirmation: true });
 
       await cryptid.addKey(pubkey(), 'alias');
+
+      expectation.verify();
+    });
+
+    it('should pass the user key as the signer if SIGNER_PAYS is true', async () => {
+      const expectation = sandbox.mock(AddKey)
+        .expects('addKey').withArgs(
+          sandbox.match.any,
+          did(keypair),
+          sandbox.match(signer => signer.toString() === keypair.publicKey.toString())
+        )
+      ;
+      expectation.resolves(new Transaction());
+
+      cryptid = makeCryptid(keypair, { rentPayer: "SIGNER_PAYS" });
+
+      await cryptid.addKey(pubkey(), 'alias');
+
+      expectation.verify();
+    });
+
+    it('should throw an error if the ret payer is not recognised', async () => {
+      cryptid = makeCryptid(keypair, { rentPayer: "unrecognised" as PayerOption });
+
+      const shouldFail = cryptid.addKey(pubkey(), 'alias');
+
+      return expect(shouldFail).to.be.rejectedWith(/Unsupported payer option/)
+    });
+  });
+
+  context('removeKey', () => {
+    it('should delegate to removeKey', async () => {
+      const expectation = sandbox.mock(RemoveKey).expects('removeKey');
+      expectation.resolves(new Transaction());
+
+      await cryptid.removeKey('alias');
+
+      expectation.verify();
+    });
+  });
+
+  context('addController', () => {
+    it('should delegate to addController', async () => {
+      const expectation = sandbox.mock(AddController).expects('addController');
+      expectation.resolves(new Transaction());
+
+      await cryptid.addController('did:sol:controller');
+
+      expectation.verify();
+    });
+  });
+
+  context('removeController', () => {
+    it('should delegate to removeController', async () => {
+      const expectation = sandbox.mock(RemoveController).expects('removeController');
+      expectation.resolves(new Transaction());
+
+      await cryptid.removeController('did:sol:controller');
+
+      expectation.verify();
+    });
+  });
+
+  context('addService', () => {
+    it('should delegate to addService', async () => {
+      const expectation = sandbox.mock(AddService).expects('addService');
+      expectation.resolves(new Transaction());
+
+      await cryptid.addService(makeService());
+
+      expectation.verify();
+    });
+  });
+
+  context('removeService', () => {
+    it('should delegate to removeService', async () => {
+      const expectation = sandbox.mock(RemoveService).expects('removeService');
+      expectation.resolves(new Transaction());
+
+      await cryptid.removeService('service1');
 
       expectation.verify();
     });

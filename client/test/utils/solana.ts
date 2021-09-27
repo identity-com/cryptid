@@ -6,6 +6,7 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import { SOL_DID_PROGRAM_ID } from '../../src/lib/constants';
+import * as Sinon from 'sinon';
 
 const AIRDROP_LAMPORTS = 20_000_000;
 export const airdrop = async (
@@ -64,6 +65,16 @@ export const dummyDIDAccountInfo = {
   executable: false,
   lamports: 0,
   owner: SOL_DID_PROGRAM_ID,
+};
+
+// stub the connection functions used my many did operations
+export const stubConnection = (sandbox: Sinon.SinonSandbox): void => {
+  sandbox.stub(Connection.prototype, 'sendRawTransaction').resolves('txSig');
+  // stub getRecentBlockhash to return a valid blockhash from mainnet, to avoid going to the blockchain
+  sandbox.stub(Connection.prototype, 'getRecentBlockhash').resolves({
+    blockhash: 'FFPCDfh4NE3rfq1xTeJiZ5dAECNftv1p8vYinDBUn8dw',
+    feeCalculator: { lamportsPerSignature: 0 },
+  });
 };
 
 class Balance {
