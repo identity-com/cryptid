@@ -1,13 +1,26 @@
-import { Command } from "@oclif/command";
-import { Config } from "../service/config";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { build, resolveRecipient } from "../service/cryptid";
-import * as Flags from "../lib/flags";
+import { Command, flags } from "@oclif/command";
+import { Config } from "../../service/config";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { build, resolveRecipient } from "../../service/cryptid";
+import * as Flags from "../../lib/flags";
 
-export default class Transfer extends Command {
-  static description = "Send SOL to a recipient";
+export default class TokenTransfer extends Command {
+  static description = "Send SPL-Tokens to a recipient";
 
-  static flags = Flags.common;
+  static flags = {
+    ...Flags.common,
+    mint: flags.build<PublicKey>({
+      char: "m",
+      description: "The SPL-Token mint(base58)",
+      required: true,
+      parse: (address: string): PublicKey => new PublicKey(address),
+    })(),
+  };
 
   static args = [
     {
@@ -23,29 +36,38 @@ export default class Transfer extends Command {
   ];
 
   async run(): Promise<void> {
-    const { args, flags } = this.parse(Transfer);
+    const { args, flags } = this.parse(TokenTransfer);
 
     const config = new Config(flags.config);
     const cryptid = build(config);
     const address = await cryptid.address();
 
     const to = await resolveRecipient(args.to, config);
-
     this.log(`${args.to} resolved to ${to}`);
 
     const { blockhash: recentBlockhash } =
       await config.connection.getRecentBlockhash();
 
+    const associatedTokenAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      flags.mint as PublicKey,
+      address,
+      true
+    );
+    const transferInstruction = Token.createTransferInstruction(
+      TOKEN_PROGRAM_ID,
+      associatedTokenAccount,
+      to,
+      address,
+      [],
+      args.amount
+    );
+
     const tx = new Transaction({
       recentBlockhash,
       feePayer: config.keypair.publicKey,
-    }).add(
-      SystemProgram.transfer({
-        fromPubkey: address,
-        toPubkey: to as PublicKey,
-        lamports: args.amount,
-      })
-    );
+    }).add(transferInstruction);
 
     const [signedTx] = await cryptid.sign(tx);
     console.log(

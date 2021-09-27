@@ -13,37 +13,40 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
+    "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.27.0",
+    "@tiagonapoli/oclif-plugin-spaced-commands": "^1.0.1",
     "did-resolver": "^3.1.0",
+    "ramda": "^0.27.1",
     "tslib": "^1",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
-    "@oclif/dev-cli": "^1",
-    "@oclif/test": "^1",
-    "@types/chai": "^4",
-    "@types/mocha": "^5",
-    "@types/node": "^10",
+    "@oclif/dev-cli": "^1.26.0",
+    "@oclif/test": "^1.2.8",
+    "@types/chai": "^4.2.22",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.10.1",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
     "@typescript-eslint/parser": "^4.31.1",
-    "chai": "^4",
+    "chai": "^4.3.4",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^3.1",
     "eslint-config-oclif-typescript": "^0.2.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "globby": "^10",
-    "mocha": "^5",
+    "mocha": "^9.1.2",
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
     "source-map-support": "^0.5.20",
     "ts-node": "^8",
-    "typescript": "^3.3"
+    "typescript": "^4.4.3"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=16.0.0"
   },
   "files": [
     "/bin",
@@ -61,7 +64,8 @@
     "commands": "./lib/commands",
     "bin": "cryptid",
     "plugins": [
-      "@oclif/plugin-help"
+      "@oclif/plugin-help",
+      "@tiagonapoli/oclif-plugin-spaced-commands"
     ]
   },
   "repository": "identity-com/cryptid",
@@ -69,7 +73,7 @@
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
-    "test": "nyc --extension .ts mocha \"test/**/*.test.ts\"",
+    "test": "nyc mocha",
     "version": "oclif-dev readme && git add README.md",
     "lint": "eslint . --ext .ts --max-warnings 0",
     "cryptid": "./bin/run"

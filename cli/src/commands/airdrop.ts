@@ -1,20 +1,14 @@
-import { Command, flags } from "@oclif/command";
+import { Command } from "@oclif/command";
 import { Config } from "../service/config";
 import { airdrop, build } from "../service/cryptid";
+import * as Flags from "../lib/flags";
 
-const DEFAULT_AIRDROP_LAMPORTS = 100_000;
+const DEFAULT_AIRDROP_LAMPORTS = 50_000_000;
 
 export default class Airdrop extends Command {
   static description = "Airdrop funds into the cryptid account and owner key";
 
-  static flags = {
-    help: flags.help({ char: "h" }),
-    config: flags.string({
-      char: "c",
-      description: "Path to config file",
-      default: process.env.CRYPTID_CONFIG,
-    }),
-  };
+  static flags = Flags.common;
 
   static args = [
     {

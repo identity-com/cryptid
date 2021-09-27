@@ -1,18 +1,12 @@
-import { Command, flags } from "@oclif/command";
+import { Command } from "@oclif/command";
 import { Config } from "../service/config";
 import { balance, build } from "../service/cryptid";
+import * as Flags from "../lib/flags";
 
 export default class Balance extends Command {
   static description = "Show the cryptid account SOL balance";
 
-  static flags = {
-    help: flags.help({ char: "h" }),
-    config: flags.string({
-      char: "c",
-      description: "Path to config file",
-      default: process.env.CRYPTID_CONFIG,
-    }),
-  };
+  static flags = Flags.common;
 
   static args = [{ name: "file" }];
 
