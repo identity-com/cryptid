@@ -1,0 +1,49 @@
+name: Wallet
+on:
+  push:
+    paths:
+      - 'wallet/**'
+    branches:
+      - develop
+      - main
+jobs:
+  deploy:
+    name: Build and deploy the cryptid wallet on Node ${{ matrix.node }} and ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ['16.x']
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node dependencies
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install
+        run: yarn
+
+      - name: Build Dependencies
+        run: yarn workspace @identity.com/cryptid build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy
+        # set CI=false to ignore lint warnings inherited from sollet.io (until fixed)
+        run: CI=false STAGE=prod yarn workspace @identity.com/cryptid-wallet deploy
