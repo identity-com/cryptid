@@ -76,7 +76,6 @@ export class SimpleCryptid implements Cryptid {
   }
 
   private async getPayerForInternalTransaction(): Promise<Signer> {
-    // TODO @daniel ambiguous on undefined
     switch (this.options.rentPayer) {
       // use Cryptid to sign and send the tx, so that any rent  is paid by the cryptid account
       case 'DID_PAYS':

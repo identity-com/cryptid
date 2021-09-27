@@ -1,9 +1,10 @@
 {
-  "name": "spl-token-wallet",
+  "name": "@identity.com/cryptid-wallet",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@bonfida/spl-name-service": "^0.1.12",
+    "@identity.com/cryptid": "0.1.0",
     "@ledgerhq/hw-transport-webhid": "^5.51.1",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
@@ -43,8 +44,8 @@
     "web3": "^1.2.11"
   },
   "scripts": {
-    "predeploy": "git pull --ff-only && yarn && yarn build",
-    "deploy": "gh-pages -d build",
+    "predeploy": "SKIP_PREFLIGHT_CHECK=true yarn build",
+    "deploy": "STAGE=${STAGE:-dev} etc/deploy/deploy-site.sh",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.js\" \"extension/src/*.js\" --write",
     "start": "react-scripts start",

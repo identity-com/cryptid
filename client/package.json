@@ -32,10 +32,10 @@
     ],
     "all": true,
     "check-coverage": true,
-    "branches": 40,
-    "lines": 68,
-    "functions": 53,
-    "statements": 70
+    "branches": 64,
+    "lines": 87,
+    "functions": 76,
+    "statements": 89
   },
   "peerDependencies": {},
   "prettier": {
@@ -90,7 +90,7 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@identity.com/sol-did-client": "^0.2.0",
+    "@identity.com/sol-did-client": "^0.2.1",
     "@solana/web3.js": "^1.27.0",
     "@types/ramda": "^0.27.1",
     "did-resolver": "^3.1.0",

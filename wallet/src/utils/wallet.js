@@ -4,8 +4,8 @@ import { Account, PublicKey } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import {
   setInitialAccountInfo,
-  useAccountInfo,
-  useConnection,
+  useAccountInfo, useCluster,
+  useConnection, useConnectionConfig,
 } from './connection';
 import {
   closeTokenAccount,
@@ -28,6 +28,7 @@ import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { WalletProviderFactory } from './walletProvider/factory';
 import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
+import {build as buildCryptid} from "@identity.com/cryptid";
 
 const DEFAULT_WALLET_SELECTOR = {
   walletIndex: 0,
@@ -40,16 +41,38 @@ export class Wallet {
     this.connection = connection;
     this.type = type;
     this.provider = WalletProviderFactory.getProvider(type, args);
+    this.cryptid = null;
+    this.publicKey = null;
+    this.cluster = args.cluster || 'localnet'
   }
 
   static create = async (connection, type, args) => {
     const instance = new Wallet(connection, type, args);
     await instance.provider.init();
+    
+    console.log("DID " + instance.did);
+
+    // build and attach cryptid
+    const signer = {
+      publicKey: instance.provider.publicKey,
+      sign: instance.signTransaction
+    }
+    instance.cryptid = await buildCryptid(instance.did, signer, {
+      connection,
+    })
+    instance.publicKey = await instance.cryptid.address()
+
+
+    console.log(`Init Wallet with Cryptid! Address: ${await instance.publicKey}`)
+    console.log(`Init Wallet with Cryptid! ${instance.cryptid}`)
+
+
     return instance;
   };
 
-  get publicKey() {
-    return this.provider.publicKey;
+  get did() {
+    const clusterPrefix = this.cluster === 'mainnet-beta' ? '' : `${this.cluster}:`;
+    return `did:sol:${clusterPrefix}${this.provider.publicKey.toBase58()}`
   }
 
   get allowsExport() {
@@ -146,6 +169,7 @@ export class Wallet {
 const WalletContext = React.createContext(null);
 
 export function WalletProvider({ children }) {
+  const cluster = useCluster();
   useListener(walletSeedChanged, 'change');
   const [{
     mnemonic,
@@ -194,6 +218,7 @@ export function WalletProvider({ children }) {
             derivationPath: walletSelector.derivationPath,
             account: walletSelector.account,
             change: walletSelector.change,
+            cluster
           };
           wallet = await Wallet.create(connection, 'ledger', args);
         } catch (e) {
@@ -228,7 +253,7 @@ export function WalletProvider({ children }) {
                   );
                 })(),
               );
-        wallet = await Wallet.create(connection, 'local', { account });
+        wallet = await Wallet.create(connection, 'local', { account, cluster });
       }
       setWallet(wallet);
     })();

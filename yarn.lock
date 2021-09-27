@@ -1550,6 +1550,18 @@
     did-resolver "^3.0.1"
     ramda "^0.27.1"
 
+"@identity.com/sol-did-client@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.2.1.tgz#4d040cd01cb3dff5dc1b1a94b2ea8507e60aae6f"
+  integrity sha512-IZaWnvyUoLUx74YC28qjfxn+CynIsCQFJF+JZ6+dye55+ibMLX+pi7B7d9gP6pYk0XhBH5BFPZcQdoGPTka2Vg==
+  dependencies:
+    "@solana/web3.js" "^1.21.0"
+    bn.js "^4.12.0"
+    borsh "^0.3.1"
+    bs58 "^4.0.1"
+    did-resolver "^3.0.1"
+    ramda "^0.27.1"
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"

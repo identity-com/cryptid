@@ -1,6 +1,6 @@
 import { MARKETS } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
-import { MAINNET_URL } from './connection';
+import {MAINNET_URL} from "./clusters";
 
 interface Markets {
   [coin: string]: {

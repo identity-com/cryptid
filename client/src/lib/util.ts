@@ -35,7 +35,7 @@ export const didToDefaultDOASigner = async (
   return doaSigner;
 };
 
-export const notNil = <T>(entries: (T | null | undefined)[]): T[] =>
+export const filterNotNil = <T>(entries: (T | null | undefined)[]): T[] =>
   entries.filter(complement(isNil)) as T[];
 
 export const headNonEmpty = <T>(t: NonEmptyArray<T>): T => t[0];

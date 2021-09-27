@@ -2,11 +2,9 @@ import React, { useContext, useState, useEffect } from 'react';
 import EventEmitter from 'events';
 import {
   useConnectionConfig,
-  MAINNET_URL,
-  MAINNET_BACKUP_URL,
 } from '../connection';
 import { useListener } from '../utils';
-import { clusterForEndpoint } from '../clusters';
+import { clusterForEndpoint, MAINNET_BACKUP_URL, MAINNET_URL } from '../clusters';
 import { useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { TokenListProvider } from '@solana/spl-token-registry';

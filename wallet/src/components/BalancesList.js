@@ -24,6 +24,9 @@ import { abbreviateAddress, useIsExtensionWidth } from '../utils/utils';
 import Button from '@material-ui/core/Button';
 import SendIcon from '@material-ui/icons/Send';
 import ReceiveIcon from '@material-ui/icons/WorkOutline';
+import AddKeyIcon from '@material-ui/icons/VpnKeyOutlined';
+import AddServiceIcon from '@material-ui/icons/RoomServiceOutlined';
+import AddControllerIcon from '@material-ui/icons/SupervisorAccountOutlined';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import AddIcon from '@material-ui/icons/Add';
@@ -106,6 +109,7 @@ function fairsIsLoaded(publicKeys) {
 export default function BalancesList() {
   const wallet = useWallet();
   const [publicKeys, loaded] = useWalletPublicKeys();
+
   const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
   const [showEditAccountNameDialog, setShowEditAccountNameDialog] = useState(
     false,
@@ -201,7 +205,7 @@ export default function BalancesList() {
       <AppBar position="static" color="default" elevation={1}>
         <Toolbar>
           <CopyToClipboard
-            text={selectedAccount && selectedAccount.address.toBase58()}
+            text={wallet && wallet.did}
             onCopy={() => {
               setIsCopied(true);
               setTimeout(() => {
@@ -231,8 +235,8 @@ export default function BalancesList() {
                 {isExtensionWidth
                   ? ''
                   : ` (${
-                      selectedAccount &&
-                      shortenAddress(selectedAccount.address.toBase58())
+                      wallet &&
+                      shortenAddress(wallet.did)
                     })`}{' '}
                 {allTokensLoaded && (
                   <>({numberFormat.format(totalUsdValue.toFixed(2))})</>
@@ -503,7 +507,7 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
             flexDirection: 'column',
           }}
         >
-          {publicKey.toBase58()}
+          DOA:  {publicKey.toBase58()}
         </div>
       </div>
     );
@@ -749,6 +753,30 @@ function BalanceListItemDetails({
             onClick={() => setSendDialogOpen(true)}
           >
             Send
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<AddKeyIcon />}
+            onClick={() => alert('Add Key clicked')}
+          >
+            Add Key
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<AddServiceIcon />}
+            onClick={() => alert('Add Service clicked')}
+          >
+            Add Service
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<AddControllerIcon />}
+            onClick={() => alert('Add Controller clicked')}
+          >
+            Add Controller
           </Button>
           {localStorage.getItem('warning-close-account') &&
           mint &&
