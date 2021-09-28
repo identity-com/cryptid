@@ -20,7 +20,7 @@ import Typography from "@material-ui/core/Typography";
 import { useCryptid } from "../../utils/Cryptid/cryptid";
 
 export const CryptidSelector = () => {
-  const { cryptidAccounts } = useCryptid()
+  const { cryptidAccounts, selectedCryptidAccount, setSelectedCryptidAccount } = useCryptid()
 
   const [anchorEl, setAnchorEl] = useState<Element | null>(null);
   const classes = useStyles();
@@ -40,7 +40,7 @@ export const CryptidSelector = () => {
         </Button>
       </Hidden>
       <Hidden smUp>
-        <Tooltip title="Select Account" arrow>
+        <Tooltip title="Select Cryptid Account" arrow>
           <IconButton color="inherit" onClick={(e) => setAnchorEl(e.target as Element)}>
             <AccountIcon />
           </IconButton>
@@ -56,12 +56,13 @@ export const CryptidSelector = () => {
         }}
         getContentAnchorEl={null}
       >
-        {cryptidAccounts.map((account) => (
+        {cryptidAccounts.map((cryptidAccount) => (
           <CryptidListItem
-            account={account}
+            cryptidAccount={cryptidAccount}
+            isSelected={cryptidAccount.did === selectedCryptidAccount?.did}
             classes={classes}
             setAnchorEl={setAnchorEl}
-            // setWalletSelector={setWalletSelector}
+            setSelectedCryptidAccount={setSelectedCryptidAccount}
           />
         ))}
       </Menu>
@@ -69,24 +70,24 @@ export const CryptidSelector = () => {
   );
 }
 
-const CryptidListItem = ({ account, classes, setAnchorEl }) => {
+const CryptidListItem = ({ cryptidAccount, isSelected, classes, setAnchorEl, setSelectedCryptidAccount }) => {
   return (
     <MenuItem
-      key={account.did}
+      key={cryptidAccount.did}
       onClick={() => {
         setAnchorEl(null);
-        // setWalletSelector(account.selector);
+        setSelectedCryptidAccount(cryptidAccount);
       }}
-      selected={account.isSelected}
+      selected={cryptidAccount.isSelected}
       component="div"
     >
-      {/*<ListItemIcon className={classes.menuItemIcon}>*/}
-      {/*  {account.isSelected ? <CheckIcon fontSize="small" /> : null}*/}
-      {/*</ListItemIcon>*/}
+      <ListItemIcon className={classes.menuItemIcon}>
+        {isSelected ? <CheckIcon fontSize="small" /> : null}
+      </ListItemIcon>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Typography>{account.did}</Typography>
+        <Typography>{cryptidAccount.did}</Typography>
         <Typography color="textSecondary">
-          {account.did}
+          {cryptidAccount.did}
         </Typography>
       </div>
     </MenuItem>

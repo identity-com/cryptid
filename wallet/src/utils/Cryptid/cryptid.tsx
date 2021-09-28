@@ -5,7 +5,7 @@
  * - Generative Method from Wallet keys
  * -
  */
-import React, { FC, useCallback, useContext, useEffect, useState } from "react";
+import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
@@ -13,7 +13,7 @@ import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
 import { useAsyncData } from "../fetch-loop";
-import { useRefEqual } from "../utils";
+import { useLocalStorageState, useRefEqual } from "../utils";
 import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
 import { parseTokenAccountData } from "../tokens/data";
 
@@ -124,14 +124,20 @@ export class CryptidAccount {
 interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | null;
+  setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
   loaded: boolean;
 }
 
 const CryptidContext = React.createContext<CryptidContextInterface>({
   cryptidAccounts: [],
   selectedCryptidAccount: null,
+  setSelectedCryptidAccount: () => {},
   loaded: false,
 });
+
+const DEFAULT_CRYPTID_SELECTOR = {
+  selectedCryptidAccountDid: undefined
+};
 
 /**
  *
@@ -148,6 +154,11 @@ export const CryptidProvider:FC = ({ children }) => {
   const connection = useConnection();
   const cluster = useCluster();
   const { accounts }: { accounts: Account[] } = useWalletSelector();
+
+  let [cryptidSelector, setCryptidSelector] = useLocalStorageState(
+    'cryptidSelector',
+    DEFAULT_CRYPTID_SELECTOR,
+  );
 
   // In order to not
 
@@ -168,9 +179,10 @@ export const CryptidProvider:FC = ({ children }) => {
     })
 
     const cryptidAccounts = await Promise.all(promises);
-    // Select first one by default
     if (cryptidAccounts.length > 0) {
-      setSelectedCryptidAccount(cryptidAccounts[0])
+      // Selected from cryptidSelector or fallback to first.
+      const selected = cryptidAccounts.find(a => a.did === cryptidSelector.selectedCryptidAccountDid) || cryptidAccounts[0]
+      setSelectedCryptidAccount(selected)
     }
 
     setCryptidAccounts(cryptidAccounts)
@@ -179,6 +191,15 @@ export const CryptidProvider:FC = ({ children }) => {
   useEffect(() => {
     loadCryptidAccounts()
   }, [loadCryptidAccounts])
+
+  // persist selected selectedCryptidAccount to localStorage
+  useEffect(() => {
+    if (selectedCryptidAccount) {
+      setCryptidSelector({
+        selectedCryptidAccountDid: selectedCryptidAccount.did
+      })
+    }
+  }, [selectedCryptidAccount])
 
   // update Signer of selectedcCyptidAccount whenever wallet changes.
   useEffect(() => {
@@ -198,6 +219,7 @@ export const CryptidProvider:FC = ({ children }) => {
     value={{
       cryptidAccounts,
       selectedCryptidAccount,
+      setSelectedCryptidAccount,
       loaded: !!selectedCryptidAccount
     }}
   >
@@ -209,11 +231,13 @@ export function useCryptid() {
   const {
     selectedCryptidAccount,
     cryptidAccounts,
+    setSelectedCryptidAccount,
     loaded,
   } = useContext(CryptidContext);
   return {
     selectedCryptidAccount,
     cryptidAccounts,
+    setSelectedCryptidAccount,
     loaded,
   }
 }
