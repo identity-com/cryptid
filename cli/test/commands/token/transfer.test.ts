@@ -1,17 +1,19 @@
 import { expect, test } from "@oclif/test";
 
-describe("token:transfer", () => {
+// skipped until we stub solana
+describe.skip("token:transfer", () => {
   test
     .stdout()
-    .command(["token:transfer"])
-    .it("runs hello", (ctx) => {
-      expect(ctx.stdout).to.contain("hello world");
-    });
-
-  test
-    .stdout()
-    .command(["token:transfer", "--name", "jeff"])
-    .it("runs hello --name jeff", (ctx) => {
-      expect(ctx.stdout).to.contain("hello jeff");
+    .command([
+      "token",
+      "transfer",
+      "BG5vtQf8LHC8nX41gQHmMm5b9zsMY8FDbAhwGJpM2moV",
+      "10",
+      "-m",
+      "6D19AhQbHKHb9VParwRFH1LgEuN9dJ9rN9UPxswreUkf",
+      ".-f",
+    ])
+    .it("sends tokens", (ctx) => {
+      expect(ctx.stdout).to.contain("Transaction sent");
     });
 });

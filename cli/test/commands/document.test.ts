@@ -5,13 +5,8 @@ describe("document", () => {
     .stdout()
     .command(["document"])
     .it("shows the document", (ctx) => {
-      expect(ctx.stdout).to.contain("hello world");
-    });
-
-  test
-    .stdout()
-    .command(["document", "--name", "jeff"])
-    .it("runs hello --name jeff", (ctx) => {
-      expect(ctx.stdout).to.contain("hello jeff");
+      expect(ctx.stdout).to.contain(
+        '"id": "did:sol:FtMiL5EHC9ap56ZKcLYZRtyAnKVJoEqhf5JysiZXgTEm"'
+      );
     });
 });

@@ -28,7 +28,7 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        accounts.print_keys();
+        // accounts.print_keys();
 
         let (key_threshold, signer_key, signer_nonce) = match &accounts.doa {
             DOAAddress::OnChain(doa) => {
@@ -187,6 +187,7 @@ pub struct DirectExecuteAccounts {
 impl DirectExecuteAccounts {
     pub const DISCRIMINANT: u8 = 5;
 
+    #[allow(dead_code)]
     fn print_keys(&self) {
         msg!("doa: {}", self.doa.info().key);
         msg!("did: {}", self.did.key);

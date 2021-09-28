@@ -1,17 +1,13 @@
 import { expect, test } from "@oclif/test";
 
-describe("token:show", () => {
+// skipped until we stub solana
+describe.skip("token:show", () => {
   test
     .stdout()
-    .command(["token:show"])
-    .it("runs hello", (ctx) => {
-      expect(ctx.stdout).to.contain("hello world");
-    });
-
-  test
-    .stdout()
-    .command(["token:show", "--name", "jeff"])
-    .it("runs hello --name jeff", (ctx) => {
-      expect(ctx.stdout).to.contain("hello jeff");
+    .command(["token", "show"])
+    .it("shows all tokens and balances", (ctx) => {
+      expect(ctx.stdout).to.contain(
+        "6D19AhQbHKHb9VParwRFH1LgEuN9dJ9rN9UPxswreUkf: 10"
+      );
     });
 });

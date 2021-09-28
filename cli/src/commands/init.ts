@@ -30,10 +30,12 @@ export default class Init extends Command {
     }),
   };
 
-  static args = [{ name: "file" }];
+  static args = [];
 
   async run(): Promise<void> {
     const { flags } = this.parse(Init);
+
+    console.log(flags);
 
     ConfigService.init(
       flags.overwrite,

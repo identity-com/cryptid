@@ -9,6 +9,18 @@ import {
 import { build, resolveRecipient } from "../../service/cryptid";
 import * as Flags from "../../lib/flags";
 
+export const getAssociatedTokenAccount = async (
+  mint: PublicKey,
+  owner: PublicKey
+): Promise<PublicKey> =>
+  Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    owner,
+    true
+  );
+
 export default class TokenTransfer extends Command {
   static description = "Send SPL-Tokens to a recipient";
 
@@ -21,10 +33,10 @@ export default class TokenTransfer extends Command {
       parse: (address: string): PublicKey => new PublicKey(address),
     })(),
     allowUnfundedRecipient: flags.boolean({
-      char: 'f',
-      description: 'Create a token account for the recipient if needed',
-      default: false
-    })
+      char: "f",
+      description: "Create a token account for the recipient if needed",
+      default: false,
+    }),
   };
 
   static args = [
@@ -45,48 +57,49 @@ export default class TokenTransfer extends Command {
 
     const config = new Config(flags.config);
     const cryptid = build(config);
-    const address = await cryptid.address();
+    const cryptidAddress = await cryptid.address();
 
     const to = await resolveRecipient(args.to, config);
     this.log(`${args.to} resolved to ${to}`);
-    this.log('mint: ' + flags.mint!.toBase58())
+
+    // oclif type system does not make required flags non-null
+    this.log("mint: " + flags.mint!.toBase58()); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
     const { blockhash: recentBlockhash } =
       await config.connection.getRecentBlockhash();
 
-    const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const senderAssociatedTokenAccount = await getAssociatedTokenAccount(
       flags.mint as PublicKey,
-      address,
-      true
+      cryptidAddress
     );
-    const recipientAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const recipientAssociatedTokenAccount = await getAssociatedTokenAccount(
       flags.mint as PublicKey,
-      to,
-      true
+      to
     );
+
+    console.log("Cryptid ATA " + senderAssociatedTokenAccount);
 
     const instructions = [];
 
     if (flags.allowUnfundedRecipient) {
       // check if the recipient ATA exists:
-      const recipientATAAccount = await config.connection.getAccountInfo(recipientAssociatedTokenAccount);
+      const recipientATAAccount = await config.connection.getAccountInfo(
+        recipientAssociatedTokenAccount
+      );
 
       if (!recipientATAAccount) {
-        this.log("Creating a token account for " + to)
-        const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          flags.mint as PublicKey,
-          recipientAssociatedTokenAccount,
-          to,
-          address
-        )
+        this.log("Creating a token account for " + to);
+        const createATAInstruction =
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            flags.mint as PublicKey,
+            recipientAssociatedTokenAccount,
+            to,
+            cryptidAddress
+          );
 
-        instructions.push(createATAInstruction)
+        instructions.push(createATAInstruction);
       }
     }
 
@@ -94,15 +107,15 @@ export default class TokenTransfer extends Command {
       TOKEN_PROGRAM_ID,
       senderAssociatedTokenAccount,
       recipientAssociatedTokenAccount,
-      address,
+      cryptidAddress,
       [],
       args.amount
     );
-    instructions.push(transferInstruction)
+    instructions.push(transferInstruction);
 
     const tx = new Transaction({
       recentBlockhash,
-      feePayer: address//config.keypair.publicKey,
+      feePayer: cryptidAddress, // config.keypair.publicKey,
     }).add(...instructions);
 
     const [signedTx] = await cryptid.sign(tx);

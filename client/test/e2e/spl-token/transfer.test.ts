@@ -43,7 +43,7 @@ describe('SPL-Token transfers', function () {
 
     await Promise.all([
       airdrop(connection, doaSigner), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+      airdrop(connection, key.publicKey, 5_000_000), // to cover fees only
       airdrop(connection, mintAuthority.publicKey), // cover creating the mint and minting tokens
     ]);
 
@@ -106,9 +106,6 @@ describe('SPL-Token transfers', function () {
       );
       const tx = await createTransaction(connection, doaSigner, [createATAInstruction])
 
-      // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceBefore = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
-
       const [cryptidTx] = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
@@ -158,7 +155,6 @@ describe('SPL-Token transfers', function () {
 
       console.log("ATA created");
 
-
       const [cryptidTx2] = await cryptid.sign(tx2);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx2);
 
@@ -193,7 +189,7 @@ describe('SPL-Token transfers', function () {
       const transferInstruction = Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
         cryptidATA,
-        recipient,
+        recipientATA,
         doaSigner,
         [],
         tokensToTransfer
