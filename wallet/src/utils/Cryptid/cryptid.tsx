@@ -135,6 +135,10 @@ const CryptidContext = React.createContext<CryptidContextInterface>({
   loaded: false,
 });
 
+interface CryptidSelectorInterface {
+  selectedCryptidAccountDid: string | undefined
+}
+
 const DEFAULT_CRYPTID_SELECTOR = {
   selectedCryptidAccountDid: undefined
 };
@@ -155,7 +159,7 @@ export const CryptidProvider:FC = ({ children }) => {
   const cluster = useCluster();
   const { accounts }: { accounts: Account[] } = useWalletSelector();
 
-  let [cryptidSelector, setCryptidSelector] = useLocalStorageState(
+  let [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
     'cryptidSelector',
     DEFAULT_CRYPTID_SELECTOR,
   );
