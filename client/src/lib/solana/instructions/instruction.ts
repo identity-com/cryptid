@@ -26,12 +26,17 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
     super(props);
   }
 
+  /**
+   * Builds direct execute instruction data
+   * @param signers An array the same length as number of signers, each index being the number of extra accounts for that signer
+   * @param instructions The instructions to execute, all accounts must be in the instruction
+   */
   static directExecute(
-    signers: number[],
-    instructions: InstructionData[]
+      signers: number[],
+      instructions: InstructionData[]
   ): CryptidInstruction {
     return new CryptidInstruction({
-      directExecute: new DirectExecute({ signers, instructions }),
+      directExecute: new DirectExecute({signers, instructions}),
     });
   }
 }

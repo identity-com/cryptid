@@ -13,7 +13,6 @@ use sol_did::state::get_sol_address_with_seed;
 use solana_generator::solana_program::system_instruction::transfer;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_sdk::instruction::InstructionError;
-use solana_sdk::program_error::ProgramError;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::{Transaction, TransactionError};

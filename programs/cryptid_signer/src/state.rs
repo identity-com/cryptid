@@ -15,7 +15,7 @@ pub struct DOAAccount {
     pub did: Pubkey,
     /// The program for the DID
     pub did_program: Pubkey,
-    /// The nonce of tje DOA Signer
+    /// The nonce of the DOA Signer
     pub signer_nonce: u8,
     /// The number of keys needed for transactions to be executed
     pub key_threshold: u8,
@@ -69,7 +69,7 @@ pub struct TransactionAccount {
     pub signers: Vec<(Pubkey, UnixTimestamp)>,
     /// Whether or not this has executed
     pub has_executed: bool,
-    /// The value of [`DOAAccount::settings_sequence`] when this was proposed, only claid while that's the same
+    /// The value of [`DOAAccount::settings_sequence`] when this was proposed, only valid while that's the same
     pub settings_sequence: u16,
 }
 

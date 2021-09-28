@@ -7,93 +7,57 @@ import {
 import { Signer } from '../../../types/crypto';
 import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
-import { any, find, propEq } from 'ramda';
-import { InstructionData } from '../model/InstructionData';
-import { TransactionAccountMeta } from '../model/TransactionAccountMeta';
-import { AssignablePublicKey } from '../model/AssignablePublicKey';
+import {DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID} from '../../constants';
+import {find, propEq} from 'ramda';
+import {InstructionData} from '../model/InstructionData';
 
 export const create = async (
-  unsignedTransaction: Transaction,
-  didPDAKey: PublicKey,
-  signers: [Signer, (PublicKey | AccountMeta)[]][],
-  doa?: PublicKey
+    unsignedTransaction: Transaction,
+    didPDAKey: PublicKey,
+    signers: [Signer, AccountMeta[]][],
+    doa?: PublicKey
 ): Promise<TransactionInstruction> => {
-  const sendingDoa = doa || (await deriveDefaultDOAFromKey(didPDAKey));
+  const sendingDoa: PublicKey =
+      doa || (await deriveDefaultDOAFromKey(didPDAKey));
 
-  const doa_signer_key = await deriveDOASigner(sendingDoa).then(
-    (signer) => signer[0]
+  const doa_signer_key: PublicKey = await deriveDOASigner(sendingDoa).then(
+      (signer) => signer[0]
   );
 
   const instruction_accounts: AccountMeta[] = [];
   unsignedTransaction.instructions.forEach((instruction) => {
-    if (!any(propEq('pubkey', instruction.programId))(instruction_accounts)) {
-      instruction_accounts.push({
-        pubkey: instruction.programId,
-        isSigner: false,
-        isWritable: false,
-      });
-    }
+    // Add the program that will be called as not a signer and not writable
+    addMetaUnique(
+        instruction_accounts,
+        {pubkey: instruction.programId, isSigner: false, isWritable: false},
+        doa_signer_key
+    );
 
-    instruction.keys.forEach((account) => {
-      const found: AccountMeta | undefined = find<AccountMeta>(
-        propEq('pubkey', account.pubkey)
-      )(instruction_accounts);
-      if (found) {
-        found.isSigner =
-          found.isSigner ||
-          (account.pubkey != doa_signer_key && account.isSigner);
-        found.isWritable = found.isWritable || account.isWritable;
-      } else {
-        instruction_accounts.push({
-          ...account,
-          isSigner: false,
-        });
-      }
-    });
+    // Add each instruction's key, order doesn't matter to the program
+    instruction.keys.forEach((account) =>
+        addMetaUnique(instruction_accounts, account, doa_signer_key)
+    );
   });
 
   const keys: AccountMeta[] = [
-    { pubkey: sendingDoa, isSigner: false, isWritable: false },
-    {
-      pubkey: didPDAKey,
-      isSigner: false,
-      isWritable: false,
-    },
-    { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
+    {pubkey: sendingDoa, isSigner: false, isWritable: false},
+    {pubkey: didPDAKey, isSigner: false, isWritable: false},
+    {pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false},
     ...signers.flatMap(([signer, extras]) => [
-      {
-        pubkey: signer.publicKey,
-        isSigner: true,
-        isWritable: false,
-      },
-      ...extras.map((extra): AccountMeta => {
-        if (extra instanceof PublicKey) {
-          return {
-            pubkey: extra,
-            isSigner: false,
-            isWritable: false,
-          };
-        } else {
-          return extra;
-        }
-      }),
+      {pubkey: signer.publicKey, isSigner: true, isWritable: false},
+      ...extras,
     ]),
     ...instruction_accounts,
   ];
 
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
-    (instruction) =>
-      new InstructionData({
-        program_id: AssignablePublicKey.fromPublicKey(instruction.programId),
-        accounts: instruction.keys.map(TransactionAccountMeta.fromAccountMeta),
-        data: instruction.data,
-      })
+      InstructionData.fromTransactionInstruction
   );
 
-  const data = CryptidInstruction.directExecute(
-    signers.map((extra_accounts) => extra_accounts[1].length),
-    instructions
+  const data: Buffer = CryptidInstruction.directExecute(
+      // Map into number of extra accounts array
+      signers.map((extra_accounts) => extra_accounts[1].length),
+      instructions
   ).encode();
 
   return new TransactionInstruction({
@@ -101,4 +65,29 @@ export const create = async (
     programId: DOA_PROGRAM_ID,
     data,
   });
+};
+
+const addMetaUnique = (
+    array: AccountMeta[],
+    add: AccountMeta,
+    doa_signer_key: PublicKey
+) => {
+  const found: AccountMeta | undefined = find<AccountMeta>(
+      propEq('pubkey', add.pubkey)
+  )(array);
+  if (found) {
+    // Instruction account already present
+    // Make signer if new is signer and not the doa signer
+    found.isSigner =
+        found.isSigner || (add.isSigner && !add.pubkey.equals(doa_signer_key));
+    // Make writable if new is writable
+    found.isWritable = found.isWritable || add.isWritable;
+  } else {
+    // Instruction account not present, add it
+    array.push({
+      ...add,
+      // Don't make signer if is doa signer
+      isSigner: add.isSigner && !add.pubkey.equals(doa_signer_key),
+    });
+  }
 };
