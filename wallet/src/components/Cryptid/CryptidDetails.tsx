@@ -5,33 +5,46 @@ import AddKeyIcon from "@material-ui/icons/VpnKeyOutlined";
 import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
 import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
 import ListItemText from "@material-ui/core/ListItemText";
-import AddCustomClusterDialog from "../AddCustomClusterDialog";
-import { addCustomCluster } from "../../utils/clusters";
 import AddKeyDialog from "./AddKeyDialog";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
+import { useSnackbar } from "notistack";
 
 interface CryptidDetailsInterface {
   crytidAccount: CryptidAccount
 }
 
 export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
+  // Hooks
+  const { enqueueSnackbar } = useSnackbar();
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
 
+  const addKeyCallback = useCallback(async (address: string, alias: string) => {
+
+    console.log(`Adding key ${address}`)
+
+    try {
+      const pk = new PublicKey(address)
+      await crytidAccount.addKey(pk, alias)
+      setAddKeyDialogOpen(false)
+    } catch (e) {
+      console.warn(e);
+      enqueueSnackbar(e.message, { variant: 'error' });
+    }
+
+    // success refresh the account.
+    // TODO: Daniel This call does not contain the new key yet.
+    await crytidAccount.updateDocument()
+    console.log(JSON.stringify(crytidAccount.verificationMethods))
+
+  }, [crytidAccount])
 
   return (
     <>
       <AddKeyDialog
         open={addKeyDialogOpen}
         onClose={() => setAddKeyDialogOpen(false)}
-        onAdd={({ address }) => {
-          // Cast to public Key
-
-          // Add a key
-          crytidAccount.addKey(new PublicKey(address), 'test').then(() => setAddKeyDialogOpen(false))
-          // alert(`Trying to add ${address}`)
-
-        }}
+        onAdd={addKeyCallback}
       />
       <Card>
         <Typography variant="h6">
@@ -44,7 +57,7 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
           <List>
             { crytidAccount.verificationMethods.map(vm => {
               return (
-                <CryptidDetailsListItem primary={vm.type} secondary={vm.publicKeyBase58} />
+                <CryptidDetailsListItem primary={vm.id.replace(crytidAccount.did, '')} secondary={vm.publicKeyBase58} />
               )
             })
 

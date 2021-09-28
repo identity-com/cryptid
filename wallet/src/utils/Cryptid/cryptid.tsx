@@ -36,10 +36,18 @@ export class CryptidAccount {
   }
 
   async init() {
+    if (this.isInitialized) {
+      return
+    }
+
     this.address = await this.cryptid.address()
-    this.document = await this.cryptid.document()
+    await this.updateDocument();
     // console.log(`Getting address: ${this.address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
+  }
+
+  updateDocument = async () => {
+    this.document = await this.cryptid.document()
   }
 
   get verificationMethods() {

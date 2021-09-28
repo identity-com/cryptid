@@ -65,8 +65,8 @@ import MergeAccountsDialog from './MergeAccountsDialog';
 import SwapButton from './SwapButton';
 import DnsIcon from '@material-ui/icons/Dns';
 import DomainsList from './DomainsList';
-import {useCryptid, useCryptidPublicKeys} from "../utils/Cryptid/cryptid";
-import {CryptidDetails} from "./Cryptid/CryptidDetails";
+import {useCryptid} from "../utils/Cryptid/cryptid";
+import { CryptidDetails } from "./Cryptid/CryptidDetails";
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 4,
