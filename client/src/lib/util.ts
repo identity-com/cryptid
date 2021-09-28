@@ -30,7 +30,7 @@ export const didToDefaultDOASigner = async (
   did: string
 ): Promise<PublicKey> => {
   const doa = await deriveDefaultDOA(did);
-    const [doaSigner] = await deriveDOASigner(doa);
+  const [doaSigner] = await deriveDOASigner(doa);
   return doaSigner;
 };
 

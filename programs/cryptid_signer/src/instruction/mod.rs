@@ -2,15 +2,15 @@
 
 #[path = "./000_create_doa.rs"]
 mod create_doa;
-#[path = "./005_direct_execute_transaction.rs"]
-mod direct_execute_transaction;
+#[path = "./005_direct_execute.rs"]
+mod direct_execute;
 #[path = "./001_propose_transaction.rs"]
 mod propose_transaction;
 #[path = "./254_test_instruction.rs"]
 mod test_instruction;
 
 pub use create_doa::*;
-pub use direct_execute_transaction::*;
+pub use direct_execute::*;
 pub use propose_transaction::*;
 pub use test_instruction::*;
 

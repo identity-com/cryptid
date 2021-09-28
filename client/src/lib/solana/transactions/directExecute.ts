@@ -4,10 +4,10 @@ import {
   PublicKey,
   Transaction,
 } from '@solana/web3.js';
-import {create} from '../instructions/directExecute';
-import {Signer} from '../../../types/crypto';
-import {createTransaction} from './util';
-import {DecentralizedIdentifier} from '@identity.com/sol-did-client';
+import { create } from '../instructions/directExecute';
+import { Signer } from '../../../types/crypto';
+import { createTransaction } from './util';
+import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 /**
  * Optional extra keys for a signer
@@ -22,12 +22,13 @@ export type SignerArg = Signer | [Signer, SignerExtra[]];
  * Creates a Direct_Execute transaction, that signs and sends a transaction from a DID
  */
 export const directExecute = async (
-    connection: Connection,
-    unsignedTransaction: Transaction,
-    did: string,
-    payer: PublicKey,
-    signers: SignerArg[],
-    doa?: PublicKey
+  connection: Connection,
+  unsignedTransaction: Transaction,
+  did: string,
+  payer: PublicKey,
+  signers: SignerArg[],
+  doa?: PublicKey,
+  debug = false
 ): Promise<Transaction> => {
   const signersNormalized: [Signer, AccountMeta[]][] = signers.map((signer) => {
     if (Array.isArray(signer)) {
@@ -41,17 +42,18 @@ export const directExecute = async (
   const didPDAKey = await parsedDID.pdaSolanaPubkey();
 
   const directExecuteInstruction = await create(
-      unsignedTransaction,
-      didPDAKey,
-      signersNormalized,
-      doa
+    unsignedTransaction,
+    didPDAKey,
+    signersNormalized,
+    doa,
+    debug
   );
 
   return createTransaction(
-      connection,
-      [directExecuteInstruction],
-      payer,
-      signersNormalized.map(([signer]) => signer)
+    connection,
+    [directExecuteInstruction],
+    payer,
+    signersNormalized.map(([signer]) => signer)
   );
 };
 

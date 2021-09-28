@@ -7,6 +7,7 @@ use crate::error::CryptidSignerError;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{AccountMeta, InstructionData};
 use crate::DOASignerSeeder;
+use bitflags::bitflags;
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
 
@@ -28,7 +29,10 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        // accounts.print_keys();
+        let debug = data.flags.contains(DirectExecuteFlags::DEBUG);
+        if debug {
+            accounts.print_keys();
+        }
 
         // Retrieve needed data from doa
         let (key_threshold, signer_generator, signer_key, signer_nonce) = match &accounts.doa {
@@ -166,6 +170,7 @@ impl Instruction for DirectExecute {
                     .map(SigningKeyBuild::extra_count)
                     .collect(),
                 instructions: arg.instructions,
+                flags: arg.flags,
             },
             &mut data,
         )?;
@@ -236,6 +241,8 @@ pub struct DirectExecuteData {
     pub signers_extras: Vec<u8>,
     /// The instructions to execute
     pub instructions: Vec<InstructionData>,
+    /// Additional flags
+    pub flags: DirectExecuteFlags,
 }
 
 /// The build argument for [`DirectExecute`]
@@ -251,4 +258,15 @@ pub struct DirectExecuteBuild {
     pub signing_keys: Vec<SigningKeyBuild>,
     /// The instructions to execute
     pub instructions: Vec<InstructionData>,
+    /// Additional flags
+    pub flags: DirectExecuteFlags,
+}
+
+bitflags! {
+    /// Extra flags passed to DirectExecute
+    #[derive(BorshSerialize, BorshDeserialize, BorshSchema)]
+    pub struct DirectExecuteFlags: u8{
+        /// Print debug logs, uses a large portion of the compute budget
+        const DEBUG = 1 << 0;
+    }
 }

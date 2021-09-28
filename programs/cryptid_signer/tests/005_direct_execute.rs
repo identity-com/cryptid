@@ -3,7 +3,7 @@
 mod constants;
 
 use constants::*;
-use cryptid_signer::instruction::{CryptidInstruction, DirectExecuteBuild, SigningKeyBuild};
+use cryptid_signer::instruction::{CryptidInstruction, DirectExecuteBuild, SigningKeyBuild, DirectExecuteFlags};
 use cryptid_signer::state::InstructionData;
 use cryptid_signer::{DOASignerSeeder, GenerativeDOASeeder};
 use dummy_program::DummyInstruction;
@@ -107,6 +107,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
             extra_accounts: vec![],
         }],
         instructions: instruction_data,
+        flags: DirectExecuteFlags::DEBUG,
     };
     let direct_execute_instruction = build_instruction!(
         cryptid_id,
@@ -178,6 +179,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
             extra_accounts: vec![],
         }],
         instructions: instruction_data,
+        flags: DirectExecuteFlags::DEBUG,
     };
     let direct_execute_instruction = build_instruction!(
         cryptid_id,

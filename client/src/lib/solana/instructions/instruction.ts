@@ -9,11 +9,22 @@ import { InstructionData } from '../model/InstructionData';
 export class DirectExecute extends Assignable<DirectExecute> {
   signers!: number[];
   instructions!: InstructionData[];
+  flags!: number;
 
-  constructor(props: { signers: number[]; instructions: InstructionData[] }) {
+  constructor(props: {
+    signers: number[];
+    instructions: InstructionData[];
+    flags: number;
+  }) {
     super(props);
   }
+
+  static buildFlags(debug: boolean): number {
+    return +debug * DEBUG_FLAG;
+  }
 }
+const DEBUG_FLAG = 1 << 0;
+
 export class CryptidInstruction extends Enum<CryptidInstruction> {
   createDOA?: number; // Placeholder
   proposeTransaction?: number; // Placeholder
@@ -30,13 +41,15 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
    * Builds direct execute instruction data
    * @param signers An array the same length as number of signers, each index being the number of extra accounts for that signer
    * @param instructions The instructions to execute, all accounts must be in the instruction
+   * @param debug True if debug information should be printed, defaults to false
    */
   static directExecute(
-      signers: number[],
-      instructions: InstructionData[]
+    signers: number[],
+    instructions: InstructionData[],
+    debug: boolean = false
   ): CryptidInstruction {
     return new CryptidInstruction({
-      directExecute: new DirectExecute({signers, instructions}),
+      directExecute: new DirectExecute({ signers, instructions, flags: DirectExecute.buildFlags(debug) }),
     });
   }
 }
@@ -52,4 +65,5 @@ add_enum_to_schema(CryptidInstruction, {
 add_struct_to_schema(DirectExecute, {
   signers: ['u8'],
   instructions: [InstructionData],
+  flags: 'u8',
 });

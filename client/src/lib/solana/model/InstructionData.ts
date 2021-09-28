@@ -1,7 +1,7 @@
 import { TransactionAccountMeta } from './TransactionAccountMeta';
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
-import {AssignablePublicKey} from './AssignablePublicKey';
-import {TransactionInstruction} from '@solana/web3.js';
+import { AssignablePublicKey } from './AssignablePublicKey';
+import { TransactionInstruction } from '@solana/web3.js';
 
 export class InstructionData extends Assignable<InstructionData> {
   program_id!: AssignablePublicKey;
@@ -17,7 +17,7 @@ export class InstructionData extends Assignable<InstructionData> {
   }
 
   static fromTransactionInstruction(
-      instruction: TransactionInstruction
+    instruction: TransactionInstruction
   ): InstructionData {
     return new InstructionData({
       program_id: AssignablePublicKey.fromPublicKey(instruction.programId),
