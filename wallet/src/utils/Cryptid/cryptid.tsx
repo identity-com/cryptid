@@ -6,16 +6,16 @@
  * -
  */
 import React, { FC, useCallback, useContext, useEffect, useState } from "react";
-import { useWallet, useWalletSelector } from "./wallet";
+import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
-import { setInitialAccountInfo, useCluster, useConnection } from "./connection";
+import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
-import { useAsyncData } from "./fetch-loop";
-import { useRefEqual } from "./utils";
-import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "./tokens";
-import { parseTokenAccountData } from "./tokens/data";
+import { useAsyncData } from "../fetch-loop";
+import { useRefEqual } from "../utils";
+import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
+import { parseTokenAccountData } from "../tokens/data";
 
 export class CryptidAccount {
   public did: string

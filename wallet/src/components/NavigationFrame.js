@@ -37,7 +37,7 @@ import { useConnectedWallets } from '../utils/connected-wallets';
 import { usePage } from '../utils/page';
 import { MonetizationOn, OpenInNew } from '@material-ui/icons';
 import AddCustomClusterDialog from "./AddCustomClusterDialog";
-import {CryptidSelector} from "./CryptidSelector";
+import {CryptidSelector} from "./Cryptid/CryptidSelector";
 
 export const useStyles = makeStyles((theme) => ({
   content: {

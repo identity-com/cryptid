@@ -1,4 +1,4 @@
-import { useWalletSelector } from "../utils/wallet";
+import { useWalletSelector } from "../../utils/wallet";
 
 import Hidden from "@material-ui/core/Hidden";
 import Button from "@material-ui/core/Button";
@@ -14,10 +14,10 @@ import AddIcon from "@material-ui/icons/Add";
 import ImportExportIcon from "@material-ui/icons/ImportExport";
 import ExitToApp from "@material-ui/icons/ExitToApp";
 import React, { useState } from "react";
-import { useStyles } from "./NavigationFrame";
+import { useStyles } from "../NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
-import { useCryptid } from "../utils/cryptid";
+import { useCryptid } from "../../utils/Cryptid/cryptid";
 
 export const CryptidSelector = () => {
   const { cryptidAccounts } = useCryptid()

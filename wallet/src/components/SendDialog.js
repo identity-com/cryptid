@@ -37,7 +37,7 @@ import { parseTokenAccountData } from '../utils/tokens/data';
 import { Switch, Tooltip } from '@material-ui/core';
 import { EthFeeEstimate } from './EthFeeEstimate';
 import { resolveDomainName, resolveTwitterHandle } from '../utils/name-service';
-import {useCryptid} from "../utils/cryptid";
+import {useCryptid} from "../utils/Cryptid/cryptid";
 
 const WUSDC_MINT = new PublicKey(
   'BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW',

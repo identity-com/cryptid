@@ -1,13 +1,13 @@
 import { Card, CardContent, List, ListItem, Typography } from "@material-ui/core";
-import { CryptidAccount } from "../utils/cryptid";
+import { CryptidAccount } from "../../utils/Cryptid/cryptid";
 import Button from "@material-ui/core/Button";
 import AddKeyIcon from "@material-ui/icons/VpnKeyOutlined";
 import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
 import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
 import ListItemText from "@material-ui/core/ListItemText";
-import AddCustomClusterDialog from "./AddCustomClusterDialog";
-import { addCustomCluster } from "../utils/clusters";
-import AddKeyDialog from "./Cryptid/AddKeyDialog";
+import AddCustomClusterDialog from "../AddCustomClusterDialog";
+import { addCustomCluster } from "../../utils/clusters";
+import AddKeyDialog from "./AddKeyDialog";
 import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 

@@ -15,7 +15,7 @@ import { createAndInitializeMint } from '../utils/tokens';
 import { Tooltip, Button } from '@material-ui/core';
 import React from 'react';
 import { MAINNET_URL } from "../utils/clusters";
-import {useCryptid} from "../utils/cryptid";
+import {useCryptid} from "../utils/Cryptid/cryptid";
 
 export default function DebugButtons() {
   // const wallet = useWallet();
