@@ -3,7 +3,9 @@
 mod constants;
 
 use constants::*;
-use cryptid_signer::instruction::{CryptidInstruction, DirectExecuteBuild, SigningKeyBuild, DirectExecuteFlags};
+use cryptid_signer::instruction::{
+    CryptidInstruction, DirectExecuteBuild, DirectExecuteFlags, SigningKeyBuild,
+};
 use cryptid_signer::state::InstructionData;
 use cryptid_signer::{DOASignerSeeder, GenerativeDOASeeder};
 use dummy_program::DummyInstruction;
