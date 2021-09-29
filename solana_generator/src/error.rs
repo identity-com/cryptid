@@ -2,9 +2,10 @@ use crate::traits::Error;
 use crate::Discriminant;
 use solana_program::pubkey::Pubkey;
 use std::fmt::Debug;
+use strum::EnumDiscriminants;
 
 /// General errors issued by the generator.
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug, Error, EnumDiscriminants)]
 #[error(start = 0)]
 pub enum GeneratorError<'a> {
     /// Discriminant mismatch for accounts. Usually caused by passing the wrong account for a slot
@@ -162,9 +163,15 @@ pub enum GeneratorError<'a> {
         /// Lamports needed
         needed_lamports: u64,
     },
+    /// No Account could be created from seeds
+    #[error_msg("No account could be created from seeds: `{:?}`", seeds)]
+    NoAccountFromSeeds {
+        /// The seeds that could not create an account
+        seeds: Vec<String>,
+    },
     /// Account not generated from expected seeds.
     #[error_msg(
-        "Account `{}` not from seeds `{}` and program `{}`",
+        "Account `{}` not from seeds `{:?}` and program `{}`",
         account,
         seeds,
         program_id
@@ -173,7 +180,7 @@ pub enum GeneratorError<'a> {
         /// Account that is not from `seeds`
         account: Pubkey,
         /// Seeds that should have generated `account`
-        seeds: String,
+        seeds: Vec<String>,
         /// The program id for seeding
         program_id: Pubkey,
     },

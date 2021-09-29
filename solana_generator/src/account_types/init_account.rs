@@ -4,14 +4,13 @@ use std::num::NonZeroU64;
 use std::ops::{Deref, DerefMut};
 
 use borsh::BorshSerialize;
-use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 use solana_program::system_instruction::create_account;
 
 use crate::traits::AccountArgument;
 use crate::{
-    invoke, Account, AccountInfo, AllAny, Discriminant, GeneratorError, GeneratorResult,
-    MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
+    invoke, Account, AccountInfo, AllAny, Discriminant, FromAccounts, GeneratorError,
+    GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 
 use super::SYSTEM_PROGRAM_ID;
@@ -53,43 +52,8 @@ where
 }
 impl<T> AccountArgument for InitAccount<T>
 where
-    T: Account + Default,
+    T: Account,
 {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        _program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        _data: &mut &[u8],
-        _arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
-
-        if *info.owner.borrow() != &SYSTEM_PROGRAM_ID {
-            return Err(GeneratorError::AccountOwnerNotEqual {
-                account: info.key,
-                owner: **info.owner.borrow(),
-                expected_owner: Default::default(),
-            }
-            .into());
-        }
-
-        if !info.is_signer {
-            return Err(GeneratorError::AccountIsNotSigner { account: info.key }.into());
-        }
-
-        if !info.is_writable {
-            return Err(GeneratorError::CannotWrite { account: info.key }.into());
-        }
-
-        Ok(Self {
-            info,
-            data: T::default(),
-            init_size: InitSize::default(),
-            funder: None,
-        })
-    }
-
     fn write_back(
         self,
         program_id: Pubkey,
@@ -157,6 +121,43 @@ where
 
     fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
         self.info.add_keys(add)
+    }
+}
+impl<T, A> FromAccounts<A> for InitAccount<T>
+where
+    T: Account + Default,
+    AccountInfo: FromAccounts<A>,
+{
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: A,
+    ) -> GeneratorResult<Self> {
+        let info = AccountInfo::from_accounts(program_id, infos, arg)?;
+
+        if *info.owner.borrow() != &SYSTEM_PROGRAM_ID {
+            return Err(GeneratorError::AccountOwnerNotEqual {
+                account: info.key,
+                owner: **info.owner.borrow(),
+                expected_owner: Default::default(),
+            }
+            .into());
+        }
+
+        if !info.is_signer {
+            return Err(GeneratorError::AccountIsNotSigner { account: info.key }.into());
+        }
+
+        if !info.is_writable {
+            return Err(GeneratorError::CannotWrite { account: info.key }.into());
+        }
+
+        Ok(Self {
+            info,
+            data: T::default(),
+            init_size: InitSize::default(),
+            funder: None,
+        })
     }
 }
 impl<T> MultiIndexableAccountArgument<()> for InitAccount<T>

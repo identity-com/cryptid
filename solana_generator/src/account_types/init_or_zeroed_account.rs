@@ -1,6 +1,6 @@
 use crate::solana_program::program_error::ProgramError;
 use crate::{
-    system_program_id, Account, AccountArgument, AccountInfo, AllAny, GeneratorError,
+    system_program_id, Account, AccountArgument, AccountInfo, AllAny, FromAccounts, GeneratorError,
     GeneratorResult, InitAccount, InitSize, MultiIndexableAccountArgument, Pubkey,
     SingleIndexableAccountArgument, SystemProgram, ZeroedAccount,
 };
@@ -73,40 +73,6 @@ impl<T> AccountArgument for InitOrZeroedAccount<T>
 where
     T: Account + Default,
 {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        data: &mut &[u8],
-        arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
-        let owner = **info.owner.borrow();
-        if owner == program_id {
-            Ok(Self::Zeroed(ZeroedAccount::from_account_infos(
-                program_id,
-                &mut once(info),
-                data,
-                arg,
-            )?))
-        } else if owner == system_program_id() {
-            Ok(Self::Init(InitAccount::from_account_infos(
-                program_id,
-                &mut once(info),
-                data,
-                arg,
-            )?))
-        } else {
-            Err(GeneratorError::AccountOwnerNotEqual {
-                account: Default::default(),
-                owner: Default::default(),
-                expected_owner: vec![program_id, system_program_id()],
-            }
-            .into())
-        }
-    }
-
     fn write_back(
         self,
         program_id: Pubkey,
@@ -122,6 +88,41 @@ where
         match self {
             InitOrZeroedAccount::Init(init) => init.add_keys(add),
             InitOrZeroedAccount::Zeroed(zeroed) => zeroed.add_keys(add),
+        }
+    }
+}
+impl<T, A> FromAccounts<A> for InitOrZeroedAccount<T>
+where
+    T: Account + Default,
+    InitAccount<T>: FromAccounts<A>,
+    ZeroedAccount<T>: FromAccounts<A>,
+{
+    fn from_accounts(
+        program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        arg: A,
+    ) -> GeneratorResult<Self> {
+        let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let owner = **info.owner.borrow();
+        if owner == program_id {
+            Ok(Self::Zeroed(ZeroedAccount::from_accounts(
+                program_id,
+                &mut once(info),
+                arg,
+            )?))
+        } else if owner == system_program_id() {
+            Ok(Self::Init(InitAccount::from_accounts(
+                program_id,
+                &mut once(info),
+                arg,
+            )?))
+        } else {
+            Err(GeneratorError::AccountOwnerNotEqual {
+                account: Default::default(),
+                owner: Default::default(),
+                expected_owner: vec![program_id, system_program_id()],
+            }
+            .into())
         }
     }
 }

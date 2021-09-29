@@ -1,28 +1,13 @@
-use std::array::IntoIter;
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::ops::RangeBounds;
 
-use array_init::try_array_init;
-use solana_program::pubkey::Pubkey;
-use solana_program::system_program::ID as SYSTEM_PROGRAM_ID;
+use crate::{
+    AccountArgument, AllAny, AllAnyRange, GeneratorError, GeneratorResult,
+    MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument, SystemProgram,
+};
 
-pub use init_account::*;
-pub use init_or_zeroed_account::*;
-pub use program_account::*;
-pub use rest::*;
-pub use system_program::*;
-pub use zeroed_account::*;
-
-use crate::*;
-
-mod init_account;
-mod init_or_zeroed_account;
-mod program_account;
-mod rest;
-mod system_program;
-mod zeroed_account;
-
-impl<T, const N: usize> AccountArgument for [T; N]
+impl<T> AccountArgument for VecDeque<T>
 where
     T: AccountArgument,
 {
@@ -31,34 +16,21 @@ where
         program_id: Pubkey,
         system_program: Option<&SystemProgram>,
     ) -> GeneratorResult<()> {
-        for item in IntoIter::new(self) {
-            item.write_back(program_id, system_program)?;
+        for account in self {
+            account.write_back(program_id, system_program)?;
         }
         Ok(())
     }
 
     fn add_keys(&self, mut add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
-        self.iter()
-            .map(|inner| inner.add_keys(&mut add))
-            .find(|res| res.is_err())
-            .unwrap_or(Ok(()))
-    }
-}
-impl<A, T, const N: usize> FromAccounts<[A; N]> for [T; N]
-where
-    T: FromAccounts<A>,
-{
-    fn from_accounts(
-        program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        arg: [A; N],
-    ) -> GeneratorResult<Self> {
-        let mut iter = IntoIter::new(arg);
-        try_array_init(|_| T::from_accounts(program_id, infos, iter.next().unwrap()))
+        for account in self {
+            account.add_keys(&mut add)?;
+        }
+        Ok(())
     }
 }
 
-impl<T, I, const N: usize> MultiIndexableAccountArgument<(AllAny, I)> for [T; N]
+impl<T, I> MultiIndexableAccountArgument<(AllAny, I)> for VecDeque<T>
 where
     T: AccountArgument + MultiIndexableAccountArgument<I>,
     I: Debug + Clone,
@@ -81,7 +53,7 @@ where
             .run_func(self.iter(), |val| val.is_owner(owner, indexer.1.clone()))
     }
 }
-impl<T, I, const N: usize> MultiIndexableAccountArgument<(usize, I)> for [T; N]
+impl<T, I> MultiIndexableAccountArgument<(usize, I)> for VecDeque<T>
 where
     T: AccountArgument + MultiIndexableAccountArgument<I>,
     I: Debug + Clone,
@@ -119,7 +91,7 @@ where
         )
     }
 }
-impl<T, I, const N: usize> SingleIndexableAccountArgument<(usize, I)> for [T; N]
+impl<T, I> SingleIndexableAccountArgument<(usize, I)> for VecDeque<T>
 where
     T: AccountArgument + SingleIndexableAccountArgument<I>,
     I: Debug + Clone,
@@ -132,14 +104,14 @@ where
         self[indexer.0].key(indexer.1)
     }
 }
-impl<T, R, I, const N: usize> MultiIndexableAccountArgument<(AllAnyRange<R>, I)> for [T; N]
+impl<T, R, I> MultiIndexableAccountArgument<(AllAnyRange<R>, I)> for VecDeque<T>
 where
     T: AccountArgument + MultiIndexableAccountArgument<I>,
     R: RangeBounds<usize> + Clone + Debug,
     I: Debug + Clone,
 {
     fn is_signer(&self, indexer: (AllAnyRange<R>, I)) -> GeneratorResult<bool> {
-        let (start, end) = util::convert_range(&indexer.0.range, self.len())?;
+        let (start, end) = crate::convert_range(&indexer.0.range, self.len())?;
         indexer
             .0
             .all_any
@@ -149,7 +121,7 @@ where
     }
 
     fn is_writable(&self, indexer: (AllAnyRange<R>, I)) -> GeneratorResult<bool> {
-        let (start, end) = util::convert_range(&indexer.0.range, self.len())?;
+        let (start, end) = crate::convert_range(&indexer.0.range, self.len())?;
         indexer
             .0
             .all_any
@@ -159,7 +131,7 @@ where
     }
 
     fn is_owner(&self, owner: Pubkey, indexer: (AllAnyRange<R>, I)) -> GeneratorResult<bool> {
-        let (start, end) = util::convert_range(&indexer.0.range, self.len())?;
+        let (start, end) = crate::convert_range(&indexer.0.range, self.len())?;
         indexer
             .0
             .all_any

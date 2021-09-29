@@ -17,4 +17,6 @@ pub trait InstructionList: Copy {
         program_id: Pubkey,
         build_enum: Self::BuildEnum,
     ) -> GeneratorResult<SolanaInstruction>;
+    /// Gets the discriminant for the instruction
+    fn discriminant(self) -> u8;
 }

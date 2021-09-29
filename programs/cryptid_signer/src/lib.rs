@@ -1,48 +1,53 @@
-#![warn(unused_import_braces, missing_debug_implementations)]
+#![warn(unused_import_braces, missing_debug_implementations, missing_docs)]
+//! A signer that supports did-interfaces for signing (rotatable multi-key)
 
-use solana_generator::{GeneratorError, GeneratorResult, Pubkey};
+use solana_generator::*;
+
+use crate::instruction::CryptidInstruction;
+use std::array::IntoIter;
 
 #[macro_use]
 mod macros;
 
 pub mod account;
-mod entry;
 pub mod error;
 pub mod instruction;
 pub mod state;
 
-pub const DOA_SIGNER_SEED: &[u8] = b"doa_signer";
+#[cfg(not(feature = "no-entrypoint"))]
+entrypoint_list!(CryptidInstruction);
 
-pub fn get_doa_signer(
-    program_id: Pubkey,
-    doa_key: Pubkey,
-    doa_signer_nonce: u8,
-) -> GeneratorResult<Pubkey> {
-    Ok(Pubkey::create_program_address(
-        doa_signer_seeds!(doa_key, doa_signer_nonce),
-        &program_id,
-    )?)
-}
-pub fn generate_doa_signer(program_id: Pubkey, doa: Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(doa_signer_seeds!(doa), &program_id)
-}
-// TODO: Move this seeds check to `solana_generator`
-pub fn verify_doa_signer(
-    program_id: Pubkey,
-    doa_key: Pubkey,
-    doa_signer: Pubkey,
-    doa_signer_nonce: u8,
-) -> GeneratorResult<()> {
-    let seeds = doa_signer_seeds!(doa_key, doa_signer_nonce);
+/// The seed for the DOA signer
+pub const DOA_SIGNER_SEED: &str = "cryptid_signer";
+/// The seed for generative DOAs
+pub const GENERATIVE_DOA_SEED: &str = "cryptid_doa";
 
-    if doa_signer != Pubkey::create_program_address(seeds, &program_id)? {
-        Err(GeneratorError::AccountNotFromSeeds {
-            account: doa_signer,
-            seeds: format!("[\"doa_signer\", {}, [{}]]", doa_key, doa_signer_nonce),
-            program_id,
-        }
-        .into())
-    } else {
-        Ok(())
+/// The seeder for DOA signers
+#[derive(Debug)]
+pub struct DOASignerSeeder {
+    /// The key of the doa for this signer
+    pub doa: Pubkey,
+}
+impl<'a> PDASeeder<'a> for DOASignerSeeder {
+    type Iterator = IntoIter<&'a dyn PDASeed, 2>;
+
+    fn seeds(&'a self) -> Self::Iterator {
+        IntoIter::new([&DOA_SIGNER_SEED, &self.doa])
+    }
+}
+
+/// The seeder for generative DOAs
+#[derive(Debug)]
+pub struct GenerativeDOASeeder {
+    /// The DID program's key for this DOA
+    pub did_program: Pubkey,
+    /// The DID's key for this DOA
+    pub did: Pubkey,
+}
+impl<'a> PDASeeder<'a> for GenerativeDOASeeder {
+    type Iterator = IntoIter<&'a dyn PDASeed, 3>;
+
+    fn seeds(&'a self) -> Self::Iterator {
+        IntoIter::new([&GENERATIVE_DOA_SEED, &self.did_program, &self.did])
     }
 }

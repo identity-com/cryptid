@@ -7,8 +7,8 @@ use solana_program::pubkey::Pubkey;
 use crate::solana_program::sysvar::Sysvar;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountInfo, AllAny, GeneratorError, GeneratorResult, MultiIndexableAccountArgument,
-    SingleIndexableAccountArgument, SystemProgram,
+    Account, AccountInfo, AllAny, FromAccounts, GeneratorError, GeneratorResult,
+    MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 use solana_program::rent::Rent;
 use std::fmt::Debug;
@@ -28,15 +28,33 @@ impl<T> AccountArgument for ZeroedAccount<T>
 where
     T: Account + Default,
 {
-    type InstructionArg = ();
+    fn write_back(
+        self,
+        _program_id: Pubkey,
+        _system_program: Option<&SystemProgram>,
+    ) -> GeneratorResult<()> {
+        let mut account_data_ref = self.info.data.borrow_mut();
+        let mut account_data = &mut **account_data_ref.deref_mut();
+        T::DISCRIMINANT.serialize(&mut account_data)?;
+        self.data.serialize(&mut account_data)?;
+        Ok(())
+    }
 
-    fn from_account_infos(
+    fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
+        self.info.add_keys(add)
+    }
+}
+impl<A, T> FromAccounts<A> for ZeroedAccount<T>
+where
+    T: Account + Default,
+    AccountInfo: FromAccounts<A>,
+{
+    fn from_accounts(
         program_id: Pubkey,
         infos: &mut impl Iterator<Item = AccountInfo>,
-        _data: &mut &[u8],
-        _arg: Self::InstructionArg,
+        arg: A,
     ) -> GeneratorResult<Self> {
-        let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let info = AccountInfo::from_accounts(program_id, infos, arg)?;
 
         if **info.owner.borrow() != program_id {
             return Err(GeneratorError::AccountOwnerNotEqual {
@@ -64,22 +82,6 @@ where
             info,
             data: T::default(),
         })
-    }
-
-    fn write_back(
-        self,
-        _program_id: Pubkey,
-        _system_program: Option<&SystemProgram>,
-    ) -> GeneratorResult<()> {
-        let mut account_data_ref = self.info.data.borrow_mut();
-        let mut account_data = &mut **account_data_ref.deref_mut();
-        T::DISCRIMINANT.serialize(&mut account_data)?;
-        self.data.serialize(&mut account_data)?;
-        Ok(())
-    }
-
-    fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
-        self.info.add_keys(add)
     }
 }
 impl<T> MultiIndexableAccountArgument<()> for ZeroedAccount<T>

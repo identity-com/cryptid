@@ -26,6 +26,7 @@ pub fn derive_account(ts: TokenStream) -> TokenStream {
     stream.into()
 }
 
+/// If no start specified starts at `300`
 #[proc_macro_error]
 #[proc_macro_derive(Error, attributes(error, error_msg))]
 pub fn derive_error(ts: TokenStream) -> TokenStream {

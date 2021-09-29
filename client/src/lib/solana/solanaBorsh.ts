@@ -8,7 +8,7 @@ export abstract class Assignable<Self> {
     (Object.keys(props) as Array<keyof this>).forEach(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore this is okay as long as Self == this
-      key => (this[key] = props[key])
+      (key) => (this[key] = props[key])
     );
   }
 
@@ -16,10 +16,7 @@ export abstract class Assignable<Self> {
     return Buffer.from(serialize(SCHEMA, this));
   }
 
-  static decode<T extends Assignable<T>>(
-    data: Buffer,
-    tCons: Cons<T>
-  ): T {
+  static decode<T extends Assignable<T>>(data: Buffer, tCons: Cons<T>): T {
     return deserialize(SCHEMA, tCons, data);
   }
 }
@@ -55,10 +52,7 @@ export abstract class Enum<Self> {
     return Buffer.from(serialize(SCHEMA, this));
   }
 
-  static decode<T extends Enum<T>>(
-    data: Buffer,
-    tCons: Cons<T>
-  ): T {
+  static decode<T extends Enum<T>>(data: Buffer, tCons: Cons<T>): T {
     return deserialize(SCHEMA, tCons, data);
   }
 }
@@ -79,21 +73,21 @@ export type ArrayedFieldType = [FieldType] | [number];
 export function add_struct_to_schema<
   T extends Assignable<T>,
   V extends keyof T & string
-  >(cons: Cons<T>, fields: { [P in V]: FieldType | ArrayedFieldType }): void {
+>(cons: Cons<T>, fields: { [P in V]: FieldType | ArrayedFieldType }): void {
   SCHEMA.set(cons, {
     kind: 'struct',
-    fields: (Object.keys(fields) as V[]).map(key => [key, fields[key]]),
+    fields: (Object.keys(fields) as V[]).map((key) => [key, fields[key]]),
   });
 }
 
 export function add_enum_to_schema<
   T extends Enum<T>,
   V extends keyof T & string
-  >(cons: Cons<T>, values: { [P in V]: FieldType | ArrayedFieldType }): void {
+>(cons: Cons<T>, values: { [P in V]: FieldType | ArrayedFieldType }): void {
   SCHEMA.set(cons, {
     kind: 'enum',
     field: 'enum',
-    values: (Object.keys(values) as V[]).map(key => [key, values[key]]),
+    values: (Object.keys(values) as V[]).map((key) => [key, values[key]]),
   });
 }
 

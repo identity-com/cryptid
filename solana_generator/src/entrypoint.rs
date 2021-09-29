@@ -10,6 +10,7 @@ pub use solana_program::custom_panic_default;
 use std::vec::IntoIter;
 
 /// The entrypoint macro, replaces [`solana_program::entrypoint`](::solana_program::entrypoint) macro.
+/// Requires a function that can be passed to [`entry`].
 #[macro_export]
 macro_rules! entrypoint {
     ($process_instruction:path) => {
@@ -31,6 +32,35 @@ macro_rules! entrypoint {
         #[no_mangle]
         pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
             $crate::entrypoint::entry(input, $process_instruction)
+        }
+    };
+}
+
+/// Similar to the [`entrypoint`] macro but only requires passing a type that implements [`InstructionList`].
+#[macro_export]
+macro_rules! entrypoint_list {
+    ($instruction_list:ty) => {
+        $crate::entrypoint_list!($instruction_list, no_heap, no_panic);
+        $crate::entrypoint::custom_heap_default!();
+        $crate::entrypoint::custom_panic_default!();
+    };
+    ($instruction_list:ty, no_heap) => {
+        $crate::entrypoint_list!($instruction_list, no_heap, no_panic);
+        $crate::entrypoint::custom_panic_default!();
+    };
+    ($instruction_list:ty, no_panic) => {
+        $crate::entrypoint_list!($instruction_list, no_heap, no_panic);
+        $crate::entrypoint::custom_heap_default!();
+    };
+    ($instruction_list:ty, no_heap, no_panic) => {
+        /// # Safety
+        /// This function should not be called by rust code
+        #[no_mangle]
+        pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
+            $crate::entrypoint::entry(
+                input,
+                <$instruction_list as $crate::InstructionList>::process_instruction,
+            )
         }
     };
 }
