@@ -8,6 +8,7 @@ use cryptid_signer::instruction::{CreateDOABuild, CryptidInstruction, SigningKey
 use cryptid_signer::state::DOAAccount;
 use cryptid_signer::DOASignerSeeder;
 use log::trace;
+use sol_did::id as sol_did_id;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta};
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
@@ -24,7 +25,9 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     trace!(target: LOG_TARGET, "doa: {}", doa.pubkey());
     let did = Keypair::generate(&mut rng);
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
-    let did_program = Keypair::generate(&mut rng).pubkey(); // TODO: Replace with actual did program
+    let did_pda = sol_did::state::get_sol_address_with_seed(&did.pubkey()).0;
+    trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
+    let did_program = sol_did_id();
     trace!(target: LOG_TARGET, "did_program: {}", did_program);
     let key_threshold = rng.gen();
     trace!(target: LOG_TARGET, "key_threshold: {}", key_threshold);
@@ -51,7 +54,7 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
                     signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
                     extra_accounts: vec![],
                 }, // Sign as generative
-                did: SolanaAccountMeta::new_readonly(did.pubkey(), false),
+                did: SolanaAccountMeta::new_readonly(did_pda, false),
             })
         )
         .expect("Could not create instruction")],
@@ -69,7 +72,7 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     let data: DOAAccount = BorshDeserialize::deserialize(&mut &account.data.as_slice()[2..])?;
     // TODO: This slice index skips the discriminant. Should find a better way to do this.
     trace!(target: LOG_TARGET, "data: {:?}", data);
-    assert_eq!(data.did, did.pubkey());
+    assert_eq!(data.did, did_pda);
     assert_eq!(data.did_program, did_program);
 
     assert_eq!(data.signer_nonce, signer_nonce);
