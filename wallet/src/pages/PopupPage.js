@@ -61,9 +61,7 @@ export default function PopupPage({ opener }) {
     return params.get('origin');
   }, []);
   const selectedWallet = useWallet();
-  const selectedWalletAddress = selectedWallet && selectedWallet.publicKey.toBase58();
-  const { accounts, setWalletSelector } = useWalletSelector();
-  const [wallet, setWallet] = useState(isExtension ? null : selectedWallet);
+  const { accounts } = useWalletSelector();
   const { selectedCryptidAccount } = useCryptid()
 
   const [connectedAccount, setConnectedAccount] = useState(null);
@@ -84,42 +82,6 @@ export default function PopupPage({ opener }) {
     [opener, origin],
   );
 
-  // Keep selectedWallet and wallet in sync.
-  useEffect(() => {
-    if (!isExtension) {
-      setWallet(selectedWallet);
-    }
-  // using stronger condition here
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWalletAddress]);
-
-
-  // (Extension only) Fetch connected wallet for site from local storage.
-  useEffect(() => {
-    if (isExtension) {
-      chrome.storage.local.get('connectedWallets', (result) => {
-        const connectedWallet = (result.connectedWallets || {})[origin];
-        if (connectedWallet) {
-          setWalletSelector(connectedWallet.selector);
-          setConnectedAccount(new PublicKey(connectedWallet.publicKey));
-          setAutoApprove(connectedWallet.autoApprove);
-        } else {
-          setConnectedAccount(selectedWallet.publicKey);
-        }
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin]);
-
-  // (Extension only) Set wallet once connectedWallet is retrieved.
-  useEffect(() => {
-    if (isExtension && connectedAccount) {
-      setWallet(selectedWallet);
-    }
-  // using stronger condition here
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectedAccount, selectedWalletAddress]);
-
   // Send a disconnect event if this window is closed, this component is
   // unmounted, or setConnectedAccount(null) is called.
   useEffect(() => {
@@ -135,17 +97,16 @@ export default function PopupPage({ opener }) {
     }
   }, [hasConnectedAccount, postMessage, origin]);
 
-  // Disconnect if the user switches to a different wallet.
+  // Disconnect if the user switches to a different account.
   useEffect(() => {
     if (
-      !isExtension &&
-      wallet &&
+      selectedCryptidAccount &&
       connectedAccount &&
-      !connectedAccount.equals(wallet.publicKey)
+      !connectedAccount.equals(selectedCryptidAccount.address)
     ) {
       setConnectedAccount(null);
     }
-  }, [connectedAccount, wallet]);
+  }, [connectedAccount, selectedCryptidAccount]);
 
   // Push requests from the parent window into a queue.
   useEffect(() => {
@@ -213,12 +174,12 @@ export default function PopupPage({ opener }) {
     );
   }
 
-  if (!wallet) {
+  if (!selectedCryptidAccount) {
     return <Typography>Loading wallet...</Typography>;
   }
 
   const mustConnect =
-    !connectedAccount || !connectedAccount.equals(wallet.publicKey);
+    !connectedAccount || !connectedAccount.equals(selectedCryptidAccount.address);
   // We must detect when to show the connection form on the website as it is not sent as a request.
   if (
     (isExtension && request.method === 'connect') ||
@@ -226,17 +187,17 @@ export default function PopupPage({ opener }) {
   ) {
     // Approve the parent page to connect to this wallet.
     function connect(autoApprove) {
-      setConnectedAccount(wallet.publicKey);
+      setConnectedAccount(selectedCryptidAccount.address);
       if (isExtension) {
         chrome.storage.local.get('connectedWallets', (result) => {
           // TODO better way to do this
           const account = accounts.find((account) =>
-            account.address.equals(wallet.publicKey),
+            account.address.equals(selectedWallet.publicKey),
           );
           const connectedWallets = {
             ...(result.connectedWallets || {}),
             [origin]: {
-              publicKey: wallet.publicKey.toBase58(),
+              publicKey: selectedCryptidAccount.address.toBase58(),
               selector: account.selector,
               autoApprove,
             },
@@ -246,7 +207,7 @@ export default function PopupPage({ opener }) {
       }
       postMessage({
         method: 'connected',
-        params: { publicKey: wallet.publicKey.toBase58(), autoApprove },
+        params: { publicKey: selectedCryptidAccount.address.toBase58(), autoApprove },
         id: isExtension ? request.id : undefined,
       });
       setAutoApprove(autoApprove);
@@ -264,7 +225,7 @@ export default function PopupPage({ opener }) {
     (request.method === 'signTransaction' ||
       request.method === 'signAllTransactions' ||
       request.method === 'sign') &&
-      wallet,
+      selectedCryptidAccount,
   );
 
   async function onApprove() {
@@ -292,36 +253,40 @@ export default function PopupPage({ opener }) {
     });
   }
 
+  // TODO Warning - unsupported
   async function sendSignature(message) {
-    postMessage({
-      result: {
-        signature: await wallet.createSignature(message),
-        publicKey: wallet.publicKey.toBase58(),
-      },
-      id: request.id,
-    });
+    throw new Error("Unsupported")
+    // postMessage({
+    //   result: {
+    //     signature: await wallet.createSignature(message),
+    //     publicKey: selectedCryptidAccount.address.toBase58(),
+    //   },
+    //   id: request.id,
+    // });
   }
 
+  // TODO Warning - unsupported
   async function sendAllSignatures(messages) {
-    let signatures;
-    // Ledger must sign one by one.
-    if (wallet.type === 'ledger') {
-      signatures = [];
-      for (let k = 0; k < messages.length; k += 1) {
-        signatures.push(await wallet.createSignature(messages[k]));
-      }
-    } else {
-      signatures = await Promise.all(
-        messages.map((m) => wallet.createSignature(m)),
-      );
-    }
-    postMessage({
-      result: {
-        signatures,
-        publicKey: wallet.publicKey.toBase58(),
-      },
-      id: request.id,
-    });
+    throw new Error("Unsupported")
+    // let signatures;
+    // // Ledger must sign one by one.
+    // if (wallet.type === 'ledger') {
+    //   signatures = [];
+    //   for (let k = 0; k < messages.length; k += 1) {
+    //     signatures.push(await wallet.createSignature(messages[k]));
+    //   }
+    // } else {
+    //   signatures = await Promise.all(
+    //     messages.map((m) => wallet.createSignature(m)),
+    //   );
+    // }
+    // postMessage({
+    //   result: {
+    //     signatures,
+    //     publicKey: wallet.publicKey.toBase58(),
+    //   },
+    //   id: request.id,
+    // });
   }
 
   function sendReject() {
@@ -409,6 +374,7 @@ function ApproveConnectionForm({ origin, onApprove }) {
     .find((account) => account && account.address.equals(wallet.publicKey));
   const classes = useStyles();
   const [autoApprove, setAutoApprove] = useState(false);
+  const { selectedCryptidAccount } = useCryptid()
   let [dismissed, setDismissed] = useLocalStorageState(
     'dismissedAutoApproveWarning',
     false,
@@ -425,7 +391,8 @@ function ApproveConnectionForm({ origin, onApprove }) {
           {/* TODO @martin*/}
           <Typography>{account?.name}</Typography> 
           <Typography variant="caption">
-            ({wallet.publicKey.toBase58()})
+            {/* TODO @martin*/}
+            ({selectedCryptidAccount.address.toBase58()})
           </Typography>
         </div>
         <Typography>Only connect with sites you trust.</Typography>

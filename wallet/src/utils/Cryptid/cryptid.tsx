@@ -72,6 +72,10 @@ export class CryptidAccount {
       connection: this.connection,
     })
   }
+  
+  activeSigningKey():PublicKey {
+    return this.signer.publicKey
+  }
 
   addKey = async(address: PublicKey, alias: string) => {
     return await this.cryptid.addKey(address, alias)

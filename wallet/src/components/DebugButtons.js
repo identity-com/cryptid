@@ -34,6 +34,7 @@ export default function DebugButtons() {
   function requestAirdrop() {
     callAsync(
       selectedCryptidAccount.connection.requestAirdrop(selectedCryptidAccount.address, LAMPORTS_PER_SOL),
+      
       {
         onSuccess: async () => {
           await sleep(5000);
@@ -43,6 +44,19 @@ export default function DebugButtons() {
           'Success! Please wait up to 30 seconds for the SOL tokens to appear in your wallet.',
       },
     );
+
+    callAsync(
+      selectedCryptidAccount.connection.requestAirdrop(selectedCryptidAccount.activeSigningKey(), LAMPORTS_PER_SOL),
+      {
+        onSuccess: async () => {
+          await sleep(5000);
+          refreshAccountInfo(selectedCryptidAccount.connection, selectedCryptidAccount.address);
+        },
+        successMessage:
+          'Success! Please wait up to 30 seconds for the SOL tokens to appear in your wallet.',
+      },
+    );
+    
   }
 
   function mintTestToken() {
