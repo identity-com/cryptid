@@ -125,14 +125,18 @@ interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | null;
   setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
-  loaded: boolean;
+  addCryptidAccount: (b: string) => void
+  removeCryptidAccount: (b: string) => void
+  getDidPrefix: () => string
 }
 
 const CryptidContext = React.createContext<CryptidContextInterface>({
   cryptidAccounts: [],
   selectedCryptidAccount: null,
   setSelectedCryptidAccount: () => {},
-  loaded: false,
+  addCryptidAccount: () => {},
+  removeCryptidAccount: () => {},
+  getDidPrefix: () => '',
 });
 
 interface CryptidSelectorInterface {
@@ -159,13 +163,30 @@ export const CryptidProvider:FC = ({ children }) => {
   const cluster = useCluster();
   const { accounts }: { accounts: Account[] } = useWalletSelector();
 
-  let [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
+  const [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
     'cryptidSelector',
     DEFAULT_CRYPTID_SELECTOR,
   );
 
-  // In order to not
+  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<string[]>(
+    'cryptidExtAccounts',
+    [],
+  );
 
+  const addCryptidAccount = useCallback((base58: string) => {
+    if (cryptidExtAccounts.indexOf(base58) < 0) {
+      setCryptidExtAccounts(cryptidExtAccounts.concat([base58]))
+    }
+  }, [setCryptidExtAccounts])
+
+  const removeCryptidAccount = useCallback((base58: string) => {
+    const idx = cryptidExtAccounts.indexOf(base58)
+    if (idx >= 0) {
+      setCryptidExtAccounts(cryptidExtAccounts.splice(idx, 1))
+    }
+  }, [setCryptidExtAccounts])
+
+  // In order to not
   const [selectedCryptidAccount, setSelectedCryptidAccount] = useState<CryptidAccount | null>(null);
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
 
@@ -175,12 +196,18 @@ export const CryptidProvider:FC = ({ children }) => {
     sign: wallet?.signTransaction
   }
 
+  const getDidPrefix = useCallback(() => `did:sol:${cluster}:`,[cluster])
+
   const loadCryptidAccounts = useCallback(async () => {
-    const promises = accounts.map(async (a) => {
-      const cryptidAccount = new CryptidAccount(`did:sol:${cluster}:${a.address}`, defaultSigner, connection )
+    // generative accounts + extAccounts
+    const allAccounts = accounts.map(a => a.address.toBase58()).concat(cryptidExtAccounts)
+
+    const promises = allAccounts.map(async (base58) => {
+      const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
       await cryptidAccount.init()
       return cryptidAccount
     })
+
 
     const cryptidAccounts = await Promise.all(promises);
     if (cryptidAccounts.length > 0) {
@@ -224,7 +251,9 @@ export const CryptidProvider:FC = ({ children }) => {
       cryptidAccounts,
       selectedCryptidAccount,
       setSelectedCryptidAccount,
-      loaded: !!selectedCryptidAccount
+      addCryptidAccount,
+      removeCryptidAccount,
+      getDidPrefix,
     }}
   >
     {children}
@@ -236,12 +265,16 @@ export function useCryptid() {
     selectedCryptidAccount,
     cryptidAccounts,
     setSelectedCryptidAccount,
-    loaded,
+    addCryptidAccount,
+    removeCryptidAccount,
+    getDidPrefix,
   } = useContext(CryptidContext);
   return {
     selectedCryptidAccount,
     cryptidAccounts,
     setSelectedCryptidAccount,
-    loaded,
+    addCryptidAccount,
+    removeCryptidAccount,
+    getDidPrefix,
   }
 }
