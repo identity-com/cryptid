@@ -26,6 +26,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import { useLocalStorageState, isExtension } from '../utils/utils';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
+import { useCryptid } from "../utils/Cryptid/cryptid";
 
 function getInitialRequests() {
   if (!isExtension) {
@@ -63,6 +64,7 @@ export default function PopupPage({ opener }) {
   const selectedWalletAddress = selectedWallet && selectedWallet.publicKey.toBase58();
   const { accounts, setWalletSelector } = useWalletSelector();
   const [wallet, setWallet] = useState(isExtension ? null : selectedWallet);
+  const { selectedCryptidAccount } = useCryptid()
 
   const [connectedAccount, setConnectedAccount] = useState(null);
   const hasConnectedAccount = !!connectedAccount;
@@ -268,9 +270,10 @@ export default function PopupPage({ opener }) {
   async function onApprove() {
     popRequest();
     switch (request.method) {
-      case 'signTransaction':
       case 'sign':
-        sendSignature(messages[0]);
+        throw new Error("Not supported")
+      case 'signTransaction':
+        sendTransaction(messages[0]);
         break;
       case 'signAllTransactions':
         sendAllSignatures(messages);
@@ -278,6 +281,15 @@ export default function PopupPage({ opener }) {
       default:
         throw new Error('Unexpected method: ' + request.method);
     }
+  }
+
+  async function sendTransaction(message) {
+    postMessage({
+      result: {
+        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(message)).serialize())
+      },
+      id: request.id,
+    });
   }
 
   async function sendSignature(message) {

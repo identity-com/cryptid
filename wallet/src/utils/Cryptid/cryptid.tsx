@@ -45,6 +45,10 @@ export class CryptidAccount {
     // console.log(`Getting address: ${this.address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
+  
+  signTransaction(transaction: Transaction):Promise<Transaction> {
+    return this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
+  }
 
   updateDocument = async () => {
     this.document = await this.cryptid.document()
@@ -110,7 +114,7 @@ export class CryptidAccount {
     const signingWrapper = {
       // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
       publicKey: this.address,
-      signTransaction: (transaction: Transaction) => this.cryptid.sign(transaction).then(transactions => transactions.pop())
+      signTransaction: this.signTransaction.bind(this)
     }
 
     console.log(`Doing native transfer with ${this.signer.publicKey}`)
@@ -118,8 +122,6 @@ export class CryptidAccount {
     return nativeTransfer(this.connection, signingWrapper, destination, amount);
   };
 }
-
-
 
 interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
