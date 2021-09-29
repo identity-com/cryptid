@@ -140,11 +140,11 @@ const CryptidContext = React.createContext<CryptidContextInterface>({
 });
 
 interface CryptidSelectorInterface {
-  selectedCryptidAccountDid: string | undefined
+  selectedCryptidAccount: string | undefined
 }
 
 const DEFAULT_CRYPTID_SELECTOR = {
-  selectedCryptidAccountDid: undefined
+  selectedCryptidAccount: undefined
 };
 
 /**
@@ -175,6 +175,10 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const addCryptidAccount = useCallback((base58: string) => {
     if (cryptidExtAccounts.indexOf(base58) < 0) {
+      // set to new account
+      setCryptidSelector({
+        selectedCryptidAccount: base58
+      })
       setCryptidExtAccounts(cryptidExtAccounts.concat([base58]))
     }
   }, [setCryptidExtAccounts])
@@ -212,12 +216,12 @@ export const CryptidProvider:FC = ({ children }) => {
     const cryptidAccounts = await Promise.all(promises);
     if (cryptidAccounts.length > 0) {
       // Selected from cryptidSelector or fallback to first.
-      const selected = cryptidAccounts.find(a => a.did === cryptidSelector.selectedCryptidAccountDid) || cryptidAccounts[0]
+      const selected = cryptidAccounts.find(a => a.did === getDidPrefix() + cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
       setSelectedCryptidAccount(selected)
     }
 
     setCryptidAccounts(cryptidAccounts)
-  }, [accounts, cluster])
+  }, [accounts, cluster, cryptidExtAccounts])
 
   useEffect(() => {
     loadCryptidAccounts()
@@ -227,7 +231,7 @@ export const CryptidProvider:FC = ({ children }) => {
   useEffect(() => {
     if (selectedCryptidAccount) {
       setCryptidSelector({
-        selectedCryptidAccountDid: selectedCryptidAccount.did
+        selectedCryptidAccount: selectedCryptidAccount.did.replace(getDidPrefix(), '')
       })
     }
   }, [selectedCryptidAccount])

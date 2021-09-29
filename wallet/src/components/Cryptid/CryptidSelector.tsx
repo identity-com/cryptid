@@ -13,23 +13,38 @@ import UsbIcon from "@material-ui/icons/Usb";
 import AddIcon from "@material-ui/icons/Add";
 import ImportExportIcon from "@material-ui/icons/ImportExport";
 import ExitToApp from "@material-ui/icons/ExitToApp";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useStyles } from "../NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
 import { useCryptid } from "../../utils/Cryptid/cryptid";
+import AddKeyDialog from "./AddKeyDialog";
+import AddCryptidAccountDialog from "./AddCryptidAccountDialog";
 
 export const CryptidSelector = () => {
-  const { cryptidAccounts, selectedCryptidAccount, setSelectedCryptidAccount } = useCryptid()
+  const { cryptidAccounts, selectedCryptidAccount, setSelectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
 
   const [anchorEl, setAnchorEl] = useState<Element | null>(null);
+  const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
+
   const classes = useStyles();
+
+  const onAdd = useCallback(async (address) => {
+    addCryptidAccount(address)
+    setCryptidAccountDialogOpen(false)
+  },[])
 
   if (cryptidAccounts.length === 0) {
     return null;
   }
   return (
     <>
+      <AddCryptidAccountDialog
+        open={addCryptidAccountDialogOpen}
+        onClose={() => setCryptidAccountDialogOpen(false)}
+        onAdd={onAdd}
+        didPrefix={getDidPrefix()}
+      />
       <Hidden xsDown>
         <Button
           color="inherit"
@@ -65,6 +80,18 @@ export const CryptidSelector = () => {
             setSelectedCryptidAccount={setSelectedCryptidAccount}
           />
         ))}
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            setAnchorEl(null);
+            setCryptidAccountDialogOpen(true);
+          }}
+        >
+          <ListItemIcon className={classes.menuItemIcon}>
+            <AddIcon fontSize="small" />
+          </ListItemIcon>
+          Add Cryptid Account
+        </MenuItem>
       </Menu>
     </>
   );
