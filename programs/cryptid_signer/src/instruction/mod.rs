@@ -14,6 +14,7 @@ pub use direct_execute::*;
 pub use propose_transaction::*;
 pub use test_instruction::*;
 
+use crate::error::CryptidSignerError;
 use solana_generator::*;
 use std::iter::once;
 
@@ -56,7 +57,10 @@ pub fn verify_keys<'a>(
         Ok(())
     } else {
         //TODO: Verify signing key against did using interface
-        Ok(()) // Allows all other did programs through
+        Err(CryptidSignerError::UnsupportedDIDProgram {
+            program: did_program.key,
+        }
+        .into())
     }
 }
 

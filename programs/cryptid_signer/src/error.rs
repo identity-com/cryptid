@@ -40,4 +40,10 @@ pub enum CryptidSignerError {
         /// The error the instruction gave
         error: ProgramError,
     },
+    /// Unsupported DID program given
+    #[error_msg("Unsupported DID Program `{}`", program)]
+    UnsupportedDIDProgram {
+        /// The unsupported program
+        program: Pubkey,
+    },
 }
