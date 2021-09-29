@@ -202,7 +202,11 @@ export const CryptidProvider:FC = ({ children }) => {
     sign: wallet?.signTransaction
   }
 
-  const getDidPrefix = useCallback(() => `did:sol:${cluster}:`,[cluster])
+  const getDidPrefix = useCallback(() => {
+    // sol dids on mainnet have no cluster prefix 
+    const clusterPrefix = cluster === 'mainnet-beta' ? '' : `${cluster}:`;
+    return `did:sol:${clusterPrefix}`;
+  },[cluster])
 
   const loadCryptidAccounts = useCallback(async () => {
     // generative accounts + extAccounts
