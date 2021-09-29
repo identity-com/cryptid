@@ -19,6 +19,7 @@ zeroize = "=1.3.0"
 num-traits = "0.2.14"
 array-init = "2.0.0"
 bincode = "1.3.3"
+strum = { version = "0.21.0", features = ["derive"] }
 
 [[example]]
 name = "account_argument_derive"

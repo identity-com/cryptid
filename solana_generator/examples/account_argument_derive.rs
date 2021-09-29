@@ -12,10 +12,20 @@ pub struct EmptyTupple();
 pub struct Empty;
 
 #[derive(AccountArgument)]
-#[account_argument(instruction_data = (init_size: u64))]
+#[account_argument(instruction_data = init_size: u64)]
 pub struct FullStruct {
     data_account: ProgramAccount<CoolAccount>,
-    #[account_argument(instruction_data = (init_size as usize, ()))]
+    #[account_argument(instruction_data = vec![(); init_size as usize])]
+    init_accounts: Vec<InitAccount<CoolAccount>>,
+    #[account_argument(signer, writable(3), owner(0..4) = get_pubkey())]
+    other_accounts: [ZeroedAccount<i8>; 8],
+}
+
+#[derive(AccountArgument)]
+#[account_argument(instruction_data = (init_size: u64))]
+pub struct FullStruct2 {
+    data_account: ProgramAccount<CoolAccount>,
+    #[account_argument(instruction_data = vec![(); init_size as usize])]
     init_accounts: Vec<InitAccount<CoolAccount>>,
     #[account_argument(signer, writable(3), owner(0..4) = get_pubkey())]
     other_accounts: [ZeroedAccount<i8>; 8],

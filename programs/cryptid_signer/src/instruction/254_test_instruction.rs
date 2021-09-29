@@ -1,15 +1,15 @@
 use solana_generator::*;
 
+/// A test instruction that logs a success message
 #[derive(Debug)]
 pub struct TestInstruction;
 impl Instruction for TestInstruction {
     type Data = ();
+    type FromAccountsData = ();
     type Accounts = ();
     type BuildArg = ();
 
-    fn data_to_instruction_arg(
-        _data: &mut Self::Data,
-    ) -> GeneratorResult<<Self::Accounts as AccountArgument>::InstructionArg> {
+    fn data_to_instruction_arg(_data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
         Ok(())
     }
 

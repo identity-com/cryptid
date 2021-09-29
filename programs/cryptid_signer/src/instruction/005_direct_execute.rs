@@ -3,24 +3,25 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use solana_generator::*;
 
 use crate::account::DOAAddress;
-use crate::error::CryptIdSignerError;
-use crate::generate_doa_signer;
-use crate::instruction::verify_keys;
+use crate::error::CryptidSignerError;
+use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{AccountMeta, InstructionData};
+use crate::DOASignerSeeder;
+use bitflags::bitflags;
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
 
+/// Executes a transaction directly if all required keys sign
 #[derive(Debug)]
 pub struct DirectExecute;
 impl Instruction for DirectExecute {
     type Data = DirectExecuteData;
+    type FromAccountsData = Vec<u8>;
     type Accounts = DirectExecuteAccounts;
     type BuildArg = DirectExecuteBuild;
 
-    fn data_to_instruction_arg(
-        data: &mut Self::Data,
-    ) -> GeneratorResult<<Self::Accounts as AccountArgument>::InstructionArg> {
-        Ok((data.signers,))
+    fn data_to_instruction_arg(data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
+        Ok(data.signers_extras.clone())
     }
 
     fn process(
@@ -28,14 +29,19 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        // accounts.print_keys();
+        let debug = data.flags.contains(DirectExecuteFlags::DEBUG);
+        if debug {
+            accounts.print_keys();
+        }
 
-        let (key_threshold, signer_key, signer_nonce) = match &accounts.doa {
+        // Retrieve needed data from doa
+        let (key_threshold, signer_generator, signer_key, signer_nonce) = match &accounts.doa {
             DOAAddress::OnChain(doa) => {
                 doa.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
-                let signer_seeds = doa_signer_seeds!(doa.info.key, doa.signer_nonce);
-                let signer_key = Pubkey::create_program_address(signer_seeds, &program_id)?;
-                (doa.key_threshold, signer_key, doa.signer_nonce)
+                let generator =
+                    PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.info.key });
+                let signer_key = generator.create_address(doa.signer_nonce)?;
+                (doa.key_threshold, generator, signer_key, [doa.signer_nonce])
             }
             DOAAddress::Generative(doa) => {
                 DOAAddress::verify_seeds(
@@ -43,46 +49,50 @@ impl Instruction for DirectExecute {
                     program_id,
                     accounts.did_program.key,
                     accounts.did.key,
-                    None,
                 )?;
-                let signer_seeds = doa_signer_seeds!(doa.key);
-                let (signer_key, signer_nonce) =
-                    Pubkey::find_program_address(signer_seeds, &program_id);
-                (1, signer_key, signer_nonce)
+                let generator = PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.key });
+                let (signer_key, signer_nonce) = generator.find_address();
+                (1, generator, signer_key, [signer_nonce])
             }
         };
 
-        if data.signers < key_threshold {
-            return Err(CryptIdSignerError::NotEnoughSigners {
+        // Error if there aren't enough signers
+        if data.signers_extras.len() < key_threshold as usize {
+            return Err(CryptidSignerError::NotEnoughSigners {
                 expected: key_threshold,
-                received: data.signers,
+                received: data.signers_extras.len() as u8,
             }
             .into());
         }
 
+        msg!("Verifying keys");
+        // Verify the keys sent, this only checks that one is valid for now but will use the threshold eventually
         verify_keys(
-            accounts.did_program.key,
+            &accounts.did_program,
             &accounts.did,
             accounts.signing_keys.iter(),
         )?;
 
         let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
-        let signer_seeds = doa_signer_seeds!(accounts.doa.info().key, signer_nonce);
+        let signer_seeds = signer_generator.seeds_to_bytes(Some(&signer_nonce));
 
-        for instruction in data.instructions {
+        msg!("Executing instructions");
+        // Execute instructions
+        for (index, instruction) in data.instructions.into_iter().enumerate() {
+            // Convert the metas
             let metas = instruction
                 .accounts
                 .iter()
-                .map(|meta| SolanaAccountMeta {
-                    pubkey: meta.key,
-                    is_signer: meta.meta.contains(AccountMeta::IS_SIGNER),
-                    is_writable: meta.meta.contains(AccountMeta::IS_WRITABLE),
-                })
+                .cloned()
+                .map(SolanaAccountMeta::from)
                 .collect::<Vec<_>>();
 
-            if metas.iter().any(|meta| meta.pubkey == signer_key) {
-                msg!("invoking with signing");
-                sol_log_compute_units();
+            msg!("Remaining compute units for sub-instruction `{}`", index);
+            sol_log_compute_units();
+
+            // Check if the metas contain a the signer and run relevant invoke
+            let sub_instruction_result = if metas.iter().any(|meta| meta.pubkey == signer_key) {
+                msg!("Invoking signed");
                 invoke_signed_variable_size(
                     &SolanaInstruction {
                         program_id: instruction.program_id,
@@ -90,11 +100,10 @@ impl Instruction for DirectExecute {
                         data: instruction.data,
                     },
                     &instruction_accounts_ref,
-                    &[signer_seeds],
-                )?;
+                    &[&signer_seeds],
+                )
             } else {
-                msg!("invoking without signing");
-                sol_log_compute_units();
+                msg!("Invoking without signature");
                 invoke_variable_size(
                     &SolanaInstruction {
                         program_id: instruction.program_id,
@@ -102,7 +111,12 @@ impl Instruction for DirectExecute {
                         data: instruction.data,
                     },
                     &instruction_accounts_ref,
-                )?;
+                )
+            };
+
+            // If sub-instruction errored log the index and error
+            if let Err(error) = sub_instruction_result {
+                return Err(CryptidSignerError::SubInstructionError { index, error }.into());
             }
         }
 
@@ -114,7 +128,9 @@ impl Instruction for DirectExecute {
         discriminant: &[u8],
         arg: Self::BuildArg,
     ) -> GeneratorResult<SolanaInstruction> {
-        let signer_key = generate_doa_signer(program_id, arg.doa).0;
+        let signer_key = PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa })
+            .find_address()
+            .0;
         let mut instruction_accounts = HashMap::new();
 
         // Go through all the instructions and collect all the accounts together
@@ -148,8 +164,13 @@ impl Instruction for DirectExecute {
         let mut data = discriminant.to_vec();
         BorshSerialize::serialize(
             &DirectExecuteData {
-                signers: arg.signing_keys.len() as u8,
+                signers_extras: arg
+                    .signing_keys
+                    .iter()
+                    .map(SigningKeyBuild::extra_count)
+                    .collect(),
                 instructions: arg.instructions,
+                flags: arg.flags,
             },
             &mut data,
         )?;
@@ -160,8 +181,9 @@ impl Instruction for DirectExecute {
         ];
         accounts.extend(
             arg.signing_keys
-                .into_iter()
-                .map(|key| SolanaAccountMeta::new_readonly(key, true)),
+                .iter()
+                .map(SigningKeyBuild::to_metas)
+                .flatten(),
         );
         accounts.extend(instruction_accounts);
         Ok(SolanaInstruction {
@@ -172,23 +194,25 @@ impl Instruction for DirectExecute {
     }
 }
 
+/// The accounts for [`DirectExecute`]
 #[derive(Debug, AccountArgument)]
-#[account_argument(instruction_data = (signers: u8))]
+#[account_argument(instruction_data = signers_extras: Vec<u8>)]
 pub struct DirectExecuteAccounts {
+    /// The DOA to execute with
     pub doa: DOAAddress,
+    /// The DID on the DOA
     pub did: AccountInfo,
+    /// The program for the DID
     pub did_program: AccountInfo,
-    // TODO: Same as propose transaction
-    #[account_argument(instruction_data = (signers as usize, ()), signer)]
-    pub signing_keys: Vec<AccountInfo>,
-    /// Each account should only appear once
+    /// The set of keys that sign for this transaction
+    #[account_argument(instruction_data = signers_extras)]
+    pub signing_keys: Vec<SigningKey>,
+    /// Accounts for the instructions, each should only appear once
     pub instruction_accounts: Rest<AccountInfo>,
 }
 impl DirectExecuteAccounts {
-    pub const DISCRIMINANT: u8 = 5;
-
-    #[allow(dead_code)]
-    fn print_keys(&self) {
+    /// Prints all the keys to the program log (compute budget intensive)
+    pub fn print_keys(&self) {
         msg!("doa: {}", self.doa.info().key);
         msg!("did: {}", self.did.key);
         msg!("did_program: {}", self.did_program.key);
@@ -196,7 +220,7 @@ impl DirectExecuteAccounts {
             "signing_keys: {:?}",
             self.signing_keys
                 .iter()
-                .map(|account| account.key)
+                .map(|signing_keys| signing_keys.to_key_string())
                 .collect::<Vec<_>>()
         );
         msg!(
@@ -209,18 +233,40 @@ impl DirectExecuteAccounts {
         );
     }
 }
+
+/// The instruction data for [`DirectExecute`]
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct DirectExecuteData {
-    pub signers: u8,
+    /// A vector of the number of extras for each signer, signer count is the length
+    pub signers_extras: Vec<u8>,
+    /// The instructions to execute
     pub instructions: Vec<InstructionData>,
+    /// Additional flags
+    pub flags: DirectExecuteFlags,
 }
 
+/// The build argument for [`DirectExecute`]
 #[derive(Debug)]
 pub struct DirectExecuteBuild {
+    /// The DOA to execute with
     pub doa: Pubkey,
+    /// The DID for the DOA
     pub did: SolanaAccountMeta,
+    /// The program for the DID
     pub did_program: Pubkey,
-    pub signing_keys: Vec<Pubkey>,
-    pub did_program_accounts: Vec<Pubkey>,
+    /// The signing keys for this transaction
+    pub signing_keys: Vec<SigningKeyBuild>,
+    /// The instructions to execute
     pub instructions: Vec<InstructionData>,
+    /// Additional flags
+    pub flags: DirectExecuteFlags,
+}
+
+bitflags! {
+    /// Extra flags passed to DirectExecute
+    #[derive(BorshSerialize, BorshDeserialize, BorshSchema)]
+    pub struct DirectExecuteFlags: u8{
+        /// Print debug logs, uses a large portion of the compute budget
+        const DEBUG = 1 << 0;
+    }
 }

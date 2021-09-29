@@ -1,5 +1,5 @@
 use crate::{
-    AccountArgument, AllAny, GeneratorResult, MultiIndexableAccountArgument,
+    AccountArgument, AllAny, FromAccounts, GeneratorResult, MultiIndexableAccountArgument,
     SingleIndexableAccountArgument, SystemProgram,
 };
 use solana_program::account_info::AccountInfo as SolanaAccountInfo;
@@ -129,20 +129,6 @@ impl AccountInfo {
     }
 }
 impl AccountArgument for AccountInfo {
-    type InstructionArg = ();
-
-    fn from_account_infos(
-        _program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
-        _data: &mut &[u8],
-        _arg: Self::InstructionArg,
-    ) -> GeneratorResult<Self> {
-        match infos.next() {
-            None => Err(ProgramError::NotEnoughAccountKeys.into()),
-            Some(info) => Ok(info),
-        }
-    }
-
     fn write_back(
         self,
         _program_id: Pubkey,
@@ -153,6 +139,18 @@ impl AccountArgument for AccountInfo {
 
     fn add_keys(&self, mut add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
         add(self.key)
+    }
+}
+impl FromAccounts<()> for AccountInfo {
+    fn from_accounts(
+        _program_id: Pubkey,
+        infos: &mut impl Iterator<Item = AccountInfo>,
+        _arg: (),
+    ) -> GeneratorResult<Self> {
+        match infos.next() {
+            None => Err(ProgramError::NotEnoughAccountKeys.into()),
+            Some(info) => Ok(info),
+        }
     }
 }
 impl MultiIndexableAccountArgument<()> for AccountInfo {

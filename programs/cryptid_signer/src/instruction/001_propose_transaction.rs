@@ -6,21 +6,20 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use solana_generator::*;
 
 use crate::account::DOAAddress;
-use crate::error::CryptIdSignerError;
-use crate::instruction::verify_keys;
+use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{DOAAccount, InstructionData, TransactionAccount};
 
+/// Proposes a new transaction that can be approved and appended to
 #[derive(Debug)]
 pub struct ProposeTransaction;
 impl Instruction for ProposeTransaction {
     type Data = ProposeTransactionData;
+    type FromAccountsData = Vec<u8>;
     type Accounts = ProposeTransactionAccounts;
     type BuildArg = ProposeTransactionBuild;
 
-    fn data_to_instruction_arg(
-        data: &mut Self::Data,
-    ) -> GeneratorResult<<Self::Accounts as AccountArgument>::InstructionArg> {
-        Ok((data.signers,))
+    fn data_to_instruction_arg(data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
+        Ok(data.signers.iter().map(|(extras, _)| *extras).collect())
     }
 
     fn process(
@@ -36,7 +35,6 @@ impl Instruction for ProposeTransaction {
                     program_id,
                     accounts.did_program.key,
                     accounts.did.key,
-                    None,
                 )?;
                 (
                     DOAAccount::GENERATIVE_DOA_KEY_THRESHOLD,
@@ -44,20 +42,13 @@ impl Instruction for ProposeTransaction {
                 )
             }
         };
-        if data.expiry_times.len() != data.signers as usize {
-            return Err(CryptIdSignerError::ExpiryTimesSizeMismatch {
-                expiry_times_size: data.expiry_times.len(),
-                signers_size: data.signers as usize,
-            }
-            .into());
-        }
 
         accounts
             .transaction_account
             .set_funder(accounts.funder.clone());
         accounts.transaction_account.set_init_size(
             match NonZeroU64::new(
-                (key_threshold as u64 - data.signers as u64 + data.extra_keyspace as u64)
+                (key_threshold as u64 - data.signers.len() as u64 + data.extra_keyspace as u64)
                     * size_of::<(Pubkey, UnixTimestamp)>() as u64,
             ) {
                 None => InitSize::DataSize,
@@ -75,7 +66,7 @@ impl Instruction for ProposeTransaction {
         accounts.transaction_account.settings_sequence = settings_sequence;
 
         verify_keys(
-            accounts.did_program.key,
+            &accounts.did_program,
             &accounts.did,
             accounts.signer_keys.iter(),
         )?;
@@ -83,8 +74,8 @@ impl Instruction for ProposeTransaction {
         accounts.transaction_account.signers = accounts
             .signer_keys
             .iter()
-            .zip(data.expiry_times.iter())
-            .map(|(signer, expiry_time)| (signer.key, *expiry_time))
+            .zip(data.signers.iter().map(|(_, expiry_time)| *expiry_time))
+            .map(|(signer, expiry_time)| (signer.signing_key.key, expiry_time))
             .collect();
         Ok(Some(accounts.system_program.clone()))
     }
@@ -97,13 +88,12 @@ impl Instruction for ProposeTransaction {
         let mut data = discriminant.to_vec();
         BorshSerialize::serialize(
             &ProposeTransactionData {
-                signers: arg.signers.len() as u8,
-                instructions: arg.instructions,
-                expiry_times: arg
+                signers: arg
                     .signers
                     .iter()
-                    .map(|(_, expiry_time)| *expiry_time)
+                    .map(|(key, expiry)| (key.extra_count(), *expiry))
                     .collect(),
+                instructions: arg.instructions,
                 extra_keyspace: arg.extra_keyspace,
             },
             &mut data,
@@ -116,12 +106,7 @@ impl Instruction for ProposeTransaction {
             SolanaAccountMeta::new_readonly(arg.did_program, false),
             SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
-        accounts.extend(
-            arg.signers
-                .into_iter()
-                .map(|(key, _)| SolanaAccountMeta::new_readonly(key, true)),
-        );
-        accounts.extend(arg.extra_accounts);
+        accounts.extend(arg.signers.iter().map(|(key, _)| key.to_metas()).flatten());
         Ok(SolanaInstruction {
             program_id,
             accounts,
@@ -130,42 +115,58 @@ impl Instruction for ProposeTransaction {
     }
 }
 
+/// Accounts for [`ProposeTransaction`]
 #[derive(Debug, AccountArgument)]
-#[account_argument(instruction_data = (signers: u8))]
+#[account_argument(instruction_data = signers: Vec<u8>)]
 pub struct ProposeTransactionAccounts {
+    /// The funder that will pay the rent
     #[account_argument(signer, writable, owner = system_program_id())]
     pub funder: AccountInfo,
+    /// The account that will store the transaction information, can be init or zeroed
     pub transaction_account: InitOrZeroedAccount<TransactionAccount>,
+    /// The DOA to execute for
     pub doa: DOAAddress,
+    /// The DID for the DOA
     pub did: AccountInfo,
+    /// The program for the DID
     pub did_program: AccountInfo,
+    /// The system program
     pub system_program: SystemProgram,
-    // TODO: Clean up `instruction_data` to `singers as usize`, maybe a `size` argument?
-    #[account_argument(instruction_data = (signers as usize, ()), signer)]
-    pub signer_keys: Vec<AccountInfo>,
-    pub extra_accounts: Rest<AccountInfo>,
+    /// The signing keys, need at least one to propose irrespective of the key threshold
+    #[account_argument(instruction_data = signers)]
+    pub signer_keys: Vec<SigningKey>,
 }
-impl ProposeTransactionAccounts {
-    pub const DISCRIMINANT: u8 = 1;
-}
+
+/// Instruction data for [`ProposeTransaction`]
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct ProposeTransactionData {
-    pub signers: u8,
+    /// The signers (extra account count, expire time)
+    pub signers: Vec<(u8, UnixTimestamp)>,
+    /// The instructions that will be executed
     pub instructions: Vec<InstructionData>,
-    pub expiry_times: Vec<UnixTimestamp>,
+    /// Number of extra signatures to allow, used for over-signing to account for expiry or key rotation
     pub extra_keyspace: u8, // TODO: Remove when flip flop or re-allocation added
 }
 
+/// Build argument for [`ProposeTransaction`]
 #[derive(Debug)]
 pub struct ProposeTransactionBuild {
+    /// The funder that will pay the rent
     pub funder: Pubkey,
+    /// The account that will store the transaction information, can be init or zeroed
     pub transaction_account: Pubkey,
+    /// [`true`] if [`transaction_account`](ProposeTransactionBuild::transaction_account) is zeored, [`false`] if init
     pub transaction_account_is_zeroed: bool,
+    /// The DOA to execute for
     pub doa: Pubkey,
+    /// The DID for the DOA
     pub did: SolanaAccountMeta,
+    /// The program for the DID
     pub did_program: Pubkey,
-    pub signers: Vec<(Pubkey, UnixTimestamp)>,
-    pub extra_accounts: Vec<SolanaAccountMeta>,
+    /// The signing keys, need at least one to propose irrespective of the key threshold
+    pub signers: Vec<(SigningKeyBuild, UnixTimestamp)>,
+    /// The instructions that will be executed
     pub instructions: Vec<InstructionData>,
+    /// Number of extra signatures to allow, used for over-signing to account for expiry or key rotation
     pub extra_keyspace: u8,
 }

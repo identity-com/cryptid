@@ -1,3 +1,17 @@
+/// Builds an instruction.
+/// Used to shorten [`InstructionList::build_instruction`](crate::InstructionList::build_instruction) invocations.
+#[macro_export]
+macro_rules! build_instruction {
+    ($program_id:expr, $instruction:ty, $instruction_ident:ident($instruction_arg:expr)) => {
+        <$instruction as $crate::InstructionList>::build_instruction(
+            $program_id,
+            <$instruction as $crate::InstructionList>::BuildEnum::$instruction_ident(
+                $instruction_arg,
+            ),
+        )
+    };
+}
+
 macro_rules! impl_indexed_for_unit {
     ($ty:ty, yield no single [$(gen: $($gen:ident),+)?]  [$(where: $($where_path:path: $where_bound:path),+)?] ) => {
         impl<T__, $($($gen,)*)?> $crate::MultiIndexableAccountArgument<$ty> for T__

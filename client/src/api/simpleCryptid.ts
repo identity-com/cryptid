@@ -43,7 +43,7 @@ export class SimpleCryptid implements Cryptid {
       transaction,
       this.did,
       this.signer.publicKey,
-      [this.signer]
+      [[this.signer, []]]
     );
     return [wrappedTransaction];
   }

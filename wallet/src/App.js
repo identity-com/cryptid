@@ -26,6 +26,7 @@ import LoginPage from './pages/LoginPage';
 import ConnectionsPage from './pages/ConnectionsPage';
 import { isExtension } from './utils/utils';
 import { PageProvider, usePage } from './utils/page';
+import {CryptidProvider, useCryptid} from "./utils/Cryptid/cryptid";
 
 export default function App() {
   // TODO: add toggle for dark mode
@@ -72,7 +73,9 @@ export default function App() {
         <ConnectionProvider>
           <TokenRegistryProvider>
             <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-              <WalletProvider>{appElement}</WalletProvider>
+              <WalletProvider>
+                <CryptidProvider>{appElement}</CryptidProvider>
+              </WalletProvider>
             </SnackbarProvider>
           </TokenRegistryProvider>
         </ConnectionProvider>
@@ -83,11 +86,13 @@ export default function App() {
 
 function PageContents() {
   const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
+
   const [page] = usePage();
   const [showWalletSuggestion, setShowWalletSuggestion] = useState(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
-  if (!wallet) {
+  if (!wallet || !selectedCryptidAccount) {
     return (
       <>
         {!ignoreSuggestion && (

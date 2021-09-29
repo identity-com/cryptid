@@ -92,7 +92,7 @@ impl ErrorDerive {
 
         quote! {
             #[automatically_derived]
-            impl #impl_generics #crate_name::Error for #ident #ty_generics #where_clause{
+            impl #impl_generics Error for #ident #ty_generics #where_clause{
                 fn message(&self) -> ::std::string::String{
                     match self{
                         #( #messages, )*

@@ -10,8 +10,8 @@ import {
   DecentralizedIdentifier,
 } from '@identity.com/sol-did-client';
 
-const DOA_SEED = 'cryptid_doa';
-const DOA_SIGNER_SEED = 'doa_signer';
+export const DOA_SEED = 'cryptid_doa';
+export const DOA_SIGNER_SEED = 'cryptid_signer';
 
 export const publicKeyToDid = (
   publicKey: PublicKey,
@@ -32,9 +32,9 @@ export const deriveDefaultDOAFromKey = async (
 ): Promise<PublicKey> => {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [
+      Buffer.from(DOA_SEED, 'utf8'),
       SOL_DID_PROGRAM_ID.toBuffer(),
       didPDAKey.toBuffer(),
-      Buffer.from(DOA_SEED, 'utf8'),
     ],
     DOA_PROGRAM_ID
   );

@@ -2,6 +2,7 @@ import { DialogContentText } from "@material-ui/core";
 import { useEffect, useState } from "react";
 import { useConnection } from "../utils/connection";
 import { priceStore, serumMarkets } from "../utils/markets";
+import React from "react";
 
 function FeeContentText({ ethFee, ethPrice, warning = false, prefix = "", bold = false }) {
   let usdFeeEstimate = ethPrice !== undefined ? ethPrice * ethFee : null;
