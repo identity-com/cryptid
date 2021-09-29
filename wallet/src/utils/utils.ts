@@ -11,8 +11,8 @@ export async function sleep(ms: number) {
 export function useLocalStorageState<T>(
   key: string,
   defaultState: T,
-): [T, (T) => void] {
-  const [state, setState] = useState(() => {
+): [T, (state: T|null) => void] {
+  const [state, setState] = useState<T>(() => {
     let storedState = localStorage.getItem(key);
     if (storedState) {
       return JSON.parse(storedState);
@@ -21,15 +21,16 @@ export function useLocalStorageState<T>(
   });
 
   const setLocalStorageState = useCallback(
-    (newState) => {
+    (newState: T|null) => {
       let changed = state !== newState;
       if (!changed) {
         return;
       }
-      setState(newState);
       if (newState === null) {
+        setState(defaultState)
         localStorage.removeItem(key);
       } else {
+        setState(newState);
         localStorage.setItem(key, JSON.stringify(newState));
       }
     },

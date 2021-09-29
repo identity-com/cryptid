@@ -15,12 +15,17 @@ import { createAndInitializeMint } from '../utils/tokens';
 import { Tooltip, Button } from '@material-ui/core';
 import React from 'react';
 import { MAINNET_URL } from "../utils/clusters";
+import {useCryptid} from "../utils/Cryptid/cryptid";
 
 export default function DebugButtons() {
-  const wallet = useWallet();
+  // const wallet = useWallet();
+  // const balanceInfo = useBalanceInfo(wallet.publicKey);
+
+  const { selectedCryptidAccount } = useCryptid()
+  const balanceInfo = useBalanceInfo(selectedCryptidAccount.address);
+
   const updateTokenName = useUpdateTokenName();
   const { endpoint } = useConnectionConfig();
-  const balanceInfo = useBalanceInfo(wallet.publicKey);
   const [sendTransaction, sending] = useSendTransaction();
   const callAsync = useCallAsync();
 
@@ -28,11 +33,11 @@ export default function DebugButtons() {
 
   function requestAirdrop() {
     callAsync(
-      wallet.connection.requestAirdrop(wallet.publicKey, LAMPORTS_PER_SOL),
+      selectedCryptidAccount.connection.requestAirdrop(selectedCryptidAccount.address, LAMPORTS_PER_SOL),
       {
         onSuccess: async () => {
           await sleep(5000);
-          refreshAccountInfo(wallet.connection, wallet.publicKey);
+          refreshAccountInfo(selectedCryptidAccount.connection, selectedCryptidAccount.address);
         },
         successMessage:
           'Success! Please wait up to 30 seconds for the SOL tokens to appear in your wallet.',
@@ -49,14 +54,15 @@ export default function DebugButtons() {
     );
     sendTransaction(
       createAndInitializeMint({
-        connection: wallet.connection,
-        owner: wallet,
+        connection: selectedCryptidAccount.connection,
+        owner: {publicKey: selectedCryptidAccount.address},
         mint,
         amount: 1000,
         decimals: 2,
         initialAccount: new Account(),
       }),
-      { onSuccess: () => refreshWalletPublicKeys(wallet) },
+      // TODO: Reenable for CryptidR
+      // { onSuccess: () => refreshWalletPublicKeys(wallet) },
     );
   }
 

@@ -67,35 +67,14 @@ export async function signAndSendTransaction(
 }
 
 export async function nativeTransfer(connection, wallet, destination, amount) {
-
-  const { blockhash: recentBlockhash } =
-    await connection.getRecentBlockhash();
-
-  const tx = new Transaction({
-    recentBlockhash,
-    feePayer: wallet.provider.publicKey,
-  }).add(
+  const tx = new Transaction().add(
     SystemProgram.transfer({
       fromPubkey: wallet.publicKey,
       toPubkey: destination,
       lamports: amount,
-    })
+    }),
   );
-
-  const [signedTx] = await wallet.cryptid.sign(tx);
-  return await connection.sendRawTransaction(
-    signedTx.serialize()
-  );
-
-  // TODO: Other transactions need to be updated.
-  // const tx = new Transaction().add(
-  //   SystemProgram.transfer({
-  //     fromPubkey: wallet.publicKey,
-  //     toPubkey: destination,
-  //     lamports: amount,
-  //   }),
-  // );
-  // return await signAndSendTransaction(connection, tx, wallet, []);
+  return await signAndSendTransaction(connection, tx, wallet, []);
 }
 
 export async function createAndInitializeMint({

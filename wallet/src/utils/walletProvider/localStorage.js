@@ -58,6 +58,7 @@ export class LocalStorageWalletProvider {
   };
 
   signTransaction = async (transaction) => {
+    console.log(`Calling transaction.partialSign with ${this.account.publicKey}`)
     transaction.partialSign(this.account);
     return transaction;
   };

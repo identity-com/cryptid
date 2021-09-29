@@ -8,3 +8,6 @@ export const build = Builder.build;
 export const util = {
   publicKeyToDid,
 };
+
+// Types exports
+export * from './types'
