@@ -28,34 +28,60 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid airdrop [FILE]`](#cryptid-airdrop-file)
+* [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
+* [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
 * [`cryptid balance [FILE]`](#cryptid-balance-file)
 * [`cryptid config [SUBCOMMAND] [KEY] [VALUE]`](#cryptid-config-subcommand-key-value)
+* [`cryptid control [FILE]`](#cryptid-control-file)
+* [`cryptid controller:add [DID]`](#cryptid-controlleradd-did)
+* [`cryptid controller:remove [DID]`](#cryptid-controllerremove-did)
+* [`cryptid controller:show [DID]`](#cryptid-controllershow-did)
+* [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init [FILE]`](#cryptid-init-file)
-* [`cryptid key SUBCOMMAND [KEY] [ALIAS]`](#cryptid-key-subcommand-key-alias)
+* [`cryptid key:add [KEY] [ALIAS]`](#cryptid-keyadd-key-alias)
+* [`cryptid key:remove [ALIAS]`](#cryptid-keyremove-alias)
+* [`cryptid key:show`](#cryptid-keyshow)
 * [`cryptid token [SUBCOMMAND]`](#cryptid-token-subcommand)
-* [`cryptid transfer`](#cryptid-transfer)
+* [`cryptid token:balance [FILE]`](#cryptid-tokenbalance-file)
+* [`cryptid token:show [FILE]`](#cryptid-tokenshow-file)
+* [`cryptid token:transfer TO AMOUNT`](#cryptid-tokentransfer-to-amount)
+* [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
-## `cryptid airdrop [FILE]`
+## `cryptid airdrop [AMOUNT]`
 
-describe the command here
+Airdrop funds into the cryptid account and owner key
 
 ```
 USAGE
-  $ cryptid airdrop [FILE]
+  $ cryptid airdrop [AMOUNT]
 
 OPTIONS
-  -a, --amount=amount  [default: 100000] The amount in lamports to airdrop
   -c, --config=config  Path to config file
   -h, --help           show CLI help
 ```
 
 _See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/airdrop.ts)_
 
-## `cryptid balance [FILE]`
+## `cryptid alias [NAME] [DID]`
 
 describe the command here
+
+```
+USAGE
+  $ cryptid alias [NAME] [DID]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -u, --unset          unset an alias
+```
+
+_See code: [src/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/alias.ts)_
+
+## `cryptid balance [FILE]`
+
+Show the cryptid account SOL balance
 
 ```
 USAGE
@@ -82,6 +108,81 @@ OPTIONS
 ```
 
 _See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
+
+## `cryptid control [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid control [FILE]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/control.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/control.ts)_
+
+## `cryptid controller:add [DID]`
+
+Add a controller to a cryptid account
+
+```
+USAGE
+  $ cryptid controller add [DID]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/controller/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/add.ts)_
+
+## `cryptid controller:remove [DID]`
+
+Add a controller to a cryptid account
+
+```
+USAGE
+  $ cryptid controller remove [DID]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/controller/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/remove.ts)_
+
+## `cryptid controller:show [DID]`
+
+Add a controller to a cryptid account
+
+```
+USAGE
+  $ cryptid controller show [DID]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/controller/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/show.ts)_
+
+## `cryptid document`
+
+Show the cryptid account's DID Document
+
+```
+USAGE
+  $ cryptid document
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/document.ts)_
 
 ## `cryptid help [COMMAND]`
 
@@ -118,22 +219,53 @@ OPTIONS
 
 _See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
 
-## `cryptid key SUBCOMMAND [KEY] [ALIAS]`
+## `cryptid key:add [KEY] [ALIAS]`
 
-Manage cryptid keys
+Add a cryptid key
 
 ```
 USAGE
-  $ cryptid key SUBCOMMAND [KEY] [ALIAS]
+  $ cryptid key add [KEY] [ALIAS]
 
 OPTIONS
-  -a, --alias=alias    Key alias
   -c, --config=config  Path to config file
   -h, --help           show CLI help
-  -k, --key=key        Key (base58)
 ```
 
-_See code: [src/commands/key.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key.ts)_
+_See code: [src/commands/key/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/add.ts)_
+
+## `cryptid key:remove [ALIAS]`
+
+Remove a cryptid key
+
+```
+USAGE
+  $ cryptid key remove [ALIAS]
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+```
+
+_See code: [src/commands/key/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/remove.ts)_
+
+## `cryptid key:show`
+
+List keys attached to the cryptid account
+
+```
+USAGE
+  $ cryptid key show
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+
+ALIASES
+  $ cryptid
+```
+
+_See code: [src/commands/key/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/show.ts)_
 
 ## `cryptid token [SUBCOMMAND]`
 
@@ -153,19 +285,73 @@ OPTIONS
 
 _See code: [src/commands/token.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token.ts)_
 
-## `cryptid transfer`
+## `cryptid token:balance [FILE]`
 
 describe the command here
 
 ```
 USAGE
-  $ cryptid transfer
+  $ cryptid token balance [FILE]
 
 OPTIONS
-  -a, --amount=amount  (required) The amount in lamports to transfer
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/token/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/balance.ts)_
+
+## `cryptid token:show [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid token show [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/token/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/show.ts)_
+
+## `cryptid token:transfer TO AMOUNT`
+
+Send SPL-Tokens to a recipient
+
+```
+USAGE
+  $ cryptid token transfer TO AMOUNT
+
+ARGUMENTS
+  TO      Recipient alias, did or public key (base58)
+  AMOUNT  The amount in lamports to transfer
+
+OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
-  -t, --to=to          (required) Recipient public key (base58)
+  -m, --mint=mint      (required) The SPL-Token mint(base58)
+```
+
+_See code: [src/commands/token/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/transfer.ts)_
+
+## `cryptid transfer TO AMOUNT`
+
+Send SOL to a recipient
+
+```
+USAGE
+  $ cryptid transfer TO AMOUNT
+
+ARGUMENTS
+  TO      Recipient alias, did or public key (base58)
+  AMOUNT  The amount in lamports to transfer
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
 ```
 
 _See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/transfer.ts)_

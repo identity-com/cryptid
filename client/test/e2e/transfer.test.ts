@@ -1,10 +1,11 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import {
   airdrop,
   Balances,
+  createTransaction,
   createTransferTransaction,
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
@@ -36,10 +37,6 @@ describe('transfers', function () {
     cryptid = build(did, key, { connection, waitForConfirmation: true });
 
     doaSigner = await cryptid.address();
-
-    console.log(`Wallet: ${key.publicKey}`);
-    console.log(`DID: ${did}`);
-    console.log(`Cryptid Address: ${doaSigner}`);
 
     await Promise.all([
       airdrop(connection, doaSigner), // the main funds for the cryptid account
@@ -73,6 +70,38 @@ describe('transfers', function () {
 
       // assert balances are correct
       expect(balances.for(doaSigner)).to.equal(-lamportsToTransfer); // the amount transferred
+      expect(balances.for(key.publicKey)).to.equal(-5000); // fees only
+
+      // skip for now as it is consistently returning 2,439 lamports too few
+      // expect(balances.for(recipient).to.equal(lamportsToTransfer);
+    });
+
+    it('should sign a transaction with two instructions', async () => {
+      const cryptid = build(did, key, { connection });
+
+      const instruction1 = SystemProgram.transfer({
+        fromPubkey: doaSigner,
+        toPubkey: recipient,
+        lamports: lamportsToTransfer,
+      });
+      const instruction2 = SystemProgram.transfer({
+        fromPubkey: doaSigner,
+        toPubkey: recipient,
+        lamports: lamportsToTransfer,
+      });
+
+      const tx = await createTransaction(connection, doaSigner, [
+        instruction1,
+        instruction2,
+      ]);
+
+      const [cryptidTx] = await cryptid.sign(tx);
+      await sendAndConfirmCryptidTransaction(connection, cryptidTx);
+
+      await balances.recordAfter();
+
+      // assert balances are correct
+      expect(balances.for(doaSigner)).to.equal(-(lamportsToTransfer * 2)); // the amount transferred
       expect(balances.for(key.publicKey)).to.equal(-5000); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few

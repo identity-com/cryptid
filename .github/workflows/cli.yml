@@ -39,7 +39,7 @@ jobs:
         run: yarn workspace @identity.com/cryptid-cli lint
 
       - name: Test
-        run: yarn workspace @identity.com/cryptid-cli test --ci --coverage --maxWorkers=2
+        run: yarn workspace @identity.com/cryptid-cli test
 
       - name: Build
         run: yarn workspace @identity.com/cryptid-cli pack

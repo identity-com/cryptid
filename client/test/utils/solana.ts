@@ -4,7 +4,13 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import { SOL_DID_PROGRAM_ID } from '../../src/lib/constants';
 import * as Sinon from 'sinon';
 
@@ -46,6 +52,77 @@ export const createTransferTransaction = async (
       lamports: lamportsToTransfer,
     })
   );
+};
+
+export const createTransaction = async (
+  connection: Connection,
+  payer: PublicKey,
+  instructions: TransactionInstruction[]
+): Promise<Transaction> => {
+  const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+
+  return new Transaction({ recentBlockhash, feePayer: payer }).add(
+    ...instructions
+  );
+};
+
+export const getAssociatedTokenAccount = async (
+  mint: PublicKey,
+  owner: PublicKey
+): Promise<PublicKey> =>
+  Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    owner,
+    true
+  );
+
+export const createTokenTransferTransaction = async (
+  connection: Connection,
+  mint: PublicKey,
+  sender: PublicKey,
+  recipient: PublicKey,
+  tokensToTransfer: number
+): Promise<Transaction> => {
+  const associatedTokenAccount = await getAssociatedTokenAccount(mint, sender);
+  const transferInstruction = Token.createTransferInstruction(
+    TOKEN_PROGRAM_ID,
+    associatedTokenAccount,
+    recipient,
+    sender,
+    [],
+    tokensToTransfer
+  );
+  return createTransaction(connection, sender, [transferInstruction]);
+};
+
+export const createAssociatedTokenAddress = async (
+  connection: Connection,
+  mint: PublicKey,
+  payer: Keypair,
+  doaSigner: PublicKey
+): Promise<PublicKey> => {
+  const associatedTokenAccount = await getAssociatedTokenAccount(
+    mint,
+    doaSigner
+  );
+  const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    associatedTokenAccount,
+    doaSigner,
+    payer.publicKey
+  );
+  const transaction = await createTransaction(connection, payer.publicKey, [
+    createATAInstruction,
+  ]);
+
+  const txSignature = await connection.sendTransaction(transaction, [payer]);
+  await connection.confirmTransaction(txSignature);
+
+  return associatedTokenAccount;
 };
 
 export const sendAndConfirmCryptidTransaction = async (

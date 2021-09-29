@@ -4,6 +4,7 @@ import * as yaml from "yaml";
 import * as fs from "fs";
 import { clusterApiUrl, Connection, Keypair } from "@solana/web3.js";
 import { ExtendedCluster } from "@identity.com/cryptid";
+import { omit } from "ramda";
 
 const DEFAULT_CONFIG_FILE = path.join(
   os.homedir(),
@@ -19,6 +20,7 @@ type ConfigFile = {
   did: string;
   keyFile: string;
   cluster: ExtendedCluster;
+  aliases: { [key: string]: string }; // Record<string, string>
 };
 
 const loadKeyFile = (keyFile: string): Keypair => {
@@ -57,6 +59,7 @@ export class Config {
       did: `did:sol:${cluster}:${keypair.publicKey.toBase58()}`,
       keyFile: keyPath,
       cluster,
+      aliases: {},
     };
 
     if (fs.existsSync(configPath)) {
@@ -74,9 +77,33 @@ export class Config {
   }
 
   set<K extends keyof ConfigFile>(key: K, value: ConfigFile[K]): void {
+    if (key === "aliases")
+      throw new Error("Cannot set field " + key + " with this command");
+
     const configObject: ConfigFile = {
       ...this.config,
       [key]: value,
+    };
+
+    fs.writeFileSync(this.configPath, yaml.stringify(configObject));
+  }
+
+  alias(name: string, did: string): void {
+    const configObject: ConfigFile = {
+      ...this.config,
+      aliases: {
+        ...(this.config.aliases || {}),
+        [name]: did,
+      },
+    };
+
+    fs.writeFileSync(this.configPath, yaml.stringify(configObject));
+  }
+
+  removeAlias(name: string): void {
+    const configObject: ConfigFile = {
+      ...this.config,
+      aliases: omit([name], this.config.aliases || {}),
     };
 
     fs.writeFileSync(this.configPath, yaml.stringify(configObject));

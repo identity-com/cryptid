@@ -59,6 +59,7 @@
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@size-limit/preset-small-lib": "^5.0.3",
+    "@solana/spl-token": "^0.1.8",
     "@types/bs58": "^4.0.1",
     "@types/chai": "^4.2.21",
     "@types/chai-as-promised": "^7.1.4",
