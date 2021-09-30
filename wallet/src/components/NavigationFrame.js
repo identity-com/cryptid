@@ -38,7 +38,10 @@ import { usePage } from '../utils/page';
 import { MonetizationOn, OpenInNew } from '@material-ui/icons';
 import AddCustomClusterDialog from "./AddCustomClusterDialog";
 import {CryptidSelector} from "./Cryptid/CryptidSelector";
-import {WalletDisconnectButton, WalletMultiButton} from "@solana/wallet-adapter-material-ui";
+import {
+  WalletDisconnectButton,
+  WalletMultiButton,
+} from '@solana/wallet-adapter-material-ui';
 
 export const useStyles = makeStyles((theme) => ({
   content: {

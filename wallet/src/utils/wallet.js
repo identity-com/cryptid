@@ -5,7 +5,7 @@ import nacl from 'tweetnacl';
 import {
   setInitialAccountInfo,
   useAccountInfo,
-  useConnection, useConnectionConfig,
+  useConnection,
 } from './connection';
 import {
   closeTokenAccount,
@@ -28,14 +28,7 @@ import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { WalletProviderFactory } from './walletProvider/factory';
 import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
-import {ConnectionProvider} from "@solana/wallet-adapter-react";
-import {
-  getLedgerWallet,
-  getPhantomWallet,
-  getSlopeWallet,
-  getSolflareWallet,
-  getTorusWallet
-} from "@solana/wallet-adapter-wallets";
+import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
 const DEFAULT_WALLET_SELECTOR = {
   walletIndex: 0,
@@ -146,6 +139,7 @@ export class Wallet {
     return this.provider.signTransaction(transaction);
   };
 
+  // TODO: This should be removed, since the interface will no longer be used.
   createSignature = async (message) => {
     return this.provider.createSignature(message);
   };
@@ -185,6 +179,8 @@ export function WalletProvider({ children }) {
     setWalletSelector(DEFAULT_WALLET_SELECTOR);
   }
 
+  const { publicKey, signTransaction } = useSolAdapterWallet()
+
   useEffect(() => {
     (async () => {
       if (!seed) {
@@ -216,6 +212,15 @@ export function WalletProvider({ children }) {
           return;
         }
       }
+
+      // is connected via wallet adapter.
+      if (publicKey) {
+        wallet = await Wallet.create(connection, 'adapter', {
+          publicKey,
+          signTransaction,
+        });
+      }
+
       if (!wallet) {
         const account =
           walletSelector.walletIndex !== undefined
@@ -249,6 +254,7 @@ export function WalletProvider({ children }) {
     setWalletSelector,
     enqueueSnackbar,
     derivationPath,
+    publicKey,
   ]);
   function addAccount({ name, importedAccount, ledger }) {
     if (importedAccount === undefined) {
@@ -346,45 +352,28 @@ export function WalletProvider({ children }) {
     };
   }
 
-  const { endpoint } = useConnectionConfig()
-  // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
-  // Only the wallets you configure here will be compiled into your application
-  const wallets = useMemo(() => [
-    getPhantomWallet(),
-    // getSlopeWallet(),
-    // getSolflareWallet(),
-    // getTorusWallet({
-    //   options: { clientId: 'Get a client ID @ https://developer.tor.us' }
-    // }),
-    // getLedgerWallet(),
-  ], []);
-
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletContext.Provider
-          value={{
-            wallet,
-            seed,
-            mnemonic,
-            importsEncryptionKey,
-            walletSelector,
-            setWalletSelector,
-            privateKeyImports,
-            setPrivateKeyImports,
-            accounts,
-            derivedAccounts,
-            addAccount,
-            setAccountName,
-            derivationPath,
-            hardwareWalletAccount,
-            setHardwareWalletAccount,
-          }}
-        >
-          {children}
-        </WalletContext.Provider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <WalletContext.Provider
+      value={{
+        wallet,
+        seed,
+        mnemonic,
+        importsEncryptionKey,
+        walletSelector,
+        setWalletSelector,
+        privateKeyImports,
+        setPrivateKeyImports,
+        accounts,
+        derivedAccounts,
+        addAccount,
+        setAccountName,
+        derivationPath,
+        hardwareWalletAccount,
+        setHardwareWalletAccount,
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
   );
 }
 
