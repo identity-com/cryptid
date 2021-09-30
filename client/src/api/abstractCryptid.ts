@@ -1,7 +1,6 @@
 import { Signer } from '../types/crypto';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
-import { directExecute } from '../lib/solana/transactions/directExecute';
 import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
 import { removeKey as removeKeyTransaction } from '../lib/solana/transactions/did/removeKey';
 import { addService as addServiceTransaction } from '../lib/solana/transactions/did/addService';
@@ -16,10 +15,7 @@ import { NonEmptyArray } from '../types/lang';
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
 
-  constructor(
-    protected did: string,
-    options: CryptidOptions
-  ) {
+  constructor(readonly did: string, options: CryptidOptions) {
     // combine default options and user-specified options
     // note - if nested options are added, this may need to be changed to a deep merge
     this.options = {
@@ -28,6 +24,8 @@ export abstract class AbstractCryptid implements Cryptid {
     };
   }
 
+  abstract as(did: string): Cryptid;
+
   document(): Promise<DIDDocument> {
     return resolve(this.did);
   }
@@ -35,6 +33,8 @@ export abstract class AbstractCryptid implements Cryptid {
   address(): Promise<PublicKey> {
     return didToDefaultDOASigner(this.did);
   }
+
+  abstract sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>>;
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
@@ -57,13 +57,20 @@ export abstract class AbstractCryptid implements Cryptid {
   /**
    * Returns this cryptid object as a Signer, i.e. an obect with a sign function and a public key
    * that can be used when sending arbitrary transactions
-   * @protected
+   * @private
    */
-  protected abstract asSigner(): Promise<Signer>
+  protected async asSigner(): Promise<Signer> {
+    const publicKey = await this.address();
+    return {
+      publicKey,
+      sign: (transaction: Transaction) =>
+        this.sign(transaction).then(headNonEmpty),
+    };
+  }
 
-  protected abstract get signer(): Signer
+  abstract get signer(): Signer;
 
-  private async getPayerForInternalTransaction(): Promise<Signer> {
+  protected async getPayerForInternalTransaction(): Promise<Signer> {
     switch (this.options.rentPayer) {
       // use Cryptid to sign and send the tx, so that any rent  is paid by the cryptid account
       case 'DID_PAYS':
@@ -159,5 +166,11 @@ export abstract class AbstractCryptid implements Cryptid {
     );
 
     return this.send(transaction);
+  }
+
+  // Base case for collecting all additional keys that must be provided when signing
+  // a transaction with controller chains. Each controller layer adds an additional key here
+  async additionalKeys(): Promise<PublicKey[]> {
+    return [];
   }
 }

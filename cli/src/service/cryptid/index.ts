@@ -9,7 +9,7 @@ export const build = (config: Config, asDid: string | undefined): Cryptid => {
     connection: config.connection,
   });
 
-  // if (asDid) return cryptid.as(asDid);
+  if (asDid) return cryptid.as(asDid);
 
   return cryptid;
 };

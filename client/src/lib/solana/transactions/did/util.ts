@@ -1,9 +1,10 @@
 import {DIDDocument} from "did-resolver";
 import {createTransaction, registerInstructionIfNeeded} from "../util";
-import {createUpdateInstruction, DecentralizedIdentifier, MergeBehaviour} from "@identity.com/sol-did-client";
+import {createUpdateInstruction, MergeBehaviour} from "@identity.com/sol-did-client";
 import {filterNotNil} from "../../../util";
 import {Connection, PublicKey, Transaction} from "@solana/web3.js";
 import {Signer} from "../../../../types/crypto";
+import {didToPublicKey} from "../../util";
 
 /**
  * Creates a transaction that updates a DID Document.
@@ -32,9 +33,7 @@ export const registerOrUpdate = async (did: string, document: Partial<DIDDocumen
   // if the did is registered, update it
   if (!registerInstruction) {
     const updateInstruction = await createUpdateInstruction({
-      authority: await DecentralizedIdentifier.parse(
-        did
-      ).authorityPubkey.toPublicKey(),
+      authority: didToPublicKey(did),
       identifier: did,
       document,
       mergeBehaviour

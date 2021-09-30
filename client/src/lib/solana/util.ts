@@ -41,8 +41,13 @@ export const deriveDefaultDOAFromKey = async (
   return publicKeyNonce[0];
 };
 
+export const didToPublicKey = (did: string):PublicKey =>
+  DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey()
+
+export const didToPDA = (did: string) => DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
+
 export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
-  const didKey = await DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
+  const didKey = await didToPDA(did);
   return deriveDefaultDOAFromKey(didKey);
 };
 
