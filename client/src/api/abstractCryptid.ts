@@ -12,31 +12,28 @@ import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
-import {ControlledCryptid} from "./controlledCryptid";
-import {AbstractCryptid} from "./abstractCryptid";
 
-export class SimpleCryptid extends AbstractCryptid {
+export abstract class AbstractCryptid implements Cryptid {
+  protected options: CryptidOptions;
+
   constructor(
-    did: string,
-    private signer: Signer,
+    protected did: string,
     options: CryptidOptions
   ) {
-    super(did, options);
+    // combine default options and user-specified options
+    // note - if nested options are added, this may need to be changed to a deep merge
+    this.options = {
+      ...DEFAULT_CRYPTID_OPTIONS,
+      ...options,
+    };
   }
 
-  as(controlledDid: string): ControlledCryptid {
-    return new ControlledCryptid(controlledDid, this);
+  document(): Promise<DIDDocument> {
+    return resolve(this.did);
   }
 
-  async sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>> {
-    const wrappedTransaction = await directExecute(
-      this.options.connection,
-      transaction,
-      this.did,
-      this.signer.publicKey,
-      [[this.signer, []]]
-    );
-    return [wrappedTransaction];
+  address(): Promise<PublicKey> {
+    return didToDefaultDOASigner(this.did);
   }
 
   /**
@@ -60,16 +57,11 @@ export class SimpleCryptid extends AbstractCryptid {
   /**
    * Returns this cryptid object as a Signer, i.e. an obect with a sign function and a public key
    * that can be used when sending arbitrary transactions
-   * @private
+   * @protected
    */
-  private async asSigner(): Promise<Signer> {
-    const publicKey = await this.address();
-    return {
-      publicKey,
-      sign: (transaction: Transaction) =>
-        this.sign(transaction).then(headNonEmpty),
-    };
-  }
+  protected abstract asSigner(): Promise<Signer>
+
+  protected abstract get signer(): Signer
 
   private async getPayerForInternalTransaction(): Promise<Signer> {
     switch (this.options.rentPayer) {

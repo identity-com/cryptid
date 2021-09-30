@@ -24,4 +24,6 @@ export interface Cryptid {
 
   document(): Promise<DIDDocument>;
   address(): Promise<PublicKey>;
+
+  as(did: string): Cryptid;
 }

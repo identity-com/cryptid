@@ -4,10 +4,15 @@ import { VerificationMethod } from "did-resolver";
 import { PublicKey } from "@solana/web3.js";
 import { getOwnedTokenAccounts, safeParsePubkey } from "../../lib/solana";
 
-export const build = (config: Config): Cryptid =>
-  buildCryptid(config.did, config.keypair, {
+export const build = (config: Config, asDid: string | undefined): Cryptid => {
+  const cryptid = buildCryptid(config.did, config.keypair, {
     connection: config.connection,
   });
+
+  // if (asDid) return cryptid.as(asDid);
+
+  return cryptid;
+};
 
 export const balance = async (
   cryptid: Cryptid,

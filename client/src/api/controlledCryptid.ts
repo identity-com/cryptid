@@ -12,20 +12,27 @@ import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
-import {ControlledCryptid} from "./controlledCryptid";
-import {AbstractCryptid} from "./abstractCryptid";
+import {SimpleCryptid} from "./simpleCryptid";
 
-export class SimpleCryptid extends AbstractCryptid {
+export class ControlledCryptid extends SimpleCryptid {
+  private options: CryptidOptions;
+
   constructor(
-    did: string,
-    private signer: Signer,
-    options: CryptidOptions
+    private controlledDid: string,
+    private controllerCryptid: Cryptid,
   ) {
-    super(did, options);
   }
 
-  as(controlledDid: string): ControlledCryptid {
-    return new ControlledCryptid(controlledDid, this);
+  as(did: string): ControlledCryptid {
+        throw new Error('Method not implemented.');
+    }
+
+  document(): Promise<DIDDocument> {
+    return resolve(this.did);
+  }
+
+  address(): Promise<PublicKey> {
+    return didToDefaultDOASigner(this.did);
   }
 
   async sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>> {

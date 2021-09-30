@@ -34,6 +34,6 @@ export default abstract class Base extends Command {
     const { flags } = this.parse(this.ctor as typeof Base);
 
     this._config = new Config(flags.config);
-    this._cryptid = build(this._config);
+    this._cryptid = build(this._config, flags.as);
   }
 }
