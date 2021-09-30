@@ -24,9 +24,7 @@ export class ControlledCryptid extends AbstractCryptid {
   }
 
   async additionalKeys(): Promise<PublicKey[]> {
-    // TODO @brett
-    const additionalKey = await didToPDA(this.controllerCryptid.did); // this?
-    // await didToPDA(this.did) // or this?
+    const additionalKey = await didToPDA(this.controllerCryptid.did);
     const controllerAdditionalKeys =
       await this.controllerCryptid.additionalKeys();
 
