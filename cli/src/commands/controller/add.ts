@@ -1,22 +1,16 @@
-import { Command } from "@oclif/command";
-import { Config } from "../../service/config";
-import { build } from "../../service/cryptid";
-import * as Flags from "../../lib/flags";
+import Base from "../base";
 
-export default class AddController extends Command {
+export default class AddController extends Base {
   static description = "Add a controller to a cryptid account";
-
-  static flags = Flags.common;
 
   static args = [{ name: "did" }];
 
+  static flags = Base.flags;
+
   async run(): Promise<void> {
-    const { args, flags } = this.parse(AddController);
+    const { args } = this.parse(AddController);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    await cryptid.addController(args.did);
+    await this.cryptid.addController(args.did);
     this.log("Added");
   }
 }

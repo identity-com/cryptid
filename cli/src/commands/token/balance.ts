@@ -1,13 +1,9 @@
-import { Command } from "@oclif/command";
-import * as Flags from "../../lib/flags";
-import { Config } from "../../service/config";
-import { build, getTokenAccounts, TokenDetails } from "../../service/cryptid";
+import { getTokenAccounts, TokenDetails } from "../../service/cryptid";
 import { PublicKey } from "@solana/web3.js";
+import Base from "../base";
 
-export default class TokenBalance extends Command {
+export default class TokenBalance extends Base {
   static description = "show an SPL Token balance";
-
-  static flags = Flags.common;
 
   static args = [
     {
@@ -18,13 +14,12 @@ export default class TokenBalance extends Command {
     },
   ];
 
+  static flags = Base.flags;
+
   async run(): Promise<void> {
-    const { args, flags } = this.parse(TokenBalance);
+    const { args } = this.parse(TokenBalance);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    const accounts = await getTokenAccounts(cryptid, config);
+    const accounts = await getTokenAccounts(this.cryptid, this.cryptidConfig);
 
     const token = accounts.find(
       (token: TokenDetails) => token.mint.toString() === args.mint.toString()

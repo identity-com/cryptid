@@ -1,13 +1,9 @@
-import { Command } from "@oclif/command";
-import { Config } from "../service/config";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { build, resolveRecipient } from "../service/cryptid";
-import * as Flags from "../lib/flags";
+import { resolveRecipient } from "../service/cryptid";
+import Base from "./base";
 
-export default class Transfer extends Command {
+export default class Transfer extends Base {
   static description = "Send SOL to a recipient";
-
-  static flags = Flags.common;
 
   static args = [
     {
@@ -22,23 +18,23 @@ export default class Transfer extends Command {
     },
   ];
 
+  static flags = Base.flags;
+
   async run(): Promise<void> {
-    const { args, flags } = this.parse(Transfer);
+    const { args } = this.parse(Transfer);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-    const address = await cryptid.address();
+    const address = await this.cryptid.address();
 
-    const to = await resolveRecipient(args.to, config);
+    const to = await resolveRecipient(args.to, this.cryptidConfig);
 
     this.log(`${args.to} resolved to ${to}`);
 
     const { blockhash: recentBlockhash } =
-      await config.connection.getRecentBlockhash();
+      await this.connection.getRecentBlockhash();
 
     const tx = new Transaction({
       recentBlockhash,
-      feePayer: config.keypair.publicKey,
+      feePayer: this.cryptidConfig.keypair.publicKey,
     }).add(
       SystemProgram.transfer({
         fromPubkey: address,
@@ -47,7 +43,7 @@ export default class Transfer extends Command {
       })
     );
 
-    const [signedTx] = await cryptid.sign(tx);
+    const [signedTx] = await this.cryptid.sign(tx);
     console.log(
       signedTx.signatures.map((s) => ({
         publicKey: s.publicKey.toString(),
@@ -60,7 +56,7 @@ export default class Transfer extends Command {
         pubkey: k.pubkey.toString(),
       }))
     );
-    const txSignature = await config.connection.sendRawTransaction(
+    const txSignature = await this.connection.sendRawTransaction(
       signedTx.serialize()
     );
 
