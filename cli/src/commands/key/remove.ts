@@ -1,25 +1,20 @@
-import { Command } from "@oclif/command";
-import { Config } from "../../service/config";
-import { build, getKeys } from "../../service/cryptid";
-import * as Flags from "../../lib/flags";
+import { getKeys } from "../../service/cryptid";
+import Base from "../base";
 
-export default class RemoveKey extends Command {
+export default class RemoveKey extends Base {
   static description = "Remove a cryptid key";
-
-  static flags = Flags.common;
 
   static args = [{ name: "alias" }];
 
+  static flags = Base.flags;
+
   async run(): Promise<void> {
-    const { args, flags } = this.parse(RemoveKey);
+    const { args } = this.parse(RemoveKey);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    await cryptid.removeKey(args.alias);
+    await this.cryptid.removeKey(args.alias);
     this.log("Removed");
 
-    const keys = await getKeys(cryptid);
+    const keys = await getKeys(this.cryptid);
     this.log(keys.join("\n"));
   }
 }

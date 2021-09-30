@@ -1,24 +1,17 @@
-import { Command } from "@oclif/command";
-import { Config } from "../../service/config";
-import { build, getKeys } from "../../service/cryptid";
-import * as Flags from "../../lib/flags";
+import { getKeys } from "../../service/cryptid";
+import Base from "../base";
 
-export default class ShowKeys extends Command {
+export default class ShowKeys extends Base {
   static description = "List keys attached to the cryptid account";
 
-  static flags = Flags.common;
-
   static args = [];
+
+  static flags = Base.flags;
 
   static aliases = [""];
 
   async run(): Promise<void> {
-    const { flags } = this.parse(ShowKeys);
-
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    const keys = await getKeys(cryptid);
+    const keys = await getKeys(this.cryptid);
     this.log(keys.join("\n"));
   }
 }
