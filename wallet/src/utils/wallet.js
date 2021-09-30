@@ -310,7 +310,7 @@ export function WalletProvider({ children }) {
           importedPubkey: undefined,
           ledger: false,
         },
-        isSelected: walletSelector.walletIndex === idx,
+        isSelected: !publicKey && walletSelector.walletIndex === idx,
         address,
         name: idx === 0 ? 'Main account' : name || `Account ${idx}`,
       };
@@ -330,10 +330,25 @@ export function WalletProvider({ children }) {
       };
     });
 
-    const accounts = derivedAccounts.concat(importedAccounts);
+    // insert adapter as account.
+    const adapterAccount = []
+    if (publicKey) {
+      adapterAccount.push({
+        selector: {
+          walletIndex: undefined,
+          importedPubkey: undefined,
+          ledger: false,
+        },
+        isSelected: true,
+        address: publicKey,
+        name: 'External',
+      })
+    }
+
+    const accounts = derivedAccounts.concat(importedAccounts).concat(adapterAccount);
     return [accounts, derivedAccounts];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seed, walletCount, walletSelector, privateKeyImports, walletNames]);
+  }, [seed, walletCount, walletSelector, privateKeyImports, walletNames, publicKey]);
 
   let hardwareWalletAccount;
   if (_hardwareWalletAccount) {
