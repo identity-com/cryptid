@@ -1,13 +1,9 @@
-import { Command } from "@oclif/command";
-import { Config } from "../../service/config";
-import { build, getKeys } from "../../service/cryptid";
+import { getKeys } from "../../service/cryptid";
 import { PublicKey } from "@solana/web3.js";
-import * as Flags from "../../lib/flags";
+import Base from "../base";
 
-export default class AddKey extends Command {
+export default class AddKey extends Base {
   static description = "Add a cryptid key";
-
-  static flags = Flags.common;
 
   static args = [
     {
@@ -18,16 +14,15 @@ export default class AddKey extends Command {
     { name: "alias" },
   ];
 
+  static flags = Base.flags;
+
   async run(): Promise<void> {
-    const { args, flags } = this.parse(AddKey);
+    const { args } = this.parse(AddKey);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    await cryptid.addKey(args.key, args.alias);
+    await this.cryptid.addKey(args.key, args.alias);
     this.log("Added");
 
-    const keys = await getKeys(cryptid);
+    const keys = await getKeys(this.cryptid);
     this.log(keys.join("\n"));
   }
 }

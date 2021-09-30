@@ -1,13 +1,13 @@
-import { Command, flags } from "@oclif/command";
-import { Config } from "../../service/config";
+import { flags } from "@oclif/command";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { build, resolveRecipient } from "../../service/cryptid";
 import * as Flags from "../../lib/flags";
+import Base from "../base";
+import { resolveRecipient } from "../../service/cryptid";
 
 export const getAssociatedTokenAccount = async (
   mint: PublicKey,
@@ -21,7 +21,7 @@ export const getAssociatedTokenAccount = async (
     true
   );
 
-export default class TokenTransfer extends Command {
+export default class TokenTransfer extends Base {
   static description = "Send SPL-Tokens to a recipient";
 
   static flags = {
@@ -55,18 +55,16 @@ export default class TokenTransfer extends Command {
   async run(): Promise<void> {
     const { args, flags } = this.parse(TokenTransfer);
 
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-    const cryptidAddress = await cryptid.address();
+    const cryptidAddress = await this.cryptid.address();
 
-    const to = await resolveRecipient(args.to, config);
+    const to = await resolveRecipient(args.to, this.cryptidConfig);
     this.log(`${args.to} resolved to ${to}`);
 
     // oclif type system does not make required flags non-null
     this.log("mint: " + flags.mint!.toBase58()); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
     const { blockhash: recentBlockhash } =
-      await config.connection.getRecentBlockhash();
+      await this.cryptidConfig.connection.getRecentBlockhash();
 
     const senderAssociatedTokenAccount = await getAssociatedTokenAccount(
       flags.mint as PublicKey,
@@ -77,13 +75,13 @@ export default class TokenTransfer extends Command {
       to
     );
 
-    console.log("Cryptid ATA " + senderAssociatedTokenAccount);
+    console.log("this.cryptid ATA " + senderAssociatedTokenAccount);
 
     const instructions = [];
 
     if (flags.allowUnfundedRecipient) {
       // check if the recipient ATA exists:
-      const recipientATAAccount = await config.connection.getAccountInfo(
+      const recipientATAAccount = await this.connection.getAccountInfo(
         recipientAssociatedTokenAccount
       );
 
@@ -115,10 +113,10 @@ export default class TokenTransfer extends Command {
 
     const tx = new Transaction({
       recentBlockhash,
-      feePayer: cryptidAddress, // config.keypair.publicKey,
+      feePayer: cryptidAddress,
     }).add(...instructions);
 
-    const [signedTx] = await cryptid.sign(tx);
+    const [signedTx] = await this.cryptid.sign(tx);
     console.log(
       signedTx.signatures.map((s) => ({
         publicKey: s.publicKey.toString(),
@@ -131,7 +129,7 @@ export default class TokenTransfer extends Command {
         pubkey: k.pubkey.toString(),
       }))
     );
-    const txSignature = await config.connection.sendRawTransaction(
+    const txSignature = await this.connection.sendRawTransaction(
       signedTx.serialize()
     );
 
