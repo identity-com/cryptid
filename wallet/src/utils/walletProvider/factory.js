@@ -1,5 +1,6 @@
 import { LocalStorageWalletProvider } from './localStorage';
 import { LedgerWalletProvider } from './ledger';
+import {SolanaAdapterWalletProvider} from "./adapter";
 
 export class WalletProviderFactory {
   static getProvider(type, args) {
@@ -9,6 +10,10 @@ export class WalletProviderFactory {
 
     if (type === 'ledger') {
       return new LedgerWalletProvider(args);
+    }
+
+    if (type === 'adapter') {
+      return new SolanaAdapterWalletProvider(args);
     }
   }
 }

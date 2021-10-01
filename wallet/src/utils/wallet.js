@@ -28,6 +28,7 @@ import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { WalletProviderFactory } from './walletProvider/factory';
 import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
+import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
 const DEFAULT_WALLET_SELECTOR = {
   walletIndex: 0,
@@ -138,6 +139,7 @@ export class Wallet {
     return this.provider.signTransaction(transaction);
   };
 
+  // TODO: This should be removed, since the interface will no longer be used.
   createSignature = async (message) => {
     return this.provider.createSignature(message);
   };
@@ -177,6 +179,8 @@ export function WalletProvider({ children }) {
     setWalletSelector(DEFAULT_WALLET_SELECTOR);
   }
 
+  const { publicKey, signTransaction } = useSolAdapterWallet()
+
   useEffect(() => {
     (async () => {
       if (!seed) {
@@ -208,6 +212,15 @@ export function WalletProvider({ children }) {
           return;
         }
       }
+
+      // is connected via wallet adapter.
+      if (publicKey) {
+        wallet = await Wallet.create(connection, 'adapter', {
+          publicKey,
+          signTransaction,
+        });
+      }
+
       if (!wallet) {
         const account =
           walletSelector.walletIndex !== undefined
@@ -241,6 +254,7 @@ export function WalletProvider({ children }) {
     setWalletSelector,
     enqueueSnackbar,
     derivationPath,
+    publicKey,
   ]);
   function addAccount({ name, importedAccount, ledger }) {
     if (importedAccount === undefined) {
@@ -296,7 +310,7 @@ export function WalletProvider({ children }) {
           importedPubkey: undefined,
           ledger: false,
         },
-        isSelected: walletSelector.walletIndex === idx,
+        isSelected: !publicKey && walletSelector.walletIndex === idx,
         address,
         name: idx === 0 ? 'Main account' : name || `Account ${idx}`,
       };
@@ -316,10 +330,25 @@ export function WalletProvider({ children }) {
       };
     });
 
-    const accounts = derivedAccounts.concat(importedAccounts);
+    // insert adapter as account.
+    const adapterAccount = []
+    if (publicKey) {
+      adapterAccount.push({
+        selector: {
+          walletIndex: undefined,
+          importedPubkey: undefined,
+          ledger: false,
+        },
+        isSelected: true,
+        address: publicKey,
+        name: 'External',
+      })
+    }
+
+    const accounts = derivedAccounts.concat(importedAccounts).concat(adapterAccount);
     return [accounts, derivedAccounts];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seed, walletCount, walletSelector, privateKeyImports, walletNames]);
+  }, [seed, walletCount, walletSelector, privateKeyImports, walletNames, publicKey]);
 
   let hardwareWalletAccount;
   if (_hardwareWalletAccount) {

@@ -23,7 +23,7 @@ export const removeKey = async (
   alias: string,
   signers: Signer[]
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did);
+  const existingDocument = await resolve(did, { connection });
   const verificationMethodToRemove = findVerificationMethodWithAlias(existingDocument, alias);
 
   if (!verificationMethodToRemove) throw new Error(`Key ${alias} not found on ${did}`);

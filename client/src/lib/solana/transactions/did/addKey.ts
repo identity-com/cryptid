@@ -20,7 +20,7 @@ export const addKey = async (
 ): Promise<Transaction> => {
   // resolve the existing document so that any existing capability invocation keys can be included in the registered version
   // if this is missed, registering with a new key removes the old key, which we don't want in this case.
-  const existingDocument = await resolve(did);
+  const existingDocument = await resolve(did, { connection });
   const verificationMethod = makeVerificationMethod(did, newKey, alias);
   const document = {
     verificationMethod: [verificationMethod],

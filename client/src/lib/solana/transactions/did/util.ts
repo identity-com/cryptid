@@ -36,7 +36,8 @@ export const registerOrUpdate = async (did: string, document: Partial<DIDDocumen
       authority: didToPublicKey(did),
       identifier: did,
       document,
-      mergeBehaviour
+      mergeBehaviour,
+      connection
     });
     instructions = [updateInstruction];
   }

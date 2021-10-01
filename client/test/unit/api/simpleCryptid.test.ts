@@ -173,7 +173,7 @@ describe('SimpleCryptid', () => {
 
       const address = await cryptid.address();
       expect(address.toBase58()).to.equal(
-        'Homrp2FPFVn2gCdoY5kby2SLheMShZnUYHRmQoxhRJHn'
+        'DA2m96dgMW9vC6BMFTCo8HvMPibq1SB8iYY7z7veedG4'
       );
     });
   });
