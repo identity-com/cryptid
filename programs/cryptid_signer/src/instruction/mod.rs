@@ -12,6 +12,7 @@ mod test_instruction;
 pub use create_doa::*;
 pub use direct_execute::*;
 pub use propose_transaction::*;
+use std::borrow::Cow;
 pub use test_instruction::*;
 
 use crate::error::CryptidSignerError;
@@ -45,14 +46,19 @@ pub fn verify_keys<'a>(
 ) -> GeneratorResult<()> {
     // TODO: Handle higher key threshold than 1
     if did_program.key == sol_did::id() {
-        unsafe {
-            let account_infos = signing_keys
-                .map(|account| account.signing_key.to_solana_account_info())
-                .collect::<Vec<_>>();
-            sol_did::validate_owner(
-                &did.to_solana_account_info(),
-                &account_infos.iter().collect::<Vec<_>>(),
-            )?;
+        for signing_key in signing_keys {
+            // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
+            unsafe {
+                sol_did::validate_owner(
+                    &did.to_solana_account_info(),
+                    &signing_key.signing_key.to_solana_account_info(),
+                    signing_key
+                        .extra_accounts
+                        .iter()
+                        .map(|info| info.to_solana_account_info())
+                        .map(Cow::Owned),
+                )?;
+            }
         }
         Ok(())
     } else {
