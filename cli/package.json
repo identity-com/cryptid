@@ -9,7 +9,7 @@
   "bugs": "https://github.com/identity-com/cryptid/issues",
   "dependencies": {
     "@identity.com/cryptid": "0.1.0",
-    "@identity.com/sol-did-client": "^0.2.0",
+    "@identity.com/sol-did-client": "1.0.0-beta",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
