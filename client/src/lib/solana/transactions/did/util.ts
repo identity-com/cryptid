@@ -37,7 +37,8 @@ export const registerOrUpdate = async (did: string, document: Partial<DIDDocumen
       ).authorityPubkey.toPublicKey(),
       identifier: did,
       document,
-      mergeBehaviour
+      mergeBehaviour,
+      connection
     });
     instructions = [updateInstruction];
   }
