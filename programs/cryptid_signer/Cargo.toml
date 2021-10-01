@@ -12,7 +12,7 @@ crate-type = ["cdylib", "lib"]
 solana_generator = { path = "../../solana_generator" }
 borsh = "0.9.1"
 bitflags = "1.3.2"
-sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b51bf82af14e3b5917d231a255f5fdb390b96eda", features = ["no-entrypoint"] }
+sol-did = { git = "https://github.com/identity-com/sol-did", rev = "190065b75468ecae3081b4f3b627ab0fab01cc05", features = ["no-entrypoint"] }
 
 [dev-dependencies]
 solana-sdk = "1.7.12"
