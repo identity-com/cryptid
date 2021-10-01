@@ -13,7 +13,8 @@ const { expect } = chai;
 
 const TRANSACTION_FEE = 5000;
 
-const controller = 'did:sol:123';
+const controller =
+  'did:sol:localnet:4TiH6KXzruQDYjR2KLsdrCDLnkjZhi19yqrEkSdZ2At2';
 
 describe('DID Controller operations', function () {
   this.timeout(60_000);
