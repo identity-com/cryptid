@@ -2,7 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 import { ExtendedCluster } from '../types/solana';
 
 export const SOL_DID_PROGRAM_ID = new PublicKey(
-  'ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV'
+  'idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM'
 );
 
 export const DOA_PROGRAM_ID = new PublicKey(

@@ -1549,22 +1549,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.0.tgz#87de7af9c231826fdd68ac7258f77c429e0e5fcf"
   integrity sha512-wdppn25U8z/2yiaT6YGquE6X8sSv7hNMWSXYSSU1jGv/yd6XqjXgTDJ8KP4NgjTXfJ3GbRjeeb8RTV7a/VpM+w==
 
-"@identity.com/sol-did-client@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.2.0.tgz#bdd3c79e66705bb6a75ab62dbbd436fe1d6db1c9"
-  integrity sha512-40jjPxyjMa/JP1LBWlFnD8fQ+NUxn/1e0gt4ALdcKdQS5uD1FUTw9W7PYI71NwoUhiJEitQIzqcYbChsZEEBqw==
-  dependencies:
-    "@solana/web3.js" "^1.21.0"
-    bn.js "^4.12.0"
-    borsh "^0.3.1"
-    bs58 "^4.0.1"
-    did-resolver "^3.0.1"
-    ramda "^0.27.1"
-
-"@identity.com/sol-did-client@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.2.1.tgz#4d040cd01cb3dff5dc1b1a94b2ea8507e60aae6f"
-  integrity sha512-IZaWnvyUoLUx74YC28qjfxn+CynIsCQFJF+JZ6+dye55+ibMLX+pi7B7d9gP6pYk0XhBH5BFPZcQdoGPTka2Vg==
+"@identity.com/sol-did-client@1.0.0-beta":
+  version "1.0.0-beta"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-1.0.0-beta.tgz#0fa3f3328f813eeffd216c5588b660f2f47c108d"
+  integrity sha512-uzIo8B5ScUTnr4SAJrxruLb+yu8EtJUvNHaftYBfoJ5RYKZ0e+5kjpVuVlR66yoycOacjNF1o4c/MVzvGMG86g==
   dependencies:
     "@solana/web3.js" "^1.21.0"
     bn.js "^4.12.0"
