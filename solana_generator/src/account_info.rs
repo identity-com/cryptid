@@ -190,10 +190,16 @@ impl SingleIndexableAccountArgument<()> for AccountInfo {
 }
 
 #[cfg(test)]
-mod test {
-    use crate::Pubkey;
+pub mod account_info_test {
+    use crate::{
+        AccountInfo, All, Any, MultiIndexableAccountArgument, NotAll, NotAny, Pubkey,
+        SingleIndexableAccountArgument,
+    };
+    use rand::{thread_rng, Rng};
     use solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE;
+    use std::cell::RefCell;
     use std::mem::align_of;
+    use std::rc::Rc;
     fn add<const N: usize>(data: &mut Vec<u8>, add: [u8; N]) {
         for item in add {
             data.push(item);
@@ -371,5 +377,164 @@ mod test {
             solana_accounts[1].owner as *const Pubkey,
             *generator_accounts[1].owner.borrow() as *const Pubkey
         );
+    }
+
+    fn random_account_info(rng: &mut impl Rng) -> AccountInfo {
+        let data_len: usize = rng.gen_range(16..=1024);
+        let mut data = vec![0; data_len];
+        for val in &mut data {
+            *val = rng.gen();
+        }
+        AccountInfo {
+            key: Pubkey::new(&rng.gen::<[u8; 32]>()),
+            is_signer: rng.gen(),
+            is_writable: rng.gen(),
+            lamports: Rc::new(RefCell::new(Box::leak(Box::new(rng.gen())))),
+            data: Rc::new(RefCell::new(Box::leak(data.into_boxed_slice()))),
+            owner: Rc::new(RefCell::new(Box::leak(Box::new(Pubkey::new(
+                &rng.gen::<[u8; 32]>(),
+            ))))),
+            executable: rng.gen(),
+            rent_epoch: rng.gen(),
+        }
+    }
+    pub fn account_info_eq(first: &AccountInfo, second: &AccountInfo) -> bool {
+        first.key == second.key
+            && first.is_signer == second.is_signer
+            && first.is_writable == second.is_writable
+            && **first.lamports.borrow() == **second.lamports.borrow()
+            && **first.data.borrow() == **second.data.borrow()
+            && **first.owner.borrow() == **second.owner.borrow()
+            && first.executable == second.executable
+            && first.rent_epoch == second.rent_epoch
+    }
+
+    #[test]
+    fn is_signer_test() {
+        let mut rng = thread_rng();
+        let mut account_info = random_account_info(&mut rng);
+        assert_eq!(account_info.is_signer, account_info.is_signer(()).unwrap());
+        assert_eq!(account_info.is_signer, account_info.is_signer(All).unwrap());
+        assert_eq!(account_info.is_signer, account_info.is_signer(Any).unwrap());
+        assert_eq!(
+            !account_info.is_signer,
+            account_info.is_signer(NotAll).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_signer,
+            account_info.is_signer(NotAny).unwrap()
+        );
+        account_info.is_signer = !account_info.is_signer;
+        assert_eq!(account_info.is_signer, account_info.is_signer(()).unwrap());
+        assert_eq!(account_info.is_signer, account_info.is_signer(All).unwrap());
+        assert_eq!(account_info.is_signer, account_info.is_signer(Any).unwrap());
+        assert_eq!(
+            !account_info.is_signer,
+            account_info.is_signer(NotAll).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_signer,
+            account_info.is_signer(NotAny).unwrap()
+        );
+    }
+
+    #[test]
+    fn is_writable_test() {
+        let mut rng = thread_rng();
+        let mut account_info = random_account_info(&mut rng);
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(()).unwrap()
+        );
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(All).unwrap()
+        );
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(Any).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_writable,
+            account_info.is_writable(NotAll).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_writable,
+            account_info.is_writable(NotAny).unwrap()
+        );
+        account_info.is_signer = !account_info.is_signer;
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(()).unwrap()
+        );
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(All).unwrap()
+        );
+        assert_eq!(
+            account_info.is_writable,
+            account_info.is_writable(Any).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_writable,
+            account_info.is_writable(NotAll).unwrap()
+        );
+        assert_eq!(
+            !account_info.is_writable,
+            account_info.is_writable(NotAny).unwrap()
+        );
+    }
+
+    #[test]
+    fn is_owner_test() {
+        let mut rng = thread_rng();
+        let account_info = random_account_info(&mut rng);
+        assert!(account_info
+            .is_owner(**account_info.owner.borrow(), ())
+            .unwrap());
+        assert!(account_info
+            .is_owner(**account_info.owner.borrow(), All)
+            .unwrap());
+        assert!(account_info
+            .is_owner(**account_info.owner.borrow(), Any)
+            .unwrap());
+        assert!(!account_info
+            .is_owner(**account_info.owner.borrow(), NotAll)
+            .unwrap());
+        assert!(!account_info
+            .is_owner(**account_info.owner.borrow(), NotAny)
+            .unwrap());
+        assert!(!account_info
+            .is_owner(Pubkey::new(&rng.gen::<[u8; 32]>()), ())
+            .unwrap());
+        assert!(!account_info
+            .is_owner(Pubkey::new(&rng.gen::<[u8; 32]>()), All)
+            .unwrap());
+        assert!(!account_info
+            .is_owner(Pubkey::new(&rng.gen::<[u8; 32]>()), Any)
+            .unwrap());
+        assert!(account_info
+            .is_owner(Pubkey::new(&rng.gen::<[u8; 32]>()), NotAll)
+            .unwrap());
+        assert!(account_info
+            .is_owner(Pubkey::new(&rng.gen::<[u8; 32]>()), NotAny)
+            .unwrap());
+    }
+
+    #[test]
+    fn owner_test() {
+        let mut rng = thread_rng();
+        let account_info = random_account_info(&mut rng);
+        assert_eq!(
+            account_info.owner(()).unwrap(),
+            **account_info.owner.borrow()
+        );
+    }
+
+    #[test]
+    fn key_test() {
+        let mut rng = thread_rng();
+        let account_info = random_account_info(&mut rng);
+        assert_eq!(account_info.key(()).unwrap(), account_info.key);
     }
 }
