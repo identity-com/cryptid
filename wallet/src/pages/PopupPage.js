@@ -245,16 +245,18 @@ export default function PopupPage({ opener }) {
   }
 
   async function sendTransaction(transaction) {
+    const signedTransaction = await selectedCryptidAccount.signTransaction(transaction);
+    
     postMessage({
       result: {
-        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(transaction)).serialize())
+        transaction: bs58.encode(signedTransaction.serialize())
       },
       id: request.id,
     });
   }
 
   async function sendTransactions(transactions) {
-    const signedTransactions = await Promise.all(
+    const serializedSignedTransactions = await Promise.all(
       transactions.map(
         tx => selectedCryptidAccount
           .signTransaction(tx)
@@ -263,7 +265,7 @@ export default function PopupPage({ opener }) {
     );
     postMessage({
       result: {
-        transaction: bs58.encode(signedTransactions)
+        transaction: bs58.encode(serializedSignedTransactions)
       },
       id: request.id,
     });
