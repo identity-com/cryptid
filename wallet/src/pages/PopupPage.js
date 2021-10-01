@@ -237,17 +237,33 @@ export default function PopupPage({ opener }) {
         sendTransaction(messages[0]);
         break;
       case 'signAllTransactions':
-        sendAllSignatures(messages);
+        sendTransactions(messages);
         break;
       default:
         throw new Error('Unexpected method: ' + request.method);
     }
   }
 
-  async function sendTransaction(message) {
+  async function sendTransaction(transaction) {
     postMessage({
       result: {
-        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(message)).serialize())
+        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(transaction)).serialize())
+      },
+      id: request.id,
+    });
+  }
+
+  async function sendTransactions(transactions) {
+    const signedTransactions = await Promise.all(
+      transactions.map(
+        tx => selectedCryptidAccount
+          .signTransaction(tx)
+          .then(signedTx => signedTx.serialize())
+      )
+    );
+    postMessage({
+      result: {
+        transaction: bs58.encode(signedTransactions)
       },
       id: request.id,
     });
