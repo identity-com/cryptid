@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { useWallet, useWalletSelector } from '../utils/wallet';
-import { PublicKey } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js';
 import {
   Divider,
   FormControlLabel,
@@ -130,19 +130,19 @@ export default function PopupPage({ opener }) {
   const request = requests[0];
   const popRequest = () => setRequests((requests) => requests.slice(1));
 
-  const { messages, messageDisplay } = useMemo(() => {
+  const { payloads, messageDisplay } = useMemo(() => {
     if (!request || request.method === 'connect') {
-      return { messages: [], messageDisplay: 'tx' }
+      return { payloads: [], messageDisplay: 'tx' }
     }
     switch (request.method) {
       case 'signTransaction':
         return {
-          messages: [bs58.decode(request.params.message)],
+          payloads: [bs58.decode(request.params.transaction)],
           messageDisplay: 'tx',
         };
       case 'signAllTransactions':
         return {
-          messages: request.params.messages.map((m) => bs58.decode(m)),
+          payloads: request.params.transactions.map((t) => bs58.decode(t)),
           messageDisplay: 'tx',
         };
       case 'sign':
@@ -150,7 +150,7 @@ export default function PopupPage({ opener }) {
           throw new Error('Data must be an instance of Uint8Array');
         }
         return {
-          messages: [request.params.data],
+          payloads: [request.params.data],
           messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
         }
       default:
@@ -234,17 +234,18 @@ export default function PopupPage({ opener }) {
       case 'sign':
         throw new Error("Not supported")
       case 'signTransaction':
-        sendTransaction(messages[0]);
+        await sendTransaction(payloads[0]);
         break;
       case 'signAllTransactions':
-        sendTransactions(messages);
+        await sendTransactions(payloads);
         break;
       default:
         throw new Error('Unexpected method: ' + request.method);
     }
   }
 
-  async function sendTransaction(transaction) {
+  async function sendTransaction(transactionBuffer) {
+    const transaction = Transaction.from(transactionBuffer)
     postMessage({
       result: {
         transaction: bs58.encode((await selectedCryptidAccount.signTransaction(transaction)).serialize())
@@ -253,17 +254,18 @@ export default function PopupPage({ opener }) {
     });
   }
 
-  async function sendTransactions(transactions) {
+  async function sendTransactions(transactionBuffers) {
+    const transactions = transactionBuffers.map(b => Transaction.from(b))
     const signedTransactions = await Promise.all(
       transactions.map(
         tx => selectedCryptidAccount
           .signTransaction(tx)
-          .then(signedTx => signedTx.serialize())
+          .then(signedTx => bs58.encode(signedTx.serialize()))
       )
     );
     postMessage({
       result: {
-        transaction: bs58.encode(signedTransactions)
+        transactions: signedTransactions
       },
       id: request.id,
     });
@@ -318,7 +320,7 @@ export default function PopupPage({ opener }) {
       key={request.id}
       autoApprove={autoApprove}
       origin={origin}
-      messages={messages}
+      payloads={payloads}
       messageDisplay={messageDisplay}
       onApprove={onApprove}
       onReject={sendReject}
@@ -462,7 +464,7 @@ function ApproveConnectionForm({ origin, onApprove }) {
 
 function ApproveSignatureForm({
   origin,
-  messages,
+  payloads,
   messageDisplay,
   onApprove,
   onReject,
@@ -471,7 +473,9 @@ function ApproveSignatureForm({
   const classes = useStyles();
   const buttonRef = useRef();
 
-  const isMultiTx = messageDisplay === 'tx' && messages.length > 1;
+
+  const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
+  const mapTransactionToMessageBuffer = (tx) => Transaction.from(tx).serializeMessage()
 
   const renderFormContent = () => {
     if (messageDisplay === 'tx') {
@@ -479,7 +483,7 @@ function ApproveSignatureForm({
         <SignTransactionFormContent
           autoApprove={autoApprove}
           origin={origin}
-          messages={messages}
+          messages={payloads.map(mapTransactionToMessageBuffer)}
           onApprove={onApprove}
           buttonRef={buttonRef}
         />
@@ -488,7 +492,7 @@ function ApproveSignatureForm({
       return (
         <SignFormContent
           origin={origin}
-          message={messages[0]}
+          message={mapTransactionToMessageBuffer(payloads[0])}
           messageDisplay={messageDisplay}
           buttonRef={buttonRef}
         />
