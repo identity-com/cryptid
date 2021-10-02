@@ -1,23 +1,16 @@
-import { Command } from "@oclif/command";
-import { Config } from "../service/config";
-import { balance, build } from "../service/cryptid";
-import * as Flags from "../lib/flags";
+import { balance } from "../service/cryptid";
+import Base from "./base";
 
-export default class Balance extends Command {
+export default class Balance extends Base {
   static description = "Show the cryptid account SOL balance";
 
-  static flags = Flags.common;
+  static args = [];
 
-  static args = [{ name: "file" }];
+  static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { flags } = this.parse(Balance);
-
-    const config = new Config(flags.config);
-    const cryptid = build(config);
-
-    const address = await cryptid.address();
-    const cryptidBalance = await balance(cryptid, config);
+    const address = await this.cryptid.address();
+    const cryptidBalance = await balance(this.cryptid, this.cryptidConfig);
     this.log(`${address}: ${cryptidBalance} lamports`);
   }
 }

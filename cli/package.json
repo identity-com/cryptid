@@ -9,7 +9,7 @@
   "bugs": "https://github.com/identity-com/cryptid/issues",
   "dependencies": {
     "@identity.com/cryptid": "0.1.0",
-    "@identity.com/sol-did-client": "^0.2.0",
+    "@identity.com/sol-did-client": "1.0.0-beta",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
@@ -95,10 +95,10 @@
     "all": true,
     "skip-full": true,
     "check-coverage": true,
-    "branches": 8,
-    "lines": 59,
-    "functions": 17,
-    "statements": 58
+    "branches": 11,
+    "lines": 60,
+    "functions": 21,
+    "statements": 59
   },
   "types": "lib/index.d.ts"
 }

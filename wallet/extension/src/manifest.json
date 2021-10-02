@@ -9,8 +9,8 @@
   "manifest_version": 2,
   "icons": {
     "16": "favicon.ico",
-    "192": "logo192.png",
-    "512": "logo512.png"
+    "300": "logo300.png",
+    "600": "logo600.png"
   },
   "background": {
     "persistent": true,

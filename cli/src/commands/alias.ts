@@ -1,9 +1,9 @@
-import { Command, flags } from "@oclif/command";
+import { flags } from "@oclif/command";
 import * as Flags from "../lib/flags";
-import { Config as ConfigService } from "../service/config";
 import { mapObjIndexed } from "ramda";
+import Base from "./base";
 
-export default class Alias extends Command {
+export default class Alias extends Base {
   static description = "describe the command here";
 
   static flags = {
@@ -20,14 +20,12 @@ export default class Alias extends Command {
   async run(): Promise<void> {
     const { args, flags } = this.parse(Alias);
 
-    const service = new ConfigService(flags.config);
-
     if (!flags.unset && args.name && args.did) {
-      service.alias(args.name, args.did);
+      this.cryptidConfig.alias(args.name, args.did);
     } else if (flags.unset && args.name) {
-      service.removeAlias(args.name);
+      this.cryptidConfig.removeAlias(args.name);
     } else if (!flags.unset && !args.name && !args.did) {
-      const aliases = service.config.aliases || {};
+      const aliases = this.cryptidConfig.config.aliases || {};
       mapObjIndexed((val, key: string) => {
         this.log(`${key}: ${val}`);
       }, aliases);

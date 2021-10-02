@@ -2,7 +2,12 @@ import * as os from "os";
 import * as path from "path";
 import * as yaml from "yaml";
 import * as fs from "fs";
-import { clusterApiUrl, Connection, Keypair } from "@solana/web3.js";
+import {
+  clusterApiUrl,
+  Commitment,
+  Connection,
+  Keypair,
+} from "@solana/web3.js";
 import { ExtendedCluster } from "@identity.com/cryptid";
 import { omit } from "ramda";
 
@@ -15,6 +20,7 @@ const DEFAULT_CONFIG_FILE = path.join(
 const DEFAULT_ID_FILE = path.join(os.homedir(), ".config", "solana", "id.json");
 
 const DEFAULT_CLUSTER: ExtendedCluster = "devnet";
+const DEFAULT_COMMITMENT: Commitment = "confirmed";
 
 type ConfigFile = {
   did: string;
@@ -44,7 +50,7 @@ export class Config {
       this.config.cluster === "localnet"
         ? "http://localhost:8899"
         : clusterApiUrl(this.config.cluster);
-    this.connection = new Connection(clusterUrl);
+    this.connection = new Connection(clusterUrl, DEFAULT_COMMITMENT);
   }
 
   static init(
