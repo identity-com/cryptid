@@ -155,7 +155,7 @@ describe('transfers', function () {
     beforeEach('Set up the controller relationship', async () => {
       // create a new controlled DID
       const controlledDIDKey = Keypair.generate();
-      const controlledDID = publicKeyToDid(key.publicKey, 'localnet');
+      const controlledDID = publicKeyToDid(controlledDIDKey.publicKey, 'localnet');
       const controlledCryptid = build(controlledDID, controlledDIDKey, {
         connection,
         waitForConfirmation: true,
@@ -166,7 +166,7 @@ describe('transfers', function () {
       controllerCryptid = cryptid.as(controlledDID);
 
       // airdrop funds to the controlled DID cryptid account
-      await airdrop(connection, controlledDIDKey.publicKey);
+      await airdrop(connection, controlledCryptidAddress);
       // airdrop funds to the controlled DID signer key (for fees)
       await airdrop(connection, controlledDIDKey.publicKey, 10_000);
 
