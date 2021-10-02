@@ -52,6 +52,7 @@ export class CryptidAccount {
 
   updateDocument = async () => {
     this.document = await this.cryptid.document()
+    return this.document
   }
 
   get verificationMethods() {
@@ -77,8 +78,8 @@ export class CryptidAccount {
     return this.signer.publicKey
   }
 
-  addKey = async(address: PublicKey, alias: string) => {
-    return await this.cryptid.addKey(address, alias)
+  addKey = async (address: PublicKey, alias: string) => {
+    return this.cryptid.addKey(address, alias)
   }
 
   transferToken = async (
