@@ -6,17 +6,17 @@ import chai from 'chai';
 import {
   expectDocumentNotToIncludeController,
   expectDocumentToIncludeKey,
-  expectDocumentToIncludeController
-} from "../../utils/did";
+  expectDocumentToIncludeController,
+} from '../../utils/did';
 
 const { expect } = chai;
 
 const TRANSACTION_FEE = 5000;
 
-const controller = 'did:sol:123'
+const controller =
+  'did:sol:localnet:' + Keypair.generate().publicKey.toBase58();
 
-// unskip when the program supports controllers
-describe.skip('DID Controller operations', function () {
+describe('DID Controller operations', function () {
   this.timeout(60_000);
 
   let connection: Connection;
@@ -51,7 +51,7 @@ describe.skip('DID Controller operations', function () {
     beforeEach(async () => {
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -110,7 +110,7 @@ describe.skip('DID Controller operations', function () {
 
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -130,7 +130,7 @@ describe.skip('DID Controller operations', function () {
 
     it('should keep any other added content', async () => {
       const key2 = Keypair.generate().publicKey;
-      await cryptid.addKey(key2, 'key2')
+      await cryptid.addKey(key2, 'key2');
 
       await cryptid.removeController(controller);
 

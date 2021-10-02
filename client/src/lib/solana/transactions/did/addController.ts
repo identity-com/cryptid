@@ -1,10 +1,10 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {registerOrUpdate} from "./util";
-import {DIDDocument} from "did-resolver";
-import {resolve} from "@identity.com/sol-did-client";
-import {filterNotNil} from "../../../util";
-import {flatten, uniq} from "ramda";
+import { registerOrUpdate } from './util';
+import { DIDDocument } from 'did-resolver';
+import { resolve } from '@identity.com/sol-did-client';
+import { filterNotNil } from '../../../util';
+import { flatten, uniq } from 'ramda';
 
 /**
  * Creates a transaction that adds a controller to a DID.
@@ -22,10 +22,12 @@ export const addController = async (
   const existingDocument = await resolve(did, { connection });
 
   // add the new controller to the list
-  const newControllers = uniq(filterNotNil(flatten([controller, ...[existingDocument.controller]])))
+  const newControllers = uniq(
+    filterNotNil(flatten([controller, ...[existingDocument.controller]]))
+  );
 
   const document: Partial<DIDDocument> = {
-    controller: newControllers
+    controller: newControllers,
   };
 
   return registerOrUpdate(did, document, connection, payer, signers);

@@ -7,7 +7,7 @@ import sinonChai from 'sinon-chai';
 import { Cryptid } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
-import {did, makeKeypair, makeService} from '../../utils/did';
+import { did, makeKeypair, makeService } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
 import * as AddKey from '../../../src/lib/solana/transactions/did/addKey';
@@ -18,7 +18,7 @@ import * as AddController from '../../../src/lib/solana/transactions/did/addCont
 import * as RemoveController from '../../../src/lib/solana/transactions/did/removeController';
 import { pubkey } from '../../utils/solana';
 import { decode } from 'bs58';
-import {CryptidOptions, PayerOption} from '../../../src/api/cryptid';
+import { CryptidOptions, PayerOption } from '../../../src/api/cryptid';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -83,16 +83,19 @@ describe('SimpleCryptid', () => {
     });
 
     it('should pass the user key as the signer if SIGNER_PAYS is true', async () => {
-      const expectation = sandbox.mock(AddKey)
-        .expects('addKey').withArgs(
+      const expectation = sandbox
+        .mock(AddKey)
+        .expects('addKey')
+        .withArgs(
           sandbox.match.any,
           did(keypair),
-          sandbox.match(signer => signer.toString() === keypair.publicKey.toString())
-        )
-      ;
+          sandbox.match(
+            (signer) => signer.toString() === keypair.publicKey.toString()
+          )
+        );
       expectation.resolves(new Transaction());
 
-      cryptid = makeCryptid(keypair, { rentPayer: "SIGNER_PAYS" });
+      cryptid = makeCryptid(keypair, { rentPayer: 'SIGNER_PAYS' });
 
       await cryptid.addKey(pubkey(), 'alias');
 
@@ -100,11 +103,13 @@ describe('SimpleCryptid', () => {
     });
 
     it('should throw an error if the ret payer is not recognised', async () => {
-      cryptid = makeCryptid(keypair, { rentPayer: "unrecognised" as PayerOption });
+      cryptid = makeCryptid(keypair, {
+        rentPayer: 'unrecognised' as PayerOption,
+      });
 
       const shouldFail = cryptid.addKey(pubkey(), 'alias');
 
-      return expect(shouldFail).to.be.rejectedWith(/Unsupported payer option/)
+      return expect(shouldFail).to.be.rejectedWith(/Unsupported payer option/);
     });
   });
 
@@ -132,7 +137,9 @@ describe('SimpleCryptid', () => {
 
   context('removeController', () => {
     it('should delegate to removeController', async () => {
-      const expectation = sandbox.mock(RemoveController).expects('removeController');
+      const expectation = sandbox
+        .mock(RemoveController)
+        .expects('removeController');
       expectation.resolves(new Transaction());
 
       await cryptid.removeController('did:sol:controller');
