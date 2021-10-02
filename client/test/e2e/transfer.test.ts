@@ -148,9 +148,9 @@ describe('transfers', function () {
     });
   });
   context('a controller cryptid', () => {
-    let controllerCryptid;
+    let controllerCryptid: Cryptid;
 
-    let controlledCryptidAddress;
+    let controlledCryptidAddress: PublicKey;
 
     beforeEach('Set up the controller relationship', async () => {
       // create a new controlled DID
