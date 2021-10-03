@@ -1,4 +1,4 @@
-use crate::{AccountInfo, GeneratorResult, Pubkey, SolanaInstruction};
+use crate::{AccountInfo, AccountInfoIterator, GeneratorResult, Pubkey, SolanaInstruction};
 pub use solana_generator_derive::InstructionList;
 
 /// A list of possible instructions for a program.
@@ -9,7 +9,7 @@ pub trait InstructionList: Copy {
     /// Processes a given instruction. Usually delegates to [`crate::Instruction`].
     fn process_instruction(
         program_id: Pubkey,
-        accounts: &mut impl Iterator<Item = AccountInfo>,
+        accounts: &mut impl AccountInfoIterator<Item = AccountInfo>,
         data: &[u8],
     ) -> GeneratorResult<()>;
     /// Builds an instruction from [`BuildEnum`].

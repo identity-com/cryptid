@@ -4,7 +4,7 @@ use solana_generator::*;
 #[derive(Debug)]
 pub struct TestInstruction;
 impl Instruction for TestInstruction {
-    type Data = ();
+    type Data = Vec<u8>;
     type FromAccountsData = ();
     type Accounts = ();
     type BuildArg = ();
@@ -15,10 +15,11 @@ impl Instruction for TestInstruction {
 
     fn process(
         _program_id: Pubkey,
-        _data: Self::Data,
+        data: Self::Data,
         _accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
         msg!("Test successful!");
+        msg!("data: {:?}", data);
         Ok(None)
     }
 

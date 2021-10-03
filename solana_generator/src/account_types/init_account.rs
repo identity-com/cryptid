@@ -9,8 +9,9 @@ use solana_program::system_instruction::create_account;
 
 use crate::traits::AccountArgument;
 use crate::{
-    invoke, Account, AccountInfo, AllAny, Discriminant, FromAccounts, GeneratorError,
-    GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
+    invoke, Account, AccountDiscriminant, AccountInfo, AccountInfoIterator, AllAny, FromAccounts,
+    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument,
+    SystemProgram,
 };
 
 use super::SYSTEM_PROGRAM_ID;
@@ -69,12 +70,12 @@ where
 
         let data = self.data.try_to_vec()?;
         let size = match self.init_size {
-            InitSize::DataSize => (data.len() + size_of::<Discriminant>()) as u64,
+            InitSize::DataSize => (data.len() + size_of::<AccountDiscriminant>()) as u64,
             InitSize::DataSizePlus(plus) => {
-                (data.len() + size_of::<Discriminant>()) as u64 + plus.get()
+                (data.len() + size_of::<AccountDiscriminant>()) as u64 + plus.get()
             }
             InitSize::SetSize(size) => {
-                if size < (data.len() + size_of::<Discriminant>()) as u64 {
+                if size < (data.len() + size_of::<AccountDiscriminant>()) as u64 {
                     return Err(GeneratorError::NotEnoughSpaceInit {
                         account: self.info.key,
                         space_given: size,
@@ -130,7 +131,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = AccountInfo::from_accounts(program_id, infos, arg)?;

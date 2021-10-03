@@ -4,6 +4,7 @@ pub use solana_generator_derive::AccountArgument;
 
 use crate::{AccountInfo, GeneratorError, GeneratorResult, SolanaAccountMeta, SystemProgram};
 use std::fmt::Debug;
+use std::iter::FusedIterator;
 
 /// A set of accounts that can be derived from an iterator over [`AccountInfo`]s and instruction data
 ///
@@ -54,10 +55,12 @@ pub trait FromAccounts<A>: Sized + AccountArgument {
     /// - `arg` is the [`InstructionArg`](AccountArgument::InstructionArg)
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self>;
 }
+pub trait AccountInfoIterator: Iterator + DoubleEndedIterator + FusedIterator {}
+impl<T> AccountInfoIterator for T where T: Iterator + DoubleEndedIterator + FusedIterator {}
 
 /// An account set that can be indexed by 0+ accounts at time with index `I`.
 pub trait MultiIndexableAccountArgument<I>: AccountArgument
@@ -165,7 +168,7 @@ impl AccountArgument for () {
 impl FromAccounts<()> for () {
     fn from_accounts(
         _program_id: Pubkey,
-        _infos: &mut impl Iterator<Item = AccountInfo>,
+        _infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         _arg: (),
     ) -> GeneratorResult<Self> {
         Ok(())

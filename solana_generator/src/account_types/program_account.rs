@@ -6,8 +6,8 @@ use solana_program::pubkey::Pubkey;
 use crate::account_types::system_program::SystemProgram;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountInfo, AllAny, Discriminant, FromAccounts, GeneratorError, GeneratorResult,
-    MultiIndexableAccountArgument, SingleIndexableAccountArgument,
+    Account, AccountDiscriminant, AccountInfo, AccountInfoIterator, AllAny, FromAccounts,
+    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument,
 };
 use std::fmt::Debug;
 
@@ -49,7 +49,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = AccountInfo::from_accounts(program_id, infos, arg)?;
@@ -65,7 +65,7 @@ where
         let account_data_ref = info.data.borrow();
         let mut account_data = &**account_data_ref.deref();
 
-        let in_discriminant = Discriminant::deserialize(&mut account_data)?;
+        let in_discriminant = AccountDiscriminant::deserialize(&mut account_data)?;
         if in_discriminant != T::DISCRIMINANT {
             return Err(GeneratorError::MismatchedDiscriminant {
                 account: info.key,

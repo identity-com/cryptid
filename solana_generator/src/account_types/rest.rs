@@ -1,4 +1,7 @@
-use crate::{AccountArgument, AccountInfo, FromAccounts, GeneratorResult, Pubkey, SystemProgram};
+use crate::{
+    AccountArgument, AccountInfo, AccountInfoIterator, FromAccounts, GeneratorResult, Pubkey,
+    SystemProgram,
+};
 use std::iter::once;
 use std::ops::Deref;
 
@@ -28,7 +31,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        mut infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let mut out = Vec::new();

@@ -7,8 +7,8 @@ use std::ops::Deref;
 
 /// The type of account discriminants
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Discriminant<'a>(pub Cow<'a, [u8]>);
-impl<'a> BorshSerialize for Discriminant<'a> {
+pub struct AccountDiscriminant<'a>(pub Cow<'a, [u8]>);
+impl<'a> BorshSerialize for AccountDiscriminant<'a> {
     fn serialize<W: Write>(&self, writer: &mut W) -> borsh::maybestd::io::Result<()> {
         if self.0.len() > u8::MAX as usize {
             panic!("Discriminant longer than `{}`", u8::MAX);
@@ -17,7 +17,7 @@ impl<'a> BorshSerialize for Discriminant<'a> {
         writer.write_all(self.0.deref())
     }
 }
-impl<'a> BorshDeserialize for Discriminant<'a> {
+impl<'a> BorshDeserialize for AccountDiscriminant<'a> {
     fn deserialize(buf: &mut &[u8]) -> borsh::maybestd::io::Result<Self> {
         let len = buf[0] as usize;
         *buf = &buf[1..];
@@ -26,7 +26,7 @@ impl<'a> BorshDeserialize for Discriminant<'a> {
         Ok(out)
     }
 }
-impl Discriminant<'static> {
+impl AccountDiscriminant<'static> {
     /// Creates a discriminant from a static array
     pub const fn from_array<const N: usize>(from: &'static [u8; N]) -> Self {
         Self(Cow::Borrowed(from))
@@ -38,12 +38,13 @@ pub trait Account: BorshSerialize + BorshDeserialize + BorshSchema {
     /// The discriminant for this account.
     /// A given discriminant should not be duplicated or your program will be open to a confusion attack.
     /// All Discriminants of the form `[255, ..]` are reserved for system implementations.
-    const DISCRIMINANT: Discriminant<'static>;
+    const DISCRIMINANT: AccountDiscriminant<'static>;
 }
 macro_rules! impl_account {
     ($ty:ty, $expr:expr) => {
         impl Account for $ty {
-            const DISCRIMINANT: Discriminant<'static> = Discriminant::from_array($expr);
+            const DISCRIMINANT: AccountDiscriminant<'static> =
+                AccountDiscriminant::from_array($expr);
         }
     };
 }

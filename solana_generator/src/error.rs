@@ -1,5 +1,5 @@
 use crate::traits::Error;
-use crate::Discriminant;
+use crate::AccountDiscriminant;
 use solana_program::pubkey::Pubkey;
 use std::fmt::Debug;
 use strum::EnumDiscriminants;
@@ -19,9 +19,9 @@ pub enum GeneratorError<'a> {
         /// The account that has the discriminant mismatch
         account: Pubkey,
         /// The discriminant of the account
-        received: Discriminant<'a>,
+        received: AccountDiscriminant<'a>,
         /// The discriminant that was expected
-        expected: Discriminant<'static>,
+        expected: AccountDiscriminant<'static>,
     },
     /// Accounts are either writable when should not be or not writable when should be depending on the indexer
     #[error_msg(

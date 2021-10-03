@@ -1,8 +1,9 @@
 use crate::solana_program::program_error::ProgramError;
 use crate::{
-    system_program_id, Account, AccountArgument, AccountInfo, AllAny, FromAccounts, GeneratorError,
-    GeneratorResult, InitAccount, InitSize, MultiIndexableAccountArgument, Pubkey,
-    SingleIndexableAccountArgument, SystemProgram, ZeroedAccount,
+    system_program_id, Account, AccountArgument, AccountInfo, AccountInfoIterator, AllAny,
+    FromAccounts, GeneratorError, GeneratorResult, InitAccount, InitSize,
+    MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument, SystemProgram,
+    ZeroedAccount,
 };
 use std::iter::once;
 use std::ops::{Deref, DerefMut};
@@ -99,7 +100,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
