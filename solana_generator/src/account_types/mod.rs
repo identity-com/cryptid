@@ -50,7 +50,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: [A; N],
     ) -> GeneratorResult<Self> {
         let mut iter = IntoIter::new(arg);

@@ -1,6 +1,6 @@
 use crate::{
-    AccountArgument, AllAny, FromAccounts, GeneratorResult, MultiIndexableAccountArgument,
-    SingleIndexableAccountArgument, SystemProgram,
+    AccountArgument, AccountInfoIterator, AllAny, FromAccounts, GeneratorResult,
+    MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 use solana_program::account_info::AccountInfo as SolanaAccountInfo;
 use solana_program::clock::Epoch;
@@ -144,7 +144,7 @@ impl AccountArgument for AccountInfo {
 impl FromAccounts<()> for AccountInfo {
     fn from_accounts(
         _program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         _arg: (),
     ) -> GeneratorResult<Self> {
         match infos.next() {

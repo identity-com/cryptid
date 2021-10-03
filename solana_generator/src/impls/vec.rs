@@ -3,9 +3,9 @@ use std::fmt::Debug;
 use std::ops::RangeBounds;
 
 use crate::{
-    AccountArgument, AccountInfo, AllAny, AllAnyRange, FromAccounts, GeneratorError,
-    GeneratorResult, MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument,
-    SystemProgram,
+    AccountArgument, AccountInfo, AccountInfoIterator, AllAny, AllAnyRange, FromAccounts,
+    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, Pubkey,
+    SingleIndexableAccountArgument, SystemProgram,
 };
 
 impl<T> AccountArgument for Vec<T>
@@ -36,7 +36,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: usize,
     ) -> GeneratorResult<Self> {
         (0..arg)
@@ -50,7 +50,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: Vec<A>,
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.len());
@@ -67,7 +67,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: (usize, A),
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.0);
@@ -87,7 +87,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         mut arg: (usize, F, ()),
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.0);
@@ -104,7 +104,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: [A; N],
     ) -> GeneratorResult<Self> {
         Ok(IntoIter::new(<[T; N]>::from_accounts(program_id, infos, arg)?).collect())

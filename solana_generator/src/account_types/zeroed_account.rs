@@ -7,8 +7,8 @@ use solana_program::pubkey::Pubkey;
 use crate::solana_program::sysvar::Sysvar;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountInfo, AllAny, FromAccounts, GeneratorError, GeneratorResult,
-    MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
+    Account, AccountInfo, AccountInfoIterator, AllAny, FromAccounts, GeneratorError,
+    GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 use solana_program::rent::Rent;
 use std::fmt::Debug;
@@ -51,7 +51,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = AccountInfo::from_accounts(program_id, infos, arg)?;

@@ -2,7 +2,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::traits::AccountArgument;
 use crate::{
-    AccountInfo, AllAny, FromAccounts, GeneratorError, GeneratorResult,
+    AccountInfo, AccountInfoIterator, AllAny, FromAccounts, GeneratorError, GeneratorResult,
     MultiIndexableAccountArgument, SingleIndexableAccountArgument,
 };
 
@@ -36,7 +36,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl Iterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = AccountInfo::from_accounts(program_id, infos, arg)?;
