@@ -1,5 +1,6 @@
 use crate::{AccountArgument, AccountInfo, FromAccounts, GeneratorResult, Pubkey, SystemProgram};
 use std::iter::once;
+use std::ops::Deref;
 
 /// An account argument that takes the rest of the accounts as type `T`
 #[derive(Debug)]
@@ -31,12 +32,20 @@ where
         arg: A,
     ) -> GeneratorResult<Self> {
         let mut out = Vec::new();
-        let mut infos = Box::new(infos) as Box<dyn Iterator<Item = AccountInfo>>;
-        while let Some(info) = infos.next() {
-            infos = Box::new(once(info).chain(infos));
-            out.push(T::from_accounts(program_id, &mut infos, arg.clone())?);
+        let mut next = infos.next();
+        while let Some(info) = next {
+            let mut iter = once(info).chain(&mut infos);
+            out.push(T::from_accounts(program_id, &mut iter, arg.clone())?);
+            next = iter.next();
         }
         Ok(Self(out))
+    }
+}
+impl<T> Deref for Rest<T> {
+    type Target = Vec<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 impl<T> IntoIterator for Rest<T> {
