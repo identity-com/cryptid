@@ -55,7 +55,7 @@ pub trait FromAccounts<A>: Sized + AccountArgument {
     /// - `arg` is the [`InstructionArg`](AccountArgument::InstructionArg)
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: A,
     ) -> GeneratorResult<Self>;
 
@@ -187,7 +187,7 @@ impl AccountArgument for () {
 impl FromAccounts<()> for () {
     fn from_accounts(
         _program_id: Pubkey,
-        _infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        _infos: &mut impl AccountInfoIterator,
         _arg: (),
     ) -> GeneratorResult<Self> {
         Ok(())

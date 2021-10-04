@@ -95,7 +95,7 @@ impl InstructionListDerive {
 
                 fn process_instruction(
                     program_id: #crate_name::Pubkey,
-                    accounts: &mut impl #crate_name::AccountInfoIterator<Item=#crate_name::AccountInfo>,
+                    accounts: &mut impl #crate_name::AccountInfoIterator,
                     mut data: &[u8],
                 ) -> #crate_name::GeneratorResult<()>{
                     let data = &mut data;

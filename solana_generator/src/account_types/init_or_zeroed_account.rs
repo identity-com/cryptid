@@ -101,7 +101,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;

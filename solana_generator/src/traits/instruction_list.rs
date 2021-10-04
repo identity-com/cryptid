@@ -9,7 +9,7 @@ pub trait InstructionList: Copy {
     /// Processes a given instruction. Usually delegates to [`crate::Instruction`].
     fn process_instruction(
         program_id: Pubkey,
-        accounts: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        accounts: &mut impl AccountInfoIterator,
         data: &[u8],
     ) -> GeneratorResult<()>;
     /// Builds an instruction from [`BuildEnum`].

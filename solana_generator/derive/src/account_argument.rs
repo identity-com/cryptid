@@ -266,7 +266,7 @@ impl AccountArgumentDerive {
             impl #impl_generics #crate_name::FromAccounts<#instruction_arg> for #ident #where_clause{
                 fn from_accounts(
                     program_id: #crate_name::solana_program::pubkey::Pubkey,
-                    infos__: &mut (impl #crate_name::AccountInfoIterator<Item = #crate_name::AccountInfo>),
+                    infos__: &mut impl #crate_name::AccountInfoIterator,
                     arg__: #instruction_arg,
                 ) -> #crate_name::GeneratorResult<Self>{
                     #instruction_naming

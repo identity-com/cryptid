@@ -31,7 +31,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        mut infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        mut infos: &mut impl AccountInfoIterator,
         arg: A,
     ) -> GeneratorResult<Self> {
         let mut out = match T::accounts_usage_hint().1 {
