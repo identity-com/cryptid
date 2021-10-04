@@ -2,7 +2,6 @@
 
 use solana_generator::solana_program::system_instruction::{allocate, assign};
 use solana_generator::*;
-use std::array::IntoIter;
 
 #[cfg(not(feature = "no-entrypoint"))]
 entrypoint_list!(DummyInstruction);
@@ -40,15 +39,10 @@ impl Instruction for Test {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
+        _program_id: Pubkey,
         _arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        Ok(SolanaInstruction {
-            program_id,
-            accounts: vec![],
-            data: discriminant.to_vec(),
-        })
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        Ok((vec![], ()))
     }
 }
 #[derive(Debug)]
@@ -73,15 +67,10 @@ impl Instruction for RequireSigner {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
+        _program_id: Pubkey,
         arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        Ok(SolanaInstruction {
-            program_id,
-            accounts: vec![SolanaAccountMeta::new_readonly(arg, true)],
-            data: discriminant.to_vec(),
-        })
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        Ok((vec![SolanaAccountMeta::new_readonly(arg, true)], ()))
     }
 }
 #[derive(Debug, AccountArgument)]
@@ -127,23 +116,16 @@ impl Instruction for ReturnVal {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
+        _program_id: Pubkey,
         arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        Ok(SolanaInstruction {
-            program_id,
-            accounts: vec![
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        Ok((
+            vec![
                 SolanaAccountMeta::new(arg.0, true),
                 SolanaAccountMeta::new_readonly(system_program_id(), false),
             ],
-            data: discriminant
-                .iter()
-                .cloned()
-                .chain(IntoIter::new((arg.1.len() as u32).to_le_bytes()))
-                .chain(arg.1.into_iter())
-                .collect(),
-        })
+            arg.1,
+        ))
     }
 }
 #[derive(Debug, AccountArgument)]
@@ -182,20 +164,10 @@ impl Instruction for AssertAccountData {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
+        _program_id: Pubkey,
         arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        Ok(SolanaInstruction {
-            program_id,
-            accounts: vec![SolanaAccountMeta::new_readonly(arg.0, false)],
-            data: discriminant
-                .iter()
-                .cloned()
-                .chain(IntoIter::new((arg.1.len() as u32).to_le_bytes()))
-                .chain(arg.1.into_iter())
-                .collect(),
-        })
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        Ok((vec![SolanaAccountMeta::new_readonly(arg.0, false)], arg.1))
     }
 }
 

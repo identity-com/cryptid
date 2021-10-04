@@ -125,9 +125,8 @@ impl Instruction for DirectExecute {
 
     fn build_instruction(
         program_id: Pubkey,
-        discriminant: &[u8],
         arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
         let signer_key = PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa })
             .find_address()
             .0;
@@ -161,19 +160,15 @@ impl Instruction for DirectExecute {
                     is_writable: value.contains(AccountMeta::IS_WRITABLE),
                 });
 
-        let mut data = discriminant.to_vec();
-        BorshSerialize::serialize(
-            &DirectExecuteData {
-                signers_extras: arg
-                    .signing_keys
-                    .iter()
-                    .map(SigningKeyBuild::extra_count)
-                    .collect(),
-                instructions: arg.instructions,
-                flags: arg.flags,
-            },
-            &mut data,
-        )?;
+        let data = DirectExecuteData {
+            signers_extras: arg
+                .signing_keys
+                .iter()
+                .map(SigningKeyBuild::extra_count)
+                .collect(),
+            instructions: arg.instructions,
+            flags: arg.flags,
+        };
         let mut accounts = vec![
             SolanaAccountMeta::new_readonly(arg.doa, false),
             arg.did,
@@ -186,11 +181,7 @@ impl Instruction for DirectExecute {
                 .flatten(),
         );
         accounts.extend(instruction_accounts);
-        Ok(SolanaInstruction {
-            program_id,
-            accounts,
-            data,
-        })
+        Ok((accounts, data))
     }
 }
 

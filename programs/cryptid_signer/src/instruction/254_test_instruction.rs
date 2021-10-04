@@ -7,7 +7,7 @@ impl Instruction for TestInstruction {
     type Data = Vec<u8>;
     type FromAccountsData = ();
     type Accounts = ();
-    type BuildArg = ();
+    type BuildArg = Vec<u8>;
 
     fn data_to_instruction_arg(_data: &mut Self::Data) -> GeneratorResult<Self::FromAccountsData> {
         Ok(())
@@ -24,14 +24,9 @@ impl Instruction for TestInstruction {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
-        _arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        Ok(SolanaInstruction {
-            program_id,
-            accounts: vec![],
-            data: discriminant.to_vec(),
-        })
+        _program_id: Pubkey,
+        arg: Self::BuildArg,
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        Ok((vec![], arg))
     }
 }

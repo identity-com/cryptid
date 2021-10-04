@@ -51,10 +51,8 @@ impl Instruction for CreateDOA {
 
     fn build_instruction(
         program_id: Pubkey,
-        discriminant: &[u8],
         arg: CreateDOABuild,
-    ) -> GeneratorResult<SolanaInstruction> {
-        let mut data = discriminant.to_vec();
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
         let (_doa_signer, signer_nonce) =
             PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa }).find_address();
         let mut accounts = vec![
@@ -65,19 +63,14 @@ impl Instruction for CreateDOA {
         ];
         accounts.extend(arg.signing_key.to_metas());
         accounts.push(SolanaAccountMeta::new_readonly(system_program_id(), false));
-        BorshSerialize::serialize(
-            &CreateDOAData {
+        Ok((
+            accounts,
+            CreateDOAData {
                 extra_signer_accounts: arg.signing_key.extra_count(),
                 signer_nonce,
                 key_threshold: arg.key_threshold,
             },
-            &mut data,
-        )?;
-        Ok(SolanaInstruction {
-            program_id,
-            accounts,
-            data,
-        })
+        ))
     }
 }
 

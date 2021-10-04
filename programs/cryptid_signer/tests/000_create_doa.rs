@@ -9,15 +9,15 @@ use cryptid_signer::state::DOAAccount;
 use cryptid_signer::DOASignerSeeder;
 use log::trace;
 use sol_did::id as sol_did_id;
-use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta};
+use solana_generator::discriminant::Discriminant;
+use solana_generator::{build_instruction, Account, PDAGenerator, SolanaAccountMeta};
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
-use std::error::Error;
 use test_utils::rand::Rng;
 use test_utils::start_tests;
 
 #[tokio::test]
-async fn create_doa() -> Result<(), Box<dyn Error>> {
+async fn create_doa() {
     let (mut banks, funder, _genesis_hash, mut rng, [cryptid_id]) =
         start_tests(LOG_TARGET, [CRYPTID_SIGNER_PROGRAM_NAME]).await;
 
@@ -60,17 +60,27 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
         .expect("Could not create instruction")],
         Some(&funder.pubkey()),
         &[&funder, &doa, &did],
-        banks.get_recent_blockhash().await?,
+        banks
+            .get_recent_blockhash()
+            .await
+            .expect("Could not get recent block hash"),
     );
     trace!(target: LOG_TARGET, "transaction built");
-    banks.process_transaction(transaction).await?;
+    banks
+        .process_transaction(transaction)
+        .await
+        .expect("Transaction failed");
 
     let account = banks
         .get_account(doa.pubkey())
-        .await?
+        .await
+        .expect("Error getting account")
         .unwrap_or_else(|| panic!("Could not find account {}", doa.pubkey()));
-    let data: DOAAccount = BorshDeserialize::deserialize(&mut &account.data.as_slice()[2..])?;
-    // TODO: This slice index skips the discriminant. Should find a better way to do this.
+    let data = &mut account.data.as_slice();
+    let discriminant: Discriminant =
+        BorshDeserialize::deserialize(data).expect("Could not deserialize discriminant");
+    assert_eq!(discriminant, DOAAccount::DISCRIMINANT);
+    let data: DOAAccount = BorshDeserialize::deserialize(data).expect("Could not deserialize");
     trace!(target: LOG_TARGET, "data: {:?}", data);
     assert_eq!(data.did, did_pda);
     assert_eq!(data.did_program, did_program);
@@ -78,6 +88,4 @@ async fn create_doa() -> Result<(), Box<dyn Error>> {
     assert_eq!(data.signer_nonce, signer_nonce);
     assert_eq!(data.key_threshold, key_threshold);
     assert_eq!(data.settings_sequence, 1);
-
-    Ok(())
 }
