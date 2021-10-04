@@ -6,7 +6,7 @@ import sinonChai from 'sinon-chai';
 
 import { directExecute } from '../../../../../src/lib/solana/transactions/directExecute';
 import { Keypair, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { connection } from '../../../../utils/solana';
+import { recentBlockhash } from '../../../../utils/solana';
 import { publicKeyToDid } from '../../../../../src/lib/solana/util';
 import { normalizeSigner } from '../../../../../src/lib/util';
 import { stubGetBlockhash } from '../../../../utils/lang';
@@ -27,9 +27,10 @@ describe('transactions/directExecute', () => {
   afterEach(sandbox.restore);
 
   it('should create and sign a directExecute transaction', async () => {
-    const txToWrap = new Transaction();
+    const txToWrap = new Transaction({
+      recentBlockhash: await recentBlockhash(),
+    });
     const directExecuteTransaction = await directExecute(
-      connection(),
       txToWrap,
       did,
       payer.publicKey,
@@ -44,9 +45,10 @@ describe('transactions/directExecute', () => {
   it('should sign the directExecute transaction with all passed-in signers', async () => {
     const additionalSigner = Keypair.generate();
 
-    const txToWrap = new Transaction();
+    const txToWrap = new Transaction({
+      recentBlockhash: await recentBlockhash(),
+    });
     const directExecuteTransaction = await directExecute(
-      connection(),
       txToWrap,
       did,
       payer.publicKey,

@@ -7,7 +7,7 @@ import sinonChai from 'sinon-chai';
 
 import * as Util from '../../../../../src/lib/solana/transactions/util';
 import {Connection, Keypair, SystemProgram} from "@solana/web3.js";
-import {pubkey, dummyDIDAccountInfo} from "../../../../utils/solana";
+import { pubkey, dummyDIDAccountInfo, connection, recentBlockhash} from "../../../../utils/solana";
 import {normalizeSigner} from "../../../../../src/lib/util";
 import {complement, isNil, pluck, toString} from "ramda";
 import {publicKeyToDid} from "../../../../../src/lib/solana/util";
@@ -25,7 +25,6 @@ should();
 
 const sandbox = sinon.createSandbox();
 
-const connection = () => new Connection('http://whatever.test')
 const notNil = complement(isNil)
 
 describe('transactions/util', () => {
@@ -52,7 +51,7 @@ describe('transactions/util', () => {
         lamports: 0,
       })
 
-      const transaction = await Util.createTransaction(connection(), [instruction], feePayer.publicKey, signers);
+      const transaction = await Util.createTransaction(await recentBlockhash(), [instruction], feePayer.publicKey, signers);
 
       expect(transaction.signatures).to.have.length(2);
       // map to strings to compare public keys without worrying about internal structure (chai .members does not support .equals())

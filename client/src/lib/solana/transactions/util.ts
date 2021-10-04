@@ -15,16 +15,13 @@ import {didToPublicKey} from "../util";
 
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
- * @param connection The solana connection object to obtain the recent blockhash from
+ * @param recentBlockhash The recentBlockhash to use for the new Transaction.
  * @param payer The fee payer for the transaction
  */
 const makeEmptyTransaction = async (
-  connection: Connection,
+  recentBlockhash: string | undefined,
   payer: PublicKey
 ) => {
-  const recentBlockhashPromise = connection.getRecentBlockhash();
-  const { blockhash: recentBlockhash } = await recentBlockhashPromise;
-
   return new Transaction({ recentBlockhash, feePayer: payer });
 };
 
@@ -32,12 +29,12 @@ const makeEmptyTransaction = async (
  * Creates and signs a transaction from an array of instructions
  */
 export const createTransaction = async (
-  connection: Connection,
+  recentBlockhash: string | undefined,
   instructions: TransactionInstruction[],
   payer: PublicKey,
   signers: Signer[]
 ): Promise<Transaction> => {
-  let transaction = await makeEmptyTransaction(connection, payer);
+  let transaction = await makeEmptyTransaction(recentBlockhash, payer);
 
   transaction = transaction.add(...instructions);
 

@@ -21,7 +21,6 @@ export class SimpleCryptid extends AbstractCryptid {
 
   async sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>> {
     const wrappedTransaction = await directExecute(
-      this.options.connection,
       transaction,
       this.did,
       this.signer.publicKey,
