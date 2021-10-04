@@ -81,23 +81,19 @@ impl Instruction for ProposeTransaction {
     }
 
     fn build_instruction(
-        program_id: Pubkey,
-        discriminant: &[u8],
+        _program_id: Pubkey,
         arg: Self::BuildArg,
-    ) -> GeneratorResult<SolanaInstruction> {
-        let mut data = discriminant.to_vec();
-        BorshSerialize::serialize(
-            &ProposeTransactionData {
-                signers: arg
-                    .signers
-                    .iter()
-                    .map(|(key, expiry)| (key.extra_count(), *expiry))
-                    .collect(),
-                instructions: arg.instructions,
-                extra_keyspace: arg.extra_keyspace,
-            },
-            &mut data,
-        )?;
+    ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
+        let data = ProposeTransactionData {
+            signers: arg
+                .signers
+                .iter()
+                .map(|(key, expiry)| (key.extra_count(), *expiry))
+                .collect(),
+            instructions: arg.instructions,
+            extra_keyspace: arg.extra_keyspace,
+        };
+
         let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.transaction_account, !arg.transaction_account_is_zeroed),
@@ -107,11 +103,7 @@ impl Instruction for ProposeTransaction {
             SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
         accounts.extend(arg.signers.iter().map(|(key, _)| key.to_metas()).flatten());
-        Ok(SolanaInstruction {
-            program_id,
-            accounts,
-            data,
-        })
+        Ok((accounts, data))
     }
 }
 

@@ -122,10 +122,15 @@ impl InstructionListDerive {
                 fn build_instruction(
                     program_id: #crate_name::Pubkey,
                     build_enum: Self::BuildEnum,
-                ) -> GeneratorResult<SolanaInstruction>{
+                ) -> GeneratorResult<#crate_name::SolanaInstruction>{
                     match build_enum{
                         #(
-                            Self::BuildEnum::#variant_ident(build) => <#variant_instruction_type as #crate_name::Instruction>::build_instruction(program_id, &[#variant_discriminant], build),
+                            Self::BuildEnum::#variant_ident(build) => {
+                                let (accounts, data_assoc) = <#variant_instruction_type as #crate_name::Instruction>::build_instruction(program_id, build)?;
+                                let mut data = ::std::vec![#variant_discriminant];
+                                ::borsh::BorshSerialize::serialize(&data_assoc, &mut data)?;
+                                Ok(#crate_name::SolanaInstruction{ program_id, accounts, data })
+                            },
                         )*
                     }
                 }
