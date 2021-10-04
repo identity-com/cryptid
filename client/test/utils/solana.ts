@@ -137,6 +137,9 @@ export const sendAndConfirmCryptidTransaction = async (
 export const connection = (): Connection =>
   new Connection('http://whatever.test');
 
+export const recentBlockhash = async (): Promise<string> =>
+  (await connection().getRecentBlockhash()).blockhash;
+
 export const dummyDIDAccountInfo = {
   data: Buffer.from([]),
   executable: false,
