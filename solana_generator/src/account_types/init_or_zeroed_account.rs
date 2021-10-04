@@ -1,10 +1,11 @@
 use crate::solana_program::program_error::ProgramError;
 use crate::{
-    system_program_id, Account, AccountArgument, AccountInfo, AccountInfoIterator, AllAny,
-    FromAccounts, GeneratorError, GeneratorResult, InitAccount, InitSize,
-    MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument, SystemProgram,
+    combine_hints_branch, system_program_id, Account, AccountArgument, AccountInfo,
+    AccountInfoIterator, AllAny, FromAccounts, GeneratorError, GeneratorResult, InitAccount,
+    InitSize, MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument, SystemProgram,
     ZeroedAccount,
 };
+use std::array::IntoIter;
 use std::iter::once;
 use std::ops::{Deref, DerefMut};
 
@@ -125,6 +126,13 @@ where
             }
             .into())
         }
+    }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        combine_hints_branch(IntoIter::new([
+            <InitAccount<T> as FromAccounts<A>>::accounts_usage_hint(),
+            <ZeroedAccount<T> as FromAccounts<A>>::accounts_usage_hint(),
+        ]))
     }
 }
 impl<T> MultiIndexableAccountArgument<()> for InitOrZeroedAccount<T>

@@ -4,10 +4,11 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 use crate::account_types::system_program::SystemProgram;
+use crate::discriminant::Discriminant;
 use crate::traits::AccountArgument;
 use crate::{
-    Account, AccountDiscriminant, AccountInfo, AccountInfoIterator, AllAny, FromAccounts,
-    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument,
+    Account, AccountInfo, AccountInfoIterator, AllAny, FromAccounts, GeneratorError,
+    GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument,
 };
 use std::fmt::Debug;
 
@@ -65,7 +66,7 @@ where
         let account_data_ref = info.data.borrow();
         let mut account_data = &**account_data_ref.deref();
 
-        let in_discriminant = AccountDiscriminant::deserialize(&mut account_data)?;
+        let in_discriminant = Discriminant::deserialize(&mut account_data)?;
         if in_discriminant != T::DISCRIMINANT {
             return Err(GeneratorError::MismatchedDiscriminant {
                 account: info.key,
@@ -78,6 +79,10 @@ where
         let data = T::deserialize(&mut account_data)?;
         drop(account_data_ref);
         Ok(Self { info, data })
+    }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        AccountInfo::accounts_usage_hint()
     }
 }
 impl<T> MultiIndexableAccountArgument<()> for ProgramAccount<T>

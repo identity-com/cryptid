@@ -58,9 +58,28 @@ pub trait FromAccounts<A>: Sized + AccountArgument {
         infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self>;
+
+    /// A hint as to the number of accounts that this will use when [`FromAccounts::from_accounts`] is called.
+    /// Returns `(lower_bound, upper_bound)` where `lower_bound` is the minimum and `upper_bound` is the maximum or [`None`] if there is no maximum.
+    ///
+    /// Should only be used as an optimization hint, not relied on.
+    ///
+    /// The default return of `(0, None)` is valid for all although may not be as accurate as possible.
+    // TODO: Make this const once const trait functions are stabilized
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        (0, None)
+    }
 }
-pub trait AccountInfoIterator: Iterator + DoubleEndedIterator + FusedIterator {}
-impl<T> AccountInfoIterator for T where T: Iterator + DoubleEndedIterator + FusedIterator {}
+
+/// A globing trait for an account info iterator
+pub trait AccountInfoIterator:
+    Iterator<Item = AccountInfo> + DoubleEndedIterator + FusedIterator
+{
+}
+impl<T> AccountInfoIterator for T where
+    T: Iterator<Item = AccountInfo> + DoubleEndedIterator + FusedIterator
+{
+}
 
 /// An account set that can be indexed by 0+ accounts at time with index `I`.
 pub trait MultiIndexableAccountArgument<I>: AccountArgument

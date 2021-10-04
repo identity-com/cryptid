@@ -38,6 +38,7 @@ mod macros;
 
 mod account_info;
 mod account_types;
+pub mod discriminant;
 pub mod entrypoint;
 mod error;
 mod impls;

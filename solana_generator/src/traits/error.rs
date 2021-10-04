@@ -5,7 +5,7 @@ use solana_program::program_error::ProgramError;
 use std::fmt::Debug;
 
 /// A version of [`Result`] returned by many [`solana_generator`] functions.
-pub type GeneratorResult<T> = Result<T, Box<dyn Error>>;
+pub type GeneratorResult<T = ()> = Result<T, Box<dyn Error>>;
 
 /// An error that can be returned on the chain
 pub trait Error: Debug {
