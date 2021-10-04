@@ -2055,7 +2055,7 @@ dependencies = [
 [[package]]
 name = "sol-did"
 version = "0.2.0"
-source = "git+https://github.com/identity-com/sol-did?rev=f627699c820d3fad305f08cc10276fe7c4e3ae43#f627699c820d3fad305f08cc10276fe7c4e3ae43"
+source = "git+https://github.com/identity-com/sol-did?rev=b227cec59795ae6bf23ef987f7ce3a6ea6b6108c#b227cec59795ae6bf23ef987f7ce3a6ea6b6108c"
 dependencies = [
  "borsh",
  "num-derive",
