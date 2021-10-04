@@ -38,7 +38,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: [A; N],
     ) -> GeneratorResult<Self> {
         let mut iter = IntoIter::new(arg);
@@ -56,7 +56,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: (A,),
     ) -> GeneratorResult<Self> {
         try_array_init(|_| T::from_accounts(program_id, infos, arg.0.clone()))
@@ -72,7 +72,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: (),
     ) -> GeneratorResult<Self> {
         try_array_init(|_| T::from_accounts(program_id, infos, arg))

@@ -144,7 +144,7 @@ impl AccountArgument for AccountInfo {
 impl FromAccounts<()> for AccountInfo {
     fn from_accounts(
         _program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         _arg: (),
     ) -> GeneratorResult<Self> {
         match infos.next() {

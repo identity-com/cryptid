@@ -36,7 +36,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: usize,
     ) -> GeneratorResult<Self> {
         (0..arg)
@@ -50,7 +50,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: Vec<A>,
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.len());
@@ -67,7 +67,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: (usize, A),
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.0);
@@ -87,7 +87,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         mut arg: (usize, F, ()),
     ) -> GeneratorResult<Self> {
         let mut out = Vec::with_capacity(arg.0);
@@ -104,7 +104,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: [A; N],
     ) -> GeneratorResult<Self> {
         Ok(IntoIter::new(<[T; N]>::from_accounts(program_id, infos, arg)?).collect())

@@ -58,7 +58,7 @@ impl AccountArgument for DOAAddress {
 impl FromAccounts<()> for DOAAddress {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: (),
     ) -> GeneratorResult<Self> {
         let account = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;

@@ -131,7 +131,7 @@ where
 {
     fn from_accounts(
         program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         arg: A,
     ) -> GeneratorResult<Self> {
         let info = AccountInfo::from_accounts(program_id, infos, arg)?;

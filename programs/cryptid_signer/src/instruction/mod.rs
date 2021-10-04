@@ -98,7 +98,7 @@ impl SigningKey {
 impl FromAccounts<()> for SigningKey {
     fn from_accounts(
         _program_id: Pubkey,
-        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        infos: &mut impl AccountInfoIterator,
         _arg: (),
     ) -> GeneratorResult<Self> {
         let signing_key = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
