@@ -1,5 +1,5 @@
 import { Signer } from '../types/crypto';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
 import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
@@ -56,7 +56,7 @@ export class SimpleCryptid implements Cryptid {
    * @param transaction
    * @private
    */
-  private async send(transaction: Transaction): Promise<string> {
+  private async send(transaction: Transaction): Promise<TransactionSignature> {
     const signature = await this.options.connection.sendRawTransaction(
       transaction.serialize()
     );
@@ -93,7 +93,7 @@ export class SimpleCryptid implements Cryptid {
     }
   }
 
-  async addKey(publicKey: PublicKey, alias: string): Promise<string> {
+  async addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await addKeyTransaction(
@@ -108,7 +108,7 @@ export class SimpleCryptid implements Cryptid {
     return this.send(transaction);
   }
 
-  async removeKey(alias: string): Promise<string> {
+  async removeKey(alias: string): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await removeKeyTransaction(
@@ -122,7 +122,7 @@ export class SimpleCryptid implements Cryptid {
     return this.send(transaction);
   }
 
-  async addService(service: ServiceEndpoint): Promise<string> {
+  async addService(service: ServiceEndpoint): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await addServiceTransaction(
@@ -136,7 +136,7 @@ export class SimpleCryptid implements Cryptid {
     return this.send(transaction);
   }
 
-  async removeService(alias: string): Promise<string> {
+  async removeService(alias: string): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await removeServiceTransaction(
@@ -150,7 +150,7 @@ export class SimpleCryptid implements Cryptid {
     return this.send(transaction);
   }
 
-  async addController(controller: string): Promise<string> {
+  async addController(controller: string): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await addControllerTransaction(
@@ -164,7 +164,7 @@ export class SimpleCryptid implements Cryptid {
     return this.send(transaction);
   }
 
-  async removeController(controller: string): Promise<string> {
+  async removeController(controller: string): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await removeControllerTransaction(
