@@ -3,9 +3,9 @@ use std::fmt::Debug;
 use std::ops::RangeBounds;
 
 use crate::{
-    AccountArgument, AccountInfo, AccountInfoIterator, AllAny, AllAnyRange, FromAccounts,
-    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, Pubkey,
-    SingleIndexableAccountArgument, SystemProgram,
+    AccountArgument, AccountInfoIterator, AllAny, AllAnyRange, FromAccounts, GeneratorError,
+    GeneratorResult, MultiIndexableAccountArgument, Pubkey, SingleIndexableAccountArgument,
+    SystemProgram,
 };
 
 impl<T> AccountArgument for Vec<T>

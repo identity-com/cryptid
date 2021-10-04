@@ -1,6 +1,5 @@
 use crate::{
-    AccountArgument, AccountInfo, AccountInfoIterator, FromAccounts, GeneratorResult, Pubkey,
-    SystemProgram,
+    AccountArgument, AccountInfoIterator, FromAccounts, GeneratorResult, Pubkey, SystemProgram,
 };
 use std::iter::once;
 use std::ops::Deref;

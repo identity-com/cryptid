@@ -1,4 +1,4 @@
-use crate::{AccountInfo, AccountInfoIterator, GeneratorResult, Pubkey, SolanaInstruction};
+use crate::{AccountInfoIterator, GeneratorResult, Pubkey, SolanaInstruction};
 pub use solana_generator_derive::InstructionList;
 
 /// A list of possible instructions for a program.
