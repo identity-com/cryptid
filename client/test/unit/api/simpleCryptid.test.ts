@@ -201,4 +201,15 @@ describe('SimpleCryptid', () => {
       ]);
     });
   });
+
+  context('controller', () => {
+    it('should return a new controlledCryptid interface when called with as()', async () => {
+      const newController = 'did:sol:controller'
+      const updatedCrypid = await cryptid.as(newController);
+      expect(updatedCrypid.did).to.equal(newController)
+      // existing interface still has previous did as controller.
+      expect(cryptid.did).to.equal(did(keypair))
+    });
+  });
+
 });
