@@ -8,7 +8,7 @@
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
@@ -16,6 +16,7 @@ import { useAsyncData } from "../fetch-loop";
 import { useLocalStorageState, useRefEqual } from "../utils";
 import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
 import { parseTokenAccountData } from "../tokens/data";
+import { ServiceEndpoint } from "did-resolver/src/resolver";
 
 export class CryptidAccount {
   public did: string
@@ -24,6 +25,12 @@ export class CryptidAccount {
   private cryptid: Cryptid;
   public address: PublicKey | null = null;
   public document: DIDDocument | null = null;
+
+  private updateDocWrapper = async (f: () => Promise<TransactionSignature>) => {
+    const signature =  f()
+    await this.updateDocument()
+    return signature;
+  }
 
   constructor(did: string, signer: Signer, connection: Connection) {
     this.did = did
@@ -78,9 +85,23 @@ export class CryptidAccount {
     return this.signer.publicKey
   }
 
-  addKey = async (address: PublicKey, alias: string) => {
-    return this.cryptid.addKey(address, alias)
-  }
+  addKey = async (address: PublicKey, alias: string): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.addKey(address, alias))
+
+  removeKey = async (alias: string): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.removeKey(alias))
+
+  addService = async (service: ServiceEndpoint): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.addService(service))
+
+  removeService = async (alias: string): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.removeService(alias))
+
+  addController = async (did: string): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.addController(did))
+
+  removeController = async (did: string): Promise<TransactionSignature> =>
+    this.updateDocWrapper(() => this.cryptid.removeController(did))
 
   transferToken = async (
     source,
