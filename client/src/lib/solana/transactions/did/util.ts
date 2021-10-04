@@ -42,7 +42,9 @@ export const registerOrUpdate = async (did: string, document: Partial<DIDDocumen
     instructions = [updateInstruction];
   }
 
-  return createTransaction(connection, filterNotNil(instructions), payer, signers);
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return createTransaction(recentBlockhash, filterNotNil(instructions), payer, signers);
 }
 
 export type DIDComponent = { id : string }
