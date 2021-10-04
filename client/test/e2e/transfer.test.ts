@@ -200,10 +200,10 @@ describe('transfers', function () {
         },
       });
 
-      console.log("Documents: ");
-      console.log("Controller");
+      console.log('Documents: ');
+      console.log('Controller');
       console.log(await cryptid.document());
-      console.log("Controlled");
+      console.log('Controlled');
       console.log(await controlledCryptid.document());
     });
 
