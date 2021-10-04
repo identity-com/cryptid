@@ -8,7 +8,7 @@ use crate::{GeneratorError, GeneratorResult};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 /// A compressed discriminant that uses 1 bytes for 1 sized arrays with values 0-127 or one extra byte for arrays of size 1-127 (1 sized arrays only with values 127-255).
-/// This is accomplished by having the most significant byte of the first byte being a flag whether the first byte is the value or number of remaining values.
+/// This is accomplished by having the most significant bit of the first byte being a flag whether the first byte is the value or number of remaining values.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Discriminant<'a>(pub Cow<'a, [u8]>);
 impl<'a> Discriminant<'a> {

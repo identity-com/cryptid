@@ -5,8 +5,8 @@ use std::ops::RangeBounds;
 use array_init::try_array_init;
 
 use crate::{
-    mul_size_hint, AccountArgument, AccountInfo, AccountInfoIterator, AllAny, AllAnyRange,
-    FromAccounts, GeneratorError, GeneratorResult, MultiIndexableAccountArgument, Pubkey,
+    mul_size_hint, AccountArgument, AccountInfoIterator, AllAny, AllAnyRange, FromAccounts,
+    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, Pubkey,
     SingleIndexableAccountArgument, SystemProgram,
 };
 
