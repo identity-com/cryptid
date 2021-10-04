@@ -83,6 +83,10 @@ where
             data: T::default(),
         })
     }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        AccountInfo::accounts_usage_hint()
+    }
 }
 impl<T> MultiIndexableAccountArgument<()> for ZeroedAccount<T>
 where

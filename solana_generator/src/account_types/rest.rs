@@ -34,7 +34,10 @@ where
         mut infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
         arg: A,
     ) -> GeneratorResult<Self> {
-        let mut out = Vec::new();
+        let mut out = match T::accounts_usage_hint().1 {
+            Some(0) | None => Vec::new(),
+            Some(upper) => Vec::with_capacity(infos.size_hint().0 / upper),
+        };
         let mut next = infos.next();
         while let Some(info) = next {
             let mut iter = once(info).chain(&mut infos);
@@ -42,6 +45,10 @@ where
             next = iter.next();
         }
         Ok(Self(out))
+    }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        (0, None)
     }
 }
 impl<T> Deref for Rest<T> {

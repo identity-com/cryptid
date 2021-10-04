@@ -1,5 +1,6 @@
 use crate::{GeneratorError, GeneratorResult};
 use std::borrow::Cow;
+use std::cmp::{max, min};
 use std::convert::TryInto;
 use std::ops::{Bound, RangeBounds};
 
@@ -72,4 +73,51 @@ impl<'a, T> Take<'a> for &'a [T] {
         *self = &self[N..];
         Ok(out)
     }
+}
+
+/// Helper function to combine multiple size hints with a branch strategy, where the minimum lower bound and maximum upper bound are returned
+pub fn combine_hints_branch(
+    mut hints: impl Iterator<Item = (usize, Option<usize>)>,
+) -> (usize, Option<usize>) {
+    let (mut lower, mut upper) = match hints.next() {
+        None => return (0, None),
+        Some(hint) => hint,
+    };
+    for (hint_lower, hint_upper) in hints {
+        lower = min(lower, hint_lower);
+        upper = match (upper, hint_upper) {
+            (Some(upper), Some(hint_upper)) => Some(max(upper, hint_upper)),
+            _ => None,
+        }
+    }
+    (lower, upper)
+}
+
+/// Helper function to combine multiple size hints with a chain strategy, where the sum of lower and upper bounds are returned
+pub fn combine_hints_chain(
+    mut hints: impl Iterator<Item = (usize, Option<usize>)>,
+) -> (usize, Option<usize>) {
+    let (mut lower, mut upper) = match hints.next() {
+        None => return (0, None),
+        Some(hint) => hint,
+    };
+    for (hint_lower, hint_upper) in hints {
+        lower += hint_lower;
+        upper = match (upper, hint_upper) {
+            (Some(upper), Some(hint_upper)) => upper.checked_add(hint_upper),
+            _ => None,
+        }
+    }
+    (lower, upper)
+}
+
+/// Helper function to multiply a size hint by a number
+pub fn mul_size_hint(hint: (usize, Option<usize>), mul: usize) -> (usize, Option<usize>) {
+    (
+        hint.0 * mul,
+        match hint.1 {
+            Some(upper) => upper.checked_mul(mul),
+            None => None,
+        },
+    )
 }

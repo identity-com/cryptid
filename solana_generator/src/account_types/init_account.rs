@@ -1,5 +1,4 @@
 use std::io::Write;
-use std::mem::size_of;
 use std::num::NonZeroU64;
 use std::ops::{Deref, DerefMut};
 
@@ -9,9 +8,8 @@ use solana_program::system_instruction::create_account;
 
 use crate::traits::AccountArgument;
 use crate::{
-    invoke, Account, AccountDiscriminant, AccountInfo, AccountInfoIterator, AllAny, FromAccounts,
-    GeneratorError, GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument,
-    SystemProgram,
+    invoke, Account, AccountInfo, AccountInfoIterator, AllAny, FromAccounts, GeneratorError,
+    GeneratorResult, MultiIndexableAccountArgument, SingleIndexableAccountArgument, SystemProgram,
 };
 
 use super::SYSTEM_PROGRAM_ID;
@@ -70,12 +68,14 @@ where
 
         let data = self.data.try_to_vec()?;
         let size = match self.init_size {
-            InitSize::DataSize => (data.len() + size_of::<AccountDiscriminant>()) as u64,
+            InitSize::DataSize => {
+                (data.len() + T::DISCRIMINANT.discriminant_serialized_length()?) as u64
+            }
             InitSize::DataSizePlus(plus) => {
-                (data.len() + size_of::<AccountDiscriminant>()) as u64 + plus.get()
+                (data.len() + T::DISCRIMINANT.discriminant_serialized_length()?) as u64 + plus.get()
             }
             InitSize::SetSize(size) => {
-                if size < (data.len() + size_of::<AccountDiscriminant>()) as u64 {
+                if size < (data.len() + T::DISCRIMINANT.discriminant_serialized_length()?) as u64 {
                     return Err(GeneratorError::NotEnoughSpaceInit {
                         account: self.info.key,
                         space_given: size,
@@ -159,6 +159,10 @@ where
             init_size: InitSize::default(),
             funder: None,
         })
+    }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        AccountInfo::accounts_usage_hint()
     }
 }
 impl<T> MultiIndexableAccountArgument<()> for InitAccount<T>

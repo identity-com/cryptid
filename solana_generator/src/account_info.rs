@@ -152,6 +152,10 @@ impl FromAccounts<()> for AccountInfo {
             Some(info) => Ok(info),
         }
     }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        (1, Some(1))
+    }
 }
 impl MultiIndexableAccountArgument<()> for AccountInfo {
     fn is_signer(&self, _indexer: ()) -> GeneratorResult<bool> {

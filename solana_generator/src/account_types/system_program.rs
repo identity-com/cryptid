@@ -49,6 +49,10 @@ where
         }
         Ok(Self { info })
     }
+
+    fn accounts_usage_hint() -> (usize, Option<usize>) {
+        AccountInfo::accounts_usage_hint()
+    }
 }
 impl MultiIndexableAccountArgument<()> for SystemProgram {
     fn is_signer(&self, indexer: ()) -> GeneratorResult<bool> {

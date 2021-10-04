@@ -1,5 +1,5 @@
+use crate::discriminant::Discriminant;
 use crate::traits::Error;
-use crate::AccountDiscriminant;
 use solana_program::pubkey::Pubkey;
 use std::fmt::Debug;
 use strum::EnumDiscriminants;
@@ -19,9 +19,9 @@ pub enum GeneratorError<'a> {
         /// The account that has the discriminant mismatch
         account: Pubkey,
         /// The discriminant of the account
-        received: AccountDiscriminant<'a>,
+        received: Discriminant<'a>,
         /// The discriminant that was expected
-        expected: AccountDiscriminant<'static>,
+        expected: Discriminant<'static>,
     },
     /// Accounts are either writable when should not be or not writable when should be depending on the indexer
     #[error_msg(
@@ -187,4 +187,7 @@ pub enum GeneratorError<'a> {
     /// Interface is not yet supported.
     #[error_msg("Interfaces are not yet supported")]
     UnsupportedInterface,
+    /// Discriminant is empty
+    #[error_msg("Discriminant is empty, must contain at least one byte")]
+    EmptyDiscriminant,
 }

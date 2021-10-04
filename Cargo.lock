@@ -2503,6 +2503,7 @@ dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.9",
  "sha2",
+ "solana_generator",
  "syn 1.0.77",
 ]
 

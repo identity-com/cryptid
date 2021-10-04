@@ -68,7 +68,7 @@ impl AccountDerive {
         quote! {
             #[automatically_derived]
             impl #impl_generics Account for #ident #ty_generics #where_clause{
-                const DISCRIMINANT: #crate_name::AccountDiscriminant<'static> = #crate_name::AccountDiscriminant::from_array(&#discriminant);
+                const DISCRIMINANT: #crate_name::discriminant::Discriminant<'static> = #crate_name::discriminant::Discriminant::from_array(&#discriminant);
             }
         }
     }

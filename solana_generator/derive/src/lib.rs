@@ -44,8 +44,8 @@ pub fn derive_error(ts: TokenStream) -> TokenStream {
 /// ## Struct Macros
 /// The struct macro is `account_argument` and contains a comma seperated list of arguments.
 /// ex:
-/// ```ignore
-/// # use solana_generator::AccountArgument;
+/// ```
+/// use solana_generator::AccountArgument;
 /// #[derive(AccountArgument)]
 /// #[account_argument(instruction_data = (size: usize))]
 ///  pub struct ArgumentAccounts{}
@@ -59,8 +59,8 @@ pub fn derive_error(ts: TokenStream) -> TokenStream {
 /// The field macro is `account_argument` and contains a comma seperated list of arguments.
 /// These arguments can access the top level `instruction_data` by name.
 /// ex:
-/// ```ignore
-/// #  use solana_generator::{AccountInfo, AccountArgument};
+/// ```
+/// use solana_generator::{AccountInfo, AccountArgument};
 /// #[derive(AccountArgument)]
 ///  pub struct ArgumentAccounts{
 ///      #[account_argument(signer, writable)]

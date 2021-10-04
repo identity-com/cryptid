@@ -16,6 +16,7 @@ use std::borrow::Cow;
 pub use test_instruction::*;
 
 use crate::error::CryptidSignerError;
+use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 use std::iter::once;
 
@@ -92,6 +93,20 @@ impl SigningKey {
                 .map(|extra| extra.key)
                 .collect::<Vec<_>>()
         )
+    }
+}
+impl FromAccounts<()> for SigningKey {
+    fn from_accounts(
+        _program_id: Pubkey,
+        infos: &mut impl AccountInfoIterator<Item = AccountInfo>,
+        _arg: (),
+    ) -> GeneratorResult<Self> {
+        let signing_key = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
+        let extra_accounts = infos.collect();
+        Ok(Self {
+            signing_key,
+            extra_accounts,
+        })
     }
 }
 

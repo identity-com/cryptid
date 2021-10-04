@@ -563,8 +563,7 @@ impl Parse for AccountArgumentFieldAttribute {
             }
         }
         Ok(Self {
-            instruction_data: instruction_data
-                .unwrap_or_else(|| parse_str("::core::default::Default::default()").unwrap()),
+            instruction_data: instruction_data.unwrap_or_else(|| parse_str("()").unwrap()),
             signer,
             writable,
             owner,
@@ -574,7 +573,7 @@ impl Parse for AccountArgumentFieldAttribute {
 impl Default for AccountArgumentFieldAttribute {
     fn default() -> Self {
         Self {
-            instruction_data: parse_str("::core::default::Default::default()").unwrap(),
+            instruction_data: parse_str("()").unwrap(),
             signer: vec![],
             writable: vec![],
             owner: vec![],
