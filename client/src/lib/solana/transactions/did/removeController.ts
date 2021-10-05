@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {registerOrUpdate} from "./util";
+import {registerOrUpdate, sanitizeDefaultKeys} from "./util";
 import {DIDDocument} from "did-resolver";
 import {resolve} from "@identity.com/sol-did-client";
 import {filterNotNil} from "../../../util";
@@ -49,6 +49,8 @@ export const removeController = async (
     // remove the controller property if empty. note this works only with mergeBehaviour "Overwrite"
     controller: newControllers.length ? newControllers : undefined
   };
+
+  sanitizeDefaultKeys(document);
 
   return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };

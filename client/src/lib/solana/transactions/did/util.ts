@@ -1,11 +1,11 @@
-import {DIDDocument} from "did-resolver";
+import {DIDDocument, VerificationMethod} from "did-resolver";
 import {createTransaction, registerInstructionIfNeeded} from "../util";
 import {createUpdateInstruction, MergeBehaviour} from "@identity.com/sol-did-client";
 import {filterNotNil} from "../../../util";
 import {Connection, PublicKey, Transaction} from "@solana/web3.js";
 import {Signer} from "../../../../types/crypto";
 import {didToPublicKey} from "../../util";
-import {has} from "ramda";
+import {has, filter} from "ramda";
 
 /**
  * Creates a transaction that updates a DID Document.
@@ -58,3 +58,26 @@ export const hasAlias = (alias:string) => (component: DIDComponent | string):boo
   isDIDComponent(component) ?
   component.id.endsWith(`#${alias}`) : // DIDComponent case ID must match #alias
   component.endsWith(`#${alias}`); // string case - must match #alias
+
+export const findVerificationMethodWithAlias = (document: Partial<DIDDocument>, alias:string):VerificationMethod|undefined =>
+  document.verificationMethod?.find(hasAlias(alias));
+
+// filter default keys from capability invocation and verification method
+// if they are the only ones, as they are added by the client by default, and do not need
+// to be stored on chain
+export const sanitizeDefaultKeys = (document: Partial<DIDDocument>):void => {
+  if (document.verificationMethod?.length === 1 && hasAlias('default')(document.verificationMethod[0])) {
+    delete document.verificationMethod;
+  }
+  if (document.capabilityInvocation?.length === 1 && hasAlias('default')(document.capabilityInvocation[0])) {
+    delete document.capabilityInvocation;
+  }
+
+  if (document.verificationMethod && findVerificationMethodWithAlias(document, 'default')) {
+    document.verificationMethod = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.verificationMethod);
+  }
+
+  if (document.capabilityInvocation) {
+    document.capabilityInvocation = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.capabilityInvocation);
+  }
+}
