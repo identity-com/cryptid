@@ -1,4 +1,9 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionSignature,
+} from '@solana/web3.js';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { Signer } from '../types/crypto';
 
@@ -32,12 +37,12 @@ export interface Cryptid {
    */
   sign(transaction: Transaction): Promise<Transaction[]>;
 
-  addKey(publicKey: PublicKey, alias: string): Promise<string>;
-  removeKey(alias: string): Promise<string>;
-  addService(service: ServiceEndpoint): Promise<string>;
-  removeService(alias: string): Promise<string>;
-  addController(did: string): Promise<string>;
-  removeController(did: string): Promise<string>;
+  addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature>;
+  removeKey(alias: string): Promise<TransactionSignature>;
+  addService(service: ServiceEndpoint): Promise<TransactionSignature>;
+  removeService(alias: string): Promise<TransactionSignature>;
+  addController(did: string): Promise<TransactionSignature>;
+  removeController(did: string): Promise<TransactionSignature>;
 
   document(): Promise<DIDDocument>;
   address(): Promise<PublicKey>;
