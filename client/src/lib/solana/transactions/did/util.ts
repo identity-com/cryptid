@@ -5,6 +5,7 @@ import {filterNotNil} from "../../../util";
 import {Connection, PublicKey, Transaction} from "@solana/web3.js";
 import {Signer} from "../../../../types/crypto";
 import {didToPublicKey} from "../../util";
+import {has} from "ramda";
 
 /**
  * Creates a transaction that updates a DID Document.
@@ -48,4 +49,12 @@ export const registerOrUpdate = async (did: string, document: Partial<DIDDocumen
 }
 
 export type DIDComponent = { id : string }
-export const hasAlias = (alias:string) => (component: DIDComponent):boolean => component.id.substring(component.id.indexOf('#') + 1) === alias;
+
+const isDIDComponent = (component: DIDComponent | string): component is DIDComponent => has('id', component)
+
+// true if a did component or reference to one has an alias (defined as the did url fragment)
+// note - the DID itself is not checked here, just the fragment.
+export const hasAlias = (alias:string) => (component: DIDComponent | string):boolean =>
+  isDIDComponent(component) ?
+  component.id.endsWith(`#${alias}`) : // DIDComponent case ID must match #alias
+  component.endsWith(`#${alias}`); // string case - must match #alias
