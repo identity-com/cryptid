@@ -8,7 +8,7 @@
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
@@ -198,6 +198,40 @@ export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [Pub
           && oldKeys.every((key, i) => key.equals(newKeys[i]))
   );
   return [publicKeys, loaded]
+}
+
+export async function signAndSendCryptidTransaction(
+    connection: Connection,
+    transaction: Transaction,
+    cryptid: CryptidAccount,
+    signers: SolanaSigner[],
+    skipPreflight = false,
+) {
+  transaction.recentBlockhash = (
+      await connection.getRecentBlockhash('max')
+  ).blockhash;
+
+  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
+    ...key,
+    pubkey: key.pubkey.toBase58(),
+  }))));
+  console.log(signers.map((signer) => signer.publicKey.toBase58()));
+  console.log(await connection.getEpochInfo())
+
+  transaction = await cryptid.signTransaction(transaction);
+  if (signers.length > 0) {
+    transaction.partialSign(...signers);
+  }
+  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
+    ...key,
+    pubkey: key.pubkey.toBase58(),
+  }))));
+  console.log(signers.map((signer) => signer.publicKey.toBase58()));
+  const rawTransaction = transaction.serialize();
+  return await connection.sendRawTransaction(rawTransaction, {
+    skipPreflight,
+    preflightCommitment: 'single',
+  });
 }
 
 export type TokenAccountInfo = {

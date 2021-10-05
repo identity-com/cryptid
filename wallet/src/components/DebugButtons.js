@@ -1,11 +1,7 @@
-import {
-  refreshWalletPublicKeys,
-  useBalanceInfo,
-  useWallet,
-} from '../utils/wallet';
+import { refreshWalletPublicKeys, useBalanceInfo } from '../utils/wallet';
 import { useUpdateTokenName } from '../utils/tokens/names';
 import { useCallAsync, useSendTransaction } from '../utils/notifications';
-import { Account, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import {Account, Keypair, LAMPORTS_PER_SOL} from '@solana/web3.js';
 import { abbreviateAddress, sleep } from '../utils/utils';
 import {
   refreshAccountInfo,
@@ -66,18 +62,17 @@ export default function DebugButtons() {
       `Test Token ${abbreviateAddress(mint.publicKey)}`,
       `TEST${mint.publicKey.toBase58().slice(0, 2)}`,
     );
-    sendTransaction(
-      createAndInitializeMint({
+    console.log("account address: ", selectedCryptidAccount.address.toBase58());
+    createAndInitializeMint({
         connection: selectedCryptidAccount.connection,
-        owner: {publicKey: selectedCryptidAccount.address},
+        owner: selectedCryptidAccount,
         mint,
         amount: 1000,
         decimals: 2,
-        initialAccount: new Account(),
-      }),
-      // TODO: Reenable for CryptidR
-      // { onSuccess: () => refreshWalletPublicKeys(wallet) },
-    );
+        initialAccount: Keypair.generate(),
+        transactionCallback: sendTransaction,
+        onSuccess: () => refreshWalletPublicKeys(selectedCryptidAccount),
+    });
   }
 
   const noSol = amount === 0;
