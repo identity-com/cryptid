@@ -51,6 +51,7 @@ export class ControlledCryptid extends AbstractCryptid {
   }
 
   updateSigner(signer: Signer): void {
-    throw new Error(`Cannot update Signer of controlled DIDs with ${signer.publicKey}`);
+    // TODO: or should we rather throw here? (e.g. don't update signers on controlled instances?
+    this.controllerCryptid.updateSigner(signer)
   }
 }
