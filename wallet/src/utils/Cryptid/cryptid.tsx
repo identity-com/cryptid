@@ -25,6 +25,8 @@ export class CryptidAccount {
   private cryptid: Cryptid;
   public address: PublicKey | null = null;
   public document: DIDDocument | null = null;
+  // Crypid Account parent if controlled
+  private parent: CryptidAccount | null;
 
   private updateDocWrapper = async (f: () => Promise<TransactionSignature>) => {
     const signature =  f()
@@ -32,13 +34,14 @@ export class CryptidAccount {
     return signature;
   }
 
-  constructor(did: string, signer: Signer, connection: Connection, crypid: Cryptid | null = null) {
+  constructor(did: string, signer: Signer, connection: Connection, parent: CryptidAccount | null = null) {
     this.did = did
     this.connection = connection
     this.signer = signer
+    this.parent = parent
 
-    if (crypid != null) {
-      this.cryptid = crypid
+    if (parent != null) {
+      this.cryptid = parent.cryptid.as(did)
     } else {
       this.cryptid = buildCryptid(did, signer, {
         connection,
@@ -57,7 +60,7 @@ export class CryptidAccount {
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
   as = (controllerDID: string): CryptidAccount => {
-    return new CryptidAccount(controllerDID, this.signer, this.connection, this.cryptid.as(controllerDID))
+    return new CryptidAccount(controllerDID, this.signer, this.connection, this)
   }
   
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
@@ -66,6 +69,10 @@ export class CryptidAccount {
   updateDocument = async () => {
     this.document = await this.cryptid.document()
     return this.document
+  }
+
+  get isControlled() {
+    return this.parent != null
   }
 
   get verificationMethods() {
@@ -167,7 +174,7 @@ interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | null;
   setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
-  addCryptidAccount: (b: string) => void
+  addCryptidAccount: (b: string, parent?: CryptidAccount) => void
   removeCryptidAccount: (b: string) => void
   getDidPrefix: () => string
 }
@@ -211,11 +218,11 @@ export const CryptidProvider:FC = ({ children }) => {
   );
 
   const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<string[]>(
-    'cryptidExtAccounts',
+    'cryptidExternalAccounts',
     [],
   );
 
-  const addCryptidAccount = useCallback((base58: string) => {
+  const addCryptidAccount = useCallback((base58: string, parent?: CryptidAccount) => {
     if (cryptidExtAccounts.indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({
@@ -235,6 +242,10 @@ export const CryptidProvider:FC = ({ children }) => {
   // In order to not
   const [selectedCryptidAccount, setSelectedCryptidAccount] = useState<CryptidAccount | null>(null);
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
+
+  const addControlledCryptidAccounts = useCallback((account) => {
+
+  }, [])
 
   // TODO: Is it ok to pass an invalid Signer for the initial Account creation?
   const defaultSigner = {
