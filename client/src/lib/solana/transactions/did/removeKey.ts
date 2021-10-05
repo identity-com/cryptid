@@ -3,12 +3,9 @@ import {
   resolve,
 } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
-import {DIDDocument, VerificationMethod} from "did-resolver";
+import {DIDDocument} from "did-resolver";
 import {pick, without} from "ramda";
-import {hasAlias, registerOrUpdate} from "./util";
-
-const findVerificationMethodWithAlias = (document: DIDDocument, alias:string):VerificationMethod|undefined =>
-  document.verificationMethod?.find(hasAlias(alias));
+import {findVerificationMethodWithAlias, hasAlias, registerOrUpdate, sanitizeDefaultKeys} from "./util";
 
 /**
  * Creates a transaction that removes a key to a DID.
@@ -52,8 +49,7 @@ export const removeKey = async (
     delete document.capabilityInvocation;
   }
 
-  console.log("NEW DOC");
-  console.log(document);
+  sanitizeDefaultKeys(document);
 
   return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };

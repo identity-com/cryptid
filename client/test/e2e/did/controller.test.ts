@@ -140,6 +140,7 @@ describe('DID Controller operations', function () {
 
       const document = await cryptid.document();
       expectDocumentNotToIncludeController(document, controller);
+      expect(document.verificationMethod).to.have.lengthOf(1) // default key
 
       // cryptid account paid nothing
       expect(balances.for(doaSigner)).to.equal(0);
@@ -155,6 +156,9 @@ describe('DID Controller operations', function () {
 
       const document = await cryptid.document();
       expectDocumentToIncludeKey(document, key2);
+
+      // TODO this is a bug in sol-did. The default key is being duplicated
+      expect(document.verificationMethod).to.have.lengthOf(2) // default and key2
     });
   });
 });

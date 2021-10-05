@@ -114,7 +114,8 @@ describe('transactions/did/removeController', () => {
 
     const expectedDocument = sinon.match({
       // ensure the keys and service are still there
-      ...pick(['verificationMethod', 'assertionMethod', 'authentication', 'capabilityInvocation', 'capabilityDelegation', 'keyAgreement', 'service'], document)
+      ...pick(['assertionMethod', 'authentication', 'capabilityInvocation', 'capabilityDelegation', 'keyAgreement', 'service'], document),
+      verificationMethod: [document.verificationMethod[1]]  // #default key is removed
     })
     const expectation = sandbox.mock(DIDUtil).expects('registerOrUpdate').withArgs(did, expectedDocument)
 
