@@ -111,7 +111,7 @@ function fairsIsLoaded(publicKeys) {
 export default function BalancesList() {
 
   // Updated Crytpid Stuff (from a state POV)
-  const { selectedCryptidAccount } = useCryptid()
+  const { selectedCryptidAccount, setSelectedCryptidAccount } = useCryptid()
   const [publicKeys, setPublicKeys] = useState([]);
 
 
@@ -351,7 +351,7 @@ export default function BalancesList() {
           {/*</Tooltip>*/}
         </Toolbar>
       </AppBar>
-      {selectedCryptidAccount && <CryptidDetails crytidAccount={selectedCryptidAccount}/>}
+      {selectedCryptidAccount && <CryptidDetails crytidAccount={selectedCryptidAccount} setSelectedCryptidAccount={setSelectedCryptidAccount}/>}
       <List disablePadding>
         {balanceListItemsMemo.map((Memoized) => (
           <Memoized />

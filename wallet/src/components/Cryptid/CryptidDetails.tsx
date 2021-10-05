@@ -6,7 +6,7 @@ import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
 import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
 import ListItemText from "@material-ui/core/ListItemText";
 import AddKeyDialog from "./AddKeyDialog";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
@@ -15,43 +15,52 @@ import { refreshWalletPublicKeys } from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
   crytidAccount: CryptidAccount
+  setSelectedCryptidAccount: (c: CryptidAccount) => void
 }
 
 type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
 
+// This is a hack because component will not understand prop change.
+const useForceUpdate = () => {
+  const [value, setValue] = useState(0); // integer state
+  return () => setValue(value => value + 1); // update the state to force render
+}
+
 export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
-  const { enqueueSnackbar } = useSnackbar();
+  const forceUpdate = useForceUpdate();
   const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
 
+  useEffect(() => {}, [crytidAccount])
+
+  const onSuccessUpdate = (f?: () => void) => {
+    if (f) {
+      f();
+    }
+    crytidAccount.updateDocument().then(forceUpdate)
+  }
 
   const addKeyCallback = (address: string, alias: string) => {
-    console.log(`Adding key ${address}`)
     const pk = new PublicKey(address)
     sendTransaction(crytidAccount.addKey(pk, alias), {
-      onSuccess: () => {
-        setAddKeyDialogOpen(false)
-        // success refresh the account.
-        // TODO: Debug update
-        console.log(JSON.stringify(crytidAccount.verificationMethods))
-      },
+      onSuccess: () => onSuccessUpdate(() => setAddKeyDialogOpen(false))
     });
   }
 
-  const removeKeyCallback = useCallback(async (alias: string) => {
-    await crytidAccount.removeKey(alias.replace('#',''))
-  }, [crytidAccount]);
+  const removeKeyCallback = (alias: string) => sendTransaction(crytidAccount.removeKey(alias.replace('#','')), {
+    onSuccess: () => onSuccessUpdate()
+  });
 
-  const addControllerCallback = useCallback(async (controllerDID: string) => {
-    await crytidAccount.addController(controllerDID);
-  }, [crytidAccount]);
+  const addControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.addController(controllerDID), {
+    onSuccess: () => onSuccessUpdate(() => setAddControllerDialogOpen(false))
+  });
 
-  const removeControllerCallback = useCallback(async (controllerDID: string) => {
-    await crytidAccount.removeController(controllerDID);
-  }, [crytidAccount]);
+  const removeControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.removeController(controllerDID), {
+    onSuccess: () => onSuccessUpdate()
+  });
 
   return (
     <>
