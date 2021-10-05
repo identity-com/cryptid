@@ -42,5 +42,18 @@ export const removeKey = async (
     verificationMethod: existingDocument.verificationMethod && without([verificationMethodToRemove], existingDocument.verificationMethod),
   };
 
+  // filter default keys from capability invocation and verification method
+  // if they are the only ones, as they are added by the client by default, and do not need
+  // to be stored on chain
+  if (document.verificationMethod?.length === 1 && hasAlias('default')(document.verificationMethod[0])) {
+    delete document.verificationMethod;
+  }
+  if (document.capabilityInvocation?.length === 1 && hasAlias('default')(document.capabilityInvocation[0])) {
+    delete document.capabilityInvocation;
+  }
+
+  console.log("NEW DOC");
+  console.log(document);
+
   return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };

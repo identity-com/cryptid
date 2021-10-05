@@ -84,21 +84,40 @@ describe('DID Controller operations', function () {
         await balances.recordBefore();
       });
 
-      it('should add a new controller', async () => {
+      it('should add a controller', async () => {
         await cryptid.addController(controller);
 
         await balances.recordAfter();
 
         const document = await cryptid.document();
         expectDocumentToIncludeController(document, controller);
+        expect(document.controller).to.have.lengthOf(1);
 
         // check the key was not overwritten
         expectDocumentToIncludeKey(document, addedKey);
+
+        console.log(document);
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
         expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+      });
+
+      it('should add a second controller', async () => {
+        const secondController =
+          'did:sol:localnet:' + Keypair.generate().publicKey.toBase58();
+
+        await cryptid.addController(controller);
+        await cryptid.addController(secondController);
+
+        const document = await cryptid.document();
+        expectDocumentToIncludeController(document, controller);
+        expectDocumentToIncludeController(document, secondController);
+
+        console.log(document);
+
+        expect(document.controller).to.have.lengthOf(2);
       });
     });
   });

@@ -188,6 +188,9 @@ describe('DID Key operations', function () {
 
         const document = await cryptid.document();
         expectDocumentNotToIncludeKey(document, ledgerKey);
+        expectDocumentToIncludeKey(document, key.publicKey);
+        expect(document.verificationMethod).to.have.lengthOf(1)
+        expect(document.capabilityInvocation).to.have.lengthOf(1)
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
