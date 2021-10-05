@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {hasAlias, registerOrUpdate} from "./util";
+import {hasAlias, registerOrUpdate, sanitizeDefaultKeys} from "./util";
 import {DIDDocument, ServiceEndpoint} from "did-resolver";
 import {resolve} from "@identity.com/sol-did-client";
 import {pick, without} from "ramda";
@@ -40,6 +40,8 @@ export const removeService = async (
     // remove the service property if empty. note this works only with mergeBehaviour "Overwrite"
     service: newServices.length ? newServices : undefined
   };
+
+  sanitizeDefaultKeys(document);
 
   return registerOrUpdate(did, document, connection, payer, signers, 'Overwrite');
 };
