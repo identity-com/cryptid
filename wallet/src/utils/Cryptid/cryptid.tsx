@@ -70,6 +70,14 @@ export class CryptidAccount {
     return this.document.verificationMethod
   }
 
+  get controllers() {
+    if (!this.document || !this.document.controller) {
+      return []
+    }
+
+    return Array.isArray(this.document.controller) ? this.document.controller : [ this.document.controller ]
+  }
+
   get isInitialized() {
     return this.address !== null && this.document !== null
   }

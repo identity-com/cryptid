@@ -1,5 +1,5 @@
 import { Card, CardContent, List, ListItem, Typography } from "@material-ui/core";
-import { CryptidAccount } from "../../utils/Cryptid/cryptid";
+import { CryptidAccount, useCryptid } from "../../utils/Cryptid/cryptid";
 import Button from "@material-ui/core/Button";
 import AddKeyIcon from "@material-ui/icons/VpnKeyOutlined";
 import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
@@ -9,6 +9,7 @@ import AddKeyDialog from "./AddKeyDialog";
 import { useCallback, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
+import AddControllerDialog from "./AddControllerDialog";
 
 interface CryptidDetailsInterface {
   crytidAccount: CryptidAccount
@@ -16,13 +17,14 @@ interface CryptidDetailsInterface {
 
 export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
   // Hooks
+  const { getDidPrefix } = useCryptid();
   const { enqueueSnackbar } = useSnackbar();
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
+  const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
+
 
   const addKeyCallback = useCallback(async (address: string, alias: string) => {
-
     console.log(`Adding key ${address}`)
-
     try {
       const pk = new PublicKey(address)
       await crytidAccount.addKey(pk, alias)
@@ -33,11 +35,22 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
     }
 
     // success refresh the account.
-    // TODO: Daniel This call does not contain the new key yet.
-    await crytidAccount.updateDocument()
+    // TODO: Debug update
     console.log(JSON.stringify(crytidAccount.verificationMethods))
 
-  }, [crytidAccount])
+  }, [crytidAccount]);
+
+  const removeKeyCallback = useCallback(async (alias: string) => {
+    await crytidAccount.removeKey(alias.replace('#',''))
+  }, [crytidAccount]);
+
+  const addControllerCallback = useCallback(async (controllerDID: string) => {
+    await crytidAccount.addController(controllerDID);
+  }, [crytidAccount]);
+
+  const removeControllerCallback = useCallback(async (controllerDID: string) => {
+    await crytidAccount.removeController(controllerDID);
+  }, [crytidAccount]);
 
   return (
     <>
@@ -45,6 +58,12 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
         open={addKeyDialogOpen}
         onClose={() => setAddKeyDialogOpen(false)}
         onAdd={addKeyCallback}
+      />
+      <AddControllerDialog
+        open={addControllerDialogOpen}
+        onClose={() => setAddControllerDialogOpen(false)}
+        onAdd={addControllerCallback}
+        didPrefix={getDidPrefix()}
       />
       <Card>
         <Typography variant="h6">
@@ -57,11 +76,10 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
           <List>
             { crytidAccount.verificationMethods.map(vm => {
               return (
-                <CryptidDetailsListItem primary={vm.id.replace(crytidAccount.did, '')} secondary={vm.publicKeyBase58} />
+                <CryptidDetailsListItem primary={vm.id.replace(crytidAccount.did, '')} secondary={vm.publicKeyBase58}
+                                        removeCallback={removeKeyCallback}/>
               )
-            })
-
-            }
+            })}
           </List>
           <Button
             variant="outlined"
@@ -73,31 +91,36 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
           </Button>
         </CardContent>
       </Card>
-      <Card>
-        <CardContent>
-          <Typography variant="h6">
-            Services:
-          </Typography>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddServiceIcon />}
-            onClick={() => alert('Add Service clicked')}
-          >
-            Add Service
-          </Button>
-        </CardContent>
-      </Card>
+      {/*<Card>*/}
+      {/*  <CardContent>*/}
+      {/*    <Typography variant="h6">*/}
+      {/*      Services:*/}
+      {/*    </Typography>*/}
+      {/*    <Button*/}
+      {/*      variant="outlined"*/}
+      {/*      color="primary"*/}
+      {/*      startIcon={<AddServiceIcon />}*/}
+      {/*      onClick={() => alert('Add Service clicked')}*/}
+      {/*    >*/}
+      {/*      Add Service*/}
+      {/*    </Button>*/}
+      {/*  </CardContent>*/}
+      {/*</Card>*/}
       <Card>
         <CardContent>
           <Typography variant="h6">
             Controller:
           </Typography>
+          { crytidAccount.controllers.map(c => {
+            return (
+              <CryptidDetailsListItem primary={c} removeCallback={removeControllerCallback} />
+            )
+          })}
           <Button
             variant="outlined"
             color="primary"
             startIcon={<AddControllerIcon />}
-            onClick={() => alert('Add Controller clicked')}
+            onClick={() => setAddControllerDialogOpen(true)}
           >
             Add Controller
           </Button>
@@ -108,10 +131,11 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
 
 interface CryptidDetailsListItemInterface {
   primary: string,
-  secondary: string | undefined
+  secondary?: string
+  removeCallback: (primary: string) => void
 }
 
-const CryptidDetailsListItem = ({primary, secondary} : CryptidDetailsListItemInterface) => {
+const CryptidDetailsListItem = ({primary, secondary, removeCallback} : CryptidDetailsListItemInterface) => {
   return (
       <ListItem>
         <div style={{ display: 'flex', flex: 1 }}>
@@ -124,6 +148,13 @@ const CryptidDetailsListItem = ({primary, secondary} : CryptidDetailsListItemInt
             secondary={secondary}
           />
         </div>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => removeCallback(primary)}
+        >
+          Remove
+        </Button>
       </ListItem>
   )
 }
