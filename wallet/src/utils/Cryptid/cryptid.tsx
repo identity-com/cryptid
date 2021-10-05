@@ -32,17 +32,21 @@ export class CryptidAccount {
     return signature;
   }
 
-  constructor(did: string, signer: Signer, connection: Connection) {
+  constructor(did: string, signer: Signer, connection: Connection, crypid: Cryptid | null = null) {
     this.did = did
     this.connection = connection
     this.signer = signer
 
-    this.cryptid = buildCryptid(did, signer, {
-      connection,
-    })
+    if (crypid != null) {
+      this.cryptid = crypid
+    } else {
+      this.cryptid = buildCryptid(did, signer, {
+        connection,
+      })
+    }
   }
 
-  async init() {
+  init = async () => {
     if (this.isInitialized) {
       return
     }
@@ -52,10 +56,12 @@ export class CryptidAccount {
     // console.log(`Getting address: ${this.address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
-  
-  signTransaction(transaction: Transaction):Promise<Transaction> {
-    return this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
+  as = (controllerDID: string): CryptidAccount => {
+    return new CryptidAccount(controllerDID, this.signer, this.connection, this.cryptid.as(controllerDID))
   }
+  
+  signTransaction = (transaction: Transaction):Promise<Transaction> =>
+    this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
 
   updateDocument = async () => {
     this.document = await this.cryptid.document()
