@@ -65,7 +65,7 @@ import MergeAccountsDialog from './MergeAccountsDialog';
 import SwapButton from './SwapButton';
 import DnsIcon from '@material-ui/icons/Dns';
 import DomainsList from './DomainsList';
-import {useCryptid} from "../utils/Cryptid/cryptid";
+import {CryptidAccount, useCryptid, useCryptidWalletPublicKeys} from "../utils/Cryptid/cryptid";
 import { CryptidDetails } from "./Cryptid/CryptidDetails";
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
@@ -111,18 +111,8 @@ function fairsIsLoaded(publicKeys) {
 export default function BalancesList() {
 
   // Updated Crytpid Stuff (from a state POV)
-  const { selectedCryptidAccount } = useCryptid()
-  const [publicKeys, setPublicKeys] = useState([]);
-
-
-  useEffect(() => {
-    if (!selectedCryptidAccount) {
-      setPublicKeys([])
-    } else {
-      setPublicKeys([selectedCryptidAccount.address])
-    }
-  },[selectedCryptidAccount])
-
+  const { selectedCryptidAccount } = useCryptid();
+  const [publicKeys] = useCryptidWalletPublicKeys(selectedCryptidAccount);
   // End Cryptid Stuff
 
   // const wallet = useWallet();
