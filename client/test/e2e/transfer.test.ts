@@ -9,12 +9,14 @@ import {
   createTransferTransaction,
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
-import { publicKeyToDid } from '../../src/lib/solana/util';
+import { didToPDA, publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
 
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = 20_000;
+
+const FEE = 5_000;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -22,7 +24,7 @@ describe('transfers', function () {
 
   let key: Keypair;
   let did: string;
-  let doaSigner: PublicKey;
+  let cryptidAddress: PublicKey;
   let recipient: PublicKey;
 
   let cryptid: Cryptid;
@@ -36,10 +38,10 @@ describe('transfers', function () {
 
     cryptid = build(did, key, { connection, waitForConfirmation: true });
 
-    doaSigner = await cryptid.address();
+    cryptidAddress = await cryptid.address();
 
     await Promise.all([
-      airdrop(connection, doaSigner), // the main funds for the cryptid account
+      airdrop(connection, cryptidAddress), // the main funds for the cryptid account
       airdrop(connection, key.publicKey, 100_000), // to cover fees only
     ]);
   });
@@ -47,7 +49,7 @@ describe('transfers', function () {
   context('a simple cryptid', () => {
     beforeEach(async () => {
       balances = await new Balances(connection).register(
-        doaSigner,
+        cryptidAddress,
         key.publicKey,
         recipient
       );
@@ -58,7 +60,7 @@ describe('transfers', function () {
 
       const tx = await createTransferTransaction(
         connection,
-        doaSigner,
+        cryptidAddress,
         recipient,
         lamportsToTransfer
       );
@@ -69,8 +71,8 @@ describe('transfers', function () {
       await balances.recordAfter();
 
       // assert balances are correct
-      expect(balances.for(doaSigner)).to.equal(-lamportsToTransfer); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-5000); // fees only
+      expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
+      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -80,17 +82,17 @@ describe('transfers', function () {
       const cryptid = build(did, key, { connection });
 
       const instruction1 = SystemProgram.transfer({
-        fromPubkey: doaSigner,
+        fromPubkey: cryptidAddress,
         toPubkey: recipient,
         lamports: lamportsToTransfer,
       });
       const instruction2 = SystemProgram.transfer({
-        fromPubkey: doaSigner,
+        fromPubkey: cryptidAddress,
         toPubkey: recipient,
         lamports: lamportsToTransfer,
       });
 
-      const tx = await createTransaction(connection, doaSigner, [
+      const tx = await createTransaction(connection, cryptidAddress, [
         instruction1,
         instruction2,
       ]);
@@ -101,8 +103,8 @@ describe('transfers', function () {
       await balances.recordAfter();
 
       // assert balances are correct
-      expect(balances.for(doaSigner)).to.equal(-(lamportsToTransfer * 2)); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-5000); // fees only
+      expect(balances.for(cryptidAddress)).to.equal(-(lamportsToTransfer * 2)); // the amount transferred
+      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -129,7 +131,7 @@ describe('transfers', function () {
       // create a transfer and sign with cryptid for device 2
       const tx = await createTransferTransaction(
         connection,
-        doaSigner,
+        cryptidAddress,
         recipient,
         lamportsToTransfer
       );
@@ -142,7 +144,89 @@ describe('transfers', function () {
       await balances.recordAfter();
 
       // assert balances are correct
-      expect(balances.for(doaSigner)).to.equal(-lamportsToTransfer); // the amount transferred
+      expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
+    });
+  });
+  context('a controller cryptid', () => {
+    let controllerCryptid: Cryptid;
+
+    let controlledCryptidAddress: PublicKey;
+
+    beforeEach('Set up the controller relationship', async () => {
+      // create a new controlled DID
+      const controlledDIDKey = Keypair.generate();
+      const controlledDID = publicKeyToDid(
+        controlledDIDKey.publicKey,
+        'localnet'
+      );
+      const controlledCryptid = build(controlledDID, controlledDIDKey, {
+        connection,
+        waitForConfirmation: true,
+      });
+      controlledCryptidAddress = await controlledCryptid.address();
+
+      // Create the controller cryptid instance
+      controllerCryptid = cryptid.as(controlledDID);
+
+      // airdrop funds to the controlled DID cryptid account
+      await airdrop(connection, controlledCryptidAddress);
+      // airdrop funds to the controlled DID signer key (for fees)
+      await airdrop(connection, controlledDIDKey.publicKey, 10_000);
+
+      // add the controller to the controlled DID (this anchors the controlled DID)
+      await controlledCryptid.addController(did);
+
+      balances = await new Balances(connection).register(
+        cryptidAddress, // controller cryptid
+        controlledCryptidAddress, // controlled cryptid
+        key.publicKey, // controller signer
+        recipient
+      );
+
+      console.log('TEMP DEBUG INFO');
+      console.log('Addresses: ');
+      console.log({
+        controller: {
+          did,
+          signer: key.publicKey.toBase58(),
+          pda: (await didToPDA(did)).toBase58(),
+          cryptidAddress: (await controllerCryptid.address()).toBase58(),
+        },
+        controlled: {
+          did: controlledDID,
+          signer: controlledDIDKey.publicKey.toBase58(),
+          pda: (await didToPDA(controlledDID)).toBase58(),
+          cryptidAddress: (await controlledCryptid.address()).toBase58(),
+        },
+      });
+
+      console.log('Documents: ');
+      console.log('Controller');
+      console.log(await cryptid.document());
+      console.log('Controlled');
+      console.log(await controlledCryptid.document());
+    });
+
+    it('should sign a transaction for a controlled DID with a controller key', async () => {
+      // create a transfer from the controlled DID
+      const tx = await createTransferTransaction(
+        connection,
+        controlledCryptidAddress,
+        recipient,
+        lamportsToTransfer
+      );
+
+      const [cryptidTx] = await controllerCryptid.sign(tx); // sign with the controller
+      await sendAndConfirmCryptidTransaction(connection, cryptidTx);
+
+      await balances.recordAfter();
+
+      // assert balances are correct
+      expect(balances.for(controlledCryptidAddress)).to.equal(
+        -lamportsToTransfer
+      ); // the amount transferred
+      expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
+      expect(balances.for(key.publicKey)).to.equal(-FEE); // the controller's signer key pays the fee
     });
   });
 });

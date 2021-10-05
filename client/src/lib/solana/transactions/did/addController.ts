@@ -19,7 +19,7 @@ export const addController = async (
   controller: string,
   signers: Signer[]
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did);
+  const existingDocument = await resolve(did, { connection });
 
   // add the new controller to the list
   const newControllers = uniq(

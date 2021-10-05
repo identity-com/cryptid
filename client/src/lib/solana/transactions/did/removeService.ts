@@ -18,7 +18,7 @@ export const removeService = async (
   alias: string,
   signers: Signer[]
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did);
+  const existingDocument = await resolve(did, { connection });
   const serviceToRemove = findServiceWithAlias(existingDocument, alias);
 
   if (!serviceToRemove) throw new Error(`Service ${alias} not found on ${did}`);

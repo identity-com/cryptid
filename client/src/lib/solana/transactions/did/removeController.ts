@@ -29,7 +29,7 @@ export const removeController = async (
   controller: string,
   signers: Signer[]
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did);
+  const existingDocument = await resolve(did, { connection });
 
   if (!hasController(existingDocument, controller)) throw new Error(`Controller ${controller} not found on ${did}`);
 
