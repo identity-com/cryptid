@@ -31,9 +31,14 @@ export const CryptidSelector = () => {
 
   const onAdd = useCallback(async (address: string, isControlled: boolean) => {
 
-    addCryptidAccount(address)
+    let parent;
+    if (isControlled && selectedCryptidAccount) {
+      parent = selectedCryptidAccount
+    }
+
+    addCryptidAccount(address, parent)
     setCryptidAccountDialogOpen(false)
-  },[])
+  },[selectedCryptidAccount, addCryptidAccount])
 
   if (cryptidAccounts.length === 0) {
     return null;

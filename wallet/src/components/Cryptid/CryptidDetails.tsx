@@ -69,6 +69,11 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
         <Typography variant="h6">
           DID: {crytidAccount.did}
         </Typography>
+        { crytidAccount.isControlled &&
+          <Typography variant="h6">
+              controlled by DID: {crytidAccount.controlledBy}
+          </Typography>
+        }
         <CardContent>
           <Typography variant="h6">
             Keys:

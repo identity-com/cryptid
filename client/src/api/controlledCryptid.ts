@@ -49,4 +49,8 @@ export class ControlledCryptid extends AbstractCryptid {
     );
     return [wrappedTransaction];
   }
+
+  updateSigner(signer: Signer): void {
+    throw new Error(`Cannot update Signer of controlled DIDs with ${signer.publicKey}`);
+  }
 }
