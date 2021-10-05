@@ -83,7 +83,10 @@ export abstract class AbstractCryptid implements Cryptid {
     }
   }
 
-  async addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature> {
+  async addKey(
+    publicKey: PublicKey,
+    alias: string
+  ): Promise<TransactionSignature> {
     const signer = await this.getPayerForInternalTransaction();
 
     const transaction = await addKeyTransaction(

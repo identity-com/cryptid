@@ -1,4 +1,9 @@
-import { Connection, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionSignature,
+} from '@solana/web3.js';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { Signer } from '../types/crypto';
 

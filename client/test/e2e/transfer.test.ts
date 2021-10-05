@@ -9,7 +9,7 @@ import {
   createTransferTransaction,
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
-import { didToPDA, publicKeyToDid } from '../../src/lib/solana/util';
+import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
 
@@ -182,29 +182,6 @@ describe('transfers', function () {
         key.publicKey, // controller signer
         recipient
       );
-
-      console.log('TEMP DEBUG INFO');
-      console.log('Addresses: ');
-      console.log({
-        controller: {
-          did,
-          signer: key.publicKey.toBase58(),
-          pda: (await didToPDA(did)).toBase58(),
-          cryptidAddress: (await controllerCryptid.address()).toBase58(),
-        },
-        controlled: {
-          did: controlledDID,
-          signer: controlledDIDKey.publicKey.toBase58(),
-          pda: (await didToPDA(controlledDID)).toBase58(),
-          cryptidAddress: (await controlledCryptid.address()).toBase58(),
-        },
-      });
-
-      console.log('Documents: ');
-      console.log('Controller');
-      console.log(await cryptid.document());
-      console.log('Controlled');
-      console.log(await controlledCryptid.document());
     });
 
     it('should sign a transaction for a controlled DID with a controller key', async () => {
