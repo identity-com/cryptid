@@ -75,6 +75,10 @@ export class CryptidAccount {
     return this.parent != null
   }
 
+  get controlledBy() {
+    return this.parent != null ? this.parent.did : this.did
+  }
+
   get verificationMethods() {
     if (!this.document || !this.document.verificationMethod) {
       return []
@@ -97,9 +101,12 @@ export class CryptidAccount {
 
   updateSigner(signer: Signer) {
     this.signer = signer
-    this.cryptid = buildCryptid(this.did, signer, {
-      connection: this.connection,
-    })
+    if (!this.isControlled) {
+      this.cryptid.updateSigner(signer)
+    }
+    // this.cryptid = buildCryptid(this.did, signer, {
+    //   connection: this.connection,
+    // })
   }
   
   activeSigningKey():PublicKey {
@@ -192,6 +199,12 @@ interface CryptidSelectorInterface {
   selectedCryptidAccount: string | undefined
 }
 
+interface StoredCryptidAccount {
+  account: string
+  parent?: string
+}
+
+
 const DEFAULT_CRYPTID_SELECTOR = {
   selectedCryptidAccount: undefined
 };
@@ -217,23 +230,26 @@ export const CryptidProvider:FC = ({ children }) => {
     DEFAULT_CRYPTID_SELECTOR,
   );
 
-  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<string[]>(
+  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<StoredCryptidAccount[]>(
     'cryptidExternalAccounts',
     [],
   );
 
   const addCryptidAccount = useCallback((base58: string, parent?: CryptidAccount) => {
-    if (cryptidExtAccounts.indexOf(base58) < 0) {
+    if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({
         selectedCryptidAccount: base58
       })
-      setCryptidExtAccounts(cryptidExtAccounts.concat([base58]))
+
+      // TODO: Allow for accessor without DID prefix.
+      const parentBase58 = parent?.did.replace(getDidPrefix(), '')
+      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, parent: parentBase58 }]))
     }
   }, [setCryptidExtAccounts])
 
   const removeCryptidAccount = useCallback((base58: string) => {
-    const idx = cryptidExtAccounts.indexOf(base58)
+    const idx = cryptidExtAccounts.map(x => x.account).indexOf(base58)
     if (idx >= 0) {
       setCryptidExtAccounts(cryptidExtAccounts.splice(idx, 1))
     }
@@ -261,16 +277,29 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
     // generative accounts + extAccounts
-    const allAccounts = accounts.map(a => a.address.toBase58()).concat(cryptidExtAccounts)
+    const allAccounts = accounts.map(a => a.address.toBase58())
 
+    // generated
     const promises = allAccounts.map(async (base58) => {
       const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
       await cryptidAccount.init()
       return cryptidAccount
     })
-
-
     const cryptidAccounts = await Promise.all(promises);
+
+    // TODO: This is not robust, since dependent accounts need to be loaded first.
+    for (const ext of cryptidExtAccounts) {
+      const parentAccount = cryptidAccounts.find(x => x.did === `${getDidPrefix()}${ext.parent}`)
+      let cryptidAccount;
+      if (parentAccount) {
+        cryptidAccount = parentAccount.as(`${getDidPrefix()}${ext.account}`)
+      } else {
+        cryptidAccount = new CryptidAccount(`${getDidPrefix()}${ext.account}`, defaultSigner, connection )
+      }
+      await cryptidAccount.init()
+      cryptidAccounts.push(cryptidAccount)
+    }
+
     if (cryptidAccounts.length > 0) {
       // Selected from cryptidSelector or fallback to first.
       const selected = cryptidAccounts.find(a => a.did === getDidPrefix() + cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]

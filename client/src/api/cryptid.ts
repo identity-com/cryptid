@@ -49,4 +49,6 @@ export interface Cryptid {
 
   as(did: string): Cryptid;
   additionalKeys(): Promise<PublicKey[]>;
+
+  updateSigner(signer: Signer): void;
 }
