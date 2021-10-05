@@ -7,38 +7,39 @@ import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
 import ListItemText from "@material-ui/core/ListItemText";
 import AddKeyDialog from "./AddKeyDialog";
 import { useCallback, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
+import { useSendTransaction } from "../../utils/notifications";
+import { refreshWalletPublicKeys } from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
   crytidAccount: CryptidAccount
 }
 
+type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
+
 export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
   const { enqueueSnackbar } = useSnackbar();
+  const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
 
 
-  const addKeyCallback = useCallback(async (address: string, alias: string) => {
+  const addKeyCallback = (address: string, alias: string) => {
     console.log(`Adding key ${address}`)
-    try {
-      const pk = new PublicKey(address)
-      await crytidAccount.addKey(pk, alias)
-      setAddKeyDialogOpen(false)
-    } catch (e) {
-      console.warn(e);
-      enqueueSnackbar(e.message, { variant: 'error' });
-    }
-
-    // success refresh the account.
-    // TODO: Debug update
-    console.log(JSON.stringify(crytidAccount.verificationMethods))
-
-  }, [crytidAccount]);
+    const pk = new PublicKey(address)
+    sendTransaction(crytidAccount.addKey(pk, alias), {
+      onSuccess: () => {
+        setAddKeyDialogOpen(false)
+        // success refresh the account.
+        // TODO: Debug update
+        console.log(JSON.stringify(crytidAccount.verificationMethods))
+      },
+    });
+  }
 
   const removeKeyCallback = useCallback(async (alias: string) => {
     await crytidAccount.removeKey(alias.replace('#',''))

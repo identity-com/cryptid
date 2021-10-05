@@ -131,6 +131,7 @@ export class CryptidAccount {
   removeController = async (did: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.removeController(did))
 
+  // Sollet Interface Wallet Functionality.
   transferToken = async (
     source,
     destination,
