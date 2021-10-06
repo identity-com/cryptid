@@ -49,4 +49,7 @@ export interface Cryptid {
 
   as(did: string): Cryptid;
   additionalKeys(): Promise<PublicKey[]>;
+
+  // TODO: Remove in future PR (lazy init the interface). Only selectedCryptidAccount has builder.
+  updateSigner(signer: Signer): void;
 }

@@ -49,4 +49,9 @@ export class ControlledCryptid extends AbstractCryptid {
     );
     return [wrappedTransaction];
   }
+
+  updateSigner(signer: Signer): void {
+    // TODO: or should we rather throw here? (e.g. don't update signers on controlled instances?
+    this.controllerCryptid.updateSigner(signer);
+  }
 }

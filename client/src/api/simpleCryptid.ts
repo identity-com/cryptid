@@ -28,4 +28,8 @@ export class SimpleCryptid extends AbstractCryptid {
     );
     return [wrappedTransaction];
   }
+
+  updateSigner(signer: Signer): void {
+    this._signer = signer;
+  }
 }

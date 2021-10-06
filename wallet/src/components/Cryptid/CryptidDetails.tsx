@@ -6,51 +6,61 @@ import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
 import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
 import ListItemText from "@material-ui/core/ListItemText";
 import AddKeyDialog from "./AddKeyDialog";
-import { useCallback, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { useCallback, useEffect, useState } from "react";
+import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
+import { useSendTransaction } from "../../utils/notifications";
+import { refreshWalletPublicKeys } from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
   crytidAccount: CryptidAccount
+  setSelectedCryptidAccount: (c: CryptidAccount) => void
+}
+
+type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
+
+// This is a hack because component will not understand prop change.
+const useForceUpdate = () => {
+  const [value, setValue] = useState(0); // integer state
+  return () => setValue(value => value + 1); // update the state to force render
 }
 
 export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
-  const { enqueueSnackbar } = useSnackbar();
+  const forceUpdate = useForceUpdate();
+  const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
 
+  useEffect(() => {}, [crytidAccount])
 
-  const addKeyCallback = useCallback(async (address: string, alias: string) => {
-    console.log(`Adding key ${address}`)
-    try {
-      const pk = new PublicKey(address)
-      await crytidAccount.addKey(pk, alias)
-      setAddKeyDialogOpen(false)
-    } catch (e) {
-      console.warn(e);
-      enqueueSnackbar(e.message, { variant: 'error' });
+  const onSuccessUpdate = (f?: () => void) => {
+    if (f) {
+      f();
     }
+    crytidAccount.updateDocument().then(forceUpdate)
+  }
 
-    // success refresh the account.
-    // TODO: Debug update
-    console.log(JSON.stringify(crytidAccount.verificationMethods))
+  const addKeyCallback = (address: string, alias: string) => {
+    const pk = new PublicKey(address)
+    sendTransaction(crytidAccount.addKey(pk, alias), {
+      onSuccess: () => onSuccessUpdate(() => setAddKeyDialogOpen(false))
+    });
+  }
 
-  }, [crytidAccount]);
+  const removeKeyCallback = (alias: string) => sendTransaction(crytidAccount.removeKey(alias.replace('#','')), {
+    onSuccess: () => onSuccessUpdate()
+  });
 
-  const removeKeyCallback = useCallback(async (alias: string) => {
-    await crytidAccount.removeKey(alias.replace('#',''))
-  }, [crytidAccount]);
+  const addControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.addController(controllerDID), {
+    onSuccess: () => onSuccessUpdate(() => setAddControllerDialogOpen(false))
+  });
 
-  const addControllerCallback = useCallback(async (controllerDID: string) => {
-    await crytidAccount.addController(controllerDID);
-  }, [crytidAccount]);
-
-  const removeControllerCallback = useCallback(async (controllerDID: string) => {
-    await crytidAccount.removeController(controllerDID);
-  }, [crytidAccount]);
+  const removeControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.removeController(controllerDID), {
+    onSuccess: () => onSuccessUpdate()
+  });
 
   return (
     <>
@@ -69,6 +79,11 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
         <Typography variant="h6">
           DID: {crytidAccount.did}
         </Typography>
+        { crytidAccount.isControlled &&
+          <Typography variant="h6">
+              controlled by DID: {crytidAccount.controlledBy}
+          </Typography>
+        }
         <CardContent>
           <Typography variant="h6">
             Keys:

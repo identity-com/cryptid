@@ -25,6 +25,8 @@ export class CryptidAccount {
   private cryptid: Cryptid;
   public address: PublicKey | null = null;
   public document: DIDDocument | null = null;
+  // Crypid Account parent if controlled
+  private parent: CryptidAccount | null;
 
   private updateDocWrapper = async (f: () => Promise<TransactionSignature>) => {
     const signature =  f()
@@ -32,13 +34,14 @@ export class CryptidAccount {
     return signature;
   }
 
-  constructor(did: string, signer: Signer, connection: Connection, crypid: Cryptid | null = null) {
+  constructor(did: string, signer: Signer, connection: Connection, parent: CryptidAccount | null = null) {
     this.did = did
     this.connection = connection
     this.signer = signer
+    this.parent = parent
 
-    if (crypid != null) {
-      this.cryptid = crypid
+    if (parent != null) {
+      this.cryptid = parent.cryptid.as(did)
     } else {
       this.cryptid = buildCryptid(did, signer, {
         connection,
@@ -57,7 +60,7 @@ export class CryptidAccount {
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
   as = (controllerDID: string): CryptidAccount => {
-    return new CryptidAccount(controllerDID, this.signer, this.connection, this.cryptid.as(controllerDID))
+    return new CryptidAccount(controllerDID, this.signer, this.connection, this)
   }
   
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
@@ -66,6 +69,22 @@ export class CryptidAccount {
   updateDocument = async () => {
     this.document = await this.cryptid.document()
     return this.document
+  }
+
+  get isControlled() {
+    return this.parent != null
+  }
+
+  get controlledBy() {
+    return this.parent != null ? this.parent.did : this.did
+  }
+
+  baseAccount = () => {
+    if (this.parent) {
+      return this.parent.baseAccount()
+    }
+
+    return this
   }
 
   get verificationMethods() {
@@ -84,15 +103,20 @@ export class CryptidAccount {
     return Array.isArray(this.document.controller) ? this.document.controller : [ this.document.controller ]
   }
 
+  containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
+
   get isInitialized() {
     return this.address !== null && this.document !== null
   }
 
   updateSigner(signer: Signer) {
     this.signer = signer
-    this.cryptid = buildCryptid(this.did, signer, {
-      connection: this.connection,
-    })
+    if (!this.isControlled) {
+      this.cryptid.updateSigner(signer)
+    }
+    // this.cryptid = buildCryptid(this.did, signer, {
+    //   connection: this.connection,
+    // })
   }
   
   activeSigningKey():PublicKey {
@@ -117,6 +141,7 @@ export class CryptidAccount {
   removeController = async (did: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.removeController(did))
 
+  // Sollet Interface Wallet Functionality.
   transferToken = async (
     source,
     destination,
@@ -250,7 +275,7 @@ interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | null;
   setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
-  addCryptidAccount: (b: string) => void
+  addCryptidAccount: (b: string, parent?: CryptidAccount) => void
   removeCryptidAccount: (b: string) => void
   getDidPrefix: () => string
 }
@@ -267,6 +292,12 @@ const CryptidContext = React.createContext<CryptidContextInterface>({
 interface CryptidSelectorInterface {
   selectedCryptidAccount: string | undefined
 }
+
+interface StoredCryptidAccount {
+  account: string
+  parent?: string
+}
+
 
 const DEFAULT_CRYPTID_SELECTOR = {
   selectedCryptidAccount: undefined
@@ -286,30 +317,33 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const connection = useConnection();
   const cluster = useCluster();
-  const { accounts }: { accounts: Account[] } = useWalletSelector();
+  const { accounts, setWalletSelector }: { accounts: Account[], setWalletSelector: any } = useWalletSelector();
 
   const [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
     'cryptidSelector',
     DEFAULT_CRYPTID_SELECTOR,
   );
 
-  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<string[]>(
-    'cryptidExtAccounts',
+  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<StoredCryptidAccount[]>(
+    'cryptidExternalAccounts',
     [],
   );
 
-  const addCryptidAccount = useCallback((base58: string) => {
-    if (cryptidExtAccounts.indexOf(base58) < 0) {
+  const addCryptidAccount = useCallback((base58: string, parent?: CryptidAccount) => {
+    if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({
         selectedCryptidAccount: base58
       })
-      setCryptidExtAccounts(cryptidExtAccounts.concat([base58]))
+
+      // TODO: Allow for accessor without DID prefix.
+      const parentBase58 = parent?.did.replace(getDidPrefix(), '')
+      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, parent: parentBase58 }]))
     }
   }, [setCryptidExtAccounts])
 
   const removeCryptidAccount = useCallback((base58: string) => {
-    const idx = cryptidExtAccounts.indexOf(base58)
+    const idx = cryptidExtAccounts.map(x => x.account).indexOf(base58)
     if (idx >= 0) {
       setCryptidExtAccounts(cryptidExtAccounts.splice(idx, 1))
     }
@@ -333,16 +367,29 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
     // generative accounts + extAccounts
-    const allAccounts = accounts.map(a => a.address.toBase58()).concat(cryptidExtAccounts)
+    const allAccounts = accounts.map(a => a.address.toBase58())
 
+    // generated
     const promises = allAccounts.map(async (base58) => {
       const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
       await cryptidAccount.init()
       return cryptidAccount
     })
-
-
     const cryptidAccounts = await Promise.all(promises);
+
+    // TODO: This is not robust, since dependent accounts need to be loaded first.
+    for (const ext of cryptidExtAccounts) {
+      const parentAccount = cryptidAccounts.find(x => x.did === `${getDidPrefix()}${ext.parent}`)
+      let cryptidAccount;
+      if (parentAccount) {
+        cryptidAccount = parentAccount.as(`${getDidPrefix()}${ext.account}`)
+      } else {
+        cryptidAccount = new CryptidAccount(`${getDidPrefix()}${ext.account}`, defaultSigner, connection )
+      }
+      await cryptidAccount.init()
+      cryptidAccounts.push(cryptidAccount)
+    }
+
     if (cryptidAccounts.length > 0) {
       // Selected from cryptidSelector or fallback to first.
       const selected = cryptidAccounts.find(a => a.did === getDidPrefix() + cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
@@ -365,9 +412,26 @@ export const CryptidProvider:FC = ({ children }) => {
     }
   }, [selectedCryptidAccount])
 
+  // Pre-select wallet if account changes.
   // update Signer of selectedcCyptidAccount whenever wallet changes.
   useEffect(() => {
     if (!wallet || !selectedCryptidAccount) { return }
+
+    const crypidBaseAccount = selectedCryptidAccount.baseAccount()
+
+    if (!crypidBaseAccount.containsKey(wallet.publicKey)) {
+      // try to find PK in accounts
+      console.log(`Key of wallet (${wallet.publicKey.toBase58()}) not in selectedCryptidAccount ${crypidBaseAccount.did}`)
+
+      for (const acc of accounts) {
+        if (crypidBaseAccount.containsKey(acc.address)) {
+          // switch to acc with matching key.
+          setWalletSelector(acc.selector)
+        }
+      }
+
+      return
+    }
 
     console.log(`Updating signer to ${wallet.publicKey}`)
     selectedCryptidAccount.updateSigner({
@@ -375,7 +439,7 @@ export const CryptidProvider:FC = ({ children }) => {
       sign: wallet.signTransaction
     })
 
-  }, [wallet, selectedCryptidAccount])
+  }, [selectedCryptidAccount])
 
 
 

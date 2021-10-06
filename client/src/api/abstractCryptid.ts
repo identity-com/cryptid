@@ -24,6 +24,8 @@ export abstract class AbstractCryptid implements Cryptid {
     };
   }
 
+  abstract updateSigner(signer: Signer): void;
+
   abstract as(did: string): Cryptid;
 
   document(): Promise<DIDDocument> {
