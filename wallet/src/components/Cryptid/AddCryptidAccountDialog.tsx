@@ -7,6 +7,9 @@ import TextField from '@material-ui/core/TextField';
 import DialogForm from "../DialogForm";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
+import FormGroup from "@material-ui/core/FormGroup";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -20,8 +23,10 @@ const useStyles = makeStyles((theme) => ({
 
 const DEFAULT_ADDRESS = ''
 
-export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefix }) {
+export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefix, currentAccount }) {
   const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [isControlled, setIsControlled] = useState(false);
+
   const classes = useStyles();
 
   return (
@@ -31,7 +36,7 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
         setAddress(DEFAULT_ADDRESS);
       }}
       onClose={onClose}
-      onSubmit={() => onAdd( address )}
+      onSubmit={() => onAdd( address, isControlled )}
       fullWidth
     >
       <DialogTitle>Add Cryptid Account</DialogTitle>
@@ -48,6 +53,22 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
             value={address}
             onChange={(e) => setAddress(e.target.value.trim())}
           />
+        </div>
+        <div>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isControlled}
+                  onChange={() => setIsControlled(!isControlled)}
+                />
+              }
+              label={`Controlled by`}
+            />
+          </FormGroup>
+          <Typography>
+            {currentAccount}
+          </Typography>
         </div>
       </DialogContent>
       <DialogActions>

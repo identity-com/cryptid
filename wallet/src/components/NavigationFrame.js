@@ -480,6 +480,7 @@ function AccountListItem({ account, classes, setAnchorEl, setWalletSelector }) {
         setWalletSelector(account.selector);
       }}
       selected={account.isSelected}
+      disabled={true}
       component="div"
     >
       <ListItemIcon className={classes.menuItemIcon}>

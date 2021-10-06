@@ -29,10 +29,16 @@ export const CryptidSelector = () => {
 
   const classes = useStyles();
 
-  const onAdd = useCallback(async (address) => {
-    addCryptidAccount(address)
+  const onAdd = useCallback(async (address: string, isControlled: boolean) => {
+
+    let parent;
+    if (isControlled && selectedCryptidAccount) {
+      parent = selectedCryptidAccount
+    }
+
+    addCryptidAccount(address, parent)
     setCryptidAccountDialogOpen(false)
-  },[])
+  },[selectedCryptidAccount, addCryptidAccount])
 
   if (cryptidAccounts.length === 0) {
     return null;
@@ -44,6 +50,7 @@ export const CryptidSelector = () => {
         onClose={() => setCryptidAccountDialogOpen(false)}
         onAdd={onAdd}
         didPrefix={getDidPrefix()}
+        currentAccount={selectedCryptidAccount?.did}
       />
       <Hidden xsDown>
         <Button
