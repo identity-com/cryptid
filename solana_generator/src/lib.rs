@@ -9,7 +9,6 @@
 extern crate self as solana_generator;
 
 use array_init::array_init;
-use borsh::BorshDeserialize;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::program::{invoke as solana_invoke, invoke_signed as solana_invoke_signed};
 
