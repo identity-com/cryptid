@@ -29,7 +29,6 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        msg!("Got here 1");
         let debug = data.flags.contains(DirectExecuteFlags::DEBUG);
         if debug {
             accounts.print_keys();
