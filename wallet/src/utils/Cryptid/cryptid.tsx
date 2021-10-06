@@ -79,6 +79,14 @@ export class CryptidAccount {
     return this.parent != null ? this.parent.did : this.did
   }
 
+  baseAccount = () => {
+    if (this.parent) {
+      return this.parent.baseAccount()
+    }
+
+    return this
+  }
+
   get verificationMethods() {
     if (!this.document || !this.document.verificationMethod) {
       return []
@@ -326,12 +334,14 @@ export const CryptidProvider:FC = ({ children }) => {
   useEffect(() => {
     if (!wallet || !selectedCryptidAccount) { return }
 
-    if (!selectedCryptidAccount.containsKey(wallet.publicKey)) {
+    const crypidBaseAccount = selectedCryptidAccount.baseAccount()
+
+    if (!crypidBaseAccount.containsKey(wallet.publicKey)) {
       // try to find PK in accounts
-      console.log(`Key of wallet (${wallet.publicKey.toBase58()}) not in selectedCryptidAccount ${selectedCryptidAccount.did}`)
+      console.log(`Key of wallet (${wallet.publicKey.toBase58()}) not in selectedCryptidAccount ${crypidBaseAccount.did}`)
 
       for (const acc of accounts) {
-        if (selectedCryptidAccount.containsKey(acc.address)) {
+        if (crypidBaseAccount.containsKey(acc.address)) {
           // switch to acc with matching key.
           setWalletSelector(acc.selector)
         }
