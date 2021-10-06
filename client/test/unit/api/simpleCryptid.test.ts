@@ -212,4 +212,11 @@ describe('SimpleCryptid', () => {
     });
   });
 
+  context('signer', () => {
+    it('should update signer', async () => {
+      const newKeypair = makeKeypair();
+      cryptid.updateSigner(normalizeSigner(newKeypair));
+      expect(cryptid.signer.publicKey).to.deep.equal(newKeypair.publicKey);
+    });
+  });
 });

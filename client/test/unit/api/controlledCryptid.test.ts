@@ -82,4 +82,12 @@ describe('SimpleCryptid', () => {
     });
   });
 
+  context('signer', () => {
+    it('should update signer of base cryptid', async () => {
+      const newKeypair = makeKeypair();
+      controlledCryptid.updateSigner(normalizeSigner(newKeypair));
+      expect(cryptid.signer.publicKey).to.deep.equal(newKeypair.publicKey);
+    });
+  });
+
 });
