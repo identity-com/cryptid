@@ -17,7 +17,6 @@ import {
   transferChecked,
 } from './instructions';
 import { ACCOUNT_LAYOUT, getOwnedAccountsFilters, MINT_LAYOUT } from './data';
-import {signAndSendCryptidTransaction} from "../Cryptid/cryptid";
 
 export async function getOwnedTokenAccounts(connection, publicKey) {
   let filters = getOwnedAccountsFilters(publicKey);
@@ -49,17 +48,15 @@ export async function signAndSendTransaction(
   transaction.recentBlockhash = (
     await connection.getRecentBlockhash('max')
   ).blockhash;
-  transaction.setSigners(
-    // fee payed by the wallet owner
-    wallet.publicKey,
-    ...signers.map((s) => s.publicKey),
-  );
+
+
+
+  transaction = await wallet.signTransaction(transaction);
 
   if (signers.length > 0) {
     transaction.partialSign(...signers);
   }
 
-  transaction = await wallet.signTransaction(transaction);
   const rawTransaction = transaction.serialize();
   return await connection.sendRawTransaction(rawTransaction, {
     skipPreflight,
@@ -85,14 +82,11 @@ export async function createAndInitializeMint({
   amount, // Number of tokens to issue
   decimals,
   initialAccount, // Account to hold newly issued tokens, if amount > 0
-  transactionCallback,
-  onSuccess = () => {},
-  onError = () => {},
 }) {
   let transaction = new Transaction();
   transaction.add(
     SystemProgram.createAccount({
-      fromPubkey: owner.address,
+      fromPubkey: owner.publicKey,
       newAccountPubkey: mint.publicKey,
       lamports: await connection.getMinimumBalanceForRentExemption(
         MINT_LAYOUT.span,
@@ -105,23 +99,14 @@ export async function createAndInitializeMint({
     initializeMint({
       mint: mint.publicKey,
       decimals,
-      mintAuthority: owner.address,
+      mintAuthority: owner.publicKey,
     }),
   );
   let signers = [mint];
-  let success = false;
-  await transactionCallback(
-      signAndSendCryptidTransaction(connection, transaction, owner, signers),
-      {
-        onSuccess: () => success = true,
-        onError: () => success = false,
-      },
-  );
-  if (success && amount > 0) {
-    const accountTransaction = new Transaction();
-    accountTransaction.add(
+  if (amount > 0) {
+    transaction.add(
       SystemProgram.createAccount({
-        fromPubkey: owner.address,
+        fromPubkey: owner.publicKey,
         newAccountPubkey: initialAccount.publicKey,
         lamports: await connection.getMinimumBalanceForRentExemption(
           ACCOUNT_LAYOUT.span,
@@ -130,24 +115,25 @@ export async function createAndInitializeMint({
         programId: TOKEN_PROGRAM_ID,
       }),
     );
-    signers = [initialAccount];
-    accountTransaction.add(
+    signers.push(initialAccount);
+    transaction.add(
       initializeAccount({
         account: initialAccount.publicKey,
         mint: mint.publicKey,
-        owner: owner.address,
+        owner: owner.publicKey,
       }),
     );
-    accountTransaction.add(
+    transaction.add(
       mintTo({
         mint: mint.publicKey,
         destination: initialAccount.publicKey,
         amount,
-        mintAuthority: owner.address,
+        mintAuthority: owner.publicKey,
       }),
     );
-    await transactionCallback(signAndSendCryptidTransaction(connection, accountTransaction, owner, signers), { onSuccess, onError });
   }
+
+  return await signAndSendTransaction(connection, transaction, owner, signers);
 }
 
 export async function createAndInitializeTokenAccount({

@@ -63,16 +63,20 @@ export default function DebugButtons() {
       `TEST${mint.publicKey.toBase58().slice(0, 2)}`,
     );
     console.log("account address: ", selectedCryptidAccount.address.toBase58());
-    createAndInitializeMint({
+    sendTransaction(
+      createAndInitializeMint({
         connection: selectedCryptidAccount.connection,
-        owner: selectedCryptidAccount,
+        owner: {
+          publicKey: selectedCryptidAccount.address,
+          signTransaction: selectedCryptidAccount.signTransaction
+        },
         mint,
         amount: 1000,
         decimals: 2,
-        initialAccount: Keypair.generate(),
-        transactionCallback: sendTransaction,
-        onSuccess: () => refreshWalletPublicKeys(selectedCryptidAccount),
-    });
+        initialAccount: new Account(),
+      }),
+      { onSuccess: () => refreshWalletPublicKeys(selectedCryptidAccount) },
+    );
   }
 
   const noSol = amount === 0;

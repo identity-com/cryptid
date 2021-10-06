@@ -225,40 +225,6 @@ export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [Pub
   return [publicKeys, loaded]
 }
 
-export async function signAndSendCryptidTransaction(
-    connection: Connection,
-    transaction: Transaction,
-    cryptid: CryptidAccount,
-    signers: SolanaSigner[],
-    skipPreflight = false,
-) {
-  transaction.recentBlockhash = (
-      await connection.getRecentBlockhash('max')
-  ).blockhash;
-
-  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
-    ...key,
-    pubkey: key.pubkey.toBase58(),
-  }))));
-  console.log(signers.map((signer) => signer.publicKey.toBase58()));
-  console.log(await connection.getEpochInfo())
-
-  transaction = await cryptid.signTransaction(transaction);
-  if (signers.length > 0) {
-    transaction.partialSign(...signers);
-  }
-  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
-    ...key,
-    pubkey: key.pubkey.toBase58(),
-  }))));
-  console.log(signers.map((signer) => signer.publicKey.toBase58()));
-  const rawTransaction = transaction.serialize();
-  return await connection.sendRawTransaction(rawTransaction, {
-    skipPreflight,
-    preflightCommitment: 'single',
-  });
-}
-
 export type TokenAccountInfo = {
   data: Buffer,
   executable: boolean,
