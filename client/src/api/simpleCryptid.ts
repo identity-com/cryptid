@@ -32,5 +32,4 @@ export class SimpleCryptid extends AbstractCryptid {
   updateSigner(signer: Signer): void {
     this._signer = signer;
   }
-
 }

@@ -260,10 +260,6 @@ export const CryptidProvider:FC = ({ children }) => {
   const [selectedCryptidAccount, setSelectedCryptidAccount] = useState<CryptidAccount | null>(null);
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
 
-  const addControlledCryptidAccounts = useCallback((account) => {
-
-  }, [])
-
   // TODO: Is it ok to pass an invalid Signer for the initial Account creation?
   const defaultSigner = {
     publicKey: wallet?.publicKey,
