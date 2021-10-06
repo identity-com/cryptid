@@ -62,22 +62,24 @@ export const hasAlias = (alias:string) => (component: DIDComponent | string):boo
 export const findVerificationMethodWithAlias = (document: Partial<DIDDocument>, alias:string):VerificationMethod|undefined =>
   document.verificationMethod?.find(hasAlias(alias));
 
-// filter default keys from capability invocation and verification method
-// if they are the only ones, as they are added by the client by default, and do not need
-// to be stored on chain
+// filter the default key from capability invocation and verification method
+// If it is the only one in the capabilityInvocation array, it is inferred by default by the program,
+// and therefore does not need to be stored on chain.
+// It never needs to be stored on chain in the verificationMethod array, as it is always inferred
 export const sanitizeDefaultKeys = (document: Partial<DIDDocument>):void => {
-  if (document.verificationMethod?.length === 1 && hasAlias('default')(document.verificationMethod[0])) {
-    delete document.verificationMethod;
+  // if verificationMethod contains the default key, remove it (it is always added by default)
+  if (document.verificationMethod && findVerificationMethodWithAlias(document, 'default')) {
+    document.verificationMethod = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.verificationMethod);
+
+    // if this now means the verification method array is empty, remove the array
+    if (document.verificationMethod.length === 0) {
+      delete document.verificationMethod;
+    }
   }
+
   if (document.capabilityInvocation?.length === 1 && hasAlias('default')(document.capabilityInvocation[0])) {
     delete document.capabilityInvocation;
   }
 
-  if (document.verificationMethod && findVerificationMethodWithAlias(document, 'default')) {
-    document.verificationMethod = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.verificationMethod);
-  }
 
-  if (document.capabilityInvocation) {
-    document.capabilityInvocation = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.capabilityInvocation);
-  }
 }
