@@ -95,6 +95,8 @@ export class CryptidAccount {
     return Array.isArray(this.document.controller) ? this.document.controller : [ this.document.controller ]
   }
 
+  containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
+
   get isInitialized() {
     return this.address !== null && this.document !== null
   }
@@ -224,7 +226,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const connection = useConnection();
   const cluster = useCluster();
-  const { accounts }: { accounts: Account[] } = useWalletSelector();
+  const { accounts, setWalletSelector }: { accounts: Account[], setWalletSelector: any } = useWalletSelector();
 
   const [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
     'cryptidSelector',
@@ -319,9 +321,24 @@ export const CryptidProvider:FC = ({ children }) => {
     }
   }, [selectedCryptidAccount])
 
+  // Pre-select wallet if account changes.
   // update Signer of selectedcCyptidAccount whenever wallet changes.
   useEffect(() => {
     if (!wallet || !selectedCryptidAccount) { return }
+
+    if (!selectedCryptidAccount.containsKey(wallet.publicKey)) {
+      // try to find PK in accounts
+      console.log(`Key of wallet (${wallet.publicKey.toBase58()}) not in selectedCryptidAccount ${selectedCryptidAccount.did}`)
+
+      for (const acc of accounts) {
+        if (selectedCryptidAccount.containsKey(acc.address)) {
+          // switch to acc with matching key.
+          setWalletSelector(acc.selector)
+        }
+      }
+
+      return
+    }
 
     console.log(`Updating signer to ${wallet.publicKey}`)
     selectedCryptidAccount.updateSigner({
@@ -329,7 +346,7 @@ export const CryptidProvider:FC = ({ children }) => {
       sign: wallet.signTransaction
     })
 
-  }, [wallet, selectedCryptidAccount])
+  }, [selectedCryptidAccount])
 
 
 
