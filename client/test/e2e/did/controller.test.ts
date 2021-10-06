@@ -171,31 +171,18 @@ describe('DID Controller operations', function () {
       // add a controller to upgrade (anchor) the did
       await cryptid.addKey(key_A, 'keyA')
       await cryptid.addController(controller_A);
-
-      balances = await new Balances(connection).register(
-        doaSigner,
-        key.publicKey
-      );
     });
 
     it('should remove the added controller and add it again', async () => {
       await cryptid.removeController(controller_A);
 
-      await balances.recordAfter();
-
       const document = await cryptid.document();
+
       expectDocumentNotToIncludeController(document, controller_A);
       expect(document.verificationMethod).to.have.lengthOf(2) // default key + keyA
-
-      // cryptid account paid nothing
-      expect(balances.for(doaSigner)).to.equal(0);
-      // signer paid fee
-      expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
 
       // add controller again
       await cryptid.addController(controller_A);
     });
   });
-
-
 });
