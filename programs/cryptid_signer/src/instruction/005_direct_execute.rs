@@ -156,21 +156,20 @@ impl Instruction for DirectExecute {
             }
         }
         // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
-        let instruction_accounts = arg
-            .instruction_accounts
-            .into_iter()
-            .enumerate()
-            .map(|(index, value)| {
-                let meta = instruction_accounts
-                    .get(&(index as u8))
-                    .expect("Could not get meta");
-                SolanaAccountMeta {
-                    pubkey: value,
-                    is_signer: meta.contains(AccountMeta::IS_SIGNER),
-                    is_writable: meta.contains(AccountMeta::IS_WRITABLE),
-                }
-            })
-            .collect::<Vec<_>>();
+        let instruction_accounts =
+            arg.instruction_accounts
+                .into_iter()
+                .enumerate()
+                .map(|(index, value)| {
+                    let meta = instruction_accounts
+                        .get(&(index as u8))
+                        .expect("Could not get meta");
+                    SolanaAccountMeta {
+                        pubkey: value,
+                        is_signer: meta.contains(AccountMeta::IS_SIGNER),
+                        is_writable: meta.contains(AccountMeta::IS_WRITABLE),
+                    }
+                });
 
         let data = DirectExecuteData {
             signers_extras: arg
@@ -192,7 +191,7 @@ impl Instruction for DirectExecute {
                 .map(SigningKeyBuild::to_metas)
                 .flatten(),
         );
-        accounts.extend(instruction_accounts.into_iter());
+        accounts.extend(instruction_accounts);
         Ok((accounts, data))
     }
 }
