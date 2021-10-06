@@ -73,7 +73,12 @@ impl Instruction for DirectExecute {
             accounts.signing_keys.iter(),
         )?;
 
-        let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
+        let instruction_accounts_ref = accounts.instruction_accounts.iter().collect::<Vec<_>>();
+        let instruction_account_keys = accounts
+            .instruction_accounts
+            .iter()
+            .map(|account| account.key)
+            .collect::<Vec<_>>();
         let signer_seeds = signer_generator.seeds_to_bytes(Some(&signer_nonce));
 
         msg!("Executing instructions");
@@ -84,7 +89,7 @@ impl Instruction for DirectExecute {
                 .accounts
                 .iter()
                 .cloned()
-                .map(SolanaAccountMeta::from)
+                .map(|meta| meta.into_solana_account_meta(&instruction_account_keys))
                 .collect::<Vec<_>>();
 
             msg!("Remaining compute units for sub-instruction `{}`", index);
@@ -95,7 +100,7 @@ impl Instruction for DirectExecute {
                 msg!("Invoking signed");
                 invoke_signed_variable_size(
                     &SolanaInstruction {
-                        program_id: instruction.program_id,
+                        program_id: instruction_account_keys[instruction.program_id as usize],
                         accounts: metas,
                         data: instruction.data,
                     },
@@ -106,7 +111,7 @@ impl Instruction for DirectExecute {
                 msg!("Invoking without signature");
                 invoke_variable_size(
                     &SolanaInstruction {
-                        program_id: instruction.program_id,
+                        program_id: instruction_account_keys[instruction.program_id as usize],
                         accounts: metas,
                         data: instruction.data,
                     },
@@ -138,7 +143,7 @@ impl Instruction for DirectExecute {
                 .entry(instruction.program_id)
                 .or_insert_with(AccountMeta::empty); // No need to take the strongest as program has both false
             for account in instruction.accounts.iter() {
-                let meta_value = if account.key == signer_key {
+                let meta_value = if arg.instruction_accounts[account.key as usize] == signer_key {
                     // If the account is the signer we don't want to sign it ourselves, the program will do that
                     account.meta & AccountMeta::IS_WRITABLE
                 } else {
@@ -152,12 +157,18 @@ impl Instruction for DirectExecute {
         }
         // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
         let instruction_accounts =
-            instruction_accounts
+            arg.instruction_accounts
                 .into_iter()
-                .map(|(pubkey, value)| SolanaAccountMeta {
-                    pubkey,
-                    is_signer: value.contains(AccountMeta::IS_SIGNER),
-                    is_writable: value.contains(AccountMeta::IS_WRITABLE),
+                .enumerate()
+                .map(|(index, value)| {
+                    let meta = instruction_accounts
+                        .get(&(index as u8))
+                        .expect("Could not get meta");
+                    SolanaAccountMeta {
+                        pubkey: value,
+                        is_signer: meta.contains(AccountMeta::IS_SIGNER),
+                        is_writable: meta.contains(AccountMeta::IS_WRITABLE),
+                    }
                 });
 
         let data = DirectExecuteData {
@@ -247,6 +258,8 @@ pub struct DirectExecuteBuild {
     pub did_program: Pubkey,
     /// The signing keys for this transaction
     pub signing_keys: Vec<SigningKeyBuild>,
+    /// The list of instruction accounts
+    pub instruction_accounts: Vec<Pubkey>,
     /// The instructions to execute
     pub instructions: Vec<InstructionData>,
     /// Additional flags
