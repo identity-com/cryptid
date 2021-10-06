@@ -161,4 +161,28 @@ describe('DID Controller operations', function () {
       expect(document.verificationMethod).to.have.lengthOf(2) // default and key2
     });
   });
+
+  context('removeController with existing key', () => {
+    const key_A = Keypair.generate().publicKey
+    const controller_A =
+      'did:sol:localnet:' + key_A.toBase58()
+
+    beforeEach(async () => {
+      // add a controller to upgrade (anchor) the did
+      await cryptid.addKey(key_A, 'keyA')
+      await cryptid.addController(controller_A);
+    });
+
+    it('should remove the added controller and add it again', async () => {
+      await cryptid.removeController(controller_A);
+
+      const document = await cryptid.document();
+
+      expectDocumentNotToIncludeController(document, controller_A);
+      expect(document.verificationMethod).to.have.lengthOf(2) // default key + keyA
+
+      // add controller again
+      await cryptid.addController(controller_A);
+    });
+  });
 });
