@@ -109,17 +109,8 @@ export async function createAndInitializeMint({
     }),
   );
   let signers = [mint];
-  let success = false;
-  await transactionCallback(
-      signAndSendCryptidTransaction(connection, transaction, owner, signers),
-      {
-        onSuccess: () => success = true,
-        onError: () => success = false,
-      },
-  );
-  if (success && amount > 0) {
-    const accountTransaction = new Transaction();
-    accountTransaction.add(
+  if (amount > 0) {
+    transaction.add(
       SystemProgram.createAccount({
         fromPubkey: owner.address,
         newAccountPubkey: initialAccount.publicKey,
@@ -130,15 +121,15 @@ export async function createAndInitializeMint({
         programId: TOKEN_PROGRAM_ID,
       }),
     );
-    signers = [initialAccount];
-    accountTransaction.add(
+    signers.push(initialAccount);
+    transaction.add(
       initializeAccount({
         account: initialAccount.publicKey,
         mint: mint.publicKey,
         owner: owner.address,
       }),
     );
-    accountTransaction.add(
+    transaction.add(
       mintTo({
         mint: mint.publicKey,
         destination: initialAccount.publicKey,
@@ -146,8 +137,8 @@ export async function createAndInitializeMint({
         mintAuthority: owner.address,
       }),
     );
-    await transactionCallback(signAndSendCryptidTransaction(connection, accountTransaction, owner, signers), { onSuccess, onError });
   }
+  await transactionCallback(signAndSendCryptidTransaction(connection, transaction, owner, signers), { onSuccess, onError });
 }
 
 export async function createAndInitializeTokenAccount({

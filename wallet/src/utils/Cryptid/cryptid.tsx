@@ -8,7 +8,14 @@
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionSignature,
+  Signer as SolanaSigner,
+  Keypair
+} from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
@@ -211,22 +218,14 @@ export async function signAndSendCryptidTransaction(
       await connection.getRecentBlockhash('max')
   ).blockhash;
 
-  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
-    ...key,
-    pubkey: key.pubkey.toBase58(),
-  }))));
-  console.log(signers.map((signer) => signer.publicKey.toBase58()));
-  console.log(await connection.getEpochInfo())
-
+  transaction.feePayer = Keypair.generate().publicKey;
+  console.log(`Before transaction message size: ${transaction.serializeMessage().length}`);
   transaction = await cryptid.signTransaction(transaction);
+  console.log(`After transaction message size: ${transaction.serializeMessage().length}`);
   if (signers.length > 0) {
     transaction.partialSign(...signers);
   }
-  console.log(transaction.instructions.map((instruction) => instruction.keys.map((key) => ({
-    ...key,
-    pubkey: key.pubkey.toBase58(),
-  }))));
-  console.log(signers.map((signer) => signer.publicKey.toBase58()));
+  console.log(JSON.stringify(transaction.instructions[0].data));
   const rawTransaction = transaction.serialize();
   return await connection.sendRawTransaction(rawTransaction, {
     skipPreflight,

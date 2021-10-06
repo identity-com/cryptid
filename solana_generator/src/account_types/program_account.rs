@@ -76,7 +76,15 @@ where
             .into());
         }
 
-        let data = T::deserialize(&mut account_data)?;
+        let data = match T::deserialize(&mut account_data) {
+            Ok(data) => data,
+            Err(_) => {
+                return Err(GeneratorError::CouldNotDeserialize {
+                    what: format!("account: `{}`", info.key),
+                }
+                .into())
+            }
+        };
         drop(account_data_ref);
         Ok(Self { info, data })
     }

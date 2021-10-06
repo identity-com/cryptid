@@ -29,6 +29,7 @@ impl Instruction for DirectExecute {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
+        msg!("Got here 1");
         let debug = data.flags.contains(DirectExecuteFlags::DEBUG);
         if debug {
             accounts.print_keys();
@@ -73,7 +74,12 @@ impl Instruction for DirectExecute {
             accounts.signing_keys.iter(),
         )?;
 
-        let instruction_accounts_ref = accounts.instruction_accounts.0.iter().collect::<Vec<_>>();
+        let instruction_accounts_ref = accounts.instruction_accounts.iter().collect::<Vec<_>>();
+        let instruction_account_keys = accounts
+            .instruction_accounts
+            .iter()
+            .map(|account| account.key)
+            .collect::<Vec<_>>();
         let signer_seeds = signer_generator.seeds_to_bytes(Some(&signer_nonce));
 
         msg!("Executing instructions");
@@ -84,7 +90,7 @@ impl Instruction for DirectExecute {
                 .accounts
                 .iter()
                 .cloned()
-                .map(SolanaAccountMeta::from)
+                .map(|meta| meta.into_solana_account_meta(&instruction_account_keys))
                 .collect::<Vec<_>>();
 
             msg!("Remaining compute units for sub-instruction `{}`", index);
@@ -95,7 +101,7 @@ impl Instruction for DirectExecute {
                 msg!("Invoking signed");
                 invoke_signed_variable_size(
                     &SolanaInstruction {
-                        program_id: instruction.program_id,
+                        program_id: instruction_account_keys[instruction.program_id as usize],
                         accounts: metas,
                         data: instruction.data,
                     },
@@ -106,7 +112,7 @@ impl Instruction for DirectExecute {
                 msg!("Invoking without signature");
                 invoke_variable_size(
                     &SolanaInstruction {
-                        program_id: instruction.program_id,
+                        program_id: instruction_account_keys[instruction.program_id as usize],
                         accounts: metas,
                         data: instruction.data,
                     },
@@ -138,7 +144,7 @@ impl Instruction for DirectExecute {
                 .entry(instruction.program_id)
                 .or_insert_with(AccountMeta::empty); // No need to take the strongest as program has both false
             for account in instruction.accounts.iter() {
-                let meta_value = if account.key == signer_key {
+                let meta_value = if arg.instruction_accounts[account.key as usize] == signer_key {
                     // If the account is the signer we don't want to sign it ourselves, the program will do that
                     account.meta & AccountMeta::IS_WRITABLE
                 } else {
@@ -151,14 +157,21 @@ impl Instruction for DirectExecute {
             }
         }
         // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
-        let instruction_accounts =
-            instruction_accounts
-                .into_iter()
-                .map(|(pubkey, value)| SolanaAccountMeta {
-                    pubkey,
-                    is_signer: value.contains(AccountMeta::IS_SIGNER),
-                    is_writable: value.contains(AccountMeta::IS_WRITABLE),
-                });
+        let instruction_accounts = arg
+            .instruction_accounts
+            .into_iter()
+            .enumerate()
+            .map(|(index, value)| {
+                let meta = instruction_accounts
+                    .get(&(index as u8))
+                    .expect("Could not get meta");
+                SolanaAccountMeta {
+                    pubkey: value,
+                    is_signer: meta.contains(AccountMeta::IS_SIGNER),
+                    is_writable: meta.contains(AccountMeta::IS_WRITABLE),
+                }
+            })
+            .collect::<Vec<_>>();
 
         let data = DirectExecuteData {
             signers_extras: arg
@@ -180,7 +193,7 @@ impl Instruction for DirectExecute {
                 .map(SigningKeyBuild::to_metas)
                 .flatten(),
         );
-        accounts.extend(instruction_accounts);
+        accounts.extend(instruction_accounts.into_iter());
         Ok((accounts, data))
     }
 }
@@ -236,6 +249,28 @@ pub struct DirectExecuteData {
     pub flags: DirectExecuteFlags,
 }
 
+#[test]
+fn data_test() {
+    let mut data: &[u8] = &[
+        5, 1, 0, 0, 0, 0, 5, 0, 0, 0, 0, 2, 0, 0, 0, 1, 3, 2, 3, 52, 0, 0, 0, 0, 0, 0, 0, 96, 77,
+        22, 0, 0, 0, 0, 0, 82, 0, 0, 0, 0, 0, 0, 0, 6, 221, 246, 225, 215, 101, 161, 147, 217, 203,
+        225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126,
+        255, 0, 169, 3, 2, 0, 0, 0, 2, 2, 4, 0, 67, 0, 0, 0, 0, 2, 7, 188, 61, 250, 72, 117, 227,
+        181, 19, 167, 130, 251, 228, 61, 183, 5, 1, 213, 195, 50, 223, 59, 145, 106, 53, 62, 173,
+        205, 176, 149, 114, 121, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 3, 5, 3, 52, 0, 0, 0, 0, 0, 0, 0, 240,
+        29, 31, 0, 0, 0, 0, 0, 165, 0, 0, 0, 0, 0, 0, 0, 6, 221, 246, 225, 215, 101, 161, 147, 217,
+        203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133,
+        126, 255, 0, 169, 3, 4, 0, 0, 0, 5, 2, 2, 0, 1, 0, 4, 0, 1, 0, 0, 0, 1, 3, 3, 0, 0, 0, 2,
+        2, 5, 2, 1, 1, 9, 0, 0, 0, 7, 232, 3, 0, 0, 0, 0, 0, 0, 1,
+    ];
+    let data = &mut data;
+    let discriminant = solana_generator::Take::take_single(data);
+    println!("discriminant: {:?}", discriminant);
+    let data: DirectExecuteData = BorshDeserialize::try_from_slice(data).unwrap();
+    println!("data: {:#?}", data);
+}
+
 /// The build argument for [`DirectExecute`]
 #[derive(Debug)]
 pub struct DirectExecuteBuild {
@@ -247,6 +282,8 @@ pub struct DirectExecuteBuild {
     pub did_program: Pubkey,
     /// The signing keys for this transaction
     pub signing_keys: Vec<SigningKeyBuild>,
+    /// The list of instruction accounts
+    pub instruction_accounts: Vec<Pubkey>,
     /// The instructions to execute
     pub instructions: Vec<InstructionData>,
     /// Additional flags

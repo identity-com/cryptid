@@ -20,7 +20,9 @@ use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::{Transaction, TransactionError};
 use solana_sdk::transport::TransportError;
 use std::array::IntoIter;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
+use std::iter::once;
 use test_utils::start_tests;
 
 #[tokio::test]
@@ -90,13 +92,38 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
     )
     .expect("Could not create dummy instruction 3");
 
-    let instruction_data =
-        IntoIter::new([dummy_instruction1, dummy_instruction2, dummy_instruction3])
-            .map(InstructionData::from)
-            .collect();
+    let instructions = [dummy_instruction1, dummy_instruction2, dummy_instruction3];
+    let instruction_accounts = instructions
+        .iter()
+        .map(|instruction| {
+            instruction
+                .accounts
+                .iter()
+                .map(|account| account.pubkey)
+                .chain(once(instruction.program_id))
+        })
+        .flatten()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let instruction_map = instruction_accounts
+        .iter()
+        .enumerate()
+        .map(|(index, account)| (*account, index as u8))
+        .collect::<HashMap<_, _>>();
+
+    let instruction_data = IntoIter::new(instructions)
+        .map(|instruction| InstructionData::from_instruction(instruction, &instruction_map))
+        .collect::<Vec<_>>();
+
     trace!(
         target: LOG_TARGET,
-        "instruction_data: {:?}",
+        "instruction_accounts: {:#?}",
+        instruction_accounts
+    );
+    trace!(
+        target: LOG_TARGET,
+        "instruction_data: {:#?}",
         instruction_data
     );
 
@@ -108,6 +135,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
             signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), true),
             extra_accounts: vec![],
         }],
+        instruction_accounts,
         instructions: instruction_data,
         flags: DirectExecuteFlags::DEBUG,
     };
@@ -169,9 +197,29 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
     )
     .expect("Could not create dummy instruction 1");
 
-    let instruction_data = IntoIter::new([dummy_instruction1])
-        .map(InstructionData::from)
-        .collect();
+    let instructions = [dummy_instruction1];
+    let instruction_accounts = instructions
+        .iter()
+        .map(|instruction| {
+            instruction
+                .accounts
+                .iter()
+                .map(|account| account.pubkey)
+                .chain(once(instruction.program_id))
+        })
+        .flatten()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let instruction_map = instruction_accounts
+        .iter()
+        .enumerate()
+        .map(|(index, account)| (*account, index as u8))
+        .collect::<HashMap<_, _>>();
+
+    let instruction_data = IntoIter::new(instructions)
+        .map(|instruction| InstructionData::from_instruction(instruction, &instruction_map))
+        .collect::<Vec<_>>();
     let direct_execute_data = DirectExecuteBuild {
         doa,
         did: SolanaAccountMeta::new_readonly(did_pda, false),
@@ -180,6 +228,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
             signing_key: SolanaAccountMeta::new_readonly(did.pubkey(), false),
             extra_accounts: vec![],
         }],
+        instruction_accounts,
         instructions: instruction_data,
         flags: DirectExecuteFlags::DEBUG,
     };

@@ -6,6 +6,7 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use solana_generator::{
     Account, GeneratorResult, Pubkey, SolanaAccountMeta, SolanaInstruction, UnixTimestamp,
 };
+use std::collections::HashMap;
 
 /// The data for an on-chain DOA
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
@@ -77,35 +78,44 @@ pub struct TransactionAccount {
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct InstructionData {
     /// The program to execute
-    pub program_id: Pubkey,
+    pub program_id: u8,
     /// The accounts to send to the program
     pub accounts: Vec<TransactionAccountMeta>,
     /// The data for the instruction
     pub data: Vec<u8>,
 }
-impl From<SolanaInstruction> for InstructionData {
-    fn from(from: SolanaInstruction) -> Self {
+impl InstructionData {
+    /// Creates an [`InstructionData`] from a given [`SolanaInstruction`]
+    pub fn from_instruction(
+        instruction: SolanaInstruction,
+        accounts: &HashMap<Pubkey, u8>,
+    ) -> Self {
         Self {
-            program_id: from.program_id,
-            accounts: from
+            program_id: *accounts.get(&instruction.program_id).unwrap_or_else(|| {
+                panic!(
+                    "Could not find program `{}` in accounts",
+                    instruction.program_id
+                )
+            }),
+            accounts: instruction
                 .accounts
                 .into_iter()
-                .map(TransactionAccountMeta::from)
+                .map(|meta| TransactionAccountMeta::from_solana_account_meta(meta, accounts))
                 .collect(),
-            data: from.data,
+            data: instruction.data,
         }
     }
-}
-impl From<InstructionData> for SolanaInstruction {
-    fn from(from: InstructionData) -> Self {
-        Self {
-            program_id: from.program_id,
-            accounts: from
+
+    /// Turns `self` into a [`SolanaInstruction`]
+    pub fn into_instruction(self, accounts: &[Pubkey]) -> SolanaInstruction {
+        SolanaInstruction {
+            program_id: accounts[self.program_id as usize],
+            accounts: self
                 .accounts
                 .into_iter()
-                .map(SolanaAccountMeta::from)
+                .map(|meta| meta.into_solana_account_meta(accounts))
                 .collect(),
-            data: from.data,
+            data: self.data,
         }
     }
 }
@@ -114,24 +124,30 @@ impl From<InstructionData> for SolanaInstruction {
 #[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct TransactionAccountMeta {
     /// The key of the account
-    pub key: Pubkey,
+    pub key: u8,
     /// Information about the account
     pub meta: AccountMeta,
 }
-impl From<SolanaAccountMeta> for TransactionAccountMeta {
-    fn from(from: SolanaAccountMeta) -> Self {
+impl TransactionAccountMeta {
+    /// Creates a [`TransactionAccountMeta`] from a given [`SolanaAccountMeta`]
+    pub fn from_solana_account_meta(
+        meta: SolanaAccountMeta,
+        accounts: &HashMap<Pubkey, u8>,
+    ) -> Self {
         Self {
-            key: from.pubkey,
-            meta: AccountMeta::new(from.is_signer, from.is_writable),
+            key: *accounts
+                .get(&meta.pubkey)
+                .unwrap_or_else(|| panic!("Could not find account `{}` in accounts", meta.pubkey)),
+            meta: AccountMeta::new(meta.is_signer, meta.is_writable),
         }
     }
-}
-impl From<TransactionAccountMeta> for SolanaAccountMeta {
-    fn from(from: TransactionAccountMeta) -> Self {
+
+    /// Turns `self` into a [`SolanaAccountMeta`]
+    pub fn into_solana_account_meta(self, accounts: &[Pubkey]) -> SolanaAccountMeta {
         SolanaAccountMeta {
-            pubkey: from.key,
-            is_signer: from.meta.contains(AccountMeta::IS_SIGNER),
-            is_writable: from.meta.contains(AccountMeta::IS_WRITABLE),
+            pubkey: accounts[self.key as usize],
+            is_signer: self.meta.contains(AccountMeta::IS_SIGNER),
+            is_writable: self.meta.contains(AccountMeta::IS_WRITABLE),
         }
     }
 }

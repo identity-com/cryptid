@@ -190,4 +190,10 @@ pub enum GeneratorError<'a> {
     /// Discriminant is empty
     #[error_msg("Discriminant is empty, must contain at least one byte")]
     EmptyDiscriminant,
+    /// Could not deserialize something
+    #[error_msg("Could not deserialize: {}", what)]
+    CouldNotDeserialize {
+        /// What could not be deserialized
+        what: String,
+    },
 }

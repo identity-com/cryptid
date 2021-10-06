@@ -61,15 +61,18 @@ impl FromAccounts<()> for DOAAddress {
         infos: &mut impl AccountInfoIterator,
         arg: (),
     ) -> GeneratorResult<Self> {
+        msg!("DOA");
         let account = infos.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
         let owner = **account.owner.borrow();
         if owner == program_id {
+            msg!("Owned DOA");
             Ok(Self::OnChain(ProgramAccount::from_accounts(
                 program_id,
                 &mut once(account),
                 arg,
             )?))
         } else if owner == system_program_id() {
+            msg!("Generative DOA");
             Ok(Self::Generative(account))
         } else {
             Err(GeneratorError::AccountOwnerNotEqual {
