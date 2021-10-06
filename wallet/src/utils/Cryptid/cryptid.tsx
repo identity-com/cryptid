@@ -8,7 +8,7 @@
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
@@ -186,6 +186,55 @@ export class CryptidAccount {
 
     return nativeTransfer(this.connection, signingWrapper, destination, amount);
   };
+
+  getTokenAccountInfo = async (): Promise<{ publicKey: PublicKey, parsed: TokenInfo }[]> => {
+    let accounts: {
+      publicKey: PublicKey,
+      accountInfo: TokenAccountInfo,
+    }[] = this.address ? await getOwnedTokenAccounts(this.connection, await this.address) : [];
+    return accounts.map<{
+      publicKey: PublicKey,
+      parsed: TokenInfo,
+    }>(({ publicKey, accountInfo }) => {
+      setInitialAccountInfo(this.connection, publicKey, accountInfo);
+      return {
+        publicKey,
+        parsed: parseTokenAccountData(accountInfo.data),
+      };
+    }).sort((account1, account2) =>
+        account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
+    );
+  }
+}
+
+export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [PublicKey[], boolean] {
+  let [tokenAccountInfo, loaded] = useAsyncData(
+      cryptid ? cryptid.getTokenAccountInfo : async () => [],
+      cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
+  );
+  let publicKeys = [
+      ...(cryptid && cryptid.address ? [cryptid.address] : []),
+      ...(tokenAccountInfo ? tokenAccountInfo.map(({ publicKey }) => publicKey) : []),
+  ]
+  publicKeys = useRefEqual(
+      publicKeys,
+      (oldKeys, newKeys) =>
+          oldKeys.length === newKeys.length
+          && oldKeys.every((key, i) => key.equals(newKeys[i]))
+  );
+  return [publicKeys, loaded]
+}
+
+export type TokenAccountInfo = {
+  data: Buffer,
+  executable: boolean,
+  owner: PublicKey,
+  lamports: number,
+}
+export type TokenInfo = {
+  mint: PublicKey,
+  owner: PublicKey,
+  amount: any,
 }
 
 interface CryptidContextInterface {
