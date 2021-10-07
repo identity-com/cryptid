@@ -363,6 +363,7 @@ export function WalletProvider({ children }) {
 }
 
 export function useWallet() {
+  // @ts-ignore
   return useContext(WalletContext)?.wallet;
 }
 

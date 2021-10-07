@@ -458,7 +458,9 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
     tokenSymbol,
     tokenLogoUri,
   } = balanceInfo;
-  tokenName = tokenName ?? abbreviateAddress(mint);
+
+  const mintAddressName = mint ? abbreviateAddress(mint) : 'unknown'
+  tokenName = tokenName ?? mintAddressName;
   let displayName;
   if (isExtensionWidth) {
     displayName = tokenSymbol ?? tokenName;
@@ -478,7 +480,7 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
           {},
           associatedTokensCache[wallet.publicKey.toString()],
         );
-        walletAccounts[mint.toString()] = assocTok;
+        walletAccounts[(mint as PublicKey).toString()] = assocTok;
         associatedTokensCache[wallet.publicKey.toString()] = walletAccounts;
         if (assocTok.equals(publicKey)) {
           // Force a rerender now that we've cached the value.
@@ -522,14 +524,12 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
       </div>
     );
 
-  const usdValue =
-    price === undefined // Not yet loaded.
-      ? undefined
-      : price === null // Loaded and empty.
-      ? null
-      : ((amount / Math.pow(10, decimals)) * price).toFixed(2); // Loaded.
-  if (setUsdValue && usdValue !== undefined) {
-    setUsdValue(publicKey, usdValue === null ? null : parseFloat(usdValue));
+  let usdValue;
+  if (amount && price) {
+    usdValue = ((amount / Math.pow(10, decimals)) * price).toFixed(2)
+  }
+  if (setUsdValue && usdValue) {
+    setUsdValue(publicKey, parseFloat(usdValue));
   }
 
   return (
