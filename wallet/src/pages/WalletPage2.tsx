@@ -16,11 +16,6 @@ export default function WalletPage() {
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
         {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
         <BalancesList />
-        {isProdNetwork ? null : (
-          <Grid item xs={12}>
-            <DebugButtons />
-          </Grid>
-        )}
       </div>
     </div>
   );

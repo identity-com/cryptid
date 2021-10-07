@@ -10,6 +10,8 @@ import {refreshWalletPublicKeys, useBalanceInfo} from "../../utils/wallet";
 import {useCryptid} from "../../utils/Cryptid/cryptid";
 import {useUpdateTokenName} from "../../utils/tokens/names";
 import {useCallAsync, useSendTransaction} from "../../utils/notifications";
+import {useState} from "react";
+import AddTokenDialog from "../AddTokenDialog";
 
 export default function TokenButtons() {
   const isProdNetwork = useIsProdNetwork();
@@ -22,6 +24,8 @@ export default function TokenButtons() {
   const { endpoint } = useConnectionConfig();
   const [sendTransaction, sending] = useSendTransaction();
   const callAsync = useCallAsync();
+
+  const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
 
   if (!selectedCryptidAccount || !selectedCryptidAccount.address) return <></>;
 
@@ -66,8 +70,12 @@ export default function TokenButtons() {
 
   return (
     <div className="z-0 inline-flex shadow-sm rounded-md min-w-full justify-end ">
+      <AddTokenDialog
+        open={showAddTokenDialog}
+        onClose={() => setShowAddTokenDialog(false)}
+      />
       <TokenButton label="Add Token" Icon={PlusCircleIcon} additionalClasses='rounded-l-md'
-                   onClick={() => {}}
+                   onClick={() => {setShowAddTokenDialog(true)}}
       />
       {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
                                      onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey, selectedCryptidAccount.activeSigningKey())}/>}
