@@ -13,9 +13,8 @@ import {
 import { findAssociatedTokenAddress } from '../utils/tokens';
 import LoadingIndicator from './LoadingIndicator';
 import Collapse from '@material-ui/core/Collapse';
-import {Card, CardContent, Typography} from '@material-ui/core';
+import {Typography} from '@material-ui/core';
 import TokenInfoDialog from './TokenInfoDialog';
-import FtxPayDialog from './FtxPay/FtxPayDialog';
 import Link from '@material-ui/core/Link';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
@@ -24,9 +23,6 @@ import { abbreviateAddress, useIsExtensionWidth } from '../utils/utils';
 import Button from '@material-ui/core/Button';
 import SendIcon from '@material-ui/icons/Send';
 import ReceiveIcon from '@material-ui/icons/WorkOutline';
-import AddKeyIcon from '@material-ui/icons/VpnKeyOutlined';
-import AddServiceIcon from '@material-ui/icons/RoomServiceOutlined';
-import AddControllerIcon from '@material-ui/icons/SupervisorAccountOutlined';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import AddIcon from '@material-ui/icons/Add';
@@ -40,7 +36,6 @@ import SortIcon from '@material-ui/icons/Sort';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddTokenDialog from './AddTokenDialog';
 import ExportAccountDialog from './ExportAccountDialog';
-import ftxPayIcon from './FtxPay/icon.png';
 import SendDialog from './SendDialog';
 import DepositDialog from './DepositDialog';
 import {
@@ -48,10 +43,8 @@ import {
   refreshAccountInfo,
   useSolanaExplorerUrlSuffix,
 } from '../utils/connection';
-import { useRegion } from '../utils/region';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { serumMarkets, priceStore } from '../utils/markets';
-import { swapApiRequest } from '../utils/swap/api';
 import { showSwapAddress } from '../utils/config';
 import { useAsyncData } from '../utils/fetch-loop';
 import { showTokenInfoDialog } from '../utils/config';
@@ -61,11 +54,7 @@ import CloseTokenAccountDialog from './CloseTokenAccountButton';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import TokenIcon from './TokenIcon';
 import EditAccountNameDialog from './EditAccountNameDialog';
-import MergeAccountsDialog from './MergeAccountsDialog';
-import SwapButton from './SwapButton';
-import DnsIcon from '@material-ui/icons/Dns';
-import DomainsList from './DomainsList';
-import {useCryptid} from "../utils/Cryptid/cryptid";
+import {CryptidAccount, useCryptid, useCryptidWalletPublicKeys} from "../utils/Cryptid/cryptid";
 import { CryptidDetails } from "./Cryptid/CryptidDetails";
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
@@ -111,18 +100,8 @@ function fairsIsLoaded(publicKeys) {
 export default function BalancesList() {
 
   // Updated Crytpid Stuff (from a state POV)
-  const { selectedCryptidAccount, setSelectedCryptidAccount } = useCryptid()
-  const [publicKeys, setPublicKeys] = useState([]);
-
-
-  useEffect(() => {
-    if (!selectedCryptidAccount) {
-      setPublicKeys([])
-    } else {
-      setPublicKeys([selectedCryptidAccount.address])
-    }
-  },[selectedCryptidAccount])
-
+  const { selectedCryptidAccount } = useCryptid();
+  const [publicKeys] = useCryptidWalletPublicKeys(selectedCryptidAccount);
   // End Cryptid Stuff
 
   // const wallet = useWallet();
@@ -132,16 +111,12 @@ export default function BalancesList() {
   const [showEditAccountNameDialog, setShowEditAccountNameDialog] = useState(
     false,
   );
-  const [showMergeAccounts, setShowMergeAccounts] = useState(false);
-  const [showFtxPayDialog, setShowFtxPayDialog] = useState(false);
   // const [sortAccounts, setSortAccounts] = useState(SortAccounts.None);
-  const [showDomains, setShowDomains] = useState(false);
   const { accounts, setAccountName } = useWalletSelector();
   const [isCopied, setIsCopied] = useState(false);
   const isExtensionWidth = useIsExtensionWidth();
   // Dummy var to force rerenders on demand.
   const [, setForceUpdate] = useState(false);
-  const region = useRegion();
   const selectedAccount = accounts.find((a) => a.isSelected);
   // const allTokensLoaded = loaded && fairsIsLoaded(publicKeys);
   // let sortedPublicKeys = publicKeys;
@@ -274,37 +249,6 @@ export default function BalancesList() {
                 </IconButton>
               </Tooltip>
             )}
-          <Tooltip title="Deposit via FTX Pay" arrow>
-            <IconButton
-              size={iconSize}
-              onClick={() => setShowFtxPayDialog(true)}
-            >
-              <img
-                title={'FTX Pay'}
-                alt={'FTX Pay'}
-                style={{
-                  width: 20,
-                  height: 20,
-                }}
-                src={ftxPayIcon}
-              />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="See your domains" arrow>
-            <IconButton size={iconSize} onClick={() => setShowDomains(true)}>
-              <DnsIcon />
-            </IconButton>
-          </Tooltip>
-          <DomainsList open={showDomains} setOpen={setShowDomains} />
-          {region.result && !region.result.isRestricted && <SwapButton size={iconSize} />}
-          <Tooltip title="Migrate Tokens" arrow>
-            <IconButton
-              size={iconSize}
-              onClick={() => setShowMergeAccounts(true)}
-            >
-              <MergeType />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Add Token" arrow>
             <IconButton
               size={iconSize}
@@ -362,11 +306,6 @@ export default function BalancesList() {
         open={showAddTokenDialog}
         onClose={() => setShowAddTokenDialog(false)}
       />
-      <FtxPayDialog
-        open={showFtxPayDialog}
-        publicKeys={publicKeys}
-        onClose={() => setShowFtxPayDialog(false)}
-      />
       <EditAccountNameDialog
         open={showEditAccountNameDialog}
         onClose={() => setShowEditAccountNameDialog(false)}
@@ -375,10 +314,6 @@ export default function BalancesList() {
           setAccountName(selectedAccount.selector, name);
           setShowEditAccountNameDialog(false);
         }}
-      />
-      <MergeAccountsDialog
-        open={showMergeAccounts}
-        onClose={() => setShowMergeAccounts(false)}
       />
     </Paper>
   );
@@ -611,27 +546,7 @@ function BalanceListItemDetails({
   ] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const wallet = useWallet();
-  const isProdNetwork = useIsProdNetwork();
-  const [swapInfo] = useAsyncData(async () => {
-    if (!showSwapAddress || !isProdNetwork) {
-      return null;
-    }
-    return await swapApiRequest(
-      'POST',
-      'swap_to',
-      {
-        blockchain: 'sol',
-        coin: balanceInfo.mint?.toBase58(),
-        address: publicKey.toBase58(),
-      },
-      { ignoreUserErrors: true },
-    );
-  }, [
-    'swapInfo',
-    isProdNetwork,
-    balanceInfo.mint?.toBase58(),
-    publicKey.toBase58(),
-  ]);
+
   const isExtensionWidth = useIsExtensionWidth();
 
   if (!balanceInfo) {
@@ -684,20 +599,6 @@ function BalanceListItemDetails({
                 rel="noopener"
               >
                 View on Serum
-              </Link>
-            </Typography>
-          )}
-          {swapInfo && swapInfo.coin.erc20Contract && (
-            <Typography variant="body2">
-              <Link
-                href={
-                  `https://etherscan.io/token/${swapInfo.coin.erc20Contract}` +
-                  urlSuffix
-                }
-                target="_blank"
-                rel="noopener"
-              >
-                View on Ethereum
               </Link>
             </Typography>
           )}
@@ -800,7 +701,6 @@ function BalanceListItemDetails({
         onClose={() => setDepositDialogOpen(false)}
         balanceInfo={balanceInfo}
         publicKey={publicKey}
-        swapInfo={swapInfo}
         isAssociatedToken={isAssociatedToken}
       />
       <TokenInfoDialog

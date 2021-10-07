@@ -30,10 +30,16 @@ import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
 import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
+
+const WALLET_TYPE = {
+  sw: 'sw',
+  adapter: 'adapter',
+}
+
 const DEFAULT_WALLET_SELECTOR = {
-  walletIndex: 0,
-  importedPubkey: undefined,
-  ledger: false,
+  walletIndex: 0, // only for sw
+  importedPubkey: undefined, // only for sw
+  type: WALLET_TYPE.sw,
 };
 
 export class Wallet {
@@ -169,15 +175,9 @@ export function WalletProvider({ children }) {
     'walletSelector',
     DEFAULT_WALLET_SELECTOR,
   );
-  const [_hardwareWalletAccount, setHardwareWalletAccount] = useState(null);
-
   // `walletCount` is the number of HD wallets.
   const [walletCount, setWalletCount] = useLocalStorageState('walletCount', 1);
 
-  if (walletSelector.ledger && !_hardwareWalletAccount) {
-    walletSelector = DEFAULT_WALLET_SELECTOR;
-    setWalletSelector(DEFAULT_WALLET_SELECTOR);
-  }
 
   const { publicKey, signTransaction } = useSolAdapterWallet()
 
@@ -187,34 +187,9 @@ export function WalletProvider({ children }) {
         return null;
       }
       let wallet;
-      if (walletSelector.ledger) {
-        try {
-          const onDisconnect = () => {
-            setWalletSelector(DEFAULT_WALLET_SELECTOR);
-            setHardwareWalletAccount(null);
-          };
-          const args = {
-            onDisconnect,
-            derivationPath: walletSelector.derivationPath,
-            account: walletSelector.account,
-            change: walletSelector.change,
-          };
-          wallet = await Wallet.create(connection, 'ledger', args);
-        } catch (e) {
-          console.log(`received error using ledger wallet: ${e}`);
-          let message = 'Received error unlocking ledger';
-          if (e.statusCode) {
-            message += `: ${e.statusCode}`;
-          }
-          enqueueSnackbar(message, { variant: 'error' });
-          setWalletSelector(DEFAULT_WALLET_SELECTOR);
-          setHardwareWalletAccount(null);
-          return;
-        }
-      }
 
       // is connected via wallet adapter.
-      if (publicKey) {
+      if (walletSelector.type === WALLET_TYPE.adapter && publicKey) {
         wallet = await Wallet.create(connection, 'adapter', {
           publicKey,
           signTransaction,
@@ -256,7 +231,7 @@ export function WalletProvider({ children }) {
     derivationPath,
     publicKey,
   ]);
-  function addAccount({ name, importedAccount, ledger }) {
+  function addAccount({ name, importedAccount }) {
     if (importedAccount === undefined) {
       name && localStorage.setItem(`name${walletCount}`, name);
       setWalletCount(walletCount + 1);
@@ -284,7 +259,7 @@ export function WalletProvider({ children }) {
   };
   const [walletNames, setWalletNames] = useState(getWalletNames());
   function setAccountName(selector, newName) {
-    if (selector.importedPubkey && !selector.ledger) {
+    if (selector.importedPubkey) {
       let newPrivateKeyImports = { ...privateKeyImports };
       newPrivateKeyImports[selector.importedPubkey.toString()].name = newName;
       setPrivateKeyImports(newPrivateKeyImports);
@@ -308,9 +283,9 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: idx,
           importedPubkey: undefined,
-          ledger: false,
+          type: WALLET_TYPE.sw,
         },
-        isSelected: !publicKey && walletSelector.walletIndex === idx,
+        isSelected: walletSelector.type === WALLET_TYPE.sw && walletSelector.walletIndex === idx,
         address,
         name: idx === 0 ? 'Main account' : name || `Account ${idx}`,
       };
@@ -322,7 +297,7 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: undefined,
           importedPubkey: pubkey,
-          ledger: false,
+          type: WALLET_TYPE.sw,
         },
         address: new PublicKey(bs58.decode(pubkey)),
         name: `${name} (imported)`, // TODO: do this in the Component with styling.
@@ -337,9 +312,9 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: undefined,
           importedPubkey: undefined,
-          ledger: false,
+          type: WALLET_TYPE.adapter,
         },
-        isSelected: true,
+        isSelected: walletSelector.type === WALLET_TYPE.adapter,
         address: publicKey,
         name: 'External',
       })
@@ -350,22 +325,6 @@ export function WalletProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seed, walletCount, walletSelector, privateKeyImports, walletNames, publicKey]);
 
-  let hardwareWalletAccount;
-  if (_hardwareWalletAccount) {
-    hardwareWalletAccount = {
-      ..._hardwareWalletAccount,
-      selector: {
-        walletIndex: undefined,
-        ledger: true,
-        importedPubkey: _hardwareWalletAccount.publicKey,
-        derivationPath: _hardwareWalletAccount.derivationPath,
-        account: _hardwareWalletAccount.account,
-        change: _hardwareWalletAccount.change,
-      },
-      address: _hardwareWalletAccount.publicKey,
-      isSelected: walletSelector.ledger,
-    };
-  }
 
   return (
     <WalletContext.Provider
@@ -383,8 +342,6 @@ export function WalletProvider({ children }) {
         addAccount,
         setAccountName,
         derivationPath,
-        hardwareWalletAccount,
-        setHardwareWalletAccount,
       }}
     >
       {children}
@@ -501,8 +458,6 @@ export function useWalletSelector() {
     addAccount,
     setWalletSelector,
     setAccountName,
-    hardwareWalletAccount,
-    setHardwareWalletAccount,
   } = useContext(WalletContext);
 
   return {
@@ -511,7 +466,5 @@ export function useWalletSelector() {
     setWalletSelector,
     addAccount,
     setAccountName,
-    hardwareWalletAccount,
-    setHardwareWalletAccount,
   };
 }

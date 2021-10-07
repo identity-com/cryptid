@@ -1,6 +1,12 @@
 import * as BufferLayout from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 
+export type TokenInfo = {
+  mint: PublicKey,
+  owner: PublicKey,
+  amount: any,
+}
+
 export const ACCOUNT_LAYOUT = BufferLayout.struct([
   BufferLayout.blob(32, 'mint'),
   BufferLayout.blob(32, 'owner'),
@@ -14,7 +20,7 @@ export const MINT_LAYOUT = BufferLayout.struct([
   BufferLayout.blob(37),
 ]);
 
-export function parseTokenAccountData(data) {
+export function parseTokenAccountData(data): TokenInfo {
   let { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
   return {
     mint: new PublicKey(mint),

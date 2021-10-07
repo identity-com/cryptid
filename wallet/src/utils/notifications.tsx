@@ -3,6 +3,7 @@ import { useSnackbar } from 'notistack';
 import { useConnection, useSolanaExplorerUrlSuffix } from './connection';
 import Button from '@material-ui/core/Button';
 import { confirmTransaction } from './utils';
+import { TransactionSignature } from '@solana/web3.js';
 
 export function useSendTransaction() {
   const connection = useConnection();
@@ -10,8 +11,8 @@ export function useSendTransaction() {
   const [sending, setSending] = useState(false);
 
   async function sendTransaction(
-    signaturePromise,
-    { onSuccess, onError } = {},
+    signaturePromise: Promise<TransactionSignature>,
+    { onSuccess, onError }: { onSuccess?: (sig: TransactionSignature) => void, onError?: (e: unknown) => void } = {},
   ) {
     let id = enqueueSnackbar('Sending transaction...', {
       variant: 'info',
@@ -41,7 +42,9 @@ export function useSendTransaction() {
       closeSnackbar(id);
       setSending(false);
       console.warn(e);
-      enqueueSnackbar(e.message, { variant: 'error' });
+      if (e instanceof Error) {
+        enqueueSnackbar(e.message, { variant: 'error' });
+      }
       if (onError) {
         onError(e);
       }
@@ -66,16 +69,16 @@ function ViewTransactionOnExplorerButton({ signature }) {
   );
 }
 
-export function useCallAsync() {
+export function useCallAsync<T>() {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   return async function callAsync(
-    promise,
+    promise: Promise<T>,
     {
       progressMessage = 'Submitting...',
       successMessage = 'Success',
       onSuccess,
       onError,
-    } = {},
+    }: { progressMessage?: string, successMessage?: string, onSuccess?: (t: T) => void, onError?: (e: unknown) => void} = {},
   ) {
     let id = enqueueSnackbar(progressMessage, {
       variant: 'info',
@@ -93,7 +96,9 @@ export function useCallAsync() {
     } catch (e) {
       console.warn(e);
       closeSnackbar(id);
-      enqueueSnackbar(e.message, { variant: 'error' });
+      if (e instanceof Error) {
+        enqueueSnackbar(e.message, {variant: 'error'});
+      }
       if (onError) {
         onError(e);
       }

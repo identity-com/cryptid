@@ -24,7 +24,6 @@ import Tooltip from '@material-ui/core/Tooltip';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import AddAccountDialog from './AddAccountDialog';
 import DeleteMnemonicDialog from './DeleteMnemonicDialog';
-import AddHardwareWalletDialog from './AddHarwareWalletDialog';
 import { ExportMnemonicDialog } from './ExportAccountDialog.js';
 import {
   isExtension,
@@ -108,7 +107,7 @@ export default function NavigationFrame({ children }) {
 
 function NavigationButtons() {
   const isExtensionWidth = useIsExtensionWidth();
-  const [page] = usePage();
+  const { page } = usePage();
 
   if (isExtensionPopup) {
     return null;
@@ -151,7 +150,7 @@ function ExpandButton() {
 
 function WalletButton() {
   const classes = useStyles();
-  const setPage = usePage()[1];
+  const { setPage } = usePage();
   const onClick = () => setPage('wallet');
 
   return (
@@ -174,7 +173,7 @@ function WalletButton() {
 
 function ConnectionsButton() {
   const classes = useStyles();
-  const setPage = usePage()[1];
+  const { setPage } = usePage();
   const onClick = () => setPage('connections');
   const connectedWallets = useConnectedWallets();
 
@@ -288,17 +287,11 @@ function WalletSelector() {
   const {
     accounts,
     derivedAccounts,
-    hardwareWalletAccount,
-    setHardwareWalletAccount,
     setWalletSelector,
     addAccount,
   } = useWalletSelector();
   const [anchorEl, setAnchorEl] = useState(null);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [
-    addHardwareWalletDialogOpen,
-    setAddHardwareWalletDialogOpen,
-  ] = useState(false);
   const [deleteMnemonicOpen, setDeleteMnemonicOpen] = useState(false);
   const [exportMnemonicOpen, setExportMnemonicOpen] = useState(false);
   const classes = useStyles();
@@ -308,29 +301,6 @@ function WalletSelector() {
   }
   return (
     <>
-      <AddHardwareWalletDialog
-        open={addHardwareWalletDialogOpen}
-        onClose={() => setAddHardwareWalletDialogOpen(false)}
-        onAdd={({ publicKey, derivationPath, account, change }) => {
-          setHardwareWalletAccount({
-            name: 'Hardware wallet',
-            publicKey,
-            importedAccount: publicKey.toString(),
-            ledger: true,
-            derivationPath,
-            account,
-            change,
-          });
-          setWalletSelector({
-            walletIndex: undefined,
-            importedPubkey: publicKey.toString(),
-            ledger: true,
-            derivationPath,
-            account,
-            change,
-          });
-        }}
-      />
       <AddAccountDialog
         open={addAccountOpen}
         onClose={() => setAddAccountOpen(false)}
@@ -341,7 +311,7 @@ function WalletSelector() {
             importedPubkey: importedAccount
               ? importedAccount.publicKey.toString()
               : undefined,
-            ledger: false,
+            type: 'sw', // TODO
           });
           setAddAccountOpen(false);
         }}
@@ -388,24 +358,7 @@ function WalletSelector() {
             setWalletSelector={setWalletSelector}
           />
         ))}
-        {hardwareWalletAccount && (
-          <>
-            <Divider />
-            <AccountListItem
-              account={hardwareWalletAccount}
-              classes={classes}
-              setAnchorEl={setAnchorEl}
-              setWalletSelector={setWalletSelector}
-            />
-          </>
-        )}
         <Divider />
-        <MenuItem onClick={() => setAddHardwareWalletDialogOpen(true)}>
-          <ListItemIcon className={classes.menuItemIcon}>
-            <UsbIcon fontSize="small" />
-          </ListItemIcon>
-          Import Hardware Wallet
-        </MenuItem>
         <MenuItem
           onClick={() => {
             setAnchorEl(null);
@@ -480,6 +433,7 @@ function AccountListItem({ account, classes, setAnchorEl, setWalletSelector }) {
         setWalletSelector(account.selector);
       }}
       selected={account.isSelected}
+      disabled={true}
       component="div"
     >
       <ListItemIcon className={classes.menuItemIcon}>

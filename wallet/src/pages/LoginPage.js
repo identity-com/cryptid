@@ -10,7 +10,7 @@ import {
 import {
   getAccountFromSeed,
   DERIVATION_PATH,
-} from '../utils/walletProvider/localStorage.js';
+} from '../utils/walletProvider/localStorage';
 import Container from '@material-ui/core/Container';
 import LoadingIndicator from '../components/LoadingIndicator';
 import { BalanceListItem } from '../components/BalancesList.js';

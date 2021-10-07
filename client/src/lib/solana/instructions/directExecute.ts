@@ -52,7 +52,11 @@ export const create = async (
   ];
 
   const instructions: InstructionData[] = unsignedTransaction.instructions.map(
-    InstructionData.fromTransactionInstruction
+    (instruction) =>
+      InstructionData.fromTransactionInstruction(
+        instruction,
+        instruction_accounts.map((account) => account.pubkey)
+      )
   );
 
   const data: Buffer = CryptidInstruction.directExecute(
