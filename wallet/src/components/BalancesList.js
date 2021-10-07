@@ -295,7 +295,7 @@ export default function BalancesList() {
           {/*</Tooltip>*/}
         </Toolbar>
       </AppBar>
-      {selectedCryptidAccount && <CryptidDetails cryptidAccount={selectedCryptidAccount} setSelectedCryptidAccount={setSelectedCryptidAccount}/>}
+      {selectedCryptidAccount && <CryptidDetails cryptidAccount={selectedCryptidAccount}/>}
       <List disablePadding>
         {balanceListItemsMemo.map((Memoized) => (
           <Memoized />

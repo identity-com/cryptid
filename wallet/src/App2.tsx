@@ -3,7 +3,7 @@ import LoadingIndicator from "./components/LoadingIndicator";
 import {Suspense, useState} from "react";
 import {useWallet} from "./utils/wallet";
 import {useCryptid} from "./utils/Cryptid/cryptid";
-import {usePage} from "./utils/page";
+import {PageProvider, usePage} from "./utils/page";
 import LoginPage from "./pages/LoginPage";
 import PopupPage from "./pages/PopupPage";
 import WalletPage from "./pages/WalletPage2";
@@ -14,12 +14,13 @@ import {ConnectionProvider} from "./utils/connection";
 import {TokenRegistryProvider} from "./utils/tokens/names";
 import {SnackbarProvider} from "notistack";
 import {MetaWalletProvider} from "./utils/Cryptid/MetaWalletProvider";
+import IdentityPage from "./pages/IdentityPage";
 
 const PageContents:React.FC = () => {
   const wallet = useWallet();
   const { selectedCryptidAccount } = useCryptid();
 
-  const [page] = usePage();
+  const { page } = usePage();
   const [showWalletSuggestion, setShowWalletSuggestion] = useState<boolean>(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
@@ -31,12 +32,15 @@ const PageContents:React.FC = () => {
   if (window.opener) {
     return <PopupPage opener={window.opener} />;
   }
-  if (page === 'wallet') {
-    return <WalletPage />;
-  } else if (page === 'connections') {
-    return <ConnectionsPage />;
+  switch (page) {
+    case "Tokens": return <WalletPage/>
+    case "Collectibles": return <>TODO no page</>
+    case "Stake": return <>TODO no page</>
+    case "Swap": return <>TODO no page</>
+    case "Connections": return <ConnectionsPage />;
+    case "Identity": return <IdentityPage/>
   }
-  
+
   return <>TODO no page</>
 };
 
@@ -53,15 +57,18 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingIndicator />}>
       {/*<ThemeProvider theme={theme}>*/}
-        <CssBaseline />
-
-        <ConnectionProvider>
-          <TokenRegistryProvider>
-            <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-              <MetaWalletProvider>{appElement}</MetaWalletProvider>
-            </SnackbarProvider>
-          </TokenRegistryProvider>
-        </ConnectionProvider>
+      <CssBaseline />
+      <ConnectionProvider>
+        <TokenRegistryProvider>
+          <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
+            <PageProvider>
+              <MetaWalletProvider>
+                {appElement}
+              </MetaWalletProvider>
+            </PageProvider>
+          </SnackbarProvider>
+        </TokenRegistryProvider>
+      </ConnectionProvider>
       {/*</ThemeProvider>*/}
     </Suspense>
   );

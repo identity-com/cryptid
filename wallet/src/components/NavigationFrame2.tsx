@@ -5,7 +5,6 @@ import { useWalletSelector } from '../utils/wallet';
 import SolanaIcon from './SolanaIcon';
 import AddAccountDialog from './AddAccountDialog';
 import DeleteMnemonicDialog from './DeleteMnemonicDialog';
-import AddHardwareWalletDialog from './AddHarwareWalletDialog';
 import { ExportMnemonicDialog } from './ExportAccountDialog.js';
 import {
   isExtension,
@@ -27,15 +26,8 @@ import {complement} from "ramda";
 import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import CheckIcon from "@material-ui/icons/Check";
+import {pages} from "../utils/config";
 
-
-const navigation = [
-  { name: 'Tokens', href: '#', current: true },
-  { name: 'Collectibles', href: '#', current: false },
-  { name: 'Stake', href: '#', current: false },
-  { name: 'Swap', href: '#', current: false },
-  { name: 'Identity', href: '#', current: false },
-]
 type DIDElement = { alias: string, did: string, controlledBy?: string }
 const userNavigation: DIDElement[] = [
   { alias: 'Dan', did: 'did:sol:dan' },
@@ -73,7 +65,12 @@ const IdentitySelector = () => (
       <div>
         <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
           <span className="sr-only">Select Identity</span>
-          <UserIcon className="h-6 w-6" aria-hidden="true"/>
+          {/*<UserIcon className="h-6 w-6" aria-hidden="true"/>*/}
+          <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+        <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </span>
         </Menu.Button>
       </div>
       <Transition
@@ -178,7 +175,7 @@ const NetworkSelector = () => {
 function NavigationPanel() {
   // const classes = useStyles();
   const isExtensionWidth = useIsExtensionWidth();
-
+  const { page, setPage } = usePage()
 
   return (
     <Disclosure as="nav" className="bg-white border-b border-gray-200">
@@ -200,19 +197,23 @@ function NavigationPanel() {
                   />
                 </div>
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                  {navigation.map((item) => (
+                  {pages.map((item) => (
                     <a
-                      key={item.name}
-                      href={item.href}
+                      href='#'
+                      key={item}
+                      onClick={() => {
+                        console.log("ITEM " + item);
+                        setPage(item)
+                      }}
                       className={classNames(
-                        item.current
+                        item === page
                           ? 'border-indigo-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
                         'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
                       )}
-                      aria-current={item.current ? 'page' : undefined}
+                      aria-current={item === page ? 'page' : undefined}
                     >
-                      {item.name}
+                      {item}
                     </a>
                   ))}
                 </div>
@@ -238,19 +239,18 @@ function NavigationPanel() {
 
           <Disclosure.Panel className="sm:hidden">
             <div className="pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
+              {pages.map((item) => (
                 <a
-                  key={item.name}
-                  href={item.href}
+                  key={item}
                   className={classNames(
-                    item.current
+                    item === page
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
                       : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800',
                     'block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
                   )}
-                  aria-current={item.current ? 'page' : undefined}
+                  aria-current={item === page? 'page' : undefined}
                 >
-                  {item.name}
+                  {item}
                 </a>
               ))}
             </div>

@@ -3,7 +3,6 @@ import React, {useState} from "react";
 import {useWallet} from "../../utils/wallet";
 import {useAsyncData} from "../../utils/fetch-loop";
 import {showSwapAddress, showTokenInfoDialog} from "../../utils/config";
-import {swapApiRequest} from "../../utils/swap/api";
 import {useIsExtensionWidth} from "../../utils/utils";
 import LoadingIndicator from "../LoadingIndicator";
 import {Typography} from "@material-ui/core";
@@ -66,16 +65,16 @@ export function BalanceListItemDetails({
     if (!showSwapAddress || !isProdNetwork) {
       return null;
     }
-    return await swapApiRequest(
-      'POST',
-      'swap_to',
-      {
-        blockchain: 'sol',
-        coin: balanceInfo.mint?.toBase58(),
-        address: publicKey.toBase58(),
-      },
-      { ignoreUserErrors: true },
-    );
+    // return await swapApiRequest(
+    //   'POST',
+    //   'swap_to',
+    //   {
+    //     blockchain: 'sol',
+    //     coin: balanceInfo.mint?.toBase58(),
+    //     address: publicKey.toBase58(),
+    //   },
+    //   { ignoreUserErrors: true },
+    // );
   }, [
     'swapInfo',
     isProdNetwork,
@@ -137,20 +136,20 @@ export function BalanceListItemDetails({
               </Link>
             </Typography>
           )}
-          {swapInfo && swapInfo.coin.erc20Contract && (
-            <Typography variant="body2">
-              <Link
-                href={
-                  `https://etherscan.io/token/${swapInfo.coin.erc20Contract}` +
-                  urlSuffix
-                }
-                target="_blank"
-                rel="noopener"
-              >
-                View on Ethereum
-              </Link>
-            </Typography>
-          )}
+          {/*{swapInfo && swapInfo.coin.erc20Contract && (*/}
+          {/*  <Typography variant="body2">*/}
+          {/*    <Link*/}
+          {/*      href={*/}
+          {/*        `https://etherscan.io/token/${swapInfo.coin.erc20Contract}` +*/}
+          {/*        urlSuffix*/}
+          {/*      }*/}
+          {/*      target="_blank"*/}
+          {/*      rel="noopener"*/}
+          {/*    >*/}
+          {/*      View on Ethereum*/}
+          {/*    </Link>*/}
+          {/*  </Typography>*/}
+          {/*)}*/}
           {!isSolAddress && (
             <Typography variant="body2">
               <Link
@@ -250,7 +249,7 @@ export function BalanceListItemDetails({
         onClose={() => setDepositDialogOpen(false)}
         balanceInfo={balanceInfo}
         publicKey={publicKey}
-        swapInfo={swapInfo}
+        // swapInfo={swapInfo}
         isAssociatedToken={isAssociatedToken}
       />
       <TokenInfoDialog

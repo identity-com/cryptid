@@ -3,21 +3,15 @@ import { CheckCircleIcon, ChevronRightIcon, MailIcon } from '@heroicons/react/so
 import {CryptidDetails} from "../Cryptid/CryptidDetails";
 import {CryptidAccount} from "../../utils/Cryptid/cryptid";
 import {ExoticComponent} from "react";
+import TokenButtons from "./TokenButtons";
 
-type Props = {
-  selectedCryptidAccount: CryptidAccount | null
-  setSelectedCryptidAccount: (c: CryptidAccount) => void
-  // balanceListItems: ExoticComponent[]
-}
+type Props = {}
 const BalanceListView: React.FC<Props> = ({
-                                            selectedCryptidAccount,
-                                            setSelectedCryptidAccount,
                                             children
                                           }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-md">
+    <TokenButtons/>
     <ul role="list" className="divide-y divide-gray-200">
-      {selectedCryptidAccount &&
-      <CryptidDetails cryptidAccount={selectedCryptidAccount} setSelectedCryptidAccount={setSelectedCryptidAccount}/>}
       {children}
     </ul>
   </div>

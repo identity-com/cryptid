@@ -5,7 +5,12 @@ import Button from '@material-ui/core/Button';
 import { confirmTransaction } from './utils';
 import { TransactionSignature } from '@solana/web3.js';
 
-export function useSendTransaction() {
+type Callbacks = { onSuccess?: (sig: TransactionSignature) => void, onError?: (e: unknown) => void }
+export function useSendTransaction():[(
+  promise: Promise<TransactionSignature>,
+  callbacks: Callbacks
+) => void,
+  boolean] {
   const connection = useConnection();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [sending, setSending] = useState(false);

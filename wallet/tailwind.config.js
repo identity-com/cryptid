@@ -5,7 +5,10 @@ module.exports = {
     extend: {
       fontFamily: {
         'sans': ['Osaka', 'Helvetica', 'Arial', 'sans-serif']
-      }
+      },
+      transitionProperty: {
+        'width': 'width'
+      },
     },
   },
   variants: {

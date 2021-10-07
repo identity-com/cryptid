@@ -15,7 +15,6 @@ import LoadingIndicator from './LoadingIndicator';
 import Collapse from '@material-ui/core/Collapse';
 import {Card, CardContent, Typography} from '@material-ui/core';
 import TokenInfoDialog from './TokenInfoDialog';
-import FtxPayDialog from './FtxPay/FtxPayDialog';
 import Link from '@material-ui/core/Link';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
@@ -48,10 +47,8 @@ import {
   refreshAccountInfo,
   useSolanaExplorerUrlSuffix,
 } from '../utils/connection';
-import { useRegion } from '../utils/region';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { serumMarkets, priceStore } from '../utils/markets';
-import { swapApiRequest } from '../utils/swap/api';
 import { showSwapAddress } from '../utils/config';
 import { useAsyncData } from '../utils/fetch-loop';
 import { showTokenInfoDialog } from '../utils/config';
@@ -61,10 +58,7 @@ import CloseTokenAccountDialog from './CloseTokenAccountButton';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import TokenIcon from './TokenIcon';
 import EditAccountNameDialog from './EditAccountNameDialog';
-import MergeAccountsDialog from './MergeAccountsDialog';
-import SwapButton from './SwapButton';
 import DnsIcon from '@material-ui/icons/Dns';
-import DomainsList from './DomainsList';
 import {useCryptid} from "../utils/Cryptid/cryptid";
 import { CryptidDetails } from "./Cryptid/CryptidDetails";
 import BalanceListView from "./balances/BalanceListView";
@@ -133,7 +127,6 @@ export default function BalancesList() {
   const isExtensionWidth = useIsExtensionWidth();
   // Dummy var to force rerenders on demand.
   const [, setForceUpdate] = useState(false);
-  const region = useRegion();
   const selectedAccount = accounts.find((a) => a.isSelected);
   // const allTokensLoaded = loaded && fairsIsLoaded(publicKeys);
   // let sortedPublicKeys = publicKeys;
@@ -212,10 +205,7 @@ export default function BalancesList() {
   const iconSize = isExtensionWidth ? 'small' : 'medium';
 
   return (
-    <BalanceListView
-      selectedCryptidAccount={selectedCryptidAccount}  
-      setSelectedCryptidAccount={setSelectedCryptidAccount}
-    >
+    <BalanceListView>
       {balanceListItemsMemo.map(Memoized =>
         <Memoized />
       )}
