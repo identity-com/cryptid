@@ -1,26 +1,11 @@
 import React, {useState, useMemo, Fragment} from 'react';
 import { useConnectionConfig } from '../utils/connection';
-import {CLUSTERS, clusterForEndpoint, getClusters, addCustomCluster, customClusterExists} from '../utils/clusters';
-import { useWalletSelector } from '../utils/wallet';
-import SolanaIcon from './SolanaIcon';
-import AddAccountDialog from './AddAccountDialog';
-import DeleteMnemonicDialog from './DeleteMnemonicDialog';
-import { ExportMnemonicDialog } from './ExportAccountDialog.js';
-import ConnectionIcon from './ConnectionIcon';
-import { useConnectedWallets } from '../utils/connected-wallets';
+import {clusterForEndpoint, getClusters, addCustomCluster, customClusterExists} from '../utils/clusters';
 import { usePage } from '../utils/page';
 import AddCustomClusterDialog from "./AddCustomClusterDialog";
-import {CryptidSelector} from "./Cryptid/CryptidSelector";
-import {
-  WalletDisconnectButton,
-  WalletMultiButton,
-} from '@solana/wallet-adapter-react-ui';
-import {BellIcon, CogIcon, MenuIcon, UserIcon, XIcon} from "@heroicons/react/outline";
+import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import {complement} from "ramda";
-import MenuItem from "@material-ui/core/MenuItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import CheckIcon from "@material-ui/icons/Check";
 import {pages} from "../utils/config";
 
 type DIDElement = { alias: string, did: string, controlledBy?: string }
@@ -82,7 +67,7 @@ const IdentitySelector = () => (
             <DIDMenuItem item={item}/>
           )}
           <hr/>
-          {userNavigation.filter(isControlledBy).map((item, index) =>
+          {userNavigation.filter(isControlledBy).map((item) =>
             <DIDMenuItem item={item}/>
           )}
         </Menu.Items>
@@ -167,9 +152,14 @@ const NetworkSelector = () => {
   );
 }
 
-function NavigationPanel() {
+function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
   const { page, setPage } = usePage()
 
+  if (isSignerWindow){
+
+  } else {
+
+  }
   return (
     <Disclosure as="nav" className="bg-white border-b border-gray-200">
       {({ open }) => (
@@ -189,94 +179,111 @@ function NavigationPanel() {
                     alt="Cryptid"
                   />
                 </div>
-                <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+                {(() => {
+                  if(!isSignerWindow){
+                    return (<div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+                      {pages.map((item) => (
+                        <a
+                          href='#'
+                          key={item}
+                          onClick={() => setPage(item)}
+                          className={classNames(
+                            item === page
+                              ? 'border-indigo-500 text-gray-900'
+                              : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                            'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
+                          )}
+                          aria-current={item === page ? 'page' : undefined}
+                        >
+                          {item}
+                        </a>
+                      ))}
+                    </div>);
+                  }
+                })()}
+              </div>
+              {(() => {
+                if(isSignerWindow){
+                  return <>
+                    <IdentitySelector/>
+                  </>;
+                } else {
+                  return (<>
+                    <div className="sm:ml-6 sm:flex">
+                      <NetworkSelector/>
+                      <IdentitySelector/>
+                    </div>
+                    <div className="-mr-2 flex items-center sm:hidden">
+                      {/* Mobile menu button */}
+                      <Disclosure.Button
+                        className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <span className="sr-only">Open main menu</span>
+                        {open ? (
+                          <XIcon className="block h-6 w-6" aria-hidden="true"/>
+                        ) : (
+                          <MenuIcon className="block h-6 w-6" aria-hidden="true"/>
+                        )}
+                      </Disclosure.Button>
+                    </div>
+                  </>)
+                }
+              })()}
+            </div>
+          </div>
+          {(() => {
+            if(!isSignerWindow){
+              return (<Disclosure.Panel className="sm:hidden">
+                <div className="pt-2 pb-3 space-y-1">
                   {pages.map((item) => (
                     <a
-                      href='#'
                       key={item}
-                      onClick={() => setPage(item)}
                       className={classNames(
                         item === page
-                          ? 'border-indigo-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
+                          ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                          : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800',
+                        'block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
                       )}
-                      aria-current={item === page ? 'page' : undefined}
+                      aria-current={item === page? 'page' : undefined}
                     >
                       {item}
                     </a>
                   ))}
                 </div>
-              </div>
-              <div className="sm:ml-6 sm:flex">
-                <NetworkSelector/>
-                <IdentitySelector/>
-              </div>
-              <div className="-mr-2 flex items-center sm:hidden">
-                {/* Mobile menu button */}
-                <Disclosure.Button
-                  className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  <span className="sr-only">Open main menu</span>
-                  {open ? (
-                    <XIcon className="block h-6 w-6" aria-hidden="true"/>
-                  ) : (
-                    <MenuIcon className="block h-6 w-6" aria-hidden="true"/>
-                  )}
-                </Disclosure.Button>
-              </div>
-            </div>
-          </div>
-
-          <Disclosure.Panel className="sm:hidden">
-            <div className="pt-2 pb-3 space-y-1">
-              {pages.map((item) => (
-                <a
-                  key={item}
-                  className={classNames(
-                    item === page
-                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800',
-                    'block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
-                  )}
-                  aria-current={item === page? 'page' : undefined}
-                >
-                  {item}
-                </a>
-              ))}
-            </div>
-            <div className="pt-4 pb-3 border-t border-gray-200">
-              <div className="flex items-center px-4">
-                <div className="flex-shrink-0">
-                  <img className="h-10 w-10 rounded-full" src={selectedDIDElement.did} alt=""/>
+                <div className="pt-4 pb-3 border-t border-gray-200">
+                  <div className="flex items-center px-4">
+                    <div className="flex-shrink-0">
+                      <img className="h-10 w-10 rounded-full" src={selectedDIDElement.did} alt=""/>
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-base font-medium text-gray-800">{selectedDIDElement.alias}</div>
+                      <div className="text-sm font-medium text-gray-500">{selectedDIDElement.did}</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    {userNavigation.map((item) => (
+                      <a
+                        key={item.alias}
+                        href={item.did}
+                        className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                      >
+                        {item.alias}
+                      </a>
+                    ))}
+                  </div>
                 </div>
-                <div className="ml-3">
-                  <div className="text-base font-medium text-gray-800">{selectedDIDElement.alias}</div>
-                  <div className="text-sm font-medium text-gray-500">{selectedDIDElement.did}</div>
-                </div>
-              </div>
-              <div className="mt-3 space-y-1">
-                {userNavigation.map((item) => (
-                  <a
-                    key={item.alias}
-                    href={item.did}
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                  >
-                    {item.alias}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </Disclosure.Panel>
+              </Disclosure.Panel>)
+            }
+          })()}
         </>
       )}
     </Disclosure>
   )
 }
 
-export default function NavigationFrame({ children }) {
+export default function NavigationFrame({ children, isSignerWindow }: { children: JSX.Element | JSX.Element[], isSignerWindow: boolean }) {
   return (
     <div className="min-h-screen bg-white">
-      <NavigationPanel/>
+      <NavigationPanel isSignerWindow={isSignerWindow}/>
       {children}
     </div>
   )

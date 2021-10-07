@@ -46,7 +46,7 @@ const PageContents:React.FC = () => {
 
 export default function App() {
   let appElement = (
-    <NavigationFrame>
+    <NavigationFrame isSignerWindow={!!window.opener}>
       <Suspense fallback={<LoadingIndicator />}>
         <PageContents />
       </Suspense>
