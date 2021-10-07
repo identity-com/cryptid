@@ -12,7 +12,7 @@ import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
 import { refreshWalletPublicKeys } from "../../utils/wallet";
-import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
+import {ClipboardIcon, KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
 import {AddressLink} from "../AddressLink";
 import TokenIcon from "../TokenIcon";
 import {CheckCircleIcon, ChevronDownIcon, ChevronUpIcon} from "@heroicons/react/solid";
@@ -31,7 +31,9 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
           <UserIcon className="w-8"/>
         </div>
         <div className="min-w-0 flex-1 px-4">
-          Account: <AddressLink publicKey={cryptidAccount.address || undefined}/>
+          Account: 
+          <AddressLink publicKey={cryptidAccount.address || undefined}/>
+          <ClipboardIcon className="inline-flex pl-1 h-5 mb-3" aria-hidden="true"/>
         </div>
         <div className="min-w-0 flex-1 flex px-4 md:gap-4">
           <div className="text-sm md:block text-gray-900 flex-1">

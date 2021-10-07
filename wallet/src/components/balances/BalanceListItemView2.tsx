@@ -19,7 +19,9 @@ import {
 import {TokenButton} from "./TokenButton";
 import SendDialog from "../SendDialog";
 import DepositDialog from "../DepositDialog";
+import {ClipboardIcon} from "@heroicons/react/outline";
 
+const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 4,
@@ -37,7 +39,6 @@ export function BalanceListItemView({
                                       tokenName,
                                       decimals,
                                       displayName,
-                                      subtitle,
                                       tokenLogoUri,
                                       amount,
                                       price,
@@ -73,46 +74,49 @@ export function BalanceListItemView({
         // swapInfo={swapInfo}
         isAssociatedToken={isAssociatedToken}
       />
-        <div className="flex items-center px-4 py-4 sm:px-6">
-          <div className="min-w-0 flex-1 flex items-center">
-            <div className="flex-shrink-0">
-              <TokenIcon
-                mint={mint}
-                tokenName={tokenName}
-                url={tokenLogoUri}
-                size={28}
-              />
-            </div>
-            <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
-              <div>
-                {balanceFormat.format(amount / Math.pow(10, decimals))}{' '}
-                <p className="text-sm font-medium text-indigo-600 truncate">{displayName}</p>
-              </div>
-              <div className="hidden md:block">
-                <div>
-                  <p className="text-sm text-gray-900">
-                    {numberFormat.format(usdValue)}
-                  </p>
-                  <p className="mt-2 flex items-center text-sm text-gray-500">
-                    <CheckCircleIcon className="flex-shrink-0 mr-1.5 h-5 w-5 text-green-400" aria-hidden="true"/>
-                    {publicKey.toString()}
-                  </p>
-                </div>
-              </div>
-            </div>
+      <div className="flex items-center px-4 py-4 sm:px-6">
+        <TokenIcon
+          mint={mint}
+          tokenName={tokenName}
+          url={tokenLogoUri}
+          size={28}
+        />
+        <div className="min-w-0 flex-1 flex px-4 md:grid md:grid-cols-6 md:gap-4">
+          <div className='flex-1 md:grid-cols-1'>
+            {balanceFormat.format(amount / Math.pow(10, decimals))}{' '}
           </div>
-          <div className='inline-flex shadow-sm rounded-md'>
-            <TokenButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
-            <TokenButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+          <div className='md:col-span-2'>
+            <p className="text-sm font-medium text-indigo-600 truncate">{displayName}</p>
           </div>
-          <div>
-            {open ?
-              <ChevronUpIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
-              :
-              <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
+          <div className={classNames(
+           !!usdValue ? 'md:col-span-1': 'hidden'  
+          )}>
+            {
+              usdValue &&
+              <p className="text-sm text-gray-900">
+                {numberFormat.format(usdValue)}
+              </p>
             }
           </div>
+          <div className="hidden md:block">
+            <p className="mt-2 flex items-center text-sm text-gray-500">
+              <ClipboardIcon className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true"/>
+              {publicKey.toString()}
+            </p>
+          </div>
         </div>
+        <div className='inline-flex shadow-sm rounded-md'>
+          <TokenButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+          <TokenButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+        </div>
+        <div>
+          {open ?
+            <ChevronUpIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
+            :
+            <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
+          }
+        </div>
+      </div>
       {expandable && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <BalanceListItemDetails

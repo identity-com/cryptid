@@ -14,6 +14,7 @@ export const AddressLink:React.FC<Props> = ({publicKey}: Props) => {
       }
       target="_blank"
       rel="noopener"
+      className="pl-3"
     >
       {publicKey?.toBase58()}
     </Link>);
