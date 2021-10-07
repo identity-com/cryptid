@@ -164,7 +164,7 @@ export function useAsyncData<T = any>(
   asyncFn: () => Promise<T>,
   cacheKey: any,
   { refreshInterval = 60000 } = {},
-): [null | undefined | T, boolean, any] {
+): [null | T, boolean, any] {
   const [, rerender] = useReducer((i) => i + 1, 0);
   cacheKey = formatCacheKey(cacheKey);
 
@@ -189,7 +189,11 @@ export function useAsyncData<T = any>(
 
   const loaded = globalCache.has(cacheKey);
   const error = errorCache.has(cacheKey) ? errorCache.get(cacheKey) : undefined;
-  const data = loaded ? globalCache.get(cacheKey) : undefined;
+  let data = loaded ? globalCache.get(cacheKey) : undefined;
+  if (!data) {
+    data = null
+  }
+
   return [data, loaded, error];
 }
 
