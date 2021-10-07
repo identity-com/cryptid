@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import * as bs58 from 'bs58';
-import { Account, PublicKey } from '@solana/web3.js';
+import { Account, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import {
   setInitialAccountInfo,
@@ -25,26 +25,39 @@ import { useListener, useLocalStorageState, useRefEqual } from './utils';
 import { useTokenInfo } from './tokens/names';
 import { refreshCache, useAsyncData } from './fetch-loop';
 import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
-import { WalletProviderFactory } from './walletProvider/factory';
+import { WalletProviderFactory, WalletProviderInterface } from './walletProvider/factory';
 import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
 import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
+interface WalletSelectorInferface {
+  walletIndex?: number,
+  importedPubkey?: string,
+  type: string
+}
+
+interface WalletAccountInterface {
+  selector: WalletSelectorInferface,
+  address: PublicKey,
+  name: string,
+  isSelected: boolean
+}
 
 const WALLET_TYPE = {
   sw: 'sw',
   adapter: 'adapter',
 }
 
-const DEFAULT_WALLET_SELECTOR = {
+const DEFAULT_WALLET_SELECTOR: WalletSelectorInferface = {
   walletIndex: 0, // only for sw
   importedPubkey: undefined, // only for sw
   type: WALLET_TYPE.sw,
 };
 
 export class Wallet {
-  constructor(connection, type, args) {
-    this.connection = connection;
+  private provider: WalletProviderInterface;
+
+  constructor(private connection: Connection, private type: string, args) {
     this.type = type;
     this.provider = WalletProviderFactory.getProvider(type, args);
   }
@@ -77,7 +90,7 @@ export class Wallet {
       );
   };
 
-  createTokenAccount = async (tokenAddress) => {
+  createTokenAccount = async (tokenAddress: PublicKey) => {
     return await createAndInitializeTokenAccount({
       connection: this.connection,
       payer: this,
@@ -86,7 +99,7 @@ export class Wallet {
     });
   };
 
-  createAssociatedTokenAccount = async (splTokenMintAddress) => {
+  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey) => {
     return await createAssociatedTokenAccount({
       connection: this.connection,
       wallet: this,
@@ -101,13 +114,13 @@ export class Wallet {
   };
 
   transferToken = async (
-    source,
-    destination,
-    amount,
-    mint,
-    decimals,
-    memo = null,
-    overrideDestinationCheck = false,
+    source: PublicKey,
+    destination: PublicKey,
+    amount: number,
+    mint: PublicKey,
+    decimals: number,
+    memo: string | undefined = undefined,
+    overrideDestinationCheck: boolean = false,
   ) => {
     if (source.equals(this.publicKey)) {
       if (memo) {
@@ -128,11 +141,11 @@ export class Wallet {
     });
   };
 
-  transferSol = async (destination, amount) => {
+  transferSol = async (destination: PublicKey, amount: number) => {
     return nativeTransfer(this.connection, this, destination, amount);
   };
 
-  closeTokenAccount = async (publicKey, skipPreflight = false) => {
+  closeTokenAccount = async (publicKey: PublicKey, skipPreflight = false) => {
     return await closeTokenAccount({
       connection: this.connection,
       owner: this,
@@ -141,17 +154,17 @@ export class Wallet {
     });
   };
 
-  signTransaction = async (transaction) => {
+  signTransaction = async (transaction: Transaction) => {
     return this.provider.signTransaction(transaction);
   };
 
   // TODO: This should be removed, since the interface will no longer be used.
-  createSignature = async (message) => {
+  createSignature = async (message: Uint8Array) => {
     return this.provider.createSignature(message);
   };
 }
 
-const WalletContext = React.createContext(null);
+const WalletContext = React.createContext<unknown>(null);
 
 export function WalletProvider({ children }) {
   useListener(walletSeedChanged, 'change');
@@ -207,13 +220,13 @@ export function WalletProvider({ children }) {
             : new Account(
               (() => {
                 const { nonce, ciphertext } = privateKeyImports[
-                  walletSelector.importedPubkey
+                  walletSelector.importedPubkey as string
                   ];
                 return nacl.secretbox.open(
                   bs58.decode(ciphertext),
                   bs58.decode(nonce),
-                  importsEncryptionKey,
-                );
+                  importsEncryptionKey as Buffer,
+                ) as Uint8Array;
               })(),
             );
         wallet = await Wallet.create(connection, 'local', { account });
@@ -238,7 +251,7 @@ export function WalletProvider({ children }) {
     } else {
       const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
       const plaintext = importedAccount.secretKey;
-      const ciphertext = nacl.secretbox(plaintext, nonce, importsEncryptionKey);
+      const ciphertext = nacl.secretbox(plaintext, nonce, importsEncryptionKey as Buffer);
       // `useLocalStorageState` requires a new object.
       let newPrivateKeyImports = { ...privateKeyImports };
       newPrivateKeyImports[importedAccount.publicKey.toString()] = {
@@ -269,13 +282,13 @@ export function WalletProvider({ children }) {
     }
   }
 
-  const [accounts, derivedAccounts] = useMemo(() => {
+  const [accounts, derivedAccounts] = useMemo<[accounts: WalletAccountInterface[], derivedAccounts: WalletAccountInterface[]]>(() => {
     if (!seed) {
       return [[], []];
     }
 
     const seedBuffer = Buffer.from(seed, 'hex');
-    const derivedAccounts = [...Array(walletCount).keys()].map((idx) => {
+    const derivedAccounts: WalletAccountInterface[] = [...Array(walletCount).keys()].map((idx) => {
       let address = getAccountFromSeed(seedBuffer, idx, derivationPath)
         .publicKey;
       let name = localStorage.getItem(`name${idx}`);
@@ -291,7 +304,7 @@ export function WalletProvider({ children }) {
       };
     });
 
-    const importedAccounts = Object.keys(privateKeyImports).map((pubkey) => {
+    const importedAccounts: WalletAccountInterface[] = Object.keys(privateKeyImports).map((pubkey) => {
       const { name } = privateKeyImports[pubkey];
       return {
         selector: {
@@ -306,7 +319,7 @@ export function WalletProvider({ children }) {
     });
 
     // insert adapter as account.
-    const adapterAccount = []
+    const adapterAccount: WalletAccountInterface[] = []
     if (publicKey) {
       adapterAccount.push({
         selector: {
@@ -399,7 +412,7 @@ export function useWalletAddressForMint(mint) {
 
 export function useBalanceInfo(publicKey) {
   let [accountInfo, accountInfoLoaded] = useAccountInfo(publicKey);
-  let { mint, owner, amount } = accountInfo?.owner.equals(TOKEN_PROGRAM_ID)
+  let { mint, owner, amount }: {mint?: PublicKey, owner?: PublicKey, amount?: number}  = accountInfo?.owner.equals(TOKEN_PROGRAM_ID)
     ? parseTokenAccountData(accountInfo.data)
     : {};
   let [mintInfo, mintInfoLoaded] = useAccountInfo(mint);
@@ -409,7 +422,7 @@ export function useBalanceInfo(publicKey) {
     return null;
   }
 
-  if (mint && mintInfoLoaded) {
+  if (mint && mintInfoLoaded && mintInfo) {
     try {
       let { decimals } = parseMintData(mintInfo.data);
       return {
@@ -458,7 +471,7 @@ export function useWalletSelector() {
     addAccount,
     setWalletSelector,
     setAccountName,
-  } = useContext(WalletContext);
+  } = useContext(WalletContext) as any;
 
   return {
     accounts,

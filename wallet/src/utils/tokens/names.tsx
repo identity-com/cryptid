@@ -329,14 +329,14 @@ const customTokenNamesByNetwork = JSON.parse(
 const nameUpdated = new EventEmitter();
 nameUpdated.setMaxListeners(100);
 
-export function useTokenInfo(mint: PublicKey) {
+export function useTokenInfo(mint?: PublicKey) {
   const { endpoint } = useConnectionConfig();
   useListener(nameUpdated, 'update');
   const tokenInfos = useTokenInfos();
   return getTokenInfo(mint, endpoint, tokenInfos);
 }
 
-export function getTokenInfo(mint: PublicKey, endpoint: string, tokenInfos: TokenInfo[]) {
+export function getTokenInfo(mint: PublicKey | undefined, endpoint: string, tokenInfos: TokenInfo[]) {
   if (!mint) {
     return { name: null, symbol: null };
   }

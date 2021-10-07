@@ -43,14 +43,14 @@ interface MnomicInterface {
   mnemonic: string | null,
   seed: string | null,
   importsEncryptionKey: Buffer | null,
-  derivationPath: string | null,
+  derivationPath: string | undefined,
 }
 
 const EMPTY_MNEMONIC: MnomicInterface = {
   mnemonic: null,
   seed: null,
   importsEncryptionKey: null,
-  derivationPath: null,
+  derivationPath: undefined,
 };
 
 let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {

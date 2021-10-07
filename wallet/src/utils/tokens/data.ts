@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 export type TokenInfo = {
   mint: PublicKey,
   owner: PublicKey,
-  amount: any,
+  amount: number,
 }
 
 export const ACCOUNT_LAYOUT = BufferLayout.struct([
