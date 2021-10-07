@@ -385,10 +385,9 @@ const useStyles = makeStyles((theme) => ({
 
 function ApproveConnectionForm({ origin, onApprove }) {
   const wallet = useWallet();
-  const { accounts, hardwareWalletAccount } = useWalletSelector();
+  const { accounts } = useWalletSelector();
   // TODO better way to do this
   const account = accounts
-    .concat([hardwareWalletAccount])
     .find((account) => account && account.address.equals(wallet.publicKey));
   const classes = useStyles();
   const [autoApprove, setAutoApprove] = useState(false);

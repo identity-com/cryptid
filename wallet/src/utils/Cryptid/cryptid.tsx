@@ -15,7 +15,7 @@ import { Account } from "./cryptid-external-types";
 import { useAsyncData } from "../fetch-loop";
 import { useLocalStorageState, useRefEqual } from "../utils";
 import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
-import { parseTokenAccountData } from "../tokens/data";
+import { parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 
 export class CryptidAccount {
@@ -148,7 +148,7 @@ export class CryptidAccount {
     amount,
     mint,
     decimals,
-    memo = null,
+    memo = undefined,
     overrideDestinationCheck = false,
   ) => {
     if (source.equals(this.address)) {
@@ -157,9 +157,21 @@ export class CryptidAccount {
       }
       return this.transferSol(destination, amount);
     }
+
+    if (!this.address) {
+      throw Error('No source address for transfer')
+    }
+
+    const signingWrapper = {
+      // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
+      publicKey: this.address,
+      signTransaction: this.signTransaction.bind(this)
+    }
+
+
     return await transferTokens({
       connection: this.connection,
-      owner: this,
+      owner: signingWrapper,
       sourcePublicKey: source,
       destinationPublicKey: destination,
       amount,
@@ -171,6 +183,10 @@ export class CryptidAccount {
   };
 
   transferSol = async (destination, amount) => {
+    if (!this.address) {
+      throw Error('No source address for transfer')
+    }
+
     // The Tokens Interfaces expect a wallet with
     // interface Wallet {
     //   publicKey: PublicKey
@@ -230,11 +246,6 @@ export type TokenAccountInfo = {
   executable: boolean,
   owner: PublicKey,
   lamports: number,
-}
-export type TokenInfo = {
-  mint: PublicKey,
-  owner: PublicKey,
-  amount: any,
 }
 
 interface CryptidContextInterface {

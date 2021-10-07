@@ -1,9 +1,10 @@
 import { getUnlockedMnemonicAndSeed } from './../wallet-seed';
 import * as bip32 from 'bip32';
 import nacl from 'tweetnacl';
-import { Account } from '@solana/web3.js';
+import { Account, Transaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { derivePath } from 'ed25519-hd-key';
+import { WalletProviderInterface } from './factory';
 
 export const DERIVATION_PATH = {
   deprecated: undefined,
@@ -26,7 +27,7 @@ function deriveSeed(seed, walletIndex, derivationPath, accountIndex) {
   switch (derivationPath) {
     case DERIVATION_PATH.deprecated:
       const path = `m/501'/${walletIndex}'/0/${accountIndex}`;
-      return bip32.fromSeed(seed).derivePath(path).privateKey;
+      return bip32.fromSeed(seed).derivePath(path).privateKey as Buffer;
     case DERIVATION_PATH.bip44:
       const path44 = `m/44'/501'/${walletIndex}'`;
       return derivePath(path44, seed).key;
@@ -38,32 +39,27 @@ function deriveSeed(seed, walletIndex, derivationPath, accountIndex) {
   }
 }
 
-export class LocalStorageWalletProvider {
+export class LocalStorageWalletProvider implements WalletProviderInterface {
+  private readonly account: Account;
+
   constructor(args) {
     this.account = args.account;
-    this.publicKey = this.account.publicKey;
   }
 
-  init = async () => {
-    const { seed } = await getUnlockedMnemonicAndSeed();
-    this.listAddresses = async (walletCount) => {
-      const seedBuffer = Buffer.from(seed, 'hex');
-      return [...Array(walletCount).keys()].map((walletIndex) => {
-        let address = getAccountFromSeed(seedBuffer, walletIndex).publicKey;
-        let name = localStorage.getItem(`name${walletIndex}`);
-        return { index: walletIndex, address, name };
-      });
-    };
+  get publicKey() {
+    return this.account.publicKey
+  }
+
+  async init() {
     return this;
   };
 
-  signTransaction = async (transaction) => {
-    console.log(`Calling transaction.partialSign with ${this.account.publicKey}`)
+  signTransaction = async (transaction: Transaction) => {
     transaction.partialSign(this.account);
     return transaction;
   };
 
-  createSignature = (message) => {
+  createSignature = (message: Uint8Array) => {
     return bs58.encode(nacl.sign.detached(message, this.account.secretKey));
   };
 }

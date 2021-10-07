@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { TextField } from '@material-ui/core';
+import { StyledProps, TextField, Theme, } from '@material-ui/core';
 import CopyIcon from 'mdi-material-ui/ContentCopy';
 import { makeStyles } from '@material-ui/core/styles';
 import { useSnackbar } from 'notistack';
@@ -18,15 +18,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+interface CopyableDisplayInterface {
+  value?: unknown
+  label?: React.ReactNode
+  autoFocus?: boolean
+  qrCode?: boolean | string
+  helperText?: React.ReactNode
+}
+
+
 export default function CopyableDisplay({
   value,
   label,
   autoFocus,
   qrCode,
   helperText,
-}) {
+}: CopyableDisplayInterface) {
   const { enqueueSnackbar } = useSnackbar();
-  const textareaRef = useRef();
+  const textareaRef = useRef<HTMLInputElement>();
   const classes = useStyles();
   const copyLink = () => {
     let textArea = textareaRef.current;
@@ -40,16 +49,16 @@ export default function CopyableDisplay({
     }
   };
 
+  // @ts-ignore
   return (
     <div className={classes.root}>
       <TextField
         inputRef={(ref) => (textareaRef.current = ref)}
+        inputProps={{ readOnly: true }}
         multiline
         autoFocus={autoFocus}
         value={value}
-        readOnly
         onFocus={(e) => e.currentTarget.select()}
-        className={classes.textArea}
         fullWidth
         helperText={helperText}
         label={label}

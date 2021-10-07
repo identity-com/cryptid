@@ -7,7 +7,7 @@ import { useListener } from '../utils';
 import { clusterForEndpoint, MAINNET_BACKUP_URL, MAINNET_URL } from '../clusters';
 import { useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
-import { TokenListProvider } from '@solana/spl-token-registry';
+import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
 
 // This list is used for deciding what to display in the popular tokens list
 // in the `AddTokenDialog`.
@@ -286,16 +286,12 @@ const POPULAR_TOKENS = {
   ],
 };
 
-const TokenListContext = React.createContext({});
-
-export function useTokenInfos() {
-  const { tokenInfos } = useContext(TokenListContext);
-  return tokenInfos;
-}
+const TokenListContext = React.createContext<{tokenInfos: TokenInfo[]}>({ tokenInfos: [] });
 
 export function TokenRegistryProvider(props) {
   const { endpoint } = useConnectionConfig();
-  const [tokenInfos, setTokenInfos] = useState(null);
+  const [tokenInfos, setTokenInfos] = useState<TokenInfo[]>([]);
+
   useEffect(() => {
     if (endpoint !== MAINNET_BACKUP_URL && endpoint !== MAINNET_URL) return;
     const tokenListProvider = new TokenListProvider();
@@ -308,7 +304,7 @@ export function TokenRegistryProvider(props) {
       const tokenInfos =
         tokenListContainer !== filteredTokenListContainer
           ? filteredTokenListContainer?.getList()
-          : null; // Workaround for filter return all on unknown slug
+          : []; // Workaround for filter return all on unknown slug
       setTokenInfos(tokenInfos);
     });
   }, [endpoint]);
@@ -320,6 +316,12 @@ export function TokenRegistryProvider(props) {
   );
 }
 
+export function useTokenInfos() {
+  const { tokenInfos } = useContext(TokenListContext);
+  return tokenInfos;
+}
+
+
 const customTokenNamesByNetwork = JSON.parse(
   localStorage.getItem('tokenNames') ?? '{}',
 );
@@ -327,14 +329,14 @@ const customTokenNamesByNetwork = JSON.parse(
 const nameUpdated = new EventEmitter();
 nameUpdated.setMaxListeners(100);
 
-export function useTokenInfo(mint) {
+export function useTokenInfo(mint: PublicKey) {
   const { endpoint } = useConnectionConfig();
   useListener(nameUpdated, 'update');
   const tokenInfos = useTokenInfos();
   return getTokenInfo(mint, endpoint, tokenInfos);
 }
 
-export function getTokenInfo(mint, endpoint, tokenInfos) {
+export function getTokenInfo(mint: PublicKey, endpoint: string, tokenInfos: TokenInfo[]) {
   if (!mint) {
     return { name: null, symbol: null };
   }
