@@ -159,7 +159,11 @@ export default function PopupPage({ opener }: { opener: Opener }){
   }
 
   const mustConnect =
-    !connectedAccount || (selectedCryptidAccount && selectedCryptidAccount.address && !connectedAccount.equals(selectedCryptidAccount.address));
+    !connectedAccount || (
+      selectedCryptidAccount &&
+      selectedCryptidAccount.address &&
+      !connectedAccount.equals(selectedCryptidAccount.address)
+    );
 
   if (mustConnect){
     function connect(autoApprove: boolean){
@@ -219,7 +223,10 @@ export default function PopupPage({ opener }: { opener: Opener }){
     }
     postMessage({
       result: {
-        transaction: await selectedCryptidAccount.signTransaction(transaction).then((signedTx) => signedTx.serialize({ verifySignatures: false })).then(bs58.encode)
+        transaction: await selectedCryptidAccount
+          .signTransaction(transaction)
+          .then((signedTx) => signedTx.serialize({ verifySignatures: false }))
+          .then(bs58.encode)
       },
       id: request.id
     });
