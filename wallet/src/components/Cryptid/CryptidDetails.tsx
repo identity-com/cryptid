@@ -14,7 +14,7 @@ import { useSendTransaction } from "../../utils/notifications";
 import { refreshWalletPublicKeys } from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
-  crytidAccount: CryptidAccount
+  cryptidAccount: CryptidAccount
   setSelectedCryptidAccount: (c: CryptidAccount) => void
 }
 
@@ -26,7 +26,7 @@ const useForceUpdate = () => {
   return () => setValue(value => value + 1); // update the state to force render
 }
 
-export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
+export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
   const forceUpdate = useForceUpdate();
@@ -34,31 +34,31 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
 
-  useEffect(() => {}, [crytidAccount])
+  useEffect(() => {}, [cryptidAccount])
 
   const onSuccessUpdate = (f?: () => void) => {
     if (f) {
       f();
     }
-    crytidAccount.updateDocument().then(forceUpdate)
+    cryptidAccount.updateDocument().then(forceUpdate)
   }
 
   const addKeyCallback = (address: string, alias: string) => {
     const pk = new PublicKey(address)
-    sendTransaction(crytidAccount.addKey(pk, alias), {
+    sendTransaction(cryptidAccount.addKey(pk, alias), {
       onSuccess: () => onSuccessUpdate(() => setAddKeyDialogOpen(false))
     });
   }
 
-  const removeKeyCallback = (alias: string) => sendTransaction(crytidAccount.removeKey(alias.replace('#','')), {
+  const removeKeyCallback = (alias: string) => sendTransaction(cryptidAccount.removeKey(alias.replace('#','')), {
     onSuccess: () => onSuccessUpdate()
   });
 
-  const addControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.addController(controllerDID), {
+  const addControllerCallback = (controllerDID: string) => sendTransaction(cryptidAccount.addController(controllerDID), {
     onSuccess: () => onSuccessUpdate(() => setAddControllerDialogOpen(false))
   });
 
-  const removeControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.removeController(controllerDID), {
+  const removeControllerCallback = (controllerDID: string) => sendTransaction(cryptidAccount.removeController(controllerDID), {
     onSuccess: () => onSuccessUpdate()
   });
 
@@ -77,11 +77,11 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
       />
       <Card>
         <Typography variant="h6">
-          DID: {crytidAccount.did}
+          DID: {cryptidAccount.did}
         </Typography>
-        { crytidAccount.isControlled &&
+        { cryptidAccount.isControlled &&
           <Typography variant="h6">
-              controlled by DID: {crytidAccount.controlledBy}
+              controlled by DID: {cryptidAccount.controlledBy}
           </Typography>
         }
         <CardContent>
@@ -89,9 +89,9 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
             Keys:
           </Typography>
           <List>
-            { crytidAccount.verificationMethods.map(vm => {
+            { cryptidAccount.verificationMethods.map(vm => {
               return (
-                <CryptidDetailsListItem primary={vm.id.replace(crytidAccount.did, '')} secondary={vm.publicKeyBase58}
+                <CryptidDetailsListItem primary={vm.id.replace(cryptidAccount.did, '')} secondary={vm.publicKeyBase58}
                                         removeCallback={removeKeyCallback}/>
               )
             })}
@@ -126,7 +126,7 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
           <Typography variant="h6">
             Controller:
           </Typography>
-          { crytidAccount.controllers.map(c => {
+          { cryptidAccount.controllers.map(c => {
             return (
               <CryptidDetailsListItem primary={c} removeCallback={removeControllerCallback} />
             )

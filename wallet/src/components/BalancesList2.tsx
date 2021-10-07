@@ -67,12 +67,9 @@ import DnsIcon from '@material-ui/icons/Dns';
 import DomainsList from './DomainsList';
 import {useCryptid} from "../utils/Cryptid/cryptid";
 import { CryptidDetails } from "./Cryptid/CryptidDetails";
-
-const balanceFormat = new Intl.NumberFormat(undefined, {
-  minimumFractionDigits: 4,
-  maximumFractionDigits: 4,
-  useGrouping: true,
-});
+import BalanceListView from "./balances/BalanceListView";
+import {PublicKey} from "@solana/web3.js";
+import { BalanceListItemView } from './balances/BalanceListItemView2';
 
 const SortAccounts = {
   None: 0,
@@ -96,11 +93,6 @@ const usdValues = {};
 // flickering for the associated token fingerprint icon.
 const associatedTokensCache = {};
 
-const numberFormat = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-
 function fairsIsLoaded(publicKeys) {
   return (
     publicKeys.filter((pk) => usdValues[pk.toString()] !== undefined).length ===
@@ -112,11 +104,11 @@ export default function BalancesList() {
 
   // Updated Crytpid Stuff (from a state POV)
   const { selectedCryptidAccount, setSelectedCryptidAccount } = useCryptid()
-  const [publicKeys, setPublicKeys] = useState([]);
+  const [publicKeys, setPublicKeys] = useState<PublicKey[]>([]);
 
 
   useEffect(() => {
-    if (!selectedCryptidAccount) {
+    if (!selectedCryptidAccount || !selectedCryptidAccount.address) {
       setPublicKeys([])
     } else {
       setPublicKeys([selectedCryptidAccount.address])
@@ -210,6 +202,7 @@ export default function BalancesList() {
             key={pk.toString()}
             publicKey={pk}
             setUsdValue={setUsdValuesCallback}
+            expandable={true}
           />
         );
       });
@@ -219,6 +212,15 @@ export default function BalancesList() {
   const iconSize = isExtensionWidth ? 'small' : 'medium';
 
   return (
+    <BalanceListView
+      selectedCryptidAccount={selectedCryptidAccount}  
+      setSelectedCryptidAccount={setSelectedCryptidAccount}
+    >
+      {balanceListItemsMemo.map(Memoized =>
+        <Memoized />
+      )}
+    </BalanceListView>
+  );
     // <Paper>
     //   <AppBar position="static" color="default" elevation={1}>
     //     <Toolbar>
@@ -351,7 +353,7 @@ export default function BalancesList() {
     //       {/*</Tooltip>*/}
     //     </Toolbar>
     //   </AppBar>
-    //   {selectedCryptidAccount && <CryptidDetails crytidAccount={selectedCryptidAccount} setSelectedCryptidAccount={setSelectedCryptidAccount}/>}
+    //   {selectedCryptidAccount && <CryptidDetails cryptidAccount={selectedCryptidAccount} setSelectedCryptidAccount={setSelectedCryptidAccount}/>}
     //   <List disablePadding>
     //     {balanceListItemsMemo.map((Memoized) => (
     //       <Memoized />
@@ -378,10 +380,9 @@ export default function BalancesList() {
     //   />
     //   <MergeAccountsDialog
     //     open={showMergeAccounts}
-    {/*    onClose={() => setShowMergeAccounts(false)}*/}
-    {/*  />*/}
-    {/*</Paper>*/}
-  );
+    // {/*    onClose={() => setShowMergeAccounts(false)}*/}
+    // {/*  />*/}
+    // {/*</Paper>*/}
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -419,7 +420,7 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   //   * undefined => loading.
   //   * null => not found.
   //   * else => price is loaded.
-  const [price, setPrice] = useState(undefined);
+  const [price, setPrice] = useState<number|undefined>(undefined);
   useEffect(() => {
     if (balanceInfo) {
       if (balanceInfo.tokenSymbol) {
@@ -438,17 +439,17 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
             })
             .catch((err) => {
               console.error(err);
-              setPrice(null);
+              setPrice(undefined);
             });
         }
         // No Serum market exists.
         else {
-          setPrice(null);
+          setPrice(undefined);
         }
       }
       // No token symbol so don't fetch market data.
       else {
-        setPrice(null);
+        setPrice(undefined);
       }
     }
   }, [price, balanceInfo, connection]);
@@ -542,279 +543,19 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   }
 
   return (
-    <>
-      <ListItem button onClick={() => expandable && setOpen((open) => !open)}>
-        <ListItemIcon>
-          <TokenIcon
-            mint={mint}
-            tokenName={tokenName}
-            url={tokenLogoUri}
-            size={28}
-          />
-        </ListItemIcon>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <ListItemText
-            primary={
-              <>
-                {balanceFormat.format(amount / Math.pow(10, decimals))}{' '}
-                {displayName}
-              </>
-            }
-            secondary={subtitle}
-            secondaryTypographyProps={{ className: classes.address }}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              flexDirection: 'column',
-            }}
-          >
-            {price && (
-              <Typography color="textSecondary">
-                {numberFormat.format(usdValue)}
-              </Typography>
-            )}
-          </div>
-        </div>
-        {expandable ? open ? <ExpandLess /> : <ExpandMore /> : <></>}
-      </ListItem>
-      {expandable && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <BalanceListItemDetails
-            isAssociatedToken={isAssociatedToken}
-            publicKey={publicKey}
-            serumMarkets={serumMarkets}
-            balanceInfo={balanceInfo}
-          />
-        </Collapse>
-      )}
-    </>
-  );
-}
-
-function BalanceListItemDetails({
-  publicKey,
-  serumMarkets,
-  balanceInfo,
-  isAssociatedToken,
-}) {
-  const urlSuffix = useSolanaExplorerUrlSuffix();
-  const classes = useStyles();
-  const [sendDialogOpen, setSendDialogOpen] = useState(false);
-  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
-  const [tokenInfoDialogOpen, setTokenInfoDialogOpen] = useState(false);
-  const [exportAccDialogOpen, setExportAccDialogOpen] = useState(false);
-  const [
-    closeTokenAccountDialogOpen,
-    setCloseTokenAccountDialogOpen,
-  ] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const wallet = useWallet();
-  const isProdNetwork = useIsProdNetwork();
-  const [swapInfo] = useAsyncData(async () => {
-    if (!showSwapAddress || !isProdNetwork) {
-      return null;
-    }
-    return await swapApiRequest(
-      'POST',
-      'swap_to',
-      {
-        blockchain: 'sol',
-        coin: balanceInfo.mint?.toBase58(),
-        address: publicKey.toBase58(),
-      },
-      { ignoreUserErrors: true },
-    );
-  }, [
-    'swapInfo',
-    isProdNetwork,
-    balanceInfo.mint?.toBase58(),
-    publicKey.toBase58(),
-  ]);
-  const isExtensionWidth = useIsExtensionWidth();
-
-  if (!balanceInfo) {
-    return <LoadingIndicator delay={0} />;
-  }
-
-  let { mint, tokenName, tokenSymbol, owner, amount } = balanceInfo;
-
-  // Only show the export UI for the native SOL coin.
-  const exportNeedsDisplay =
-    mint === null && tokenName === 'SOL' && tokenSymbol === 'SOL';
-
-  const market = tokenSymbol
-    ? serumMarkets[tokenSymbol.toUpperCase()]
-      ? serumMarkets[tokenSymbol.toUpperCase()].publicKey
-      : undefined
-    : undefined;
-  const isSolAddress = publicKey.equals(owner);
-  const additionalInfo = isExtensionWidth ? undefined : (
-    <>
-      <Typography variant="body2">
-        Token Name: {tokenName ?? 'Unknown'}
-      </Typography>
-      <Typography variant="body2">
-        Token Symbol: {tokenSymbol ?? 'Unknown'}
-      </Typography>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div>
-          {!isSolAddress && isAssociatedToken === false && (
-            <div style={{ display: 'flex' }}>
-              This is an auxiliary token account.
-            </div>
-          )}
-          <Typography variant="body2">
-            <Link
-              href={
-                `https://solscan.io/account/${publicKey.toBase58()}` + urlSuffix
-              }
-              target="_blank"
-              rel="noopener"
-            >
-              View on Solscan
-            </Link>
-          </Typography>
-          {market && (
-            <Typography variant="body2">
-              <Link
-                href={`https://dex.projectserum.com/#/market/${market}`}
-                target="_blank"
-                rel="noopener"
-              >
-                View on Serum
-              </Link>
-            </Typography>
-          )}
-          {swapInfo && swapInfo.coin.erc20Contract && (
-            <Typography variant="body2">
-              <Link
-                href={
-                  `https://etherscan.io/token/${swapInfo.coin.erc20Contract}` +
-                  urlSuffix
-                }
-                target="_blank"
-                rel="noopener"
-              >
-                View on Ethereum
-              </Link>
-            </Typography>
-          )}
-          {!isSolAddress && (
-            <Typography variant="body2">
-              <Link
-                className={classes.viewDetails}
-                onClick={() => setShowDetails(!showDetails)}
-              >
-                View Details
-              </Link>
-            </Typography>
-          )}
-          {showDetails &&
-            (mint ? (
-              <Typography variant="body2" className={classes.address}>
-                Mint Address: {mint.toBase58()}
-              </Typography>
-            ) : null)}
-          {!isSolAddress && showDetails && (
-            <Typography variant="body2" className={classes.address}>
-              {isAssociatedToken ? 'Associated' : ''} Token Metadata:{' '}
-              {publicKey.toBase58()}
-            </Typography>
-          )}
-        </div>
-        {exportNeedsDisplay && wallet.allowsExport && (
-          <div>
-            <Typography variant="body2">
-              <Link href={'#'} onClick={(e) => setExportAccDialogOpen(true)}>
-                Export
-              </Link>
-            </Typography>
-          </div>
-        )}
-      </div>
-    </>
-  );
-
-  return (
-    <>
-      {wallet.allowsExport && (
-        <ExportAccountDialog
-          onClose={() => setExportAccDialogOpen(false)}
-          open={exportAccDialogOpen}
-        />
-      )}
-      <div className={classes.itemDetails}>
-        <div className={classes.buttonContainer}>
-          {!publicKey.equals(owner) && showTokenInfoDialog ? (
-            <Button
-              variant="outlined"
-              color="default"
-              startIcon={<InfoIcon />}
-              onClick={() => setTokenInfoDialogOpen(true)}
-            >
-              Token Info
-            </Button>
-          ) : null}
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<ReceiveIcon />}
-            onClick={() => setDepositDialogOpen(true)}
-          >
-            Receive
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<SendIcon />}
-            onClick={() => setSendDialogOpen(true)}
-          >
-            Send
-          </Button>
-          {localStorage.getItem('warning-close-account') &&
-          mint &&
-          amount === 0 ? (
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              startIcon={<DeleteIcon />}
-              onClick={() => setCloseTokenAccountDialogOpen(true)}
-            >
-              Delete
-            </Button>
-          ) : null}
-        </div>
-        {additionalInfo}
-      </div>
-      <SendDialog
-        open={sendDialogOpen}
-        onClose={() => setSendDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-      />
-      <DepositDialog
-        open={depositDialogOpen}
-        onClose={() => setDepositDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-        swapInfo={swapInfo}
-        isAssociatedToken={isAssociatedToken}
-      />
-      <TokenInfoDialog
-        open={tokenInfoDialogOpen}
-        onClose={() => setTokenInfoDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-      />
-      <CloseTokenAccountDialog
-        open={closeTokenAccountDialogOpen}
-        onClose={() => setCloseTokenAccountDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-      />
-    </>
+    <BalanceListItemView
+      mint={mint}
+      tokenName={tokenName}
+      decimals={decimals}
+      displayName={displayName}
+      subtitle={subtitle}
+      tokenLogoUri={tokenLogoUri}
+      amount={amount}
+      price={price}
+      usdValue={usdValue}
+      isAssociatedToken={isAssociatedToken}
+      publicKey={publicKey}
+      expandable={expandable}     
+    />
   );
 }

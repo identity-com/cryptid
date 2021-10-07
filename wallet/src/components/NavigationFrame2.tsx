@@ -21,9 +21,12 @@ import {
   WalletDisconnectButton,
   WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
-import {BellIcon, MenuIcon, UserIcon, XIcon} from "@heroicons/react/outline";
+import {BellIcon, CogIcon, MenuIcon, UserIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import {complement} from "ramda";
+import MenuItem from "@material-ui/core/MenuItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import CheckIcon from "@material-ui/icons/Check";
 
 
 const navigation = [
@@ -31,6 +34,7 @@ const navigation = [
   { name: 'Collectibles', href: '#', current: false },
   { name: 'Stake', href: '#', current: false },
   { name: 'Swap', href: '#', current: false },
+  { name: 'Identity', href: '#', current: false },
 ]
 type DIDElement = { alias: string, did: string, controlledBy?: string }
 const userNavigation: DIDElement[] = [
@@ -62,136 +66,220 @@ const DIDMenuItem = ({item}: DIDMenuItemProps) => (
 
 const isControlledBy = (didElement: DIDElement) => !!didElement.controlledBy;
 
+const IdentitySelector = () => (
+  <div className="hidden sm:ml-2 sm:flex sm:items-center">
+    {/* Identity dropdown */}
+    <Menu as="div" className="ml-3 relative">
+      <div>
+        <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <span className="sr-only">Select Identity</span>
+          <UserIcon className="h-6 w-6" aria-hidden="true"/>
+        </Menu.Button>
+      </div>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-200"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+          {userNavigation.filter(complement(isControlledBy)).map((item) =>
+            <DIDMenuItem item={item}/>
+          )}
+          <hr/>
+          {userNavigation.filter(isControlledBy).map((item, index) =>
+            <DIDMenuItem item={item}/>
+          )}
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  </div>
+)
+
+const NetworkSelector = () => {
+  const { endpoint, setEndpoint } = useConnectionConfig();
+  const cluster = useMemo(() => clusterForEndpoint(endpoint), [endpoint]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [addCustomNetworkOpen, setCustomNetworkOpen] = useState(false);
+
+  return (
+    <div className="hidden sm:ml-6 sm:flex sm:items-center">
+      <AddCustomClusterDialog
+        open={addCustomNetworkOpen}
+        onClose={() => setCustomNetworkOpen(false)}
+        onAdd={({ name, apiUrl }) => {
+          addCustomCluster(name, apiUrl);
+          setCustomNetworkOpen(false);
+        }}
+      />
+      <Menu as="div" className="ml-3 relative">
+        <div>
+          <Menu.Button
+            className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <span className="sr-only">Select Network</span>
+            <CogIcon className="h-6 w-6" aria-hidden="true"/>
+          </Menu.Button>
+        </div>
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-200"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
+        >
+          <Menu.Items
+            className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+            {getClusters().map((cluster) => (
+              <Menu.Item key={cluster.apiUrl}>
+                {({ active }) => (
+                  /*{ cluster.apiUrl === endpoint && <CheckIcon className="px-4 py-2" /> }*/
+                  <a
+                    className={classNames(
+                      cluster.apiUrl === endpoint ? 'bg-gray-200' : '',
+                      active ? 'bg-gray-100' : '',
+                      'block px-2 py-2 text-sm text-gray-700'
+                    )}
+                    onClick={() => {
+                      setAnchorEl(null);
+                      setEndpoint(cluster.apiUrl);
+                    }}
+                  >
+                    {cluster.name === 'mainnet-beta-backup'
+                      ? 'Mainnet Beta Backup'
+                      : (cluster.name || cluster.apiUrl)}
+                  </a>
+                )}
+              </Menu.Item>
+            ))}
+            <Menu.Item
+              onClick={() => {
+                setCustomNetworkOpen(true);
+              }}
+            >
+              <a
+                className="block px-2 py-2 text-sm text-gray-700"
+                onClick={() => {
+                  setCustomNetworkOpen(true);
+                }}>{customClusterExists() ? 'Edit Custom Endpoint' : 'Add Custom Endpoint'}
+              </a>
+            </Menu.Item>
+          </Menu.Items>
+        </Transition>
+      </Menu>
+    </div>
+  );
+}
 
 function NavigationPanel() {
   // const classes = useStyles();
   const isExtensionWidth = useIsExtensionWidth();
+
+
   return (
     <Disclosure as="nav" className="bg-white border-b border-gray-200">
-    {({ open }) => (
-    <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex justify-between h-32">
-    <div className="flex">
-    <div className="flex-shrink-0 flex items-center">
-    <img
-      className="block lg:hidden h-32 w-auto"
-  src="logo300.png"
-  alt="Cryptid squid"
-  />
-  <img
-    className="block lg:hidden h-8 w-auto"
-  src="title.webp"
-  alt="Cryptid"
-    />
-    </div>
-    <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-    {navigation.map((item) => (
-        <a
-          key={item.name}
-      href={item.href}
-      className={classNames(
-          item.current
-          ? 'border-indigo-500 text-gray-900'
-          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-        'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
-)}
-  aria-current={item.current ? 'page' : undefined}
-    >
-    {item.name}
-    </a>
-))}
-  </div>
-  </div>
-  <div className="hidden sm:ml-6 sm:flex sm:items-center">
+      {({ open }) => (
+        <>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-32">
+              <div className="flex">
+                <div className="flex-shrink-0 flex items-center">
+                  <img
+                    className="block h-32 w-auto"
+                    src="logo300.png"
+                    alt="Cryptid squid"
+                  />
+                  <img
+                    className="block h-8 w-auto"
+                    src="title.webp"
+                    alt="Cryptid"
+                  />
+                </div>
+                <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+                  {navigation.map((item) => (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className={classNames(
+                        item.current
+                          ? 'border-indigo-500 text-gray-900'
+                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                        'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
+                      )}
+                      aria-current={item.current ? 'page' : undefined}
+                    >
+                      {item.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <div className="sm:ml-6 sm:flex">
+                <NetworkSelector/>
+                <IdentitySelector/>
+              </div>
+              <div className="-mr-2 flex items-center sm:hidden">
+                {/* Mobile menu button */}
+                <Disclosure.Button
+                  className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <span className="sr-only">Open main menu</span>
+                  {open ? (
+                    <XIcon className="block h-6 w-6" aria-hidden="true"/>
+                  ) : (
+                    <MenuIcon className="block h-6 w-6" aria-hidden="true"/>
+                  )}
+                </Disclosure.Button>
+              </div>
+            </div>
+          </div>
 
-  {/* Profile dropdown */}
-  <Menu as="div" className="ml-3 relative">
-  <div>
-    <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-  <span className="sr-only">Select Identity</span>
-  <UserIcon className="h-6 w-6" aria-hidden="true"/>
-    </Menu.Button>
-    </div>
-    <Transition
-  as={Fragment}
-  enter="transition ease-out duration-200"
-  enterFrom="transform opacity-0 scale-95"
-  enterTo="transform opacity-100 scale-100"
-  leave="transition ease-in duration-75"
-  leaveFrom="transform opacity-100 scale-100"
-  leaveTo="transform opacity-0 scale-95"
-  >
-  <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-    {userNavigation.filter(complement(isControlledBy)).map((item) =>
-        <DIDMenuItem item={item}/>
-)}
-  <hr/>
-  {userNavigation.filter(isControlledBy).map((item, index) =>
-      <DIDMenuItem item={item}/>
-)}
-  </Menu.Items>
-  </Transition>
-  </Menu>
-  </div>
-  <div className="-mr-2 flex items-center sm:hidden">
-    {/* Mobile menu button */}
-    <Disclosure.Button className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-  <span className="sr-only">Open main menu</span>
-  {open ? (
-    <XIcon className="block h-6 w-6" aria-hidden="true" />
-  ) : (
-    <MenuIcon className="block h-6 w-6" aria-hidden="true" />
-  )}
-  </Disclosure.Button>
-  </div>
-  </div>
-  </div>
-
-  <Disclosure.Panel className="sm:hidden">
-  <div className="pt-2 pb-3 space-y-1">
-    {navigation.map((item) => (
-        <a
-          key={item.name}
-      href={item.href}
-      className={classNames(
-          item.current
-          ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-          : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800',
-        'block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
-)}
-  aria-current={item.current ? 'page' : undefined}
-    >
-    {item.name}
-    </a>
-))}
-  </div>
-  <div className="pt-4 pb-3 border-t border-gray-200">
-  <div className="flex items-center px-4">
-  <div className="flex-shrink-0">
-  <img className="h-10 w-10 rounded-full" src={selectedDIDElement.did} alt="" />
-    </div>
-    <div className="ml-3">
-  <div className="text-base font-medium text-gray-800">{selectedDIDElement.alias}</div>
-    <div className="text-sm font-medium text-gray-500">{selectedDIDElement.did}</div>
-    </div>
-    </div>
-    <div className="mt-3 space-y-1">
-    {userNavigation.map((item) => (
-        <a
-          key={item.alias}
-      href={item.did}
-      className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-      >
-      {item.alias}
-      </a>
-))}
-  </div>
-  </div>
-  </Disclosure.Panel>
-  </>
-)}
-  </Disclosure>
+          <Disclosure.Panel className="sm:hidden">
+            <div className="pt-2 pb-3 space-y-1">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className={classNames(
+                    item.current
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800',
+                    'block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
+                  )}
+                  aria-current={item.current ? 'page' : undefined}
+                >
+                  {item.name}
+                </a>
+              ))}
+            </div>
+            <div className="pt-4 pb-3 border-t border-gray-200">
+              <div className="flex items-center px-4">
+                <div className="flex-shrink-0">
+                  <img className="h-10 w-10 rounded-full" src={selectedDIDElement.did} alt=""/>
+                </div>
+                <div className="ml-3">
+                  <div className="text-base font-medium text-gray-800">{selectedDIDElement.alias}</div>
+                  <div className="text-sm font-medium text-gray-500">{selectedDIDElement.did}</div>
+                </div>
+              </div>
+              <div className="mt-3 space-y-1">
+                {userNavigation.map((item) => (
+                  <a
+                    key={item.alias}
+                    href={item.did}
+                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  >
+                    {item.alias}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </Disclosure.Panel>
+        </>
+      )}
+    </Disclosure>
   )
 }
 
