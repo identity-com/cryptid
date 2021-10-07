@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useWallet, useWalletSelector } from '../utils/wallet';
 import { Transaction } from '@solana/web3.js';
 import {
   Divider,
@@ -33,8 +32,6 @@ export default function PopupPage({ opener }) {
     let params = new URLSearchParams(window.location.hash.slice(1));
     return params.get('origin');
   }, []);
-  const selectedWallet = useWallet();
-  const { accounts } = useWalletSelector();
   const { selectedCryptidAccount } = useCryptid()
 
   const [connectedAccount, setConnectedAccount] = useState(null);
