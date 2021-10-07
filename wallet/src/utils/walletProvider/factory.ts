@@ -20,5 +20,6 @@ export interface WalletProviderInterface {
   publicKey: PublicKey;
   init: () => Promise<WalletProviderInterface>
   signTransaction(transaction: Transaction): Promise<Transaction>;
+  createSignature(message: Uint8Array): string;
 }
 
