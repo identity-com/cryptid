@@ -6,11 +6,6 @@ import SolanaIcon from './SolanaIcon';
 import AddAccountDialog from './AddAccountDialog';
 import DeleteMnemonicDialog from './DeleteMnemonicDialog';
 import { ExportMnemonicDialog } from './ExportAccountDialog.js';
-import {
-  isExtension,
-  isExtensionPopup,
-  useIsExtensionWidth,
-} from '../utils/utils';
 import ConnectionIcon from './ConnectionIcon';
 import { useConnectedWallets } from '../utils/connected-wallets';
 import { usePage } from '../utils/page';
@@ -298,7 +293,6 @@ export default function NavigationFrame({ children }) {
 //   let elements = [];
 //   if (page === 'wallet') {
 //     elements = [
-//       isExtension && <ConnectionsButton />,
 //       <CryptidSelector />,
 //       <WalletSelector />,
 //       <WalletMultiButton />,
@@ -309,9 +303,6 @@ export default function NavigationFrame({ children }) {
 //     elements = [<WalletButton />];
 //   }
 //
-//   if (isExtension && isExtensionWidth) {
-//     elements.push(<ExpandButton />);
-//   }
 //
 //   return elements;
 // }

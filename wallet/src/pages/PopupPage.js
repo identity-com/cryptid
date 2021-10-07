@@ -23,37 +23,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import assert from 'assert';
 import bs58 from 'bs58';
 import WarningIcon from '@material-ui/icons/Warning';
-import { useLocalStorageState, isExtension } from '../utils/utils';
+import { useLocalStorageState } from '../utils/utils';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
 import { useCryptid } from "../utils/Cryptid/cryptid";
-
-function getInitialRequests() {
-  if (!isExtension) {
-    return [];
-  }
-
-  // TODO CHECK OPENER (?)
-
-  const urlParams = new URLSearchParams(window.location.hash.slice(1));
-  const request = JSON.parse(urlParams.get('request'));
-  
-  if (request.method === 'sign') {
-    const dataObj = request.params.data;
-    // Deserialize `data` into a Uint8Array
-    if (!dataObj) {
-      throw new Error('Missing "data" params for "sign" request');
-    }
-
-    const data = new Uint8Array(Object.keys(dataObj).length);
-    for (const [index, value] of Object.entries(dataObj)) {
-      data[index] = value;
-    }
-    request.params.data = data;
-  }
-
-  return [request];
-}
 
 export default function PopupPage({ opener }) {
   const origin = useMemo(() => {
@@ -66,18 +39,11 @@ export default function PopupPage({ opener }) {
 
   const [connectedAccount, setConnectedAccount] = useState(null);
   const hasConnectedAccount = !!connectedAccount;
-  const [requests, setRequests] = useState(getInitialRequests);
+  const [requests, setRequests] = useState([]);
   const [autoApprove, setAutoApprove] = useState(false);
   const postMessage = useCallback(
     (message) => {
-      if (isExtension) {
-        chrome.runtime.sendMessage({
-          channel: 'sollet_extension_background_channel',
-          data: message,
-        });
-      } else {
-        opener.postMessage({ jsonrpc: '2.0', ...message }, origin);
-      }
+      opener.postMessage({ jsonrpc: '2.0', ...message }, origin);
     },
     [opener, origin],
   );
@@ -85,7 +51,7 @@ export default function PopupPage({ opener }) {
   // Send a disconnect event if this window is closed, this component is
   // unmounted, or setConnectedAccount(null) is called.
   useEffect(() => {
-    if (hasConnectedAccount && !isExtension) {
+    if (hasConnectedAccount) {
       function unloadHandler() {
         postMessage({ method: 'disconnected' });
       }
@@ -159,17 +125,11 @@ export default function PopupPage({ opener }) {
   }, [request]);
 
   if (hasConnectedAccount && requests.length === 0) {
-    if (isExtension) {
-      window.close();
-    } else {
-      focusParent();
-    }
+    focusParent();
 
     return (
       <Typography>
-        {isExtension
-          ? 'Submitting...'
-          : 'Please keep this window open in the background.'}
+        {'Please keep this window open in the background.'}
       </Typography>
     );
   }
@@ -182,40 +142,18 @@ export default function PopupPage({ opener }) {
     !connectedAccount || !connectedAccount.equals(selectedCryptidAccount.address);
   // We must detect when to show the connection form on the website as it is not sent as a request.
   if (
-    (isExtension && request.method === 'connect') ||
-    (!isExtension && mustConnect)
+    (mustConnect)
   ) {
     // Approve the parent page to connect to this wallet.
     function connect(autoApprove) {
       setConnectedAccount(selectedCryptidAccount.address);
-      if (isExtension) {
-        chrome.storage.local.get('connectedWallets', (result) => {
-          // TODO better way to do this
-          const account = accounts.find((account) =>
-            account.address.equals(selectedWallet.publicKey),
-          );
-          const connectedWallets = {
-            ...(result.connectedWallets || {}),
-            [origin]: {
-              publicKey: selectedCryptidAccount.address.toBase58(),
-              selector: account.selector,
-              autoApprove,
-            },
-          };
-          chrome.storage.local.set({ connectedWallets });
-        });
-      }
       postMessage({
         method: 'connected',
         params: { publicKey: selectedCryptidAccount.address.toBase58(), autoApprove },
-        id: isExtension ? request.id : undefined,
+        id: undefined,
       });
       setAutoApprove(autoApprove);
-      if (!isExtension) {
-        focusParent();
-      } else {
-        popRequest();
-      }
+      focusParent();
     }
 
     return <ApproveConnectionForm origin={origin} onApprove={connect} />;
@@ -384,11 +322,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function ApproveConnectionForm({ origin, onApprove }) {
-  const wallet = useWallet();
-  const { accounts } = useWalletSelector();
-  // TODO better way to do this
-  const account = accounts
-    .find((account) => account && account.address.equals(wallet.publicKey));
+
   const classes = useStyles();
   const [autoApprove, setAutoApprove] = useState(false);
   const { selectedCryptidAccount } = useCryptid()
@@ -406,7 +340,7 @@ function ApproveConnectionForm({ origin, onApprove }) {
           <Typography>{origin}</Typography>
           <ImportExportIcon fontSize="large" />
           {/* TODO @martin*/}
-          <Typography>{account?.name}</Typography> 
+          <Typography>{'TODO CRYPTID NAME'}</Typography>
           <Typography variant="caption">
             {/* TODO @martin*/}
             ({selectedCryptidAccount.address.toBase58()})

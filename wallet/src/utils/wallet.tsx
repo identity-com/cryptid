@@ -3,21 +3,11 @@ import * as bs58 from 'bs58';
 import { Account, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import {
-  setInitialAccountInfo,
   useAccountInfo,
   useConnection,
 } from './connection';
-import {
-  closeTokenAccount,
-  createAndInitializeTokenAccount,
-  createAssociatedTokenAccount,
-  getOwnedTokenAccounts,
-  nativeTransfer,
-  transferTokens,
-} from './tokens';
 import { TOKEN_PROGRAM_ID } from './tokens/instructions';
 import {
-  ACCOUNT_LAYOUT,
   parseMintData,
   parseTokenAccountData,
 } from './tokens/data';
@@ -30,10 +20,12 @@ import { getAccountFromSeed } from './walletProvider/localStorage';
 import { useSnackbar } from 'notistack';
 import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
+type WalletType = 'sw' | 'adapter'
+
 interface WalletSelectorInferface {
   walletIndex?: number,
   importedPubkey?: string,
-  type: string
+  type: WalletType
 }
 
 interface WalletAccountInterface {
@@ -43,15 +35,11 @@ interface WalletAccountInterface {
   isSelected: boolean
 }
 
-const WALLET_TYPE = {
-  sw: 'sw',
-  adapter: 'adapter',
-}
 
 const DEFAULT_WALLET_SELECTOR: WalletSelectorInferface = {
   walletIndex: 0, // only for sw
   importedPubkey: undefined, // only for sw
-  type: WALLET_TYPE.sw,
+  type: "sw",
 };
 
 export class Wallet {
@@ -75,84 +63,6 @@ export class Wallet {
   get allowsExport() {
     return this.type === 'local';
   }
-
-  getTokenAccountInfo = async () => {
-    let accounts = await getOwnedTokenAccounts(this.connection, this.publicKey);
-    return accounts
-      .map(({ publicKey, accountInfo }) => {
-        setInitialAccountInfo(this.connection, publicKey, accountInfo);
-        return { publicKey, parsed: parseTokenAccountData(accountInfo.data) };
-      })
-      .sort((account1, account2) =>
-        account1.parsed.mint
-          .toBase58()
-          .localeCompare(account2.parsed.mint.toBase58()),
-      );
-  };
-
-  createTokenAccount = async (tokenAddress: PublicKey) => {
-    return await createAndInitializeTokenAccount({
-      connection: this.connection,
-      payer: this,
-      mintPublicKey: tokenAddress,
-      newAccount: new Account(),
-    });
-  };
-
-  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey) => {
-    return await createAssociatedTokenAccount({
-      connection: this.connection,
-      wallet: this,
-      splTokenMintAddress,
-    });
-  };
-
-  tokenAccountCost = async () => {
-    return this.connection.getMinimumBalanceForRentExemption(
-      ACCOUNT_LAYOUT.span,
-    );
-  };
-
-  transferToken = async (
-    source: PublicKey,
-    destination: PublicKey,
-    amount: number,
-    mint: PublicKey,
-    decimals: number,
-    memo: string | undefined = undefined,
-    overrideDestinationCheck: boolean = false,
-  ) => {
-    if (source.equals(this.publicKey)) {
-      if (memo) {
-        throw new Error('Memo not implemented');
-      }
-      return this.transferSol(destination, amount);
-    }
-    return await transferTokens({
-      connection: this.connection,
-      owner: this,
-      sourcePublicKey: source,
-      destinationPublicKey: destination,
-      amount,
-      memo,
-      mint,
-      decimals,
-      overrideDestinationCheck,
-    });
-  };
-
-  transferSol = async (destination: PublicKey, amount: number) => {
-    return nativeTransfer(this.connection, this, destination, amount);
-  };
-
-  closeTokenAccount = async (publicKey: PublicKey, skipPreflight = false) => {
-    return await closeTokenAccount({
-      connection: this.connection,
-      owner: this,
-      sourcePublicKey: publicKey,
-      skipPreflight,
-    });
-  };
 
   signTransaction = async (transaction: Transaction) => {
     return this.provider.signTransaction(transaction);
@@ -202,7 +112,7 @@ export function WalletProvider({ children }) {
       let wallet;
 
       // is connected via wallet adapter.
-      if (walletSelector.type === WALLET_TYPE.adapter && publicKey) {
+      if (walletSelector.type === 'adapter' && publicKey) {
         wallet = await Wallet.create(connection, 'adapter', {
           publicKey,
           signTransaction,
@@ -296,9 +206,9 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: idx,
           importedPubkey: undefined,
-          type: WALLET_TYPE.sw,
+          type: 'sw',
         },
-        isSelected: walletSelector.type === WALLET_TYPE.sw && walletSelector.walletIndex === idx,
+        isSelected: walletSelector.type === 'sw' && walletSelector.walletIndex === idx,
         address,
         name: idx === 0 ? 'Main account' : name || `Account ${idx}`,
       };
@@ -310,7 +220,7 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: undefined,
           importedPubkey: pubkey,
-          type: WALLET_TYPE.sw,
+          type: 'sw',
         },
         address: new PublicKey(bs58.decode(pubkey)),
         name: `${name} (imported)`, // TODO: do this in the Component with styling.
@@ -325,9 +235,9 @@ export function WalletProvider({ children }) {
         selector: {
           walletIndex: undefined,
           importedPubkey: undefined,
-          type: WALLET_TYPE.adapter,
+          type: 'adapter',
         },
-        isSelected: walletSelector.type === WALLET_TYPE.adapter,
+        isSelected: walletSelector.type === 'adapter',
         address: publicKey,
         name: 'External',
       })
@@ -396,19 +306,6 @@ export function useWalletTokenAccounts() {
 
 export function refreshWalletPublicKeys(wallet) {
   refreshCache(wallet.getTokenAccountInfo);
-}
-
-export function useWalletAddressForMint(mint) {
-  const [walletAccounts] = useWalletTokenAccounts();
-  return useMemo(
-    () =>
-      mint
-        ? walletAccounts
-          ?.find((account) => account.parsed?.mint?.equals(mint))
-          ?.publicKey.toBase58()
-        : null,
-    [walletAccounts, mint],
-  );
 }
 
 export function useBalanceInfo(publicKey) {

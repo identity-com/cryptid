@@ -95,9 +95,6 @@ export function useIsExtensionWidth() {
   return useMediaQuery('(max-width:450px)');
 }
 
-export const isExtension = window.location.protocol === 'chrome-extension:';
-
-export const isExtensionPopup = isExtension && window.opener;
 /**
  * Returns an account object when given the private key
  */

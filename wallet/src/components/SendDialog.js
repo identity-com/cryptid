@@ -5,23 +5,10 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import TextField from '@material-ui/core/TextField';
 import DialogForm from './DialogForm';
-import { useWallet, useWalletAddressForMint } from '../utils/wallet';
 import { PublicKey } from '@solana/web3.js';
 import { abbreviateAddress } from '../utils/utils';
 import InputAdornment from '@material-ui/core/InputAdornment';
-import { useCallAsync, useSendTransaction } from '../utils/notifications';
-import { showSwapAddress } from '../utils/config';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import { useConnection, useIsProdNetwork } from '../utils/connection';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import Link from '@material-ui/core/Link';
-import Typography from '@material-ui/core/Typography';
-import { useAsyncData } from '../utils/fetch-loop';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { useSendTransaction } from '../utils/notifications';
 import {
   TOKEN_PROGRAM_ID,
   WRAPPED_SOL_MINT,

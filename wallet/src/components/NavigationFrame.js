@@ -26,8 +26,6 @@ import AddAccountDialog from './AddAccountDialog';
 import DeleteMnemonicDialog from './DeleteMnemonicDialog';
 import { ExportMnemonicDialog } from './ExportAccountDialog.js';
 import {
-  isExtension,
-  isExtensionPopup,
   useIsExtensionWidth,
 } from '../utils/utils';
 import ConnectionIcon from './ConnectionIcon';
@@ -75,23 +73,6 @@ export default function NavigationFrame({ children }) {
   return (
     <>
       <AppBar position="static">
-        {/*{!isExtension && (*/}
-        {/*  <div*/}
-        {/*    style={{*/}
-        {/*      textAlign: 'center',*/}
-        {/*      background: '#fafafa',*/}
-        {/*      color: 'black',*/}
-        {/*      paddingLeft: '24px',*/}
-        {/*      paddingRight: '24px',*/}
-        {/*      fontSize: '14px',*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    <Typography>*/}
-        {/*      Beware of sites attempting to impersonate sollet.io or other DeFi*/}
-        {/*      services.*/}
-        {/*    </Typography>*/}
-        {/*  </div>*/}
-        {/*)}*/}
         <Toolbar>
           <Typography variant="h6" className={classes.title} component="h1">
             {isExtensionWidth ? 'Cryptid' : 'Cryptid DID Wallet'}
@@ -106,17 +87,11 @@ export default function NavigationFrame({ children }) {
 }
 
 function NavigationButtons() {
-  const isExtensionWidth = useIsExtensionWidth();
   const { page } = usePage();
-
-  if (isExtensionPopup) {
-    return null;
-  }
 
   let elements = [];
   if (page === 'wallet') {
     elements = [
-      isExtension && <ConnectionsButton />,
       <CryptidSelector />,
       <WalletSelector />,
       <WalletMultiButton />,
@@ -127,25 +102,7 @@ function NavigationButtons() {
     elements = [<WalletButton />];
   }
 
-  if (isExtension && isExtensionWidth) {
-    elements.push(<ExpandButton />);
-  }
-
   return elements;
-}
-
-function ExpandButton() {
-  const onClick = () => {
-    window.open(chrome.extension.getURL('index.html'), '_blank');
-  };
-
-  return (
-    <Tooltip title="Expand View">
-      <IconButton color="inherit" onClick={onClick}>
-        <OpenInNew />
-      </IconButton>
-    </Tooltip>
-  );
 }
 
 function WalletButton() {
@@ -166,42 +123,6 @@ function WalletButton() {
         <Button color="inherit" onClick={onClick} className={classes.button}>
           Wallet
         </Button>
-      </Hidden>
-    </>
-  );
-}
-
-function ConnectionsButton() {
-  const classes = useStyles();
-  const { setPage } = usePage();
-  const onClick = () => setPage('connections');
-  const connectedWallets = useConnectedWallets();
-
-  const connectionAmount = Object.keys(connectedWallets).length;
-
-  return (
-    <>
-      <Hidden smUp>
-        <Tooltip title="Manage Connections">
-          <IconButton color="inherit" onClick={onClick}>
-            <Badge
-              badgeContent={connectionAmount}
-              classes={{ badge: classes.badge }}
-            >
-              <ConnectionIcon />
-            </Badge>
-          </IconButton>
-        </Tooltip>
-      </Hidden>
-      <Hidden xsDown>
-        <Badge
-          badgeContent={connectionAmount}
-          classes={{ badge: classes.badge }}
-        >
-          <Button color="inherit" onClick={onClick} className={classes.button}>
-            Connections
-          </Button>
-        </Badge>
       </Hidden>
     </>
   );

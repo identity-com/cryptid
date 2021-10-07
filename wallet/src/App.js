@@ -24,7 +24,6 @@ import { SnackbarProvider } from 'notistack';
 import PopupPage from './pages/PopupPage';
 import LoginPage from './pages/LoginPage';
 import ConnectionsPage from './pages/ConnectionsPage';
-import { isExtension } from './utils/utils';
 import { PageProvider, usePage } from './utils/page';
 import { CryptidProvider, useCryptid } from './utils/Cryptid/cryptid';
 import { MetaWalletProvider } from './utils/Cryptid/MetaWalletProvider';
@@ -57,14 +56,6 @@ export default function App() {
       </Suspense>
     </NavigationFrame>
   );
-
-  if (isExtension) {
-    appElement = (
-      <ConnectedWalletsProvider>
-        <PageProvider>{appElement}</PageProvider>
-      </ConnectedWalletsProvider>
-    );
-  }
 
   return (
     <Suspense fallback={<LoadingIndicator />}>
