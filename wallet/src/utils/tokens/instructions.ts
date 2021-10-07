@@ -47,7 +47,7 @@ LAYOUT.addVariant(
 );
 
 const instructionMaxSpan = Math.max(
-  ...Object.values(LAYOUT.registry).map((r) => r.span),
+  ...Object.values(LAYOUT.registry).map((r: any) => r.span),
 );
 
 function encodeTokenInstructionData(instruction) {
@@ -61,7 +61,7 @@ export function initializeMint({
   decimals,
   mintAuthority,
   freezeAuthority,
-}) {
+}: {mint: PublicKey, decimals: number, mintAuthority: PublicKey, freezeAuthority?: PublicKey}) {
   let keys = [
     { pubkey: mint, isSigner: false, isWritable: true },
     { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
@@ -80,7 +80,11 @@ export function initializeMint({
   });
 }
 
-export function initializeAccount({ account, mint, owner }) {
+export function initializeAccount({ account, mint, owner }:{
+  account: PublicKey,
+  mint: PublicKey,
+  owner: PublicKey
+}) {
   let keys = [
     { pubkey: account, isSigner: false, isWritable: true },
     { pubkey: mint, isSigner: false, isWritable: false },
@@ -96,7 +100,14 @@ export function initializeAccount({ account, mint, owner }) {
   });
 }
 
-export function transferChecked({ source, mint, destination, amount, decimals, owner }) {
+export function transferChecked({ source, mint, destination, amount, decimals, owner }: {
+  source: PublicKey,
+  mint: PublicKey,
+  destination: PublicKey,
+  amount: number,
+  decimals: number,
+  owner: PublicKey
+}) {
   let keys = [
     { pubkey: source, isSigner: false, isWritable: true },
     { pubkey: mint, isSigner: false, isWritable: false },
@@ -112,7 +123,12 @@ export function transferChecked({ source, mint, destination, amount, decimals, o
   });
 }
 
-export function mintTo({ mint, destination, amount, mintAuthority }) {
+export function mintTo({ mint, destination, amount, mintAuthority }: {
+  mint: PublicKey,
+  destination: PublicKey,
+  amount: number,
+  mintAuthority: PublicKey
+}) {
   let keys = [
     { pubkey: mint, isSigner: false, isWritable: true },
     { pubkey: destination, isSigner: false, isWritable: true },
@@ -129,7 +145,11 @@ export function mintTo({ mint, destination, amount, mintAuthority }) {
   });
 }
 
-export function closeAccount({ source, destination, owner }) {
+export function closeAccount({ source, destination, owner }:{
+  source: PublicKey,
+  destination: PublicKey,
+  owner: PublicKey
+}) {
   const keys = [
     { pubkey: source, isSigner: false, isWritable: true },
     { pubkey: destination, isSigner: false, isWritable: true },
@@ -144,7 +164,7 @@ export function closeAccount({ source, destination, owner }) {
   });
 }
 
-export function memoInstruction(memo) {
+export function memoInstruction(memo: string) {
   return new TransactionInstruction({
     keys: [],
     data: Buffer.from(memo, 'utf-8'),

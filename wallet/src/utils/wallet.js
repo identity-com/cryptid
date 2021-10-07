@@ -33,7 +33,6 @@ import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
 
 const WALLET_TYPE = {
   sw: 'sw',
-  ledger: 'ledger',
   adapter: 'adapter',
 }
 
@@ -176,15 +175,9 @@ export function WalletProvider({ children }) {
     'walletSelector',
     DEFAULT_WALLET_SELECTOR,
   );
-  const [_hardwareWalletAccount, setHardwareWalletAccount] = useState(null);
-
   // `walletCount` is the number of HD wallets.
   const [walletCount, setWalletCount] = useLocalStorageState('walletCount', 1);
 
-  if (walletSelector.type === WALLET_TYPE.ledger && !_hardwareWalletAccount) {
-    walletSelector = DEFAULT_WALLET_SELECTOR;
-    setWalletSelector(DEFAULT_WALLET_SELECTOR);
-  }
 
   const { publicKey, signTransaction } = useSolAdapterWallet()
 
@@ -194,31 +187,6 @@ export function WalletProvider({ children }) {
         return null;
       }
       let wallet;
-      if (walletSelector.type === WALLET_TYPE.ledger) {
-        try {
-          const onDisconnect = () => {
-            setWalletSelector(DEFAULT_WALLET_SELECTOR);
-            setHardwareWalletAccount(null);
-          };
-          const args = {
-            onDisconnect,
-            derivationPath: walletSelector.derivationPath,
-            account: walletSelector.account,
-            change: walletSelector.change,
-          };
-          wallet = await Wallet.create(connection, 'ledger', args);
-        } catch (e) {
-          console.log(`received error using ledger wallet: ${e}`);
-          let message = 'Received error unlocking ledger';
-          if (e.statusCode) {
-            message += `: ${e.statusCode}`;
-          }
-          enqueueSnackbar(message, { variant: 'error' });
-          setWalletSelector(DEFAULT_WALLET_SELECTOR);
-          setHardwareWalletAccount(null);
-          return;
-        }
-      }
 
       // is connected via wallet adapter.
       if (walletSelector.type === WALLET_TYPE.adapter && publicKey) {
@@ -263,7 +231,7 @@ export function WalletProvider({ children }) {
     derivationPath,
     publicKey,
   ]);
-  function addAccount({ name, importedAccount, ledger }) {
+  function addAccount({ name, importedAccount }) {
     if (importedAccount === undefined) {
       name && localStorage.setItem(`name${walletCount}`, name);
       setWalletCount(walletCount + 1);
@@ -291,7 +259,7 @@ export function WalletProvider({ children }) {
   };
   const [walletNames, setWalletNames] = useState(getWalletNames());
   function setAccountName(selector, newName) {
-    if (selector.importedPubkey && selector.type !== WALLET_TYPE.ledger) {
+    if (selector.importedPubkey) {
       let newPrivateKeyImports = { ...privateKeyImports };
       newPrivateKeyImports[selector.importedPubkey.toString()].name = newName;
       setPrivateKeyImports(newPrivateKeyImports);
@@ -357,22 +325,6 @@ export function WalletProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seed, walletCount, walletSelector, privateKeyImports, walletNames, publicKey]);
 
-  let hardwareWalletAccount;
-  if (_hardwareWalletAccount) {
-    hardwareWalletAccount = {
-      ..._hardwareWalletAccount,
-      selector: {
-        walletIndex: undefined,
-        type: WALLET_TYPE.ledger,
-        importedPubkey: _hardwareWalletAccount.publicKey,
-        derivationPath: _hardwareWalletAccount.derivationPath,
-        account: _hardwareWalletAccount.account,
-        change: _hardwareWalletAccount.change,
-      },
-      address: _hardwareWalletAccount.publicKey,
-      isSelected: walletSelector.type === WALLET_TYPE.ledger,
-    };
-  }
 
   return (
     <WalletContext.Provider
@@ -390,8 +342,6 @@ export function WalletProvider({ children }) {
         addAccount,
         setAccountName,
         derivationPath,
-        hardwareWalletAccount,
-        setHardwareWalletAccount,
       }}
     >
       {children}
@@ -508,8 +458,6 @@ export function useWalletSelector() {
     addAccount,
     setWalletSelector,
     setAccountName,
-    hardwareWalletAccount,
-    setHardwareWalletAccount,
   } = useContext(WalletContext);
 
   return {
@@ -518,7 +466,5 @@ export function useWalletSelector() {
     setWalletSelector,
     addAccount,
     setAccountName,
-    hardwareWalletAccount,
-    setHardwareWalletAccount,
   };
 }

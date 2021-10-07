@@ -8,14 +8,14 @@
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
 import { useAsyncData } from "../fetch-loop";
 import { useLocalStorageState, useRefEqual } from "../utils";
 import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
-import { parseTokenAccountData } from "../tokens/data";
+import { parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 
 export class CryptidAccount {
@@ -148,7 +148,7 @@ export class CryptidAccount {
     amount,
     mint,
     decimals,
-    memo = null,
+    memo = undefined,
     overrideDestinationCheck = false,
   ) => {
     if (source.equals(this.address)) {
@@ -157,9 +157,21 @@ export class CryptidAccount {
       }
       return this.transferSol(destination, amount);
     }
+
+    if (!this.address) {
+      throw Error('No source address for transfer')
+    }
+
+    const signingWrapper = {
+      // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
+      publicKey: this.address,
+      signTransaction: this.signTransaction.bind(this)
+    }
+
+
     return await transferTokens({
       connection: this.connection,
-      owner: this,
+      owner: signingWrapper,
       sourcePublicKey: source,
       destinationPublicKey: destination,
       amount,
@@ -171,6 +183,10 @@ export class CryptidAccount {
   };
 
   transferSol = async (destination, amount) => {
+    if (!this.address) {
+      throw Error('No source address for transfer')
+    }
+
     // The Tokens Interfaces expect a wallet with
     // interface Wallet {
     //   publicKey: PublicKey
@@ -186,6 +202,50 @@ export class CryptidAccount {
 
     return nativeTransfer(this.connection, signingWrapper, destination, amount);
   };
+
+  getTokenAccountInfo = async (): Promise<{ publicKey: PublicKey, parsed: TokenInfo }[]> => {
+    let accounts: {
+      publicKey: PublicKey,
+      accountInfo: TokenAccountInfo,
+    }[] = this.address ? await getOwnedTokenAccounts(this.connection, await this.address) : [];
+    return accounts.map<{
+      publicKey: PublicKey,
+      parsed: TokenInfo,
+    }>(({ publicKey, accountInfo }) => {
+      setInitialAccountInfo(this.connection, publicKey, accountInfo);
+      return {
+        publicKey,
+        parsed: parseTokenAccountData(accountInfo.data),
+      };
+    }).sort((account1, account2) =>
+        account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
+    );
+  }
+}
+
+export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [PublicKey[], boolean] {
+  let [tokenAccountInfo, loaded] = useAsyncData(
+      cryptid ? cryptid.getTokenAccountInfo : async () => [],
+      cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
+  );
+  let publicKeys = [
+      ...(cryptid && cryptid.address ? [cryptid.address] : []),
+      ...(tokenAccountInfo ? tokenAccountInfo.map(({ publicKey }) => publicKey) : []),
+  ]
+  publicKeys = useRefEqual(
+      publicKeys,
+      (oldKeys, newKeys) =>
+          oldKeys.length === newKeys.length
+          && oldKeys.every((key, i) => key.equals(newKeys[i]))
+  );
+  return [publicKeys, loaded]
+}
+
+export type TokenAccountInfo = {
+  data: Buffer,
+  executable: boolean,
+  owner: PublicKey,
+  lamports: number,
 }
 
 interface CryptidContextInterface {

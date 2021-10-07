@@ -248,7 +248,7 @@ export default function PopupPage({ opener }) {
     const transaction = Transaction.from(transactionBuffer)
     postMessage({
       result: {
-        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(transaction)).serialize())
+        transaction: bs58.encode((await selectedCryptidAccount.signTransaction(transaction)).serialize({ verifySignatures: false }))
       },
       id: request.id,
     });
@@ -260,7 +260,7 @@ export default function PopupPage({ opener }) {
       transactions.map(
         tx => selectedCryptidAccount
           .signTransaction(tx)
-          .then(signedTx => bs58.encode(signedTx.serialize()))
+          .then(signedTx => bs58.encode(signedTx.serialize({ verifySignatures: false })))
       )
     );
     postMessage({
@@ -385,10 +385,9 @@ const useStyles = makeStyles((theme) => ({
 
 function ApproveConnectionForm({ origin, onApprove }) {
   const wallet = useWallet();
-  const { accounts, hardwareWalletAccount } = useWalletSelector();
+  const { accounts } = useWalletSelector();
   // TODO better way to do this
   const account = accounts
-    .concat([hardwareWalletAccount])
     .find((account) => account && account.address.equals(wallet.publicKey));
   const classes = useStyles();
   const [autoApprove, setAutoApprove] = useState(false);

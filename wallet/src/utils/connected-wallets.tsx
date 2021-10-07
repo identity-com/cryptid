@@ -17,8 +17,8 @@ export const ConnectedWalletsProvider = ({ children }) => {
       }
     };
     updateConnectionAmount();
-    chrome.storage.local.onChanged.addListener(listener);
-    return () => chrome.storage.local.onChanged.removeListener(listener);
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
   return (
