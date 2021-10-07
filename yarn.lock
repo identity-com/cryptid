@@ -2634,10 +2634,10 @@
     "@ledgerhq/hw-transport-webhid" "^6.7.0"
     "@types/w3c-web-hid" "^1.0.2"
 
-"@solana/wallet-adapter-material-ui@^0.12.3":
-  version "0.12.3"
-  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-material-ui/-/wallet-adapter-material-ui-0.12.3.tgz#18a1b6ebf9bfc3ec61b9c3681d563663f5455afa"
-  integrity sha512-4+maON4S86tjxHIzW+CW+n6bUnPkYTPIDdfNkR7ziS9zoF++YvHtms2OLH0J0E5MG6WFELCD09hVckxPTFt6CQ==
+"@solana/wallet-adapter-material-ui@^0.12.4":
+  version "0.12.4"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-material-ui/-/wallet-adapter-material-ui-0.12.4.tgz#5f71dd97478e68141228498f726c0e0a556c7424"
+  integrity sha512-cIA5yXFSenZyhpXboz4AK4cZyRMfdm5Q6zFvGehRS/d3MQeeu/APwooa218D3WgRu56wC3mBgt1DBI4ABYyb8Q==
 
 "@solana/wallet-adapter-mathwallet@^0.6.0":
   version "0.6.0"
@@ -2648,6 +2648,11 @@
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-phantom/-/wallet-adapter-phantom-0.6.0.tgz#3b06ed7bb04fbcd72595a24c61600c64cc6640b3"
   integrity sha512-XXT1bYoGG/5kkoz7MljfZcsAVhQvfFlfST08ETCuOwzWWX/CKqxLWw72X6kVGjrvawKL0j3j/1eEegyTAmbwHw==
+
+"@solana/wallet-adapter-react-ui@^0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-react-ui/-/wallet-adapter-react-ui-0.5.1.tgz#5a937c4a872995bfb3b5a96afd3956783d391905"
+  integrity sha512-AFYGIeXWOCi+dGBUXHbQ1loUJu++D1hCRXo0CzQ564K2vnIIYlQdmRvFeiM9W6YXE20rIINQbvf0iMPIhwfu8A==
 
 "@solana/wallet-adapter-react@^0.12.3":
   version "0.12.3"

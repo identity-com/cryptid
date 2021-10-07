@@ -3,6 +3,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: 'Osaka';
+    src: local('Osaka'), url(./fonts/osaka-sans-serif.regular.ttf) format('ttf');
+}
 
 /* TODO consolidate popup dimensions */
 html,

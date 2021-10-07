@@ -393,7 +393,7 @@ export function WalletProvider({ children }) {
 }
 
 export function useWallet() {
-  return useContext(WalletContext).wallet;
+  return useContext(WalletContext)?.wallet;
 }
 
 export function useWalletPublicKeys() {
