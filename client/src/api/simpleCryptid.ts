@@ -20,7 +20,6 @@ export class SimpleCryptid extends AbstractCryptid {
   }
 
   async sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>> {
-    console.log("unwrapped size: " + transaction.serialize({requireAllSignatures: false}).length)
     const wrappedTransaction = await directExecute(
       transaction,
       this.did,
