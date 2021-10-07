@@ -179,7 +179,7 @@ export default function PopupPage({ opener }: { opener: Opener }){
       focusParent();
     }
 
-    return <ApproveConnectionForm origin={origin} onApprove={connect} />;
+    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove} setAutoApprove={setAutoApprove} />;
   }
 
   if(!request){
@@ -329,12 +329,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ApproveConnectionForm({ origin, onApprove }: { origin: string, onApprove: (boolean) => void }){
+function ApproveConnectionForm({ origin, onApprove, autoApprove, setAutoApprove }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }){
   const wallet = useWallet();
   const { accounts }: { accounts: any[] } = useWalletSelector();
   const account = accounts.find((account) => account && account.address.equals(wallet.publicKey));
   const classes = useStyles();
-  const [autoApprove, setAutoApprove] = useState(false);
   const { selectedCryptidAccount } = useCryptid();
   if(!selectedCryptidAccount){
     throw new Error("No selected cryptid account");
@@ -360,7 +359,9 @@ function ApproveConnectionForm({ origin, onApprove }: { origin: string, onApprov
           control={
             <Switch
               checked={autoApprove}
-              onChange={() => setAutoApprove(!autoApprove)}
+              onChange={() => {
+                setAutoApprove(!autoApprove);
+              }}
               color="primary"
             />
           }
@@ -421,11 +422,15 @@ function ApproveSignatureForm({
 }: ApproveSignerFormProps){
   const classes = useStyles();
 
-
   const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
   const mapTransactionToMessageBuffer = (tx) => Transaction.from(tx).serializeMessage();
 
   const buttonRef = useRef<any>();
+
+  if(autoApprove){
+    onApprove();
+    return (<></>);
+  }
 
   const renderFormContent = () => {
     if (messageDisplay === 'tx') {
