@@ -173,8 +173,6 @@ const NetworkSelector = () => {
 }
 
 function NavigationPanel() {
-  // const classes = useStyles();
-  const isExtensionWidth = useIsExtensionWidth();
   const { page, setPage } = usePage()
 
   return (
@@ -201,10 +199,7 @@ function NavigationPanel() {
                     <a
                       href='#'
                       key={item}
-                      onClick={() => {
-                        console.log("ITEM " + item);
-                        setPage(item)
-                      }}
+                      onClick={() => setPage(item)}
                       className={classNames(
                         item === page
                           ? 'border-indigo-500 text-gray-900'

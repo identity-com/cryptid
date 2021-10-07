@@ -50,10 +50,7 @@ export function BalanceListItemDetails({
                                 }) {
   const urlSuffix = useSolanaExplorerUrlSuffix();
   const classes = useStyles();
-  const [sendDialogOpen, setSendDialogOpen] = useState(false);
-  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
   const [tokenInfoDialogOpen, setTokenInfoDialogOpen] = useState(false);
-  const [exportAccDialogOpen, setExportAccDialogOpen] = useState(false);
   const [
     closeTokenAccountDialogOpen,
     setCloseTokenAccountDialogOpen,
@@ -101,12 +98,6 @@ export function BalanceListItemDetails({
   const isSolAddress = publicKey.equals(owner);
   const additionalInfo = isExtensionWidth ? undefined : (
     <>
-      <Typography variant="body2">
-        Token Name: {tokenName ?? 'Unknown'}
-      </Typography>
-      <Typography variant="body2">
-        Token Symbol: {tokenSymbol ?? 'Unknown'}
-      </Typography>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div>
           {!isSolAddress && isAssociatedToken === false && (
@@ -173,27 +164,12 @@ export function BalanceListItemDetails({
             </Typography>
           )}
         </div>
-        {exportNeedsDisplay && wallet.allowsExport && (
-          <div>
-            <Typography variant="body2">
-              <Link href={'#'} onClick={(e) => setExportAccDialogOpen(true)}>
-                Export
-              </Link>
-            </Typography>
-          </div>
-        )}
       </div>
     </>
   );
 
   return (
     <>
-      {wallet.allowsExport && (
-        <ExportAccountDialog
-          onClose={() => setExportAccDialogOpen(false)}
-          open={exportAccDialogOpen}
-        />
-      )}
       <div className={classes.itemDetails}>
         <div className={classes.buttonContainer}>
           {!publicKey.equals(owner) && showTokenInfoDialog ? (
@@ -206,22 +182,6 @@ export function BalanceListItemDetails({
               Token Info
             </Button>
           ) : null}
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<ReceiveIcon />}
-            onClick={() => setDepositDialogOpen(true)}
-          >
-            Receive
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<SendIcon />}
-            onClick={() => setSendDialogOpen(true)}
-          >
-            Send
-          </Button>
           {localStorage.getItem('warning-close-account') &&
           mint &&
           amount === 0 ? (
@@ -238,20 +198,6 @@ export function BalanceListItemDetails({
         </div>
         {additionalInfo}
       </div>
-      <SendDialog
-        open={sendDialogOpen}
-        onClose={() => setSendDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-      />
-      <DepositDialog
-        open={depositDialogOpen}
-        onClose={() => setDepositDialogOpen(false)}
-        balanceInfo={balanceInfo}
-        publicKey={publicKey}
-        // swapInfo={swapInfo}
-        isAssociatedToken={isAssociatedToken}
-      />
       <TokenInfoDialog
         open={tokenInfoDialogOpen}
         onClose={() => setTokenInfoDialogOpen(false)}

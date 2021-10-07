@@ -46,6 +46,7 @@ export default function TokenButtons() {
   };
 
   const mintTestToken = (owner: PublicKey) => {
+    console.log('owner ' + owner);
     const mint = Keypair.generate();
     updateTokenName(
       mint.publicKey,
@@ -69,7 +70,7 @@ export default function TokenButtons() {
   };
 
   return (
-    <div className="z-0 inline-flex shadow-sm rounded-md min-w-full justify-end ">
+    <div className="inline-flex shadow-sm rounded-md min-w-full justify-end ">
       <AddTokenDialog
         open={showAddTokenDialog}
         onClose={() => setShowAddTokenDialog(false)}

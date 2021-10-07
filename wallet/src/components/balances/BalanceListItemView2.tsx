@@ -7,13 +7,18 @@ import LoadingIndicator from "../LoadingIndicator";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import TokenIcon from "../TokenIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import {Typography} from "@material-ui/core";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
 import Collapse from "@material-ui/core/Collapse";
 import {BalanceListItemDetails} from "./BalanceListItemDetails";
-import {CheckCircleIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon} from "@heroicons/react/solid";
+import {
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ArrowCircleUpIcon, ArrowCircleDownIcon
+} from "@heroicons/react/solid";
+import {TokenButton} from "./TokenButton";
+import SendDialog from "../SendDialog";
+import DepositDialog from "../DepositDialog";
 
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
@@ -42,8 +47,9 @@ export function BalanceListItemView({
                                       expandable,
                                     }) {
   const balanceInfo = useBalanceInfo(publicKey);
-  // const classes = useStyles();
   const [open, setOpen] = useState(false);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
 
   expandable = expandable === undefined ? true : expandable;
 
@@ -53,6 +59,20 @@ export function BalanceListItemView({
 
   return (
     <li key={mint}>
+      <SendDialog
+        open={sendDialogOpen}
+        onClose={() => setSendDialogOpen(false)}
+        balanceInfo={balanceInfo}
+        publicKey={publicKey}
+      />
+      <DepositDialog
+        open={depositDialogOpen}
+        onClose={() => setDepositDialogOpen(false)}
+        balanceInfo={balanceInfo}
+        publicKey={publicKey}
+        // swapInfo={swapInfo}
+        isAssociatedToken={isAssociatedToken}
+      />
         <div className="flex items-center px-4 py-4 sm:px-6">
           <div className="min-w-0 flex-1 flex items-center">
             <div className="flex-shrink-0">
@@ -80,6 +100,10 @@ export function BalanceListItemView({
                 </div>
               </div>
             </div>
+          </div>
+          <div className='inline-flex shadow-sm rounded-md'>
+            <TokenButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+            <TokenButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
           </div>
           <div>
             {open ?
