@@ -8,7 +8,16 @@ export default function TokenIcon({ mint, url, tokenName, size = 20, ...props })
   }
 
   if (hasError || !url) {
-    return null;
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: 'white',
+          borderRadius: size / 2,
+        }}
+      />
+    );
   }
 
   return (

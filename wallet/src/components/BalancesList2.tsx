@@ -104,6 +104,7 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   //   * null => not found.
   //   * else => price is loaded.
   const [price, setPrice] = useState<number|undefined>(undefined);
+  
   useEffect(() => {
     if (balanceInfo) {
       if (balanceInfo.tokenSymbol) {
@@ -202,21 +203,6 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
     }
   }
 
-  const subtitle =
-    isExtensionWidth || !publicKey.equals(balanceInfo.owner) ? undefined : (
-      <div style={{ display: 'flex', height: '20px', overflow: 'hidden' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexDirection: 'column',
-          }}
-        >
-          DOA:  {publicKey.toBase58()}
-        </div>
-      </div>
-    );
-
   let usdValue;
   if (amount && price) {
     usdValue = ((amount / Math.pow(10, decimals)) * price).toFixed(2)
@@ -231,7 +217,6 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
       tokenName={tokenName}
       decimals={decimals}
       displayName={displayName}
-      subtitle={subtitle}
       tokenLogoUri={tokenLogoUri}
       amount={amount}
       price={price}
