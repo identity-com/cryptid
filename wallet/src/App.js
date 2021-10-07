@@ -87,7 +87,7 @@ function PageContents() {
   const wallet = useWallet();
   const { selectedCryptidAccount } = useCryptid();
 
-  const [page] = usePage();
+  const { page } = usePage();
   const [showWalletSuggestion, setShowWalletSuggestion] = useState(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);

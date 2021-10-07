@@ -1,4 +1,4 @@
-import { pbkdf2 } from 'crypto';
+import { BinaryLike, pbkdf2 } from 'crypto';
 import { randomBytes, secretbox } from 'tweetnacl';
 import * as bip32 from 'bip32';
 import bs58 from 'bs58';
@@ -31,7 +31,7 @@ async function getExtensionUnlockedMnemonic() {
     return null;
   }
 
-  return new Promise((resolve) => {
+  return new Promise<string>((resolve) => {
     chrome.runtime.sendMessage({
       channel: 'sollet_extension_mnemonic_channel',
       method: 'get',
@@ -39,14 +39,21 @@ async function getExtensionUnlockedMnemonic() {
   })
 }
 
-const EMPTY_MNEMONIC = {
+interface MnomicInterface {
+  mnemonic: string | null,
+  seed: string | null,
+  importsEncryptionKey: Buffer | null,
+  derivationPath: string | null,
+}
+
+const EMPTY_MNEMONIC: MnomicInterface = {
   mnemonic: null,
   seed: null,
   importsEncryptionKey: null,
   derivationPath: null,
 };
 
-let unlockedMnemonicAndSeed = (async () => {
+let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {
   const unlockedExpiration = localStorage.getItem('unlockedExpiration');
   // Left here to clean up stored mnemonics from previous method
   if (unlockedExpiration && Number(unlockedExpiration) < Date.now()) {
@@ -75,8 +82,8 @@ export function getUnlockedMnemonicAndSeed() {
 }
 
 // returns [mnemonic, loading]
-export function useUnlockedMnemonicAndSeed() {
-  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState(null);
+export function useUnlockedMnemonicAndSeed(): [MnomicInterface, boolean] {
+  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnomicInterface|null>(null);
   
   useEffect(() => {
     walletSeedChanged.addListener('change', setCurrentUnlockedMnemonic);
@@ -162,13 +169,18 @@ export async function storeMnemonicAndSeed(
 }
 
 export async function loadMnemonicAndSeed(password, stayLoggedIn) {
+  const lockedString = localStorage.getItem('locked')
+  if (!lockedString) {
+    throw new Error('Nothing stored in local storage');
+  }
+
   const {
     encrypted: encodedEncrypted,
     nonce: encodedNonce,
     salt: encodedSalt,
     iterations,
     digest,
-  } = JSON.parse(localStorage.getItem('locked'));
+  } = JSON.parse(lockedString);
   const encrypted = bs58.decode(encodedEncrypted);
   const nonce = bs58.decode(encodedNonce);
   const salt = bs58.decode(encodedSalt);
@@ -200,8 +212,8 @@ export async function loadMnemonicAndSeed(password, stayLoggedIn) {
   return { mnemonic, seed, derivationPath };
 }
 
-async function deriveEncryptionKey(password, salt, iterations, digest) {
-  return new Promise((resolve, reject) =>
+async function deriveEncryptionKey(password: BinaryLike, salt: BinaryLike, iterations: number, digest: string) {
+  return new Promise<Buffer>((resolve, reject) =>
     pbkdf2(
       password,
       salt,
@@ -234,11 +246,7 @@ export function forgetWallet() {
       data: '',
     });
   }
-  unlockedMnemonicAndSeed = {
-    mnemonic: null,
-    seed: null,
-    importsEncryptionKey: null,
-  };
+  unlockedMnemonicAndSeed = Promise.resolve(EMPTY_MNEMONIC);
   walletSeedChanged.emit('change', unlockedMnemonicAndSeed);
   if (isExtension) {
     // Must use wrapper function for window.location.reload

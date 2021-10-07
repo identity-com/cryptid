@@ -107,7 +107,7 @@ export default function NavigationFrame({ children }) {
 
 function NavigationButtons() {
   const isExtensionWidth = useIsExtensionWidth();
-  const [page] = usePage();
+  const { page } = usePage();
 
   if (isExtensionPopup) {
     return null;
@@ -150,7 +150,7 @@ function ExpandButton() {
 
 function WalletButton() {
   const classes = useStyles();
-  const setPage = usePage()[1];
+  const { setPage } = usePage();
   const onClick = () => setPage('wallet');
 
   return (
@@ -173,7 +173,7 @@ function WalletButton() {
 
 function ConnectionsButton() {
   const classes = useStyles();
-  const setPage = usePage()[1];
+  const { setPage } = usePage();
   const onClick = () => setPage('connections');
   const connectedWallets = useConnectedWallets();
 
