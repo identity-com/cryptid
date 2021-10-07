@@ -84,7 +84,7 @@ export function useCluster() {
   return cluster?.clusterSlug;
 }
 
-export function useAccountInfo(publicKey?: PublicKey) {
+export function useAccountInfo(publicKey?: PublicKey): [AccountInfo<Buffer> | null, boolean] {
   const connection = useConnection();
   const cacheKey = tuple(connection, publicKey?.toBase58());
   const [accountInfo, loaded] = useAsyncData(
