@@ -1,8 +1,9 @@
 # Cryptid
-Solana DID-aware on-chain signer and wallet Integrations
+Cryptid is a protocol and client-suite that brings the power of [DIDs](https://www.w3.org/TR/did-core/) to
+[Solana](https://solana.com). Specifically, it allows for a construct whereby a wallet is owned by a DID, and the DID
+defines the keys that are capable of transacting with that wallet.
 
-<!-- TODO: confirm the cryptid cli location once ready -->
-Try it out at https://cryptid.identity.com/ or install the [cli](https://www.npmjs.com/package/@identity.com/cryptid-cli).
+Try it out at https://cryptid.identity.com/ or install the [cli](./cli/).
 
 ## Contents
 * [Roadmap](#roadmap)
@@ -15,11 +16,13 @@ Try it out at https://cryptid.identity.com/ or install the [cli](https://www.npm
 ## Roadmap
 
 ## Demo
+![Placeholder Account Screen](./docs/placeholder.png)
 
 ## Features
 
 * Create a Solana DID
-* Manage your DID by adding additional keys, services and controllers
+* Manage your DID and add additional keys, services and controllers
+* Send SOL to other Solana DIDs
 
 ## Frequently Asked Questions (FAQs)
 
@@ -28,13 +31,13 @@ Cryptid is a protocol and client-suite that brings the power of [DIDs](https://w
 [Solana](https://solana.com). Specifically, it allows for a construct whereby a wallet is owned by a DID, and the DID 
 defines the keys that are capable of transacting with that wallet.
 
-### Why did you create Cryptid?
-
 ### How secure is Cryptid?
+All functionality, key generation and blockchain interaction happens directly on the client.
 
 ### How decentralized is Cryptid?
 Cryptid only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) endpoint to Solana and all
-transactions are executed on the blockchain.
+transactions are executed on the blockchain. Keys are generated and stored on your local environment and never stored
+on a centralized database.
 
 ### Can I use Cryptid on Mainnet?
 The Cryptid Solana program is currently available on Devnet.
