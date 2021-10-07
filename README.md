@@ -32,7 +32,8 @@ Cryptid is a protocol and client-suite that brings the power of [DIDs](https://w
 defines the keys that are capable of transacting with that wallet.
 
 ### How secure is Cryptid?
-All functionality, key generation and blockchain interaction happens directly on the client.
+All functionality, key generation and blockchain interaction happens directly on the client. No information is stored in
+any centralized database outside of your control.
 
 ### How decentralized is Cryptid?
 Cryptid only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) endpoint to Solana and all
@@ -41,6 +42,14 @@ on a centralized database.
 
 ### Can I use Cryptid on Mainnet?
 The Cryptid Solana program is currently available on Devnet.
+
+### How do I add an additional key to my DID?
+Once your account has been created, click the "Add Key" button under the Keys section. You will need to provide the
+public key, and a key name unique to your DID.
+
+### How can I add a controller to my DID?
+In the controller section of your account view, click "Add Controller". Enter the DID of the controller you would like
+to add.
 
 ### How much does it cost to create a DID?
 Creating a DID is free. Adding additional keys, services or controllers to the DID will require a transaction and 
