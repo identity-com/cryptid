@@ -76,11 +76,11 @@ export class CryptidAccount {
   }
 
   get publicKey() {
-    return this.address
+    return this._address
   }
 
   get address() {
-    return this.address
+    return this._address
   }
 
   get cryptid() {
@@ -100,7 +100,7 @@ export class CryptidAccount {
 
     this._address = await this.cryptid.address()
     await this.updateDocument();
-    // console.log(`Getting address: ${this.address}`)
+    // console.log(`Getting address: ${this._address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
   async as(controllerDidAddress: string, controllerAlias: string): Promise<CryptidAccount> {
@@ -157,7 +157,7 @@ export class CryptidAccount {
   containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
 
   get isInitialized() {
-    return this.address !== null && this._document !== null
+    return this._address !== null && this._document !== null
   }
 
   updateSigner(signer: Signer) {
@@ -202,7 +202,7 @@ export class CryptidAccount {
     memo = undefined,
     overrideDestinationCheck = false,
   ) => {
-    if (source.equals(this.address)) {
+    if (source.equals(this._address)) {
       if (memo) {
         throw new Error('Memo not implemented');
       }
@@ -211,7 +211,7 @@ export class CryptidAccount {
 
     const signingWrapper = {
       // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
-      publicKey: this.address,
+      publicKey: this._address,
       signTransaction: this.signTransaction.bind(this)
     }
 
@@ -238,7 +238,7 @@ export class CryptidAccount {
     // }
     const signingWrapper = {
       // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
-      publicKey: this.address,
+      publicKey: this._address,
       signTransaction: this.signTransaction.bind(this)
     }
 
@@ -251,7 +251,7 @@ export class CryptidAccount {
     let accounts: {
       publicKey: PublicKey,
       accountInfo: TokenAccountInfo,
-    }[] = this.address ? await getOwnedTokenAccounts(this._connection, await this.address) : [];
+    }[] = this._address ? await getOwnedTokenAccounts(this._connection, await this._address) : [];
     return accounts.map<{
       publicKey: PublicKey,
       parsed: TokenInfo,
@@ -276,7 +276,7 @@ export class CryptidAccount {
     return await closeTokenAccount({
       connection: this._connection,
       owner: {
-        publicKey: this.address,
+        publicKey: this._address,
         signTransaction: this.signTransaction.bind(this)
       },
       sourcePublicKey: publicKey,
@@ -288,7 +288,7 @@ export class CryptidAccount {
     return await createAssociatedTokenAccount({
       connection: this._connection,
       wallet: {
-        publicKey: this.address,
+        publicKey: this._address,
         signTransaction: this.signTransaction.bind(this)
       },
       splTokenMintAddress,
