@@ -6,17 +6,23 @@
  * -
  */
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
-import { useWallet, useWalletSelector } from "../wallet";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { Account } from "./cryptid-external-types";
-import { useAsyncData } from "../fetch-loop";
+import { refreshCache, useAsyncData } from "../fetch-loop";
 import { useLocalStorageState, useRefEqual } from "../utils";
-import { getOwnedTokenAccounts, nativeTransfer, transferTokens } from "../tokens";
-import { parseTokenAccountData, TokenInfo } from "../tokens/data";
+import {
+  closeTokenAccount,
+  createAssociatedTokenAccount,
+  getOwnedTokenAccounts,
+  nativeTransfer,
+  transferTokens
+} from "../tokens";
+import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
+import { useWalletContext } from "../wallet";
 
 export class CryptidAccount {
   public did: string
@@ -221,9 +227,46 @@ export class CryptidAccount {
         account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
     );
   }
+
+  tokenAccountCost = async () => {
+    return this.connection.getMinimumBalanceForRentExemption(
+      ACCOUNT_LAYOUT.span,
+    );
+  };
+
+  closeTokenAccount = async (publicKey, skipPreflight = false) => {
+    if (!this.address) {
+      throw Error('No source address')
+    }
+
+    return await closeTokenAccount({
+      connection: this.connection,
+      owner: {
+        publicKey: this.address,
+        signTransaction: this.signTransaction.bind(this)
+      },
+      sourcePublicKey: publicKey,
+      skipPreflight,
+    });
+  };
+
+  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey) => {
+    if (!this.address) {
+      throw Error('No source address')
+    }
+
+    return await createAssociatedTokenAccount({
+      connection: this.connection,
+      wallet: {
+        publicKey: this.address,
+        signTransaction: this.signTransaction.bind(this)
+      },
+      splTokenMintAddress,
+    });
+  };
 }
 
-export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [PublicKey[], boolean] {
+export function useCryptidAccountPublicKeys(cryptid: CryptidAccount | null): [PublicKey[], boolean] {
   let [tokenAccountInfo, loaded] = useAsyncData(
       cryptid ? cryptid.getTokenAccountInfo : async () => [],
       cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
@@ -239,6 +282,20 @@ export function useCryptidWalletPublicKeys(cryptid: CryptidAccount | null): [Pub
           && oldKeys.every((key, i) => key.equals(newKeys[i]))
   );
   return [publicKeys, loaded]
+}
+
+export function refreshCryptidAccountPublicKeys(cryptidAccount: CryptidAccount) {
+  refreshCache(cryptidAccount.getTokenAccountInfo);
+}
+
+export function useCryptidAccountTokenAccounts() {
+  const { selectedCryptidAccount } = useCryptid();
+
+
+  return useAsyncData(
+    selectedCryptidAccount ? selectedCryptidAccount.getTokenAccountInfo : async () => [],
+    selectedCryptidAccount ? selectedCryptidAccount.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
+  )
 }
 
 export type TokenAccountInfo = {
@@ -290,11 +347,10 @@ const DEFAULT_CRYPTID_SELECTOR = {
  *
  */
 export const CryptidProvider:FC = ({ children }) => {
-  const wallet = useWallet();
+  const { wallet } = useWalletContext();
 
   const connection = useConnection();
   const cluster = useCluster();
-  const { accounts, setWalletSelector }: { accounts: Account[], setWalletSelector: any } = useWalletSelector();
 
   const [cryptidSelector, setCryptidSelector] = useLocalStorageState<CryptidSelectorInterface>(
     'cryptidSelector',
@@ -330,12 +386,6 @@ export const CryptidProvider:FC = ({ children }) => {
   const [selectedCryptidAccount, setSelectedCryptidAccount] = useState<CryptidAccount | null>(null);
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
 
-  // TODO: Is it ok to pass an invalid Signer for the initial Account creation?
-  const defaultSigner = {
-    publicKey: wallet?.publicKey,
-    sign: wallet?.signTransaction
-  }
-
   const getDidPrefix = useCallback(() => {
     // sol dids on mainnet have no cluster prefix 
     const clusterPrefix = cluster === 'mainnet-beta' ? '' : `${cluster}:`;
@@ -343,16 +393,20 @@ export const CryptidProvider:FC = ({ children }) => {
   },[cluster])
 
   const loadCryptidAccounts = useCallback(async () => {
-    // generative accounts + extAccounts
-    const allAccounts = accounts.map(a => a.address.toBase58())
-
-    // generated
-    const promises = allAccounts.map(async (base58) => {
-      const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
-      await cryptidAccount.init()
-      return cryptidAccount
-    })
-    const cryptidAccounts = await Promise.all(promises);
+    // // generative accounts + extAccounts
+    // const allAccounts = accounts.map(a => a.address.toBase58())
+    //
+    // // generated
+    // const promises = allAccounts.map(async (base58) => {
+    //   const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
+    //   await cryptidAccount.init()
+    //   return cryptidAccount
+    // })
+    // const cryptidAccounts = await Promise.all(promises);
+    const defaultSigner = { // TODO
+      publicKey: wallet.publicKey as PublicKey,
+      sign: (transaction: Transaction) => Promise.resolve(transaction)
+    }
 
     // TODO: This is not robust, since dependent accounts need to be loaded first.
     for (const ext of cryptidExtAccounts) {
@@ -374,7 +428,7 @@ export const CryptidProvider:FC = ({ children }) => {
     }
 
     setCryptidAccounts(cryptidAccounts)
-  }, [accounts, cluster, cryptidExtAccounts])
+  }, [cluster, cryptidExtAccounts])
 
   useEffect(() => {
     loadCryptidAccounts()
@@ -391,32 +445,16 @@ export const CryptidProvider:FC = ({ children }) => {
 
   // Pre-select wallet if account changes.
   // update Signer of selectedcCyptidAccount whenever wallet changes.
-  useEffect(() => {
-    if (!wallet || !selectedCryptidAccount) { return }
-
-    const crypidBaseAccount = selectedCryptidAccount.baseAccount()
-
-    if (!crypidBaseAccount.containsKey(wallet.publicKey)) {
-      // try to find PK in accounts
-      console.log(`Key of wallet (${wallet.publicKey.toBase58()}) not in selectedCryptidAccount ${crypidBaseAccount.did}`)
-
-      for (const acc of accounts) {
-        if (crypidBaseAccount.containsKey(acc.address)) {
-          // switch to acc with matching key.
-          setWalletSelector(acc.selector)
-        }
-      }
-
-      return
-    }
-
-    console.log(`Updating signer to ${wallet.publicKey}`)
-    selectedCryptidAccount.updateSigner({
-      publicKey: wallet.publicKey,
-      sign: wallet.signTransaction
-    })
-
-  }, [selectedCryptidAccount])
+  // useEffect(() => {
+  //   if (!wallet || !selectedCryptidAccount) { return }
+  //
+  //   console.log(`Updating signer to ${wallet.publicKey}`)
+  //   selectedCryptidAccount.updateSigner({
+  //     publicKey: wallet.publicKey,
+  //     sign: wallet.signTransaction
+  //   })
+  //
+  // }, [selectedCryptidAccount])
 
 
 
@@ -435,20 +473,5 @@ export const CryptidProvider:FC = ({ children }) => {
 }
 
 export function useCryptid() {
-  const {
-    selectedCryptidAccount,
-    cryptidAccounts,
-    setSelectedCryptidAccount,
-    addCryptidAccount,
-    removeCryptidAccount,
-    getDidPrefix,
-  } = useContext(CryptidContext);
-  return {
-    selectedCryptidAccount,
-    cryptidAccounts,
-    setSelectedCryptidAccount,
-    addCryptidAccount,
-    removeCryptidAccount,
-    getDidPrefix,
-  }
+  return useContext(CryptidContext);
 }

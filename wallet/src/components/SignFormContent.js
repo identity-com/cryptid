@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import CardContent from '@material-ui/core/CardContent';
 import Warning from '@material-ui/icons/Warning';
 import { Tooltip, Typography, Divider } from '@material-ui/core';
-import { useWallet } from '../utils/wallet';
+import {useCryptid} from "../utils/Cryptid/cryptid";
 
 function toHex(buffer) {
   return Array.prototype.map
@@ -34,7 +34,7 @@ export default function SignFormContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buttonRef]);
 
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
 
   let messageTxt;
   switch (messageDisplay) {
@@ -51,7 +51,7 @@ export default function SignFormContent({
   const renderAction = () => {
     switch (messageDisplay) {
       case 'utf8':
-        return `Sign message with account ${wallet.publicKey}`;
+        return `Sign message with account ${selectedCryptidAccount.address}`;
       case 'hex':
         return (
           <>
@@ -61,7 +61,7 @@ export default function SignFormContent({
             >
               <Warning style={{ marginBottom: '-7px' }} />
             </Tooltip>{' '}
-            {`Sign data with account ${wallet.publicKey}`}
+            {`Sign data with account ${selectedCryptidAccount.address}`}
           </>
         );
       default:

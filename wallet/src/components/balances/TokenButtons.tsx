@@ -6,8 +6,8 @@ import { TokenButton } from './TokenButton';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
 import {abbreviateAddress, sleep} from "../../utils/utils";
 import {createAndInitializeMint} from "../../utils/tokens";
-import {refreshWalletPublicKeys, useBalanceInfo} from "../../utils/wallet";
-import {useCryptid} from "../../utils/Cryptid/cryptid";
+import {useBalanceInfo} from "../../utils/wallet";
+import { refreshCryptidAccountPublicKeys, useCryptid } from "../../utils/Cryptid/cryptid";
 import {useUpdateTokenName} from "../../utils/tokens/names";
 import {useCallAsync, useSendTransaction} from "../../utils/notifications";
 import {useState} from "react";
@@ -65,7 +65,7 @@ export default function TokenButtons() {
         decimals: 2,
         initialAccount: Keypair.generate(),
       }),
-      { onSuccess: () => refreshWalletPublicKeys(selectedCryptidAccount) },
+      { onSuccess: () => refreshCryptidAccountPublicKeys(selectedCryptidAccount) },
     );
   };
 

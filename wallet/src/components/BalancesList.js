@@ -4,11 +4,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Paper from '@material-ui/core/Paper';
 import {
-  refreshWalletPublicKeys,
   useBalanceInfo,
-  useWallet,
-  useWalletPublicKeys,
-  useWalletSelector,
 } from '../utils/wallet';
 import { findAssociatedTokenAddress } from '../utils/tokens';
 import LoadingIndicator from './LoadingIndicator';
@@ -54,7 +50,10 @@ import CloseTokenAccountDialog from './CloseTokenAccountButton';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import TokenIcon from './TokenIcon';
 import EditAccountNameDialog from './EditAccountNameDialog';
-import {CryptidAccount, useCryptid, useCryptidWalletPublicKeys} from "../utils/Cryptid/cryptid";
+import {
+  useCryptid,
+  useCryptidAccountPublicKeys,
+} from "../utils/Cryptid/cryptid";
 import { CryptidDetails } from "./Cryptid/CryptidDetails";
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
@@ -101,7 +100,7 @@ export default function BalancesList() {
 
   // Updated Crytpid Stuff (from a state POV)
   const { selectedCryptidAccount } = useCryptid();
-  const [publicKeys] = useCryptidWalletPublicKeys(selectedCryptidAccount);
+  const [publicKeys] = useCryptidAccountPublicKeys(selectedCryptidAccount);
   // End Cryptid Stuff
 
   // const wallet = useWallet();
@@ -112,12 +111,12 @@ export default function BalancesList() {
     false,
   );
   // const [sortAccounts, setSortAccounts] = useState(SortAccounts.None);
-  const { accounts, setAccountName } = useWalletSelector();
+  // const { accounts, setAccountName } = useWalletSelector();
   const [isCopied, setIsCopied] = useState(false);
   const isExtensionWidth = useIsExtensionWidth();
   // Dummy var to force rerenders on demand.
   const [, setForceUpdate] = useState(false);
-  const selectedAccount = accounts.find((a) => a.isSelected);
+  // const selectedAccount = accounts.find((a) => a.isSelected);
   // const allTokensLoaded = loaded && fairsIsLoaded(publicKeys);
   // let sortedPublicKeys = publicKeys;
   // if (allTokensLoaded && sortAccounts !== SortAccounts.None) {
@@ -224,7 +223,7 @@ export default function BalancesList() {
                 hover={true}
                 component="h2"
               >
-                {selectedAccount && selectedAccount.name}
+                {/*{selectedAccount && selectedAccount.name}*/}
                 {isExtensionWidth
                   ? ''
                   : ` (${
@@ -237,18 +236,18 @@ export default function BalancesList() {
               </Typography>
             </Tooltip>
           </CopyToClipboard>
-          {selectedAccount &&
-            selectedAccount.name !== 'Main account' &&
-            selectedAccount.name !== 'Hardware wallet' && (
-              <Tooltip title="Edit Account Name" arrow>
-                <IconButton
-                  size={iconSize}
-                  onClick={() => setShowEditAccountNameDialog(true)}
-                >
-                  <EditIcon />
-                </IconButton>
-              </Tooltip>
-            )}
+          {/*{selectedAccount &&*/}
+          {/*  selectedAccount.name !== 'Main account' &&*/}
+          {/*  selectedAccount.name !== 'Hardware wallet' && (*/}
+          {/*    <Tooltip title="Edit Account Name" arrow>*/}
+          {/*      <IconButton*/}
+          {/*        size={iconSize}*/}
+          {/*        onClick={() => setShowEditAccountNameDialog(true)}*/}
+          {/*      >*/}
+          {/*        <EditIcon />*/}
+          {/*      </IconButton>*/}
+          {/*    </Tooltip>*/}
+          {/*  )}*/}
           <Tooltip title="Add Token" arrow>
             <IconButton
               size={iconSize}
@@ -306,15 +305,15 @@ export default function BalancesList() {
         open={showAddTokenDialog}
         onClose={() => setShowAddTokenDialog(false)}
       />
-      <EditAccountNameDialog
-        open={showEditAccountNameDialog}
-        onClose={() => setShowEditAccountNameDialog(false)}
-        oldName={selectedAccount ? selectedAccount.name : ''}
-        onEdit={(name) => {
-          setAccountName(selectedAccount.selector, name);
-          setShowEditAccountNameDialog(false);
-        }}
-      />
+      {/*<EditAccountNameDialog*/}
+      {/*  open={showEditAccountNameDialog}*/}
+      {/*  onClose={() => setShowEditAccountNameDialog(false)}*/}
+      {/*  oldName={selectedAccount ? selectedAccount.name : ''}*/}
+      {/*  onEdit={(name) => {*/}
+      {/*    setAccountName(selectedAccount.selector, name);*/}
+      {/*    setShowEditAccountNameDialog(false);*/}
+      {/*  }}*/}
+      {/*/>*/}
     </Paper>
   );
 }
@@ -343,7 +342,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
   const balanceInfo = useBalanceInfo(publicKey);
   const classes = useStyles();
   const connection = useConnection();
@@ -411,19 +410,19 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   }
 
   // Fetch and cache the associated token address.
-  if (wallet && wallet.publicKey && mint) {
+  if (selectedCryptidAccount && selectedCryptidAccount.address && mint) {
     if (
-      associatedTokensCache[wallet.publicKey.toString()] === undefined ||
-      associatedTokensCache[wallet.publicKey.toString()][mint.toString()] ===
+      associatedTokensCache[selectedCryptidAccount.address.toString()] === undefined ||
+      associatedTokensCache[selectedCryptidAccount.address.toString()][mint.toString()] ===
         undefined
     ) {
-      findAssociatedTokenAddress(wallet.publicKey, mint).then((assocTok) => {
+      findAssociatedTokenAddress(selectedCryptidAccount.address, mint).then((assocTok) => {
         let walletAccounts = Object.assign(
           {},
-          associatedTokensCache[wallet.publicKey.toString()],
+          associatedTokensCache[selectedCryptidAccount.address.toString()],
         );
         walletAccounts[mint.toString()] = assocTok;
-        associatedTokensCache[wallet.publicKey.toString()] = walletAccounts;
+        associatedTokensCache[selectedCryptidAccount.address.toString()] = walletAccounts;
         if (assocTok.equals(publicKey)) {
           // Force a rerender now that we've cached the value.
           setForceUpdate((forceUpdate) => !forceUpdate);
@@ -435,13 +434,13 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   // undefined => not loaded.
   let isAssociatedToken = mint ? undefined : false;
   if (
-    wallet &&
-    wallet.publicKey &&
+    selectedCryptidAccount &&
+    selectedCryptidAccount.address &&
     mint &&
-    associatedTokensCache[wallet.publicKey.toString()]
+    associatedTokensCache[selectedCryptidAccount.address.toString()]
   ) {
     let acc =
-      associatedTokensCache[wallet.publicKey.toString()][mint.toString()];
+      associatedTokensCache[selectedCryptidAccount.address.toString()][mint.toString()];
     if (acc) {
       if (acc.equals(publicKey)) {
         isAssociatedToken = true;
@@ -545,7 +544,7 @@ function BalanceListItemDetails({
     setCloseTokenAccountDialogOpen,
   ] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
 
   const isExtensionWidth = useIsExtensionWidth();
 
@@ -625,27 +624,27 @@ function BalanceListItemDetails({
             </Typography>
           )}
         </div>
-        {exportNeedsDisplay && wallet.allowsExport && (
-          <div>
-            <Typography variant="body2">
-              <Link href={'#'} onClick={(e) => setExportAccDialogOpen(true)}>
-                Export
-              </Link>
-            </Typography>
-          </div>
-        )}
+        {/*{exportNeedsDisplay && wallet.allowsExport && (*/}
+        {/*  <div>*/}
+        {/*    <Typography variant="body2">*/}
+        {/*      <Link href={'#'} onClick={(e) => setExportAccDialogOpen(true)}>*/}
+        {/*        Export*/}
+        {/*      </Link>*/}
+        {/*    </Typography>*/}
+        {/*  </div>*/}
+        {/*)}*/}
       </div>
     </>
   );
 
   return (
     <>
-      {wallet.allowsExport && (
-        <ExportAccountDialog
-          onClose={() => setExportAccDialogOpen(false)}
-          open={exportAccDialogOpen}
-        />
-      )}
+      {/*{wallet.allowsExport && (*/}
+      {/*  <ExportAccountDialog*/}
+      {/*    onClose={() => setExportAccDialogOpen(false)}*/}
+      {/*    open={exportAccDialogOpen}*/}
+      {/*  />*/}
+      {/*)}*/}
       <div className={classes.itemDetails}>
         <div className={classes.buttonContainer}>
           {!publicKey.equals(owner) && showTokenInfoDialog ? (

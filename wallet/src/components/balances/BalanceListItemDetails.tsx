@@ -1,20 +1,14 @@
 import {useIsProdNetwork, useSolanaExplorerUrlSuffix} from "../../utils/connection";
 import React, {useState} from "react";
-import {useWallet} from "../../utils/wallet";
 import {useAsyncData} from "../../utils/fetch-loop";
 import {showSwapAddress, showTokenInfoDialog} from "../../utils/config";
 import {useIsExtensionWidth} from "../../utils/utils";
 import LoadingIndicator from "../LoadingIndicator";
 import {Typography} from "@material-ui/core";
 import Link from "@material-ui/core/Link";
-import ExportAccountDialog from "../ExportAccountDialog";
 import Button from "@material-ui/core/Button";
 import InfoIcon from "@material-ui/icons/InfoOutlined";
-import ReceiveIcon from "@material-ui/icons/WorkOutline";
-import SendIcon from "@material-ui/icons/Send";
 import DeleteIcon from "@material-ui/icons/Delete";
-import SendDialog from "../SendDialog";
-import DepositDialog from "../DepositDialog";
 import TokenInfoDialog from "../TokenInfoDialog";
 import CloseTokenAccountDialog from "../CloseTokenAccountButton";
 import {makeStyles} from "@material-ui/core/styles";
@@ -56,7 +50,6 @@ export function BalanceListItemDetails({
     setCloseTokenAccountDialogOpen,
   ] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const wallet = useWallet();
   const isProdNetwork = useIsProdNetwork();
   const [swapInfo] = useAsyncData(async () => {
     if (!showSwapAddress || !isProdNetwork) {

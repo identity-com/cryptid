@@ -1,11 +1,7 @@
 import React from "react";
-import { useWalletSelector } from "../utils/wallet";
 
 export default function WalletSettings() {
 
-  const {
-    accounts,
-  } = useWalletSelector();
 
   return (
       <div className="flex flex-col">

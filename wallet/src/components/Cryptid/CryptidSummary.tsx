@@ -1,21 +1,7 @@
-import { Card, CardContent, List, ListItem, Typography } from "@material-ui/core";
 import { CryptidAccount, useCryptid } from "../../utils/Cryptid/cryptid";
-import Button from "@material-ui/core/Button";
-import AddKeyIcon from "@material-ui/icons/VpnKeyOutlined";
-import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
-import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
-import ListItemText from "@material-ui/core/ListItemText";
-import AddKeyDialog from "./AddKeyDialog";
-import React, { useCallback, useEffect, useState } from "react";
-import { PublicKey, TransactionSignature } from "@solana/web3.js";
-import { useSnackbar } from "notistack";
-import AddControllerDialog from "./AddControllerDialog";
-import { useSendTransaction } from "../../utils/notifications";
-import { refreshWalletPublicKeys } from "../../utils/wallet";
+import React from "react";
 import {ClipboardIcon, KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
 import {AddressLink} from "../AddressLink";
-import TokenIcon from "../TokenIcon";
-import {CheckCircleIcon, ChevronDownIcon, ChevronUpIcon} from "@heroicons/react/solid";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
