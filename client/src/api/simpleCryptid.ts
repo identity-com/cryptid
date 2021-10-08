@@ -26,7 +26,6 @@ export class SimpleCryptid extends AbstractCryptid {
       this.signer.publicKey,
       [[this.signer, []]]
     );
-    console.log("wrapped size: " + wrappedTransaction.serialize({requireAllSignatures: false}).length)
     return [wrappedTransaction];
   }
 
