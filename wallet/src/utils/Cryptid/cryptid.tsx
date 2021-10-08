@@ -23,16 +23,28 @@ import {
 import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 import { useWalletContext } from "../wallet";
+import { deprecate } from "util";
+
+interface CryptidAccountInitData {
+  didPrefix: string,
+  didAddress: string,
+  alias: string,
+  signer: Signer,
+  connection: Connection,
+  parent?: CryptidAccount,
+}
 
 export class CryptidAccount {
-  public did: string
-  public connection: Connection
-  private signer: Signer;
-  private cryptid: Cryptid;
-  public address: PublicKey | null = null;
-  public document: DIDDocument | null = null;
+  public readonly didPrefix: string;
+  public readonly didAddress: string;
+  public readonly alias: string;
+  private _connection: Connection
+  private _signer: Signer;
+  private _cryptid: Cryptid;
+  private _address: PublicKey;
+  private _document: DIDDocument;
   // Crypid Account parent if controlled
-  private parent: CryptidAccount | null;
+  private _parent: CryptidAccount | undefined;
 
   private updateDocWrapper = async (f: () => Promise<TransactionSignature>) => {
     const signature =  f()
@@ -40,19 +52,45 @@ export class CryptidAccount {
     return signature;
   }
 
-  constructor(did: string, signer: Signer, connection: Connection, parent: CryptidAccount | null = null) {
-    this.did = did
-    this.connection = connection
-    this.signer = signer
-    this.parent = parent
+  private constructor({ didPrefix, didAddress, alias, signer, connection, parent} : CryptidAccountInitData) {
+    this.didPrefix = didPrefix
+    this.didAddress = didAddress
+    this.alias = alias
+    this._connection = connection
+    this._address = new PublicKey(didAddress) // Note this is wrong, but will be updated by INIT, constructor is private
+    this._document =  { id: "UNINITIALIZED" }; //Note this is wrong, but will be updated by INIT, constructor is private
+    this._signer = signer
+    this._parent = parent
 
-    if (parent != null) {
-      this.cryptid = parent.cryptid.as(did)
+    if (parent) {
+      this._cryptid = parent.cryptid.as(this.did)
     } else {
-      this.cryptid = buildCryptid(did, signer, {
+      this._cryptid = buildCryptid(this.did, signer, {
         connection,
       })
     }
+  }
+
+  get did() {
+    return `${this.didPrefix}:${this.didAddress}`
+  }
+
+  get publicKey() {
+    return this.address
+  }
+
+  get address() {
+    return this.address
+  }
+
+  get cryptid() {
+    return this._cryptid
+  }
+
+  static async create(init: CryptidAccountInitData) {
+    const account = new CryptidAccount(init)
+    await account.init()
+    return account;
   }
 
   init = async () => {
@@ -60,63 +98,70 @@ export class CryptidAccount {
       return
     }
 
-    this.address = await this.cryptid.address()
+    this._address = await this.cryptid.address()
     await this.updateDocument();
     // console.log(`Getting address: ${this.address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
-  as = (controllerDID: string): CryptidAccount => {
-    return new CryptidAccount(controllerDID, this.signer, this.connection, this)
+  async as(controllerDidAddress: string, controllerAlias: string): Promise<CryptidAccount> {
+    return CryptidAccount.create({
+      didPrefix: this.didPrefix,
+      didAddress: controllerDidAddress,
+      alias: controllerAlias,
+      signer: this._signer,
+      connection: this._connection,
+      parent: this
+    })
   }
   
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
     this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
 
   updateDocument = async () => {
-    this.document = await this.cryptid.document()
-    return this.document
+    this._document = await this.cryptid.document()
+    return this._document
   }
 
   get isControlled() {
-    return this.parent != null
+    return this._parent != null
   }
 
   get controlledBy() {
-    return this.parent != null ? this.parent.did : this.did
+    return this._parent != null ? this._parent.did : this.did
   }
 
   baseAccount = () => {
-    if (this.parent) {
-      return this.parent.baseAccount()
+    if (this._parent) {
+      return this._parent.baseAccount()
     }
 
     return this
   }
 
   get verificationMethods() {
-    if (!this.document || !this.document.verificationMethod) {
+    if (!this._document || !this._document.verificationMethod) {
       return []
     }
 
-    return this.document.verificationMethod
+    return this._document.verificationMethod
   }
 
   get controllers() {
-    if (!this.document || !this.document.controller) {
+    if (!this._document || !this._document.controller) {
       return []
     }
 
-    return Array.isArray(this.document.controller) ? this.document.controller : [ this.document.controller ]
+    return Array.isArray(this._document.controller) ? this._document.controller : [ this._document.controller ]
   }
 
   containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
 
   get isInitialized() {
-    return this.address !== null && this.document !== null
+    return this.address !== null && this._document !== null
   }
 
   updateSigner(signer: Signer) {
-    this.signer = signer
+    this._signer = signer
     if (!this.isControlled) {
       this.cryptid.updateSigner(signer)
     }
@@ -126,7 +171,7 @@ export class CryptidAccount {
   }
   
   activeSigningKey():PublicKey {
-    return this.signer.publicKey
+    return this._signer.publicKey
   }
 
   addKey = async (address: PublicKey, alias: string): Promise<TransactionSignature> =>
@@ -164,10 +209,6 @@ export class CryptidAccount {
       return this.transferSol(destination, amount);
     }
 
-    if (!this.address) {
-      throw Error('No source address for transfer')
-    }
-
     const signingWrapper = {
       // publicKey: this.signer.publicKey, // this set's both fromPubKey and Signer. :(
       publicKey: this.address,
@@ -176,7 +217,7 @@ export class CryptidAccount {
 
 
     return await transferTokens({
-      connection: this.connection,
+      connection: this._connection,
       owner: signingWrapper,
       sourcePublicKey: source,
       destinationPublicKey: destination,
@@ -189,9 +230,6 @@ export class CryptidAccount {
   };
 
   transferSol = async (destination, amount) => {
-    if (!this.address) {
-      throw Error('No source address for transfer')
-    }
 
     // The Tokens Interfaces expect a wallet with
     // interface Wallet {
@@ -204,21 +242,21 @@ export class CryptidAccount {
       signTransaction: this.signTransaction.bind(this)
     }
 
-    console.log(`Doing native transfer with ${this.signer.publicKey}`)
+    console.log(`Doing native transfer with ${this._signer.publicKey}`)
 
-    return nativeTransfer(this.connection, signingWrapper, destination, amount);
+    return nativeTransfer(this._connection, signingWrapper, destination, amount);
   };
 
   getTokenAccountInfo = async (): Promise<{ publicKey: PublicKey, parsed: TokenInfo }[]> => {
     let accounts: {
       publicKey: PublicKey,
       accountInfo: TokenAccountInfo,
-    }[] = this.address ? await getOwnedTokenAccounts(this.connection, await this.address) : [];
+    }[] = this.address ? await getOwnedTokenAccounts(this._connection, await this.address) : [];
     return accounts.map<{
       publicKey: PublicKey,
       parsed: TokenInfo,
     }>(({ publicKey, accountInfo }) => {
-      setInitialAccountInfo(this.connection, publicKey, accountInfo);
+      setInitialAccountInfo(this._connection, publicKey, accountInfo);
       return {
         publicKey,
         parsed: parseTokenAccountData(accountInfo.data),
@@ -229,18 +267,14 @@ export class CryptidAccount {
   }
 
   tokenAccountCost = async () => {
-    return this.connection.getMinimumBalanceForRentExemption(
+    return this._connection.getMinimumBalanceForRentExemption(
       ACCOUNT_LAYOUT.span,
     );
   };
 
   closeTokenAccount = async (publicKey, skipPreflight = false) => {
-    if (!this.address) {
-      throw Error('No source address')
-    }
-
     return await closeTokenAccount({
-      connection: this.connection,
+      connection: this._connection,
       owner: {
         publicKey: this.address,
         signTransaction: this.signTransaction.bind(this)
@@ -251,12 +285,8 @@ export class CryptidAccount {
   };
 
   createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey):Promise<[PublicKey, string]> => {
-    if (!this.address) {
-      throw Error('No source address')
-    }
-
     return await createAssociatedTokenAccount({
-      connection: this.connection,
+      connection: this._connection,
       wallet: {
         publicKey: this.address,
         signTransaction: this.signTransaction.bind(this)
@@ -309,8 +339,8 @@ interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | null;
   setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
-  addCryptidAccount: (b: string, parent?: CryptidAccount) => void
-  removeCryptidAccount: (b: string) => void
+  addCryptidAccount: (base58Address: string, alias: string, parent?: CryptidAccount) => void
+  removeCryptidAccount: (base58Address: string) => void
   getDidPrefix: () => string
 }
 
@@ -329,6 +359,7 @@ interface CryptidSelectorInterface {
 
 interface StoredCryptidAccount {
   account: string
+  alias: string
   parent?: string
 }
 
@@ -379,7 +410,7 @@ export const CryptidProvider:FC = ({ children }) => {
     [],
   );
 
-  const addCryptidAccount = useCallback((base58: string, parent?: CryptidAccount) => {
+  const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
     validatePublicKey(base58);
     
     if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
@@ -389,8 +420,8 @@ export const CryptidProvider:FC = ({ children }) => {
       })
 
       // TODO: Allow for accessor without DID prefix.
-      const parentBase58 = parent?.did.replace(getDidPrefix(), '')
-      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, parent: parentBase58 }]))
+      const parentBase58 = parent?.didAddress
+      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
     }
   }, [setCryptidExtAccounts])
 
@@ -407,8 +438,8 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const getDidPrefix = useCallback(() => {
     // sol dids on mainnet have no cluster prefix 
-    const clusterPrefix = cluster === 'mainnet-beta' ? '' : `${cluster}:`;
-    return `did:sol:${clusterPrefix}`;
+    const clusterPrefix = cluster === 'mainnet-beta' ? '' : `:${cluster}`;
+    return `did:sol${clusterPrefix}`;
   },[cluster])
 
   const loadCryptidAccounts = useCallback(async () => {
@@ -432,9 +463,15 @@ export const CryptidProvider:FC = ({ children }) => {
       const parentAccount = cryptidAccounts.find(x => x.did === `${getDidPrefix()}${ext.parent}`)
       let cryptidAccount;
       if (parentAccount) {
-        cryptidAccount = parentAccount.as(`${getDidPrefix()}${ext.account}`)
+        cryptidAccount = await parentAccount.as(ext.account, ext.alias)
       } else {
-        cryptidAccount = new CryptidAccount(`${getDidPrefix()}${ext.account}`, defaultSigner, connection )
+        cryptidAccount = await CryptidAccount.create({
+          didPrefix: getDidPrefix(),
+          didAddress: ext.account,
+          alias: ext.alias,
+          signer: defaultSigner,
+          connection
+        })
       }
       await cryptidAccount.init()
       cryptidAccounts.push(cryptidAccount)

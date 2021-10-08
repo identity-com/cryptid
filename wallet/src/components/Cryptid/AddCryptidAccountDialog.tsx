@@ -14,10 +14,10 @@ import {Modal} from "../modals/modal";
 import {PlusCircleIcon} from "@heroicons/react/outline";
 import {isValidPublicKey} from "../../utils/Cryptid/cryptid";
 
-const DEFAULT_ADDRESS = ''
-
 export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefix, currentAccount }) {
-  const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [address, setAddress] = useState('');
+  const [alias, setAlias] = useState('');
+
   const [isInvalidAddress, setIsInvalidAddress] = useState(false);
   const [isControlled, setIsControlled] = useState(false);
 
@@ -30,7 +30,7 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
     <Modal
       show={open}
       callbacks={{
-        onOK: () => onAdd(address, isControlled),
+        onOK: () => onAdd(address, alias, isControlled),
         onCancel: onClose
       }}
       title='Add Cryptid Account'
@@ -76,8 +76,8 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
             text-gray-900 rounded-md
             focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Alias"
-            // value={address}
-            // onChange={(e) => setAlias(e.target.value.trim())}
+            value={alias}
+            onChange={(e) => setAlias(e.target.value.trim())}
           />
         </div>
       </div>

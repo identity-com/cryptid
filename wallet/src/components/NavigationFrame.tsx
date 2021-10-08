@@ -6,9 +6,9 @@ import AddCustomClusterDialog from "./AddCustomClusterDialog";
 import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import {complement} from "ramda";
-import {pages} from "../utils/config";
 import { useCryptid } from '../utils/Cryptid/cryptid';
 import AddCryptidAccountDialog from './Cryptid/AddCryptidAccountDialog';
+import { pages } from "../utils/config";
 
 type DIDElement = { alias: string, did: string, controlledBy?: string }
 const userNavigation: DIDElement[] = [
@@ -44,13 +44,13 @@ const IdentitySelector = () => {
   const { selectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
   const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
 
-  const onAdd = useCallback(async (address: string, isControlled: boolean) => {
+  const onAdd = useCallback(async (address: string, alias: string, isControlled: boolean) => {
     let parent;
     if (isControlled && selectedCryptidAccount) {
       parent = selectedCryptidAccount
     }
 
-    addCryptidAccount(address, parent)
+    addCryptidAccount(address, alias, parent)
     setCryptidAccountDialogOpen(false)
   },[selectedCryptidAccount, addCryptidAccount])
 
