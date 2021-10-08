@@ -1,4 +1,4 @@
-import React, {useState, useMemo, Fragment} from 'react';
+import React, { useState, useMemo, Fragment, useCallback } from 'react';
 import { useConnectionConfig } from '../utils/connection';
 import {clusterForEndpoint, getClusters, addCustomCluster, customClusterExists} from '../utils/clusters';
 import { usePage } from '../utils/page';
@@ -7,6 +7,8 @@ import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import {complement} from "ramda";
 import {pages} from "../utils/config";
+import { useCryptid } from '../utils/Cryptid/cryptid';
+import AddCryptidAccountDialog from './Cryptid/AddCryptidAccountDialog';
 
 type DIDElement = { alias: string, did: string, controlledBy?: string }
 const userNavigation: DIDElement[] = [
@@ -38,43 +40,73 @@ const DIDMenuItem = ({item}: DIDMenuItemProps) => (
 
 const isControlledBy = (didElement: DIDElement) => !!didElement.controlledBy;
 
-const IdentitySelector = () => (
-  <div className="hidden sm:ml-2 sm:flex sm:items-center">
-    {/* Identity dropdown */}
-    <Menu as="div" className="ml-3 relative">
-      <div>
-        <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          <span className="sr-only">Select Identity</span>
-          {/*<UserIcon className="h-6 w-6" aria-hidden="true"/>*/}
-          <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+const IdentitySelector = () => {
+  const { selectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
+  const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
+
+
+  const onAdd = useCallback(async (address: string, isControlled: boolean) => {
+
+    let parent;
+    if (isControlled && selectedCryptidAccount) {
+      parent = selectedCryptidAccount
+    }
+
+    addCryptidAccount(address, parent)
+    setCryptidAccountDialogOpen(false)
+  },[selectedCryptidAccount, addCryptidAccount])
+
+  return (
+    <div className="hidden sm:ml-2 sm:flex sm:items-center">
+      <AddCryptidAccountDialog
+        open={addCryptidAccountDialogOpen}
+        onClose={() => setCryptidAccountDialogOpen(false)}
+        onAdd={onAdd}
+        didPrefix={getDidPrefix()}
+        currentAccount={selectedCryptidAccount?.did}
+      />
+      {/* Identity dropdown */}
+      <Menu as="div" className="ml-3 relative">
+        <div>
+          <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <span className="sr-only">Select Identity</span>
+            {/*<UserIcon className="h-6 w-6" aria-hidden="true"/>*/}
+            <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
         <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
           <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       </span>
-        </Menu.Button>
-      </div>
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
-      >
-        <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-          {userNavigation.filter(complement(isControlledBy)).map((item) =>
-            <DIDMenuItem item={item}/>
-          )}
-          <hr/>
-          {userNavigation.filter(isControlledBy).map((item) =>
-            <DIDMenuItem item={item}/>
-          )}
-        </Menu.Items>
-      </Transition>
-    </Menu>
-  </div>
-)
+          </Menu.Button>
+        </div>
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-200"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
+        >
+          <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+            {userNavigation.filter(complement(isControlledBy)).map((item) =>
+              <DIDMenuItem item={item}/>
+            )}
+            <hr/>
+            {userNavigation.filter(isControlledBy).map((item) =>
+              <DIDMenuItem item={item}/>
+            )}
+            <hr />
+            <Menu.Item key={'AddCryptid'} onClick={() => setCryptidAccountDialogOpen(true)}>
+              <a className={classNames('bg-gray-100 block px-4 py-2 text-sm text-gray-700')}>
+                Add Cryptid
+              </a>
+            </Menu.Item>
+          </Menu.Items>
+        </Transition>
+      </Menu>
+    </div>
+  )
+}
 
 const NetworkSelector = () => {
   const { endpoint, setEndpoint } = useConnectionConfig();
