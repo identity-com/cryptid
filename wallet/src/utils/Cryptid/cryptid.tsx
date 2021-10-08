@@ -91,11 +91,7 @@ export class CryptidAccount {
     return account;
   }
 
-  init = async () => {
-    if (this.isInitialized) {
-      return
-    }
-
+  async init() {
     this._address = await this.cryptid.address()
     await this.updateDocument();
   }
@@ -115,6 +111,8 @@ export class CryptidAccount {
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()
+    console.log('Returned Document')
+    console.log(this._document)
     return this._document
   }
 
@@ -166,7 +164,7 @@ export class CryptidAccount {
     // })
   }
   
-  activeSigningKey():PublicKey {
+  get activeSigningKey():PublicKey {
     return this._signer.publicKey
   }
 
@@ -364,6 +362,19 @@ const DEFAULT_CRYPTID_SELECTOR = {
   selectedCryptidAccount: undefined
 };
 
+export const convertToPublicKey = (base58: string | undefined) => {
+  // return back undefined
+  if (!base58) {
+    return
+  }
+
+  try {
+    return new PublicKey(base58)
+  } catch (error) {
+    // return undefined
+  }
+};
+
 const validatePublicKey = (base58: string) => {
   try {
     new PublicKey(base58)
@@ -371,15 +382,6 @@ const validatePublicKey = (base58: string) => {
     throw new Error('Invalid key ' + base58);
   }
 };
-
-export const isValidPublicKey = (base58: string):boolean => {
-  try {
-    validatePublicKey(base58)
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
 
 /**
  *
@@ -391,7 +393,7 @@ export const isValidPublicKey = (base58: string):boolean => {
  *
  */
 export const CryptidProvider:FC = ({ children }) => {
-  const { wallet } = useWalletContext();
+  const { wallet, hasWallet, connectWallet } = useWalletContext();
 
   const connection = useConnection();
   const cluster = useCluster();
@@ -415,7 +417,6 @@ export const CryptidProvider:FC = ({ children }) => {
         selectedCryptidAccount: base58
       })
 
-      // TODO: Allow for accessor without DID prefix.
       const parentBase58 = parent?.didAddress
       setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
     }
@@ -456,11 +457,12 @@ export const CryptidProvider:FC = ({ children }) => {
 
     // TODO: This is not robust, since dependent accounts need to be loaded first.
     for (const ext of cryptidExtAccounts) {
-      const parentAccount = cryptidAccounts.find(x => x.did === `${getDidPrefix()}${ext.parent}`)
+      const parentAccount = cryptidAccounts.find(x => x.didAddress === ext.parent)
       let cryptidAccount;
       if (parentAccount) {
         cryptidAccount = await parentAccount.as(ext.account, ext.alias)
       } else {
+        console.log('Creating did account for ' + ext.account)
         cryptidAccount = await CryptidAccount.create({
           didPrefix: getDidPrefix(),
           didAddress: ext.account,
@@ -469,44 +471,82 @@ export const CryptidProvider:FC = ({ children }) => {
           connection
         })
       }
-      await cryptidAccount.init()
       cryptidAccounts.push(cryptidAccount)
     }
 
     if (cryptidAccounts.length > 0) {
       // Selected from cryptidSelector or fallback to first.
       const selected = cryptidAccounts.find(a => a.did === getDidPrefix() + cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
+      console.log('Setting Account for ' + selected.didAddress)
       setSelectedCryptidAccount(selected)
     }
 
     setCryptidAccounts(cryptidAccounts)
-  }, [cluster, cryptidExtAccounts])
+  }, [cluster, cryptidExtAccounts, setCryptidAccounts])
 
   useEffect(() => {
+    console.log('useEffect loadCryptidAccounts')
     loadCryptidAccounts()
   }, [loadCryptidAccounts])
 
   // persist selected selectedCryptidAccount to localStorage
   useEffect(() => {
+    console.log('useEffect setCryptidSelector')
+
     if (selectedCryptidAccount) {
       setCryptidSelector({
-        selectedCryptidAccount: selectedCryptidAccount.did.replace(getDidPrefix() + ":", '')
+        selectedCryptidAccount: selectedCryptidAccount.didAddress
       })
     }
   }, [selectedCryptidAccount])
 
-  // Pre-select wallet if account changes.
-  // update Signer of selectedcCyptidAccount whenever wallet changes.
-  // useEffect(() => {
-  //   if (!wallet || !selectedCryptidAccount) { return }
-  //
-  //   console.log(`Updating signer to ${wallet.publicKey}`)
-  //   selectedCryptidAccount.updateSigner({
-  //     publicKey: wallet.publicKey,
-  //     sign: wallet.signTransaction
-  //   })
-  //
-  // }, [selectedCryptidAccount])
+  // find and assign Wallet to current account
+  useEffect(() => {
+    console.log('useEffect findWallet')
+
+    if (!selectedCryptidAccount) { return }
+
+    // already has key assigned?
+    if (wallet.publicKey && selectedCryptidAccount.containsKey(wallet.publicKey)) {
+      return
+    }
+
+    // find and assign wallet
+    console.log(`Trying to find wallet for CryptidAccount ${selectedCryptidAccount.address}`)
+
+    // TODO: consider base-case
+    for (const vm of selectedCryptidAccount.verificationMethods) {
+      const pubKey = convertToPublicKey(vm.publicKeyBase58)
+      console.log('Matching to Wallet: '+ vm.publicKeyBase58)
+
+      if (pubKey && hasWallet(pubKey)) {
+          console.log('Changing to Wallet: '+ vm.publicKeyBase58)
+          connectWallet(pubKey)
+          break
+        }
+    }
+
+  }, [selectedCryptidAccount, wallet, connectWallet])
+
+  // find and assign Wallet to current account
+  useEffect(() => {
+    console.log('useEffect Update Signer')
+
+    if (!selectedCryptidAccount || !wallet.publicKey || !wallet.signTransaction) {
+      return
+    }
+
+    // already has key assigned in signer
+    if (selectedCryptidAccount.activeSigningKey && wallet.publicKey.equals(selectedCryptidAccount.activeSigningKey)) {
+      return
+    }
+
+    console.log(`Updating signer to ${wallet.publicKey}`)
+    selectedCryptidAccount.updateSigner({
+      publicKey: wallet.publicKey,
+      sign: wallet.signTransaction
+    })
+  }, [wallet, selectedCryptidAccount])
 
 
 

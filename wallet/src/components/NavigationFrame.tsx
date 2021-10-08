@@ -67,7 +67,7 @@ const IdentitySelector = ({ isSignerWindow }: { isSignerWindow: boolean }) => {
         onClose={() => setCryptidAccountDialogOpen(false)}
         onAdd={onAdd}
         didPrefix={getDidPrefix()}
-        currentAccount={selectedCryptidAccount?.did}
+        currentAccountDid={selectedCryptidAccount?.did}
       />
       {/* Identity dropdown */}
       <Menu as="div" className="ml-3 relative">

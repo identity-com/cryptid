@@ -105,6 +105,7 @@ export const decodeAccount = (privateKey: string) => {
     try {
       return Keypair.fromSecretKey(new Uint8Array(bs58.decode(privateKey)));
     } catch (_) {
+      console.log('Could not decode KeyPair: ' + privateKey)
       return undefined;
     }
   }

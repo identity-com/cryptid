@@ -110,7 +110,7 @@ export function WalletProvider({ children }) {
       const cipher = nacl.secretbox(importedKey.secretKey, nonce, importsEncryptionKey);
 
       setPersistedWallets( { ...persistedWallets, [importedKey.publicKey.toBase58()]: {
-          type: "adapter",
+          type: "sw_imported",
           name,
           privateKey: {
             bs58Nonce: bs58.encode(nonce),
@@ -120,12 +120,18 @@ export function WalletProvider({ children }) {
       return importedKey.publicKey
     }
 
+    console.log(`Created new SW Key with Walletcount ${walletCount}`)
+
+
     // Derivation case
     const account = getAccountFromSeed(
       Buffer.from(seed, 'hex'),
       walletCount,
       derivationPath,
     )
+
+    console.log(`Created new SW Key with ${account.publicKey.toBase58()}`)
+
 
     setPersistedWallets( { ...persistedWallets, [account.publicKey.toBase58()]: {
         type: "sw",
@@ -137,7 +143,7 @@ export function WalletProvider({ children }) {
     setWalletCount(walletCount + 1);
     return account.publicKey
 
-  }, [persistedWallets, setPersistedWallets, walletAdapter, walletCount, setWalletCount])
+  }, [persistedWallets, setPersistedWallets, walletAdapter, walletCount, setWalletCount, seed, importsEncryptionKey])
 
   const hasWallet = useCallback((publicKey: PublicKey) => {
     return !!persistedWallets[publicKey.toBase58()]
@@ -187,7 +193,7 @@ export function WalletProvider({ children }) {
     }
 
     setWallet(new AccountWallet(account))
-  }, [persistedWallets, hasWallet])
+  }, [persistedWallets, hasWallet, seed, importsEncryptionKey])
 
   const disconnectWallet = useCallback(() => {
     setWallet(DEFAULT_WALLET_INTERFACE)
