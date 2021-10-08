@@ -7,10 +7,9 @@
  */
 import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature, Signer as SolanaSigner } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
-import { Account } from "./cryptid-external-types";
 import { refreshCache, useAsyncData } from "../fetch-loop";
 import { useLocalStorageState, useRefEqual } from "../utils";
 import {
@@ -23,7 +22,6 @@ import {
 import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 import { useWalletContext } from "../wallet";
-import { deprecate } from "util";
 
 interface CryptidAccountInitData {
   didPrefix: string,
@@ -492,7 +490,7 @@ export const CryptidProvider:FC = ({ children }) => {
   useEffect(() => {
     if (selectedCryptidAccount) {
       setCryptidSelector({
-        selectedCryptidAccount: selectedCryptidAccount.did.replace(getDidPrefix(), '')
+        selectedCryptidAccount: selectedCryptidAccount.did.replace(getDidPrefix() + ":", '')
       })
     }
   }, [selectedCryptidAccount])

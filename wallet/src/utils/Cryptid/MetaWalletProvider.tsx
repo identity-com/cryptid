@@ -6,8 +6,6 @@ import { WalletProvider } from "../wallet";
 import { CryptidProvider } from "./cryptid";
 import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
 
-
-
 export const MetaWalletProvider = ({ children }) => {
 
   const { endpoint } = useConnectionConfig()
