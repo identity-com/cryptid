@@ -250,7 +250,7 @@ export class CryptidAccount {
     });
   };
 
-  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey) => {
+  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey):Promise<[PublicKey, string]> => {
     if (!this.address) {
       throw Error('No source address')
     }

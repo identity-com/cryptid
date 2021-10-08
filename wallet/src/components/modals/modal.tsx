@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { ExclamationIcon } from '@heroicons/react/outline'
+import {ExclamationIcon, QuestionMarkCircleIcon} from '@heroicons/react/outline'
 import * as React from "react";
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
@@ -13,7 +13,8 @@ type ModalProps = {
     onCancel: () => void
   },
   okText?: string,
-  okEnabled: boolean,
+  suppressOKButton?: boolean
+  okEnabled?: boolean,
   cancelText?: string,
   title: string,
   Icon?: (props: React.ComponentProps<'svg'>) => JSX.Element
@@ -23,10 +24,11 @@ export const Modal:React.FC<ModalProps> = (
   {
     show,
     title,
-    Icon = ExclamationIcon,
+    Icon = QuestionMarkCircleIcon,
     iconClasses = '',
     children,
     callbacks: {onOK, onCancel},
+    suppressOKButton ,
     okText = 'OK',
     okEnabled,
     cancelText = 'Cancel'
@@ -62,18 +64,18 @@ export const Modal:React.FC<ModalProps> = (
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full pr-6">
               <div className="mb-5 mx-auto flex-shrink-0 inline-flex items-center justify-center h-12 rounded-full sm:mx-0 sm:h-10">
                 <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true" />
                 <Dialog.Title as="h3" className="text-lg pl-5 mt-1 leading-6 font-medium text-gray-900">
                   {title}
                 </Dialog.Title>
               </div>
-              <div className="sm:flex sm:items-start text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+              <div className="h-screen/2 overflow-scroll sm:flex sm:items-start text-center sm:mt-0 sm:text-left w-full">
                 {children}
               </div>
               <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button
+                {suppressOKButton || <button
                   disabled={!okEnabled}
                   type="button"
                   className={classNames(
@@ -83,7 +85,7 @@ export const Modal:React.FC<ModalProps> = (
                   onClick={onOK}
                 >
                   {okText}
-                </button>
+                </button>}
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
