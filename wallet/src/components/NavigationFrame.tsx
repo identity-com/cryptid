@@ -40,7 +40,7 @@ const DIDMenuItem = ({item}: DIDMenuItemProps) => (
 
 const isControlledBy = (didElement: DIDElement) => !!didElement.controlledBy;
 
-const IdentitySelector = () => {
+const IdentitySelector = ({ isSignerWindow }: { isSignerWindow: boolean }) => {
   const { selectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
   const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
 
@@ -55,7 +55,13 @@ const IdentitySelector = () => {
   },[selectedCryptidAccount, addCryptidAccount])
 
   return (
-    <div className="hidden sm:ml-2 sm:flex sm:items-center">
+    <div className={(() => {
+      if (isSignerWindow){
+        return "ml-2 flex items-center";
+      } else {
+        return "hidden sm:ml-2 sm:flex sm:items-center";
+      }
+    })()}>
       <AddCryptidAccountDialog
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
@@ -235,13 +241,13 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
               {(() => {
                 if(isSignerWindow){
                   return <>
-                    <IdentitySelector/>
+                    <IdentitySelector isSignerWindow={isSignerWindow}/>
                   </>;
                 } else {
                   return (<>
                     <div className="sm:ml-6 sm:flex">
                       <NetworkSelector/>
-                      <IdentitySelector/>
+                      <IdentitySelector isSignerWindow={isSignerWindow}/>
                     </div>
                     <div className="-mr-2 flex items-center sm:hidden">
                       {/* Mobile menu button */}

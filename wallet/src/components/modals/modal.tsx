@@ -34,6 +34,7 @@ export const Modal:React.FC<ModalProps> = (
     cancelText = 'Cancel'
   }) => {
   const cancelButtonRef = useRef(null)
+  okEnabled = okEnabled === undefined ? true : okEnabled; // defaults to true
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -71,7 +72,7 @@ export const Modal:React.FC<ModalProps> = (
                   {title}
                 </Dialog.Title>
               </div>
-              <div className="h-screen/2 overflow-scroll sm:flex sm:items-start text-center sm:mt-0 sm:text-left w-full">
+              <div className="max-h-screen/2 overflow-scroll sm:flex sm:items-start text-center sm:mt-0 sm:text-left w-full">
                 {children}
               </div>
               <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">

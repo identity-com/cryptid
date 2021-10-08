@@ -1,11 +1,10 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useCryptid} from "../utils/Cryptid/cryptid";
-import {PublicKey, Transaction} from "@solana/web3.js";
-import bs58 from "bs58";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCryptid} from '../utils/Cryptid/cryptid';
+import {PublicKey, Transaction} from '@solana/web3.js';
+import bs58 from 'bs58';
 import {
   Button,
   CardContent,
-  Divider,
   FormControlLabel,
   Typography,
   Card,
@@ -13,10 +12,9 @@ import {
   SnackbarContent,
   CardActions,
 } from '@material-ui/core';
-import {makeStyles} from "@material-ui/core/styles";
-import {useLocalStorageState} from "../utils/utils";
-import ImportExportIcon from "@material-ui/icons/ImportExport";
-import WarningIcon from "@material-ui/icons/Warning";
+import {makeStyles} from '@material-ui/core/styles';
+import {useLocalStorageState} from '../utils/utils';
+import WarningIcon from '@material-ui/icons/Warning';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
 
@@ -26,7 +24,7 @@ type RequestMessage = {
   id: ID,
 } & ({
   method: 'connect'
-} |{
+} | {
   method: 'signTransaction',
   params: { transaction: string }
 } | {
@@ -54,16 +52,16 @@ type Opener = {
   postMessage: (message: ResponseMessage & { jsonrpc: '2.0' }, to: string) => void;
 }
 
-export default function PopupPage({ opener }: { opener: Opener }){
+export default function PopupPage({opener}: { opener: Opener }) {
   const origin = useMemo(() => {
     let params = new URLSearchParams(window.location.hash.slice(1));
     const origin = params.get('origin');
-    if (!origin){
-      throw new Error("No origin");
+    if (!origin) {
+      throw new Error('No origin');
     }
     return origin;
   }, []);
-  const { selectedCryptidAccount } = useCryptid();
+  const {selectedCryptidAccount} = useCryptid();
 
   const [connectedAccount, setConnectedAccount] = useState<PublicKey | null>(null);
   const hasConnectedAccount = !!connectedAccount;
@@ -71,14 +69,14 @@ export default function PopupPage({ opener }: { opener: Opener }){
   const [autoApprove, setAutoApprove] = useState(false);
   const postMessage = useCallback((
     (message: ResponseMessage) => {
-      opener.postMessage({ jsonrpc: '2.0', ...message}, origin);
+      opener.postMessage({jsonrpc: '2.0', ...message}, origin);
     }
   ), [opener, origin]);
 
   useEffect(() => {
     if (hasConnectedAccount) {
-      function unloadHandler(){
-        postMessage({ method: 'disconnected' });
+      function unloadHandler() {
+        postMessage({method: 'disconnected'});
       }
       window.addEventListener('beforeunload', unloadHandler);
       return () => {
@@ -92,20 +90,20 @@ export default function PopupPage({ opener }: { opener: Opener }){
     if (
       selectedCryptidAccount &&
       connectedAccount &&
-      (!selectedCryptidAccount.address || !connectedAccount.equals(selectedCryptidAccount.address))){
+      (!selectedCryptidAccount.address || !connectedAccount.equals(selectedCryptidAccount.address))) {
       setConnectedAccount(null);
     }
   }, [connectedAccount, selectedCryptidAccount]);
 
   useEffect(() => {
-    function messageHandler(e: MessageEvent<RequestMessage>){
-      if (e.origin === origin && e.source === window.opener){
+    function messageHandler(e: MessageEvent<RequestMessage>) {
+      if (e.origin === origin && e.source === window.opener) {
         if (
           e.data.method !== 'signTransaction' &&
           e.data.method !== 'signAllTransactions' &&
           e.data.method !== 'sign'
         ) {
-          postMessage({ error: 'Unsupported method', id: e.data.id })
+          postMessage({error: 'Unsupported method', id: e.data.id});
         }
 
         setRequests((requests) => [...requests, e.data]);
@@ -118,12 +116,12 @@ export default function PopupPage({ opener }: { opener: Opener }){
   const request = requests.length > 0 ? requests[0] : null;
   const popRequest = () => setRequests((requests) => requests.slice(1));
 
-  const { payloads, messageDisplay }: {
+  const {payloads, messageDisplay}: {
     payloads: (Buffer | Uint8Array)[],
     messageDisplay: 'tx' | 'utf8' | 'hex'
   } = useMemo(() => {
-    if(!request || request.method === 'connect'){
-      return { payloads: [], messageDisplay: 'tx' }
+    if (!request || request.method === 'connect') {
+      return {payloads: [], messageDisplay: 'tx'};
     }
     switch (request.method) {
       case 'signTransaction':
@@ -135,26 +133,26 @@ export default function PopupPage({ opener }: { opener: Opener }){
         return {
           payloads: request.params.transactions.map((t) => bs58.decode(t)),
           messageDisplay: 'tx',
-        }
+        };
       case 'sign':
-        if(!(request.params.data instanceof Uint8Array)) {
+        if (!(request.params.data instanceof Uint8Array)) {
           throw new Error('Data must be instance of Uint8Array');
         }
         return {
           payloads: [request.params.data],
           messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
-        }
+        };
     }
   }, [request]);
 
   if (hasConnectedAccount && requests.length === 0) {
     focusParent();
 
-    return(
+    return (
       <Typography>
         Please keep this window open in the background.
       </Typography>
-    )
+    );
   }
 
   const mustConnect =
@@ -164,43 +162,44 @@ export default function PopupPage({ opener }: { opener: Opener }){
       !connectedAccount.equals(selectedCryptidAccount.address)
     );
 
-  if (mustConnect){
-    function connect(autoApprove: boolean){
-      if(!selectedCryptidAccount || !selectedCryptidAccount.address){
-        throw new Error("No selected address");
+  if (mustConnect) {
+    function connect(autoApprove: boolean) {
+      if (!selectedCryptidAccount || !selectedCryptidAccount.address) {
+        throw new Error('No selected address');
       }
       setConnectedAccount(selectedCryptidAccount.address);
       postMessage({
         method: 'connected',
-        params: { publicKey: selectedCryptidAccount.address.toBase58(), autoApprove },
+        params: {publicKey: selectedCryptidAccount.address.toBase58(), autoApprove},
       });
       setAutoApprove(autoApprove);
       focusParent();
     }
 
-    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove} setAutoApprove={setAutoApprove} />;
+    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove}
+                                  setAutoApprove={setAutoApprove}/>;
   }
 
-  if(!request){
-    throw new Error("No request");
+  if (!request) {
+    throw new Error('No request');
   }
-  if(!(request.method === 'signTransaction' ||
+  if (!(request.method === 'signTransaction' ||
     request.method === 'signAllTransactions' ||
-    request.method === 'sign')){
-    throw new Error("Unknown method");
+    request.method === 'sign')) {
+    throw new Error('Unknown method');
   }
-  if(!selectedCryptidAccount){
-    throw new Error("No selected cryptid account");
+  if (!selectedCryptidAccount) {
+    throw new Error('No selected cryptid account');
   }
 
-  async function onApprove(){
+  async function onApprove() {
     popRequest();
-    if(!request){
-      throw new Error("onApprove: No request");
+    if (!request) {
+      throw new Error('onApprove: No request');
     }
     switch (request.method) {
       case 'sign':
-        throw new Error("onApprove: Not supported");
+        throw new Error('onApprove: Not supported');
       case 'signTransaction':
         await sendTransaction(payloads[0]);
         break;
@@ -212,50 +211,50 @@ export default function PopupPage({ opener }: { opener: Opener }){
     }
   }
 
-  async function sendTransaction(transactionBuffer: Buffer | Uint8Array){
+  async function sendTransaction(transactionBuffer: Buffer | Uint8Array) {
     const transaction = Transaction.from(transactionBuffer);
-    if(!request){
-      throw new Error("sendTransaction: no request")
+    if (!request) {
+      throw new Error('sendTransaction: no request');
     }
-    if(!selectedCryptidAccount){
-      throw new Error("sendTransaction: no selected cryptid account")
+    if (!selectedCryptidAccount) {
+      throw new Error('sendTransaction: no selected cryptid account');
     }
     postMessage({
       result: {
         transaction: await selectedCryptidAccount
           .signTransaction(transaction)
-          .then((signedTx) => signedTx.serialize({ verifySignatures: false }))
-          .then(bs58.encode)
+          .then((signedTx) => signedTx.serialize({verifySignatures: false}))
+          .then(bs58.encode),
       },
-      id: request.id
+      id: request.id,
     });
   }
 
-  async function sendTransactions(transactionBuffers: (Buffer | Uint8Array)[]){
-    if(!request){
-      throw new Error("sendTransactions: no request")
+  async function sendTransactions(transactionBuffers: (Buffer | Uint8Array)[]) {
+    if (!request) {
+      throw new Error('sendTransactions: no request');
     }
-    if(!selectedCryptidAccount){
-      throw new Error("sendTransactions: no selected cryptid account")
+    if (!selectedCryptidAccount) {
+      throw new Error('sendTransactions: no selected cryptid account');
     }
     const signedTransactions = transactionBuffers
       .map(Transaction.from)
       .map((tx) => selectedCryptidAccount
         .signTransaction(tx)
-        .then((signedTx) => signedTx.serialize({ verifySignatures: false }))
-        .then(bs58.encode)
+        .then((signedTx) => signedTx.serialize({verifySignatures: false}))
+        .then(bs58.encode),
       );
     postMessage({
       result: {
         transactions: await Promise.all(signedTransactions),
       },
       id: request.id,
-    })
+    });
   }
 
-  function sendReject(){
-    if(!request){
-      throw new Error("sendTransactions: no request")
+  function sendReject() {
+    if (!request) {
+      throw new Error('sendTransactions: no request');
     }
     popRequest();
     postMessage({
@@ -287,9 +286,10 @@ function focusParent() {
 
 const useStyles = makeStyles((theme) => ({
   connection: {
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3),
-    textAlign: 'center',
+    // marginTop: theme.spacing(3),
+    // marginBottom: theme.spacing(3),
+    // textAlign: 'center',
+    // fontSize: 24,
   },
   transaction: {
     wordBreak: 'break-all',
@@ -328,30 +328,50 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ApproveConnectionForm({ origin, onApprove, autoApprove, setAutoApprove }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }){
-
+function ApproveConnectionForm({
+                                 origin,
+                                 onApprove,
+                                 autoApprove,
+                                 setAutoApprove,
+                               }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }) {
   const classes = useStyles();
-  const { selectedCryptidAccount } = useCryptid();
-  if(!selectedCryptidAccount){
-    throw new Error("No selected cryptid account");
-  }
   let [dismissed, setDismissed] = useLocalStorageState('dismissedAutoApproveWarning', false);
+  let {selectedCryptidAccount} = useCryptid();
   return (
     <Card>
       <CardContent>
         <Typography variant="h6" component="h1" gutterBottom>
-          Allow this site to access your Cryptid account?
+          Allow {origin} to transact with your Cryptid account?
         </Typography>
         <div className={classes.connection}>
-          <Typography>{origin}</Typography>
-          <ImportExportIcon fontSize="large"/>
-          {/*<Typography>{"TODO: Add name"}</Typography>*/}
-          <Typography variant="caption">
-            ({selectedCryptidAccount.address?.toBase58()})
-          </Typography>
+          {(() => {
+            if (!selectedCryptidAccount) {
+              return (<Typography variant="h6">
+                No selected Cryptid account.
+              </Typography>);
+            } else {
+              return (<>
+                <div className="has-tooltip flex justify-center">
+                  <span className="tooltip rounded shadow-lg bg-gray-100">
+                    DID: {selectedCryptidAccount.did}
+                    <br/>
+                    Signer Address: {selectedCryptidAccount.address.toBase58()}
+                  </span>
+                  {/* TODO: Replace with identity picture */}
+                  <svg className="h-6/12 w-6/12 text-gray-300 mr-2 items-center" fill="currentColor"
+                       viewBox="0 0 24 24">
+                    <path
+                      d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </div>
+                <p className="text-center">Alias: {selectedCryptidAccount.alias}</p>
+              </>);
+            }
+          })()}
+
         </div>
-        <Typography>Only connect with sites you trust.</Typography>
-        <Divider className={classes.divider} />
+        {/*<Typography>Only connect with sites you trust.</Typography>*/}
+        {/*<Divider className={classes.divider} />*/}
         <FormControlLabel
           control={
             <Switch
@@ -370,31 +390,30 @@ function ApproveConnectionForm({ origin, onApprove, autoApprove, setAutoApprove 
             message={
               <div>
                 <span className={classes.warningTitle}>
-                  <WarningIcon className={classes.warningIcon} />
+                  <WarningIcon className={classes.warningIcon}/>
                   Use at your own risk.
                 </span>
                 <Typography className={classes.warningMessage}>
-                  This setting allows sending some transactions on your behalf
-                  without requesting your permission for the remainder of this
-                  session.
+                  The site will be able to send any transactions for the whole session without your confirmation. Are
+                  you sure?
                 </Typography>
               </div>
             }
-            action = {[
+            action={[
               <Button onClick={() => setDismissed(true)}>I understand</Button>,
             ]}
-            classes={{ root: classes.snackbarRoot }}
+            classes={{root: classes.snackbarRoot}}
           />
         )}
       </CardContent>
       <CardActions className={classes.actions}>
-        <Button onClick={window.close}>Cancel</Button>
+        <Button onClick={window.close}>Deny</Button>
         <Button
           color="primary"
           onClick={() => onApprove(autoApprove)}
-          disabled={!dismissed && autoApprove}
+          disabled={!dismissed && autoApprove && !selectedCryptidAccount}
         >
-          Connect
+          Allow
         </Button>
       </CardActions>
     </Card>
@@ -410,13 +429,13 @@ type ApproveSignerFormProps = {
   autoApprove: boolean,
 };
 function ApproveSignatureForm({
-  origin,
-  payloads,
-  messageDisplay,
-  onApprove,
-  onReject,
-  autoApprove,
-}: ApproveSignerFormProps){
+                                origin,
+                                payloads,
+                                messageDisplay,
+                                onApprove,
+                                onReject,
+                                autoApprove,
+                              }: ApproveSignerFormProps) {
   const classes = useStyles();
 
   const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
@@ -424,7 +443,7 @@ function ApproveSignatureForm({
 
   const buttonRef = useRef<any>();
 
-  if(autoApprove){
+  if (autoApprove) {
     onApprove();
     return (<></>);
   }
@@ -446,7 +465,7 @@ function ApproveSignatureForm({
         message={mapTransactionToMessageBuffer(payloads[0])}
         messageDisplay={messageDisplay}
         buttonRef={buttonRef}
-      />
+      />;
     }
   };
 
@@ -466,5 +485,5 @@ function ApproveSignatureForm({
         </Button>
       </CardActions>
     </Card>
-  )
+  );
 }

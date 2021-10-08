@@ -18,11 +18,9 @@ export default function TokenButtons() {
   const connection = useConnection();
 
   const { selectedCryptidAccount } = useCryptid()
-  const balanceInfo = useBalanceInfo(selectedCryptidAccount?.address);
 
   const updateTokenName = useUpdateTokenName();
-  const { endpoint } = useConnectionConfig();
-  const [sendTransaction, sending] = useSendTransaction();
+  const [sendTransaction] = useSendTransaction();
   const callAsync = useCallAsync();
 
   const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
