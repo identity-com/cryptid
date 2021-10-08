@@ -44,9 +44,7 @@ const IdentitySelector = () => {
   const { selectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
   const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
 
-
   const onAdd = useCallback(async (address: string, isControlled: boolean) => {
-
     let parent;
     if (isControlled && selectedCryptidAccount) {
       parent = selectedCryptidAccount

@@ -337,6 +337,23 @@ const DEFAULT_CRYPTID_SELECTOR = {
   selectedCryptidAccount: undefined
 };
 
+const validatePublicKey = (base58: string) => {
+  try {
+    new PublicKey(base58)
+  } catch (error) {
+    throw new Error('Invalid key ' + base58);
+  }
+};
+
+export const isValidPublicKey = (base58: string):boolean => {
+  try {
+    validatePublicKey(base58)
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 /**
  *
  * @param children
@@ -363,6 +380,8 @@ export const CryptidProvider:FC = ({ children }) => {
   );
 
   const addCryptidAccount = useCallback((base58: string, parent?: CryptidAccount) => {
+    validatePublicKey(base58);
+    
     if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({

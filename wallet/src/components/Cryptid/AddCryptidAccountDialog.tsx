@@ -10,74 +10,94 @@ import { makeStyles } from "@material-ui/core/styles";
 import FormGroup from "@material-ui/core/FormGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
-
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1),
-    alignItems: 'baseline',
-  },
-}));
+import {Modal} from "../modals/modal";
+import {PlusCircleIcon} from "@heroicons/react/outline";
+import {isValidPublicKey} from "../../utils/Cryptid/cryptid";
 
 const DEFAULT_ADDRESS = ''
 
 export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefix, currentAccount }) {
   const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [isInvalidAddress, setIsInvalidAddress] = useState(false);
   const [isControlled, setIsControlled] = useState(false);
 
-  const classes = useStyles();
+  const setValidatedAddress = useCallback((value) => {
+    setAddress(value);
+    setIsInvalidAddress(!isValidPublicKey(value));
+  }, [setAddress, setIsInvalidAddress]);
 
   return (
-    <DialogForm
-      open={open}
-      onEnter={() => {
-        setAddress(DEFAULT_ADDRESS);
+    <Modal
+      show={open}
+      callbacks={{
+        onOK: () => onAdd(address, isControlled),
+        onCancel: onClose
       }}
-      onClose={onClose}
-      onSubmit={() => onAdd( address, isControlled )}
-      fullWidth
+      title='Add Cryptid Account'
+      Icon={PlusCircleIcon}
+      iconClasses='text-green-500'
+      okText='Add'
+      okEnabled={!!address && !isInvalidAddress}
     >
-      <DialogTitle>Add Cryptid Account</DialogTitle>
-      <DialogContent style={{ paddingTop: 16 }}>
-        <div className={classes.root}>
-          <Typography>
+      <div className="w-full">
+        <div className="inline-flex -space-y-px w-full">
+          <div className="self-center w-12">
             {didPrefix}
-          </Typography>
-          <TextField
-            label="Address"
-            fullWidth
-            variant="outlined"
-            margin="normal"
+          </div>
+          <input
+            id="address"
+            name="address"
+            type="text"
+            required
+            className="
+            w-full
+            appearance-none relative block
+            px-3 py-2 border border-gray-300 placeholder-gray-500
+            text-gray-900 rounded-md
+            focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Address"
             value={address}
-            onChange={(e) => setAddress(e.target.value.trim())}
+            onChange={(e) => setValidatedAddress(e.target.value.trim())}
           />
         </div>
-        { currentAccount &&
-        <div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isControlled}
-                  onChange={() => setIsControlled(!isControlled)}
-                />
-              }
-              label={`Controlled by`}
-            />
-          </FormGroup>
-          <Typography>
-            {currentAccount}
-          </Typography>
-        </div> }
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button type="submit" color="primary">
-          Add
-        </Button>
-      </DialogActions>
-    </DialogForm>
+        <div className="inline-flex -space-y-px w-full">
+          <div className="self-center w-12">
+            Alias
+          </div>
+          <input
+            id="alias"
+            name="alias"
+            type="text"
+            required
+            className="
+            w-full
+            appearance-none relative block
+            px-3 py-2 border border-gray-300 placeholder-gray-500
+            text-gray-900 rounded-md
+            focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Alias"
+            // value={address}
+            // onChange={(e) => setAlias(e.target.value.trim())}
+          />
+        </div>
+      </div>
+      { currentAccount &&
+      <div>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isControlled}
+                onChange={() => setIsControlled(!isControlled)}
+              />
+            }
+            label={`Controlled by`}
+          />
+        </FormGroup>
+        <Typography>
+          {currentAccount}
+        </Typography>
+      </div> }
+    </Modal>
   );
 }
