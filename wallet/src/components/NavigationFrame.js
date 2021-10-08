@@ -8,7 +8,6 @@ import {CLUSTERS, clusterForEndpoint, getClusters, addCustomCluster, customClust
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import { useWalletSelector } from '../utils/wallet';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import CheckIcon from '@material-ui/icons/Check';
 import AddIcon from '@material-ui/icons/Add';
@@ -93,7 +92,6 @@ function NavigationButtons() {
   if (page === 'wallet') {
     elements = [
       <CryptidSelector />,
-      <WalletSelector />,
       <WalletMultiButton />,
       <WalletDisconnectButton />,
       <NetworkSelector />,
@@ -198,120 +196,6 @@ function NetworkSelector() {
           <ListItemIcon className={classes.menuItemIcon}>
           </ListItemIcon>
           {customClusterExists() ? 'Edit Custom Endpoint' : 'Add Custom Endpoint'}
-        </MenuItem>
-      </Menu>
-    </>
-  );
-}
-
-function WalletSelector() {
-  const {
-    accounts,
-    derivedAccounts,
-    setWalletSelector,
-    addAccount,
-  } = useWalletSelector();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [deleteMnemonicOpen, setDeleteMnemonicOpen] = useState(false);
-  const [exportMnemonicOpen, setExportMnemonicOpen] = useState(false);
-  const classes = useStyles();
-
-  if (accounts.length === 0) {
-    return null;
-  }
-  return (
-    <>
-      <AddAccountDialog
-        open={addAccountOpen}
-        onClose={() => setAddAccountOpen(false)}
-        onAdd={({ name, importedAccount }) => {
-          addAccount({ name, importedAccount });
-          setWalletSelector({
-            walletIndex: importedAccount ? undefined : derivedAccounts.length,
-            importedPubkey: importedAccount
-              ? importedAccount.publicKey.toString()
-              : undefined,
-            type: 'sw', // TODO
-          });
-          setAddAccountOpen(false);
-        }}
-      />
-      <ExportMnemonicDialog
-        open={exportMnemonicOpen}
-        onClose={() => setExportMnemonicOpen(false)}
-      />
-      <DeleteMnemonicDialog
-        open={deleteMnemonicOpen}
-        onClose={() => setDeleteMnemonicOpen(false)}
-      />
-      <Hidden xsDown>
-        <Button
-          color="inherit"
-          onClick={(e) => setAnchorEl(e.target)}
-          className={classes.button}
-        >
-          Account
-        </Button>
-      </Hidden>
-      <Hidden smUp>
-        <Tooltip title="Select Account" arrow>
-          <IconButton color="inherit" onClick={(e) => setAnchorEl(e.target)}>
-            <AccountIcon />
-          </IconButton>
-        </Tooltip>
-      </Hidden>
-      <Menu
-        anchorEl={anchorEl}
-        open={!!anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        getContentAnchorEl={null}
-      >
-        {accounts.map((account) => (
-          <AccountListItem
-            account={account}
-            classes={classes}
-            setAnchorEl={setAnchorEl}
-            setWalletSelector={setWalletSelector}
-          />
-        ))}
-        <Divider />
-        <MenuItem
-          onClick={() => {
-            setAnchorEl(null);
-            setAddAccountOpen(true);
-          }}
-        >
-          <ListItemIcon className={classes.menuItemIcon}>
-            <AddIcon fontSize="small" />
-          </ListItemIcon>
-          Add Account
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setAnchorEl(null);
-            setExportMnemonicOpen(true);
-          }}
-        >
-          <ListItemIcon className={classes.menuItemIcon}>
-            <ImportExportIcon fontSize="small" />
-          </ListItemIcon>
-          Export Mnemonic
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setAnchorEl(null);
-            setDeleteMnemonicOpen(true);
-          }}
-        >
-          <ListItemIcon className={classes.menuItemIcon}>
-            <ExitToApp fontSize="small" />
-          </ListItemIcon>
-          {'Delete Mnemonic & Log Out'}
         </MenuItem>
       </Menu>
     </>
