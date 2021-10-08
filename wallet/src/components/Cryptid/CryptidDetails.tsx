@@ -11,7 +11,6 @@ import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
-import { refreshWalletPublicKeys } from "../../utils/wallet";
 import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
 import {AddressLink} from "../AddressLink";
 

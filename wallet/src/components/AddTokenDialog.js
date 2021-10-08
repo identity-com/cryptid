@@ -5,11 +5,6 @@ import Button from '@material-ui/core/Button';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import TextField from '@material-ui/core/TextField';
-import {
-  refreshWalletPublicKeys,
-  useWallet,
-  useWalletTokenAccounts,
-} from '../utils/wallet';
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { useUpdateTokenName, usePopularTokens } from '../utils/tokens/names';
 import { useAsyncData } from '../utils/fetch-loop';
@@ -30,6 +25,11 @@ import CopyableDisplay from './CopyableDisplay';
 import DialogForm from './DialogForm';
 import { showSwapAddress } from '../utils/config';
 import TokenIcon from './TokenIcon';
+import {
+  refreshCryptidAccountPublicKeys,
+  useCryptid,
+  useCryptidAccountTokenAccounts
+} from "../utils/Cryptid/cryptid";
 
 const feeFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 6,
@@ -44,16 +44,16 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function AddTokenDialog({ open, onClose }) {
-  let wallet = useWallet();
+  let { selectedCryptidAccount } = useCryptid();
   let [tokenAccountCost] = useAsyncData(
-    wallet.tokenAccountCost,
-    wallet.tokenAccountCost,
+    selectedCryptidAccount.tokenAccountCost,
+    selectedCryptidAccount.tokenAccountCost,
   );
   let classes = useStyles();
   let updateTokenName = useUpdateTokenName();
   const [sendTransaction, sending] = useSendTransaction();
 
-  const [walletAccounts] = useWalletTokenAccounts();
+  const [walletAccounts] = useCryptidAccountTokenAccounts();
   const popularTokens = usePopularTokens();
   const [tab, setTab] = useState(!!popularTokens ? 'popular' : 'manual');
   const [mintAddress, setMintAddress] = useState('');
@@ -75,7 +75,7 @@ export default function AddTokenDialog({ open, onClose }) {
     }
     sendTransaction(addToken(params), {
       onSuccess: () => {
-        refreshWalletPublicKeys(wallet);
+        refreshCryptidAccountPublicKeys(selectedCryptidAccount);
         onClose();
       },
     });
@@ -89,7 +89,7 @@ export default function AddTokenDialog({ open, onClose }) {
   }) {
     let mint = new PublicKey(mintAddress);
     updateTokenName(mint, tokenName, tokenSymbol);
-    const resp = await wallet.createAssociatedTokenAccount(mint);
+    const resp = await selectedCryptidAccount.createAssociatedTokenAccount(mint);
     return resp[1];
   }
 

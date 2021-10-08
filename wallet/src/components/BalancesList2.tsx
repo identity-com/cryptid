@@ -1,15 +1,13 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   useBalanceInfo,
-  useWallet,
-  useWalletSelector,
 } from '../utils/wallet';
 import { findAssociatedTokenAddress } from '../utils/tokens';
 import LoadingIndicator from './LoadingIndicator';
 import { abbreviateAddress, useIsExtensionWidth } from '../utils/utils';
 import { serumMarkets, priceStore } from '../utils/markets';
 import { useConnection } from '../utils/connection';
-import {useCryptid, useCryptidWalletPublicKeys} from "../utils/Cryptid/cryptid";
+import {useCryptid, useCryptidAccountPublicKeys} from "../utils/Cryptid/cryptid";
 import BalanceListView from "./balances/BalanceListView";
 import {PublicKey} from "@solana/web3.js";
 import { BalanceListItemView } from './balances/BalanceListItemView2';
@@ -39,7 +37,7 @@ function fairsIsLoaded(publicKeys) {
 
 export default function BalancesList() {
   const { selectedCryptidAccount } = useCryptid()
-  const [publicKeys] = useCryptidWalletPublicKeys(selectedCryptidAccount);
+  const [publicKeys] = useCryptidAccountPublicKeys(selectedCryptidAccount);
 
   // Dummy var to force rerenders on demand.
   const [, setForceUpdate] = useState(false);
@@ -94,7 +92,7 @@ export default function BalancesList() {
 }
 
 export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
   const balanceInfo = useBalanceInfo(publicKey);
   const connection = useConnection();
   const isExtensionWidth = useIsExtensionWidth();
@@ -163,19 +161,21 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   }
 
   // Fetch and cache the associated token address.
-  if (wallet && wallet.publicKey && mint) {
+  if (selectedCryptidAccount && selectedCryptidAccount.address && mint) {
     if (
-      associatedTokensCache[wallet.publicKey.toString()] === undefined ||
-      associatedTokensCache[wallet.publicKey.toString()][mint.toString()] ===
+      associatedTokensCache[selectedCryptidAccount.address.toString()] === undefined ||
+      associatedTokensCache[selectedCryptidAccount.address.toString()][mint.toString()] ===
         undefined
     ) {
-      findAssociatedTokenAddress(wallet.publicKey, mint).then((assocTok) => {
+      findAssociatedTokenAddress(selectedCryptidAccount.address, mint).then((assocTok) => {
         let walletAccounts = Object.assign(
           {},
-          associatedTokensCache[wallet.publicKey.toString()],
+          // @ts-ignore
+          associatedTokensCache[selectedCryptidAccount.address.toString()],
         );
         walletAccounts[(mint as PublicKey).toString()] = assocTok;
-        associatedTokensCache[wallet.publicKey.toString()] = walletAccounts;
+        // @ts-ignore
+        associatedTokensCache[selectedCryptidAccount.address.toString()] = walletAccounts;
         if (assocTok.equals(publicKey)) {
           // Force a rerender now that we've cached the value.
           setForceUpdate((forceUpdate) => !forceUpdate);
@@ -187,13 +187,13 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
   // undefined => not loaded.
   let isAssociatedToken = mint ? undefined : false;
   if (
-    wallet &&
-    wallet.publicKey &&
+    selectedCryptidAccount &&
+    selectedCryptidAccount.address &&
     mint &&
-    associatedTokensCache[wallet.publicKey.toString()]
+    associatedTokensCache[selectedCryptidAccount.address.toString()]
   ) {
     let acc =
-      associatedTokensCache[wallet.publicKey.toString()][mint.toString()];
+      associatedTokensCache[selectedCryptidAccount.address.toString()][mint.toString()];
     if (acc) {
       if (acc.equals(publicKey)) {
         isAssociatedToken = true;

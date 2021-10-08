@@ -1,7 +1,7 @@
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
-import { useWallet, useWalletPublicKeys } from '../../utils/wallet';
+import {useCryptid, useCryptidAccountPublicKeys} from "../../utils/Cryptid/cryptid";
 
 const TYPE_LABELS = {
   cancelOrder: 'Cancel order',
@@ -19,8 +19,8 @@ const DATA_LABELS = {
 };
 
 export default function DexInstruction({ instruction, onOpenAddress }) {
-  const wallet = useWallet();
-  const [publicKeys] = useWalletPublicKeys();
+  const {selectedCryptidAccount} = useCryptid();
+  const [publicKeys] = useCryptidAccountPublicKeys();
   const { type, data, market, marketInfo } = instruction;
 
   const marketLabel =
@@ -31,7 +31,7 @@ export default function DexInstruction({ instruction, onOpenAddress }) {
 
   const getAddressValue = (address) => {
     const isOwned = publicKeys.some((ownedKey) => ownedKey.equals(address));
-    const isOwner = wallet.publicKey.equals(address);
+    const isOwner = address.equals(selectedCryptidAccount.address);
     return isOwner
       ? 'This wallet'
       : (isOwned ? '(Owned) ' : '') + address?.toBase58();

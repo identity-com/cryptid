@@ -9,7 +9,7 @@ export default function WalletPage() {
     <div className="py-10">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
         {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
-        <BalancesList />
+        {/*<BalancesList />*/}
       </div>
     </div>
   );

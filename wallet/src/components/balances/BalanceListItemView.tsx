@@ -1,8 +1,6 @@
-import {useBalanceInfo, useWallet} from "../../utils/wallet";
-import {useConnection} from "../../utils/connection";
-import React, {useEffect, useState} from "react";
-import {abbreviateAddress, useIsExtensionWidth} from "../../utils/utils";
-import {priceStore, serumMarkets} from "../../utils/markets";
+import {useBalanceInfo} from "../../utils/wallet";
+import React, {useState} from "react";
+import {serumMarkets} from "../../utils/markets";
 import LoadingIndicator from "../LoadingIndicator";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";

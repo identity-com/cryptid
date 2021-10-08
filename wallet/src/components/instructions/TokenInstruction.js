@@ -1,8 +1,8 @@
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
-import { useWallet, useWalletPublicKeys } from '../../utils/wallet';
 import { TOKEN_MINTS } from '@project-serum/serum';
+import {useCryptid, useCryptidAccountPublicKeys} from "../../utils/Cryptid/cryptid";
 
 const TYPE_LABELS = {
   initializeMint: 'Initialize mint',
@@ -29,8 +29,8 @@ const DATA_LABELS = {
 };
 
 export default function TokenInstruction({ instruction, onOpenAddress }) {
-  const wallet = useWallet();
-  const [publicKeys] = useWalletPublicKeys();
+  const {selectedCryptidAccount} = useCryptid();
+  const [publicKeys] = useCryptidAccountPublicKeys();
   const { type, data } = instruction;
 
   const getAddressValue = (address) => {
@@ -38,7 +38,7 @@ export default function TokenInstruction({ instruction, onOpenAddress }) {
       token.address.equals(address),
     );
     const isOwned = publicKeys.some((ownedKey) => ownedKey.equals(address));
-    const isOwner = wallet.publicKey.equals(address);
+    const isOwner = address.equals(selectedCryptidAccount.address);
     return tokenMint
       ? tokenMint.name
       : isOwner

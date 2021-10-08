@@ -6,13 +6,13 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Box from '@material-ui/core/Box';
 import { decodeMessage } from '../utils/transactions';
 import { useConnection, useSolanaExplorerUrlSuffix } from '../utils/connection';
-import { useWallet, useWalletPublicKeys } from '../utils/wallet';
 import NewOrder from './instructions/NewOrder';
 import UnknownInstruction from './instructions/UnknownInstruction';
 import StakeInstruction from '../components/instructions/StakeInstruction';
 import SystemInstruction from '../components/instructions/SystemInstruction';
 import DexInstruction from '../components/instructions/DexInstruction';
 import TokenInstruction from '../components/instructions/TokenInstruction';
+import {useCryptid, useCryptidAccountPublicKeys} from "../utils/Cryptid/cryptid";
 
 function isSafeInstruction(publicKeys, owner, txInstructions) {
   let unsafe = false;
@@ -125,8 +125,8 @@ export default function SignTransactionFormContent({
 }) {
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
-  const wallet = useWallet();
-  const [publicKeys] = useWalletPublicKeys();
+  const { selectedCryptidAccount } = useCryptid();
+  const [publicKeys] = useCryptidAccountPublicKeys();
 
   const [parsing, setParsing] = useState(true);
   // An array of arrays, where each element is the set of instructions for a
@@ -135,6 +135,11 @@ export default function SignTransactionFormContent({
 
   const isMultiTx = messages.length > 1;
 
+  const wallet = {
+    publicKey: selectedCryptidAccount.address,
+    signTransaction: selectedCryptidAccount.signTransaction
+  }
+
   useEffect(() => {
     Promise.all(messages.map((m) => decodeMessage(connection, wallet, m))).then(
       (txInstructions) => {
@@ -142,16 +147,16 @@ export default function SignTransactionFormContent({
         setParsing(false);
       },
     );
-  }, [messages, connection, wallet]);
+  }, [messages, connection, selectedCryptidAccount]);
 
   const validator = useMemo(() => {
     return {
       safe:
         publicKeys &&
         txInstructions &&
-        isSafeInstruction(publicKeys, wallet.publicKey, txInstructions),
+        isSafeInstruction(publicKeys, selectedCryptidAccount.address, txInstructions),
     };
-  }, [publicKeys, txInstructions, wallet]);
+  }, [publicKeys, txInstructions, selectedCryptidAccount]);
 
   useEffect(() => {
     if (validator.safe && autoApprove) {

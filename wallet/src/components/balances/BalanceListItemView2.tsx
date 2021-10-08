@@ -1,4 +1,4 @@
-import {useBalanceInfo, useWallet} from "../../utils/wallet";
+import {useBalanceInfo} from "../../utils/wallet";
 import {useConnection} from "../../utils/connection";
 import React, {useEffect, useState} from "react";
 import {abbreviateAddress, useIsExtensionWidth} from "../../utils/utils";

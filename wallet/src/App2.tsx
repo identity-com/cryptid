@@ -1,8 +1,6 @@
 import NavigationFrame from "./components/NavigationFrame2";
 import LoadingIndicator from "./components/LoadingIndicator";
 import {Suspense, useState} from "react";
-import {useWallet} from "./utils/wallet";
-import {useCryptid} from "./utils/Cryptid/cryptid";
 import {PageProvider, usePage} from "./utils/page";
 import LoginPage from "./pages/LoginPage";
 import PopupPage from "./pages/PopupPage2";
@@ -14,16 +12,17 @@ import {TokenRegistryProvider} from "./utils/tokens/names";
 import {SnackbarProvider} from "notistack";
 import {MetaWalletProvider} from "./utils/Cryptid/MetaWalletProvider";
 import IdentityPage from "./pages/IdentityPage";
+import { useUnlockedMnemonicAndSeed } from "./utils/wallet-seed";
 
 const PageContents:React.FC = () => {
-  const wallet = useWallet();
-  const { selectedCryptidAccount } = useCryptid();
+  const [ mnemKey ] = useUnlockedMnemonicAndSeed();
+
 
   const { page } = usePage();
   const [showWalletSuggestion, setShowWalletSuggestion] = useState<boolean>(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
-  if (!wallet || !selectedCryptidAccount) {
+  if (!mnemKey) {
     return (
       <LoginPage />
     );

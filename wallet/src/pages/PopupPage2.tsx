@@ -1,5 +1,4 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useWallet, useWalletSelector} from "../utils/wallet";
 import {useCryptid} from "../utils/Cryptid/cryptid";
 import {PublicKey, Transaction} from "@solana/web3.js";
 import bs58 from "bs58";
@@ -330,9 +329,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function ApproveConnectionForm({ origin, onApprove, autoApprove, setAutoApprove }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }){
-  const wallet = useWallet();
-  const { accounts }: { accounts: any[] } = useWalletSelector();
-  const account = accounts.find((account) => account && account.address.equals(wallet.publicKey));
+
   const classes = useStyles();
   const { selectedCryptidAccount } = useCryptid();
   if(!selectedCryptidAccount){
@@ -348,7 +345,7 @@ function ApproveConnectionForm({ origin, onApprove, autoApprove, setAutoApprove 
         <div className={classes.connection}>
           <Typography>{origin}</Typography>
           <ImportExportIcon fontSize="large"/>
-          <Typography>{account?.name}</Typography>
+          {/*<Typography>{"TODO: Add name"}</Typography>*/}
           <Typography variant="caption">
             ({selectedCryptidAccount.address?.toBase58()})
           </Typography>
