@@ -54,6 +54,7 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
             onChange={(e) => setAddress(e.target.value.trim())}
           />
         </div>
+        { currentAccount &&
         <div>
           <FormGroup>
             <FormControlLabel
@@ -69,7 +70,7 @@ export default function AddCryptidAccountDialog({ open, onAdd, onClose, didPrefi
           <Typography>
             {currentAccount}
           </Typography>
-        </div>
+        </div> }
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
