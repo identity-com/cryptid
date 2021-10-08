@@ -1,10 +1,10 @@
-import NavigationFrame from "./components/NavigationFrame2";
+import NavigationFrame from "./components/NavigationFrame";
 import LoadingIndicator from "./components/LoadingIndicator";
 import {Suspense, useState} from "react";
 import {PageProvider, usePage} from "./utils/page";
 import LoginPage from "./pages/LoginPage";
-import PopupPage from "./pages/PopupPage2";
-import WalletPage from "./pages/WalletPage2";
+import PopupPage from "./pages/PopupPage";
+import WalletPage from "./pages/WalletPage";
 import ConnectionsPage from "./pages/ConnectionsPage";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import {ConnectionProvider} from "./utils/connection";

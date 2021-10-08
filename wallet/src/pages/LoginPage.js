@@ -13,7 +13,7 @@ import {
 } from '../utils/Wallet/AccountWallet';
 import Container from '@material-ui/core/Container';
 import LoadingIndicator from '../components/LoadingIndicator';
-import { BalanceListItem } from '../components/BalancesList.js';
+import { BalanceListItem } from '../components/BalancesList';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import { DialogActions, DialogContentText, DialogTitle, Typography } from '@material-ui/core';

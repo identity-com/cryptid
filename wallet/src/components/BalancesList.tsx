@@ -10,7 +10,7 @@ import { useConnection } from '../utils/connection';
 import {useCryptid, useCryptidAccountPublicKeys} from "../utils/Cryptid/cryptid";
 import BalanceListView from "./balances/BalanceListView";
 import {PublicKey} from "@solana/web3.js";
-import { BalanceListItemView } from './balances/BalanceListItemView2';
+import { BalanceListItemView } from './balances/BalanceListItemView';
 
 // Aggregated $USD values of all child BalanceListItems child components.
 //
