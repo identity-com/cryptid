@@ -15,14 +15,14 @@ import IdentityPage from "./pages/IdentityPage";
 import { useUnlockedMnemonicAndSeed } from "./utils/wallet-seed";
 
 const PageContents:React.FC = () => {
-  const [ mnemKey ] = useUnlockedMnemonicAndSeed();
+  const [{ mnemonic }] = useUnlockedMnemonicAndSeed();
 
 
   const { page } = usePage();
   const [showWalletSuggestion, setShowWalletSuggestion] = useState<boolean>(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
-  if (!mnemKey) {
+  if (!mnemonic) {
     return (
       <LoginPage />
     );

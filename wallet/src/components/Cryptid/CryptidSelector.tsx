@@ -7,17 +7,23 @@ import Menu from "@material-ui/core/Menu";
 import Divider from "@material-ui/core/Divider";
 import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-import UsbIcon from "@material-ui/icons/Usb";
 import AddIcon from "@material-ui/icons/Add";
-import ImportExportIcon from "@material-ui/icons/ImportExport";
-import ExitToApp from "@material-ui/icons/ExitToApp";
 import React, { useCallback, useState } from "react";
 import { useStyles } from "../NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
 import { useCryptid } from "../../utils/Cryptid/cryptid";
-import AddKeyDialog from "./AddKeyDialog";
 import AddCryptidAccountDialog from "./AddCryptidAccountDialog";
+
+export const AddCryptidButton = () => {
+  return (
+    <Button
+      color="inherit"
+      onClick={(e) => console.log('Clicked AddCryptid')}>
+      Cryptid
+    </Button>
+  )
+}
 
 export const CryptidSelector = () => {
   const { cryptidAccounts, selectedCryptidAccount, setSelectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
