@@ -61,7 +61,7 @@ export class CryptidAccount {
     this._document =  { id: "UNINITIALIZED" }; //Note this is wrong, but will be updated by INIT, constructor is private
     this._signer = signer
     this._parent = parent
-
+    
     if (parent) {
       this._cryptid = parent.cryptid.as(this.did)
     } else {
@@ -100,8 +100,6 @@ export class CryptidAccount {
 
     this._address = await this.cryptid.address()
     await this.updateDocument();
-    // console.log(`Getting address: ${this._address}`)
-    // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
   async as(controllerDidAddress: string, controllerAlias: string): Promise<CryptidAccount> {
     return CryptidAccount.create({
