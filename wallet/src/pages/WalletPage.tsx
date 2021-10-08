@@ -1,5 +1,5 @@
 import React from 'react';
-import BalancesList from '../components/BalancesList2';
+import BalancesList from '../components/BalancesList';
 import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
 import {useCryptid} from "../utils/Cryptid/cryptid";
 

@@ -1,17 +1,27 @@
 import {useBalanceInfo} from "../../utils/wallet";
-import React, {useState} from "react";
-import {serumMarkets} from "../../utils/markets";
+import {useConnection} from "../../utils/connection";
+import React, {useEffect, useState} from "react";
+import {abbreviateAddress, useIsExtensionWidth} from "../../utils/utils";
+import {priceStore, serumMarkets} from "../../utils/markets";
 import LoadingIndicator from "../LoadingIndicator";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import TokenIcon from "../TokenIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import {Typography} from "@material-ui/core";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
 import Collapse from "@material-ui/core/Collapse";
 import {BalanceListItemDetails} from "./BalanceListItemDetails";
+import {
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ArrowCircleUpIcon, ArrowCircleDownIcon
+} from "@heroicons/react/solid";
+import {TokenButton} from "./TokenButton";
+import SendDialog from "../SendDialog";
+import DepositDialog from "../DepositDialog";
+import {ClipboardIcon} from "@heroicons/react/outline";
 
+const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
 const balanceFormat = new Intl.NumberFormat(undefined, {
   minimumFractionDigits: 4,
@@ -29,7 +39,6 @@ export function BalanceListItemView({
                                       tokenName,
                                       decimals,
                                       displayName,
-                                      subtitle,
                                       tokenLogoUri,
                                       amount,
                                       price,
@@ -39,8 +48,9 @@ export function BalanceListItemView({
                                       expandable,
                                     }) {
   const balanceInfo = useBalanceInfo(publicKey);
-  // const classes = useStyles();
   const [open, setOpen] = useState(false);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [depositDialogOpen, setDepositDialogOpen] = useState(false);
 
   expandable = expandable === undefined ? true : expandable;
 
@@ -49,43 +59,64 @@ export function BalanceListItemView({
   }
 
   return (
-    <>
-      <ListItem button onClick={() => expandable && setOpen((open) => !open)}>
-        <ListItemIcon>
-          <TokenIcon
-            mint={mint}
-            tokenName={tokenName}
-            url={tokenLogoUri}
-            size={28}
-          />
-        </ListItemIcon>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <ListItemText
-            primary={
-              <>
-                {balanceFormat.format(amount / Math.pow(10, decimals))}{' '}
-                {displayName}
-              </>
-            }
-            secondary={subtitle}
-            // secondaryTypographyProps={{ className: classes.address }}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              flexDirection: 'column',
-            }}
-          >
-            {price && (
-              <Typography color="textSecondary">
+    <li key={mint}>
+      <SendDialog
+        open={sendDialogOpen}
+        onClose={() => setSendDialogOpen(false)}
+        balanceInfo={balanceInfo}
+        publicKey={publicKey}
+      />
+      <DepositDialog
+        open={depositDialogOpen}
+        onClose={() => setDepositDialogOpen(false)}
+        balanceInfo={balanceInfo}
+        publicKey={publicKey}
+        // swapInfo={swapInfo}
+        isAssociatedToken={isAssociatedToken}
+      />
+      <div className="flex items-center px-4 py-4 sm:px-6">
+        <TokenIcon
+          mint={mint}
+          tokenName={tokenName}
+          url={tokenLogoUri}
+          size={28}
+        />
+        <div className="min-w-0 flex-1 flex px-4 md:grid md:grid-cols-6 md:gap-4">
+          <div className='flex-1 md:grid-cols-1'>
+            {balanceFormat.format(amount / Math.pow(10, decimals))}{' '}
+          </div>
+          <div className='md:col-span-2'>
+            <p className="text-sm font-medium text-indigo-600 truncate">{displayName}</p>
+          </div>
+          <div className={classNames(
+           !!usdValue ? 'md:col-span-1': 'hidden'  
+          )}>
+            {
+              usdValue &&
+              <p className="text-sm text-gray-900">
                 {numberFormat.format(usdValue)}
-              </Typography>
-            )}
+              </p>
+            }
+          </div>
+          <div className="hidden md:block">
+            <p className="mt-2 flex items-center text-sm text-gray-500">
+              <ClipboardIcon className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true"/>
+              {publicKey.toString()}
+            </p>
           </div>
         </div>
-        {expandable ? open ? <ExpandLess /> : <ExpandMore /> : <></>}
-      </ListItem>
+        <div className='inline-flex shadow-sm rounded-md'>
+          <TokenButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+          <TokenButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+        </div>
+        <div>
+          {open ?
+            <ChevronUpIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
+            :
+            <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" onClick={() => setOpen(!open)}/>
+          }
+        </div>
+      </div>
       {expandable && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <BalanceListItemDetails
@@ -96,6 +127,6 @@ export function BalanceListItemView({
           />
         </Collapse>
       )}
-    </>
+    </li>
   );
 }

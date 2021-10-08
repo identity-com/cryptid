@@ -9,11 +9,40 @@ import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import AddIcon from "@material-ui/icons/Add";
 import React, { useCallback, useState } from "react";
-import { useStyles } from "../NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
 import { useCryptid } from "../../utils/Cryptid/cryptid";
 import AddCryptidAccountDialog from "./AddCryptidAccountDialog";
+import { makeStyles } from '@material-ui/core/styles';
+
+export const useStyles = makeStyles((theme) => ({
+  content: {
+    flexGrow: 1,
+    paddingBottom: theme.spacing(3),
+    // @ts-ignore
+    [theme.breakpoints.up(theme.ext)]: {
+      paddingTop: theme.spacing(3),
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1),
+    },
+  },
+  title: {
+    flexGrow: 1,
+  },
+  button: {
+    marginLeft: theme.spacing(1),
+  },
+  menuItemIcon: {
+    minWidth: 32,
+  },
+  badge: {
+    backgroundColor: theme.palette.success.main,
+    // @ts-ignore
+    color: theme.palette.text.main,
+    height: 16,
+    width: 16,
+  },
+}));
 
 export const AddCryptidButton = () => {
   return (

@@ -1,5 +1,4 @@
 import React from 'react';
-import BalancesList from '../components/BalancesList2';
 import { useIsProdNetwork } from '../utils/connection';
 import DebugButtons from '../components/DebugButtons';
 import { useIsExtensionWidth } from '../utils/utils';
