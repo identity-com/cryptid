@@ -168,16 +168,16 @@ export class CryptidAccount {
     return this._signer.publicKey
   }
   
-  signerBalance():Promise<number> {
+  signerBalance():Promise<number | undefined> {
     const key = this.activeSigningKey;
     
-    if (!key) return Promise.resolve(0);
+    if (!key) return Promise.resolve(undefined);
     return this._connection.getBalance(key);
   }
 
   get activeSigningKeyAlias():string {
     const activeVerificationMethod = this.verificationMethods.find(vm => vm.publicKeyBase58 === this.activeSigningKey?.toBase58());
-    if (!activeVerificationMethod) return 'N/A';
+    if (!activeVerificationMethod) return 'NOT SET!';
     return activeVerificationMethod.id.replace(/.*#/,'');
   }
 

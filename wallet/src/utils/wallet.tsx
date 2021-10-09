@@ -1,21 +1,24 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import * as bs58 from 'bs58';
-import { Account, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import {Account, Keypair, LAMPORTS_PER_SOL, PublicKey, Transaction} from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import {
-  useAccountInfo,
+  refreshAccountInfo,
+  useAccountInfo, useConnection,
 } from './connection';
 import { TOKEN_PROGRAM_ID } from './tokens/instructions';
 import {
   parseMintData,
   parseTokenAccountData,
 } from './tokens/data';
-import { useListener, useLocalStorageState } from './utils';
+import {sleep, useListener, useLocalStorageState} from './utils';
 import { useTokenInfo } from './tokens/names';
 // import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
 import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
 import { useUnlockedMnemonicAndSeed, walletSeedChanged } from "./wallet-seed";
+import {useCallAsync} from "./notifications";
+
 
 type WalletType = 'sw' | 'sw_imported' | 'adapter'
 
@@ -250,6 +253,30 @@ export function WalletProvider({ children }) {
 
 export function useWalletContext() {
   return useContext(WalletContext);
+}
+
+export function useRequestAirdrop(refreshCallback?: () => void) {
+  const callAsync = useCallAsync();
+  const connection = useConnection();
+
+  const requestAirdrop = (...addresses: PublicKey[]) => {
+    addresses.forEach(address => {
+      callAsync(
+        connection.requestAirdrop(address, LAMPORTS_PER_SOL),
+        {
+          onSuccess: async () => {
+            await sleep(5000);
+            refreshAccountInfo(connection, address);
+            refreshCallback && refreshCallback();
+          },
+          successMessage:
+            'Success!',
+        },
+      );
+    })
+  };
+
+  return requestAirdrop
 }
 
 export function useBalanceInfo(publicKey) {

@@ -136,7 +136,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                     </div>}
               </div>
 
-              <div className="sm:ml-6 sm:flex items-center">
+              <div className="ml-6 gap-4 sm:flex items-center">
                 <WalletMultiButton />
                 {! isSignerWindow && <NetworkSelector/>}
                 <IdentitySelector isSignerWindow={isSignerWindow}/>
