@@ -34,6 +34,7 @@ export const Modal:React.FC<ModalProps> = (
     cancelText = 'Cancel'
   }) => {
   const cancelButtonRef = useRef(null)
+  okEnabled = okEnabled === undefined ? true : okEnabled; // defaults to true
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -64,14 +65,14 @@ export const Modal:React.FC<ModalProps> = (
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full pr-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg pr-6">
               <div className="mb-5 mx-auto flex-shrink-0 inline-flex items-center justify-center h-12 rounded-full sm:mx-0 sm:h-10">
                 <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true" />
                 <Dialog.Title as="h3" className="text-lg pl-5 mt-1 leading-6 font-medium text-gray-900">
                   {title}
                 </Dialog.Title>
               </div>
-              <div className="h-screen/2 overflow-scroll sm:flex sm:items-start text-center sm:mt-0 sm:text-left w-full">
+              <div className="max-h-screen/2 overflow-scroll sm:flex sm:items-start text-center sm:mt-0 sm:text-left w-full">
                 {children}
               </div>
               <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">

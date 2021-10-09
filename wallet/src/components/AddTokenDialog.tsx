@@ -34,9 +34,17 @@ import { Modal } from "./modals/modal";
 import { BalanceListItemDetails } from "./balances/BalanceListItemDetails";
 import { serumMarkets } from "../utils/markets";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/solid";
+import {CheckCircleIcon, PlusCircleIcon} from "@heroicons/react/outline";
+import {CopyableAddress} from "./CopyableAddress";
 
 function ExpandMoreIcon() {
   return null;
+}
+
+type TokenInfo = {
+  mintAddress: string,
+  tokenName: string,
+  tokenSymbol: string,
 }
 
 export default function AddTokenDialog({ open, onClose }) {
@@ -46,25 +54,21 @@ export default function AddTokenDialog({ open, onClose }) {
 
   const [walletAccounts] = useCryptidAccountTokenAccounts();
   const popularTokens = usePopularTokens();
-  const [tab, setTab] = useState(!!popularTokens ? 'popular' : 'manual');
+  const [tab, setTab] = useState(popularTokens.length ? 'popular' : 'manual');
   const [mintAddress, setMintAddress] = useState('');
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
-  const [erc20Address, setErc20Address] = useState('');
 
   useEffect(() => {
-    if (!popularTokens) {
+    if (!popularTokens.length) {
       setTab('manual');
     }
-  }, [popularTokens]);
+  }, [popularTokens, setTab]);
 
-  function onSubmit(params) {
-    if (tab === 'manual') {
-      params = { mintAddress, tokenName, tokenSymbol };
-    } else if (tab === 'erc20') {
-      params = { erc20Address };
-    }
-    const addTokenPromise = addToken(params);
+  const onSubmit = (params?: TokenInfo) => {
+    const tokenToAdd = params || { mintAddress, tokenName, tokenSymbol };
+    console.log(tokenToAdd);
+    const addTokenPromise = addToken(tokenToAdd);
 
     if (!addTokenPromise) return;
 
@@ -74,43 +78,43 @@ export default function AddTokenDialog({ open, onClose }) {
         onClose();
       },
     });
-  }
+  };
 
   function addToken({
                       mintAddress,
                       tokenName,
                       tokenSymbol,
-                      erc20Address,
-                    }):Promise<string> | null {
-    let mint = new PublicKey(mintAddress);
+                    }: TokenInfo):Promise<string> | null {
+    const mint = new PublicKey(mintAddress);
     updateTokenName(mint, tokenName, tokenSymbol);
 
     if (!selectedCryptidAccount) return null;
 
-    return selectedCryptidAccount.createAssociatedTokenAccount(mint)
+    return selectedCryptidAccount
+      .createAssociatedTokenAccount(mint)
       .then(([, txSig]) => txSig);
   }
 
-  let valid = true;
-  if (tab === 'erc20') {
-    valid = erc20Address.length === 42 && erc20Address.startsWith('0x');
-  }
 
   const handleChange = (panel) => (event, newExpanded) => {
+    // no need to handle a change if nothing has changed (avoids a rewrite and animation)
+    if (panel === tab) return;
     setTab(newExpanded ? panel : false);
   };
 
   return (
     <Modal
+      Icon={PlusCircleIcon}
       title="Add Token"
-      suppressOKButton={true}
+      suppressOKButton={tab === 'popular'}
       show={open}
+      okText='Add'
+      okEnabled={!!mintAddress && !!tokenSymbol && !!tokenName}
       callbacks={{
-        onOK: () => {},
+        onOK: () => onSubmit(),
         onCancel: onClose
       }}>
-      <div>
-        {!!popularTokens && (
+      <div className='w-full'>
           <>
             <Accordion
               expanded={tab === 'manual'}
@@ -124,39 +128,66 @@ export default function AddTokenDialog({ open, onClose }) {
                 <Typography>Manual Input</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <React.Fragment>
-                  <TextField
-                    label="Token Mint Address"
-                    fullWidth
-                    variant="outlined"
-                    margin="normal"
-                    value={mintAddress}
-                    onChange={(e) => setMintAddress(e.target.value)}
-                    autoFocus
-                    disabled={sending}
-                  />
-                  <TextField
-                    label="Token Name"
-                    fullWidth
-                    variant="outlined"
-                    margin="normal"
-                    value={tokenName}
-                    onChange={(e) => setTokenName(e.target.value)}
-                    disabled={sending}
-                  />
-                  <TextField
-                    label="Token Symbol"
-                    fullWidth
-                    variant="outlined"
-                    margin="normal"
-                    value={tokenSymbol}
-                    onChange={(e) => setTokenSymbol(e.target.value)}
-                    disabled={sending}
-                  />
-                </React.Fragment>
+                  <form className="space-y-8 divide-y divide-gray-200 w-full">
+                    <div className="space-y-6 sm:space-y-5">
+                      <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                        <label htmlFor="mint-address" className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                          Mint Address
+                        </label>
+                        <div className="sm:pt-2 sm:mt-0 h-4 sm:col-span-2">
+                          <input
+                            type="text"
+                            name="mint-address"
+                            id="mint-address"
+                            autoFocus
+                            disabled={sending}
+                            value={mintAddress}
+                            onChange={(e) => setMintAddress(e.target.value)}
+                            className="h-8 max-w-lg block w-full shadow-sm border-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                        <label htmlFor="token-name" className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                          Name
+                        </label>
+                        <div className="sm:pt-2 sm:mt-0 h-4 sm:col-span-2">
+                          <input
+                            type="text"
+                            name="token-name"
+                            id="token-name"
+                            onChange={(e) => setTokenName(e.target.value)}
+                            autoFocus
+                            disabled={sending}
+                            value={tokenName}
+                            className="h-8 max-w-lg block w-full shadow-sm border-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                        <label htmlFor="token-symbol" className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                          Symbol
+                        </label>
+                        <div className="sm:pt-2 sm:mt-0 h-4 sm:col-span-2">
+                          <input
+                            id="token-symbol"
+                            name="token-symbol"
+                            type="type"
+                            onChange={(e) => setTokenSymbol(e.target.value)}
+                            autoFocus
+                            disabled={sending}
+                            value={tokenSymbol}
+                            className="h-8 block max-w-lg w-full shadow-sm border-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </form>
               </AccordionDetails>
             </Accordion>
-            <Accordion
+            {!!popularTokens.length && <Accordion
               expanded={tab === 'popular'}
               onChange={handleChange('popular')}
             >
@@ -177,47 +208,14 @@ export default function AddTokenDialog({ open, onClose }) {
                         (account) =>
                           account.parsed.mint.toBase58() === tokenInfo.address,
                       )}
-                      onSubmit={onSubmit}
+                      onSubmit={() => onSubmit(tokenInfo)}
                       disabled={sending}
                     />
                   ))}
                 </List>
               </AccordionDetails>
-            </Accordion>
-            {/*<Accordion>*/}
-            {/*  <AccordionSummary*/}
-            {/*    expandIcon={<ExpandMoreIcon />}*/}
-            {/*    aria-controls="erc20-token"*/}
-            {/*    id="erc20-token"*/}
-            {/*  >*/}
-            {/*    <Typography>ERC20 Token</Typography>*/}
-            {/*  </AccordionSummary>*/}
-            {/*  <AccordionDetails>*/}
-            {/*    <>*/}
-            {/*      <TextField*/}
-            {/*        label="ERC20 Contract Address"*/}
-            {/*        fullWidth*/}
-            {/*        variant="outlined"*/}
-            {/*        margin="normal"*/}
-            {/*        value={erc20Address}*/}
-            {/*        onChange={(e) => setErc20Address(e.target.value.trim())}*/}
-            {/*        autoFocus*/}
-            {/*        disabled={sending}*/}
-            {/*      />*/}
-            {/*      {erc20Address && valid ? (*/}
-            {/*        <Link*/}
-            {/*          href={`https://etherscan.io/token/${erc20Address}`}*/}
-            {/*          target="_blank"*/}
-            {/*          rel="noopener"*/}
-            {/*        >*/}
-            {/*          View on Etherscan*/}
-            {/*        </Link>*/}
-            {/*      ) : null}*/}
-            {/*    </>*/}
-            {/*  </AccordionDetails>*/}
-            {/*</Accordion>*/}
+            </Accordion>}
           </>
-        )}
       </div>
     </Modal>
   );
@@ -269,14 +267,14 @@ function TokenListItem({ tokenInfo, onSubmit, disabled, existingAccount }) {
             })
           }
         >
-          {alreadyExists ? 'Added' : 'Add'}
+          {alreadyExists ? 
+            <CheckCircleIcon className="h-6 w-6"/> :
+              <PlusCircleIcon className="h-6 w-6 text-green-500"/>
+          }
         </Button>
       </div>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <CopyableDisplay
-          value={tokenInfo.address}
-          label={`${tokenInfo.symbol} Mint Address`}
-        />
+        <CopyableAddress publicKey={tokenInfo.address} label='Mint Address'/>
       </Collapse>
     </React.Fragment>
   );
