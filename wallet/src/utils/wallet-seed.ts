@@ -40,6 +40,7 @@ const EMPTY_MNEMONIC: MnomicInterface = {
 };
 
 let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {
+  console.log('unlockedMnemonicAndSeed')
   const unlockedExpiration = localStorage.getItem('unlockedExpiration');
   // Left here to clean up stored mnemonics from previous method
   if (unlockedExpiration && Number(unlockedExpiration) < Date.now()) {
@@ -71,9 +72,13 @@ export function useUnlockedMnemonicAndSeed(): [MnomicInterface, boolean] {
   const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnomicInterface|null>(null);
   
   useEffect(() => {
+    console.log('USE EFFECT in useUnlockedMnemonicAndSeed')
+
     walletSeedChanged.addListener('change', setCurrentUnlockedMnemonic);
     unlockedMnemonicAndSeed.then(setCurrentUnlockedMnemonic);
     return () => {
+      console.log('USE EFFECT CLEANUP in useUnlockedMnemonicAndSeed')
+
       walletSeedChanged.removeListener('change', setCurrentUnlockedMnemonic);
     }
   }, []);

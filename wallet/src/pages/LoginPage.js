@@ -57,13 +57,15 @@ export default function LoginPage() {
 
 function CreateWalletForm() {
   const [mnemonicAndSeed, setMnemonicAndSeed] = useState(null);
-  useEffect(() => {
-    generateMnemonicAndSeed().then(setMnemonicAndSeed);
-  }, []);
   const [savedWords, setSavedWords] = useState(false);
   const callAsync = useCallAsync();
 
-  function submit(password) {
+  useEffect(() => {
+    console.log('useEffect CreateWalletForm')
+    generateMnemonicAndSeed().then(setMnemonicAndSeed);
+  }, []);
+
+  const submit = (password) => {
     const { mnemonic, seed } = mnemonicAndSeed;
     callAsync(
       storeMnemonicAndSeed(

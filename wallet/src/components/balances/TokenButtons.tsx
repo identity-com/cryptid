@@ -79,7 +79,7 @@ export default function TokenButtons() {
                    onClick={() => {setShowAddTokenDialog(true)}}
       />
       {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
-                                     onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey, selectedCryptidAccount.activeSigningKey())}/>}
+                                     onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey, selectedCryptidAccount.activeSigningKey)}/>}
       {isProdNetwork || <TokenButton label="Mint Test Token" Icon={CubeTransparentIcon}
                                      onClick={() => mintTestToken(selectedCryptidAccount.address as PublicKey)}/>}
       <TokenButton label="Refresh" Icon={RefreshIcon} additionalClasses='rounded-r-md'
