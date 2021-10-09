@@ -12,7 +12,7 @@ import {
 } from './tokens/data';
 import { useListener, useLocalStorageState } from './utils';
 import { useTokenInfo } from './tokens/names';
-import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
+// import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
 import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
 
@@ -54,7 +54,6 @@ interface WalletContextInterface {
   addWallet: (name: string, useAdapter: boolean, importedKey?: Keypair) => PublicKey,
   hasWallet: (publicKey: PublicKey) => boolean,
   listWallets: () => ExtendedPersistedWalletType[],
-  mnemonic: string | null,
 }
 
 const DEFAULT_WALLET_INTERFACE = { publicKey: null }
@@ -66,17 +65,21 @@ const WalletContext = React.createContext<WalletContextInterface>({
   addWallet: () => { throw new Error('Not loaded')},
   hasWallet: () => false,
   listWallets: () => [],
-  mnemonic: null
 });
 
 export function WalletProvider({ children }) {
-  useListener(walletSeedChanged, 'change');
-  const [{
-    mnemonic,
-    seed,
-    importsEncryptionKey,
-    derivationPath,
-  }, hasUnlockedMnemonic ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
+  // useListener(walletSeedChanged, 'change');
+  // const [{
+  //   mnemonic,
+  //   seed,
+  //   importsEncryptionKey,
+  //   derivationPath,
+  // }, hasUnlockedMnemonic ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
+
+  const seed = '00'
+  const importsEncryptionKey = new Uint8Array()
+  const derivationPath = 'asdf'
+
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
 
   const adapterWallet = useAdapterWallet()
@@ -213,7 +216,6 @@ export function WalletProvider({ children }) {
         addWallet,
         hasWallet,
         listWallets,
-        mnemonic,
       }}
     >
       {children}
