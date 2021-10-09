@@ -102,19 +102,19 @@ const toInstruction = async (
     } else if (programId.equals(TOKEN_PROGRAM_ID)) {
       console.log('[' + index + '] Handled as token instruction');
       return handleTokenInstruction(publicKey, instruction, accountKeys);
-    } else if (
-      MARKETS.some(
-        (market) => market.programId && market.programId.equals(programId),
-      )
-    ) {
-      console.log('[' + index + '] Handled as dex instruction');
-      let decodedInstruction = decodeInstruction(decoded);
-      return await handleDexInstruction(
-        connection,
-        instruction,
-        accountKeys,
-        decodedInstruction,
-      );
+    // } else if (
+    //   MARKETS.some(
+    //     (market) => market.programId && market.programId.equals(programId),
+    //   )
+    // ) {
+    //   console.log('[' + index + '] Handled as dex instruction');
+    //   let decodedInstruction = decodeInstruction(decoded);
+    //   return await handleDexInstruction(
+    //     connection,
+    //     instruction,
+    //     accountKeys,
+    //     decodedInstruction,
+    //   );
     } else if (programId.equals(RAYDIUM_STAKE_PROGRAM_ID)) {
       console.log('[' + index + '] Handled as raydium stake instruction');
       // @ts-ignore
