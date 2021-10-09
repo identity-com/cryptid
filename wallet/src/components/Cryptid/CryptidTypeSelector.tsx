@@ -14,30 +14,30 @@ interface AddCrytidTypeInfo {
 }
 
 interface CryptidTypeSelectorInterface {
-  initialType: AddCrytidType
+  initialType?: AddCrytidType
   onChange: (t: AddCrytidType) => void
 }
 
 
 const addCrytidTypes: AddCrytidTypeInfo[] = [
   {
+    headline: 'Connect Wallet',
+    subtext: 'Connect Cryptid to an external wallet',
+    type: 'adapterkey',
+  },
+  {
     headline: 'New Key',
-    subtext: 'Derives a new Key from your seedphrase',
+    subtext: 'Create a key and store in your browser',
     type: 'newkey',
   },
   {
     headline: 'Import Key',
-    subtext: 'Allows you to paste a private Key',
+    subtext: 'Paste an existing private key',
     type: 'importkey',
   },
   {
-    headline: 'Wallet Adapter',
-    subtext: 'Use an external Wallet Adapter',
-    type: 'adapterkey',
-  },
-  {
     headline: 'Import Cryptid Account',
-    subtext: 'Import an existing account without an Key',
+    subtext: 'Import an existing account without a key',
     type: 'import',
   }
 ]
