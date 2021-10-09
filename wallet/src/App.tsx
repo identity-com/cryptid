@@ -19,7 +19,6 @@ const PageContents: React.FC = () => {
 
 
   const {page} = usePage();
-  const [showWalletSuggestion, setShowWalletSuggestion] = useState<boolean>(false); // ignore recommendation
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
   if (!mnemonic) {

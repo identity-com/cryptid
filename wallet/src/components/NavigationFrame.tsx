@@ -105,7 +105,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
 
   }
   return (
-    <Disclosure as="nav" className="bg-white border-b border-gray-200">
+    <Disclosure as="nav" className="bg-white bg-opacity-50 border-b border-gray-200">
       {({ open }) => (
         <>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -226,7 +226,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
 
 export default function NavigationFrame({ children, isSignerWindow }: { children: JSX.Element | JSX.Element[], isSignerWindow: boolean }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <NavigationPanel isSignerWindow={isSignerWindow}/>
       {children}
     </div>
