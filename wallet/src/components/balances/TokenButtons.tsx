@@ -6,7 +6,7 @@ import { TokenButton } from './TokenButton';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
 import {abbreviateAddress, sleep} from "../../utils/utils";
 import {createAndInitializeMint} from "../../utils/tokens";
-import {useBalanceInfo} from "../../utils/wallet";
+import {useBalanceInfo, useRequestAirdrop} from "../../utils/wallet";
 import { refreshCryptidAccountPublicKeys, useCryptid } from "../../utils/Cryptid/cryptid";
 import {useUpdateTokenName} from "../../utils/tokens/names";
 import {useCallAsync, useSendTransaction} from "../../utils/notifications";
@@ -16,6 +16,7 @@ import AddTokenDialog from "../AddTokenDialog";
 export default function TokenButtons() {
   const isProdNetwork = useIsProdNetwork();
   const connection = useConnection();
+  const requestAirdrop = useRequestAirdrop();
 
   const { selectedCryptidAccount } = useCryptid()
   const balanceInfo = useBalanceInfo(selectedCryptidAccount?.address);
@@ -28,22 +29,6 @@ export default function TokenButtons() {
   const [showAddTokenDialog, setShowAddTokenDialog] = useState(false);
 
   if (!selectedCryptidAccount || !selectedCryptidAccount.address) return <></>;
-
-  const requestAirdrop = (...addresses: PublicKey[]) => {
-    addresses.forEach(address => {
-      callAsync(
-        connection.requestAirdrop(address, LAMPORTS_PER_SOL),
-        {
-          onSuccess: async () => {
-            await sleep(5000);
-            refreshAccountInfo(connection, address);
-          },
-          successMessage:
-            'Success!',
-        },
-      );
-    })
-  };
 
   const mintTestToken = (owner: PublicKey) => {
     console.log('owner ' + owner);
@@ -79,7 +64,7 @@ export default function TokenButtons() {
                    onClick={() => {setShowAddTokenDialog(true)}}
       />
       {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
-                                     onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey, selectedCryptidAccount.activeSigningKey)}/>}
+                                     onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey)}/>}
       {isProdNetwork || <TokenButton label="Mint Test Token" Icon={CubeTransparentIcon}
                                      onClick={() => mintTestToken(selectedCryptidAccount.address as PublicKey)}/>}
       <TokenButton label="Refresh" Icon={RefreshIcon} additionalClasses='rounded-r-md'

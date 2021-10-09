@@ -13,6 +13,11 @@ import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
 import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
 import {AddressLink} from "../AddressLink";
+import {TokenButton} from "../balances/TokenButton";
+import {PaperAirplaneIcon, XCircleIcon} from "@heroicons/react/solid";
+import * as React from "react";
+import {useIsProdNetwork} from "../../utils/connection";
+import {useRequestAirdrop} from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
@@ -33,6 +38,8 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
   const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
+  const isProdNetwork = useIsProdNetwork();
+  const requestAirdrop = useRequestAirdrop();
 
   useEffect(() => {}, [cryptidAccount])
 
@@ -124,9 +131,15 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
         <CardContent>
           <List>
             { cryptidAccount.verificationMethods.map(vm => {
+              if (!vm.publicKeyBase58) return null;
+              const key = new PublicKey(vm.publicKeyBase58);
+              
               return (
                 <CryptidDetailsListItem primary={vm.id.replace(cryptidAccount.did + '#', '')} secondary={vm.publicKeyBase58}
-                                        removeCallback={removeKeyCallback}/>
+                                    removeCallback={removeKeyCallback}>
+                  {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
+                                                 onClick={() => requestAirdrop(key)}/>}
+                </CryptidDetailsListItem>
               )
             })}
           </List>
@@ -194,22 +207,24 @@ type CryptidDetailsListItemInterface = {
 const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> = 
   ({primary, secondary, removeCallback, children}) => {
   return (
-    <div className="min-w-0 max-w-2xl flex-1 flex items-center">
+    <div className="min-w-0 max-w-3xl flex-1 flex items-center">
       <div className="text-lg flex-1 flex-shrink-0">
         {primary}
       </div>
       <div className="min-w-0 flex-auto px-4 text-gray-500">
         {secondary}
       </div>
-      <div className="min-w-0 flex-1 px-4">
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => removeCallback(primary)}
-        >
-          Remove
-        </Button>
-      </div>
+      {children}
+      <TokenButton label='Remove' Icon={XCircleIcon} onClick={() => removeCallback(primary)}/>
+      {/*<div className="min-w-0 flex-1 px-4">*/}
+      {/*  <Button*/}
+      {/*    variant="outlined"*/}
+      {/*    color="primary"*/}
+      {/*    onClick={() => removeCallback(primary)}*/}
+      {/*  >*/}
+      {/*    Remove*/}
+      {/*  </Button>*/}
+      {/*</div>*/}
     </div>
   )
 }

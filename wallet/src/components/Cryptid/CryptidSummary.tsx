@@ -1,9 +1,14 @@
 import { CryptidAccount } from "../../utils/Cryptid/cryptid";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {CheckCircleIcon, ExclamationCircleIcon, UserIcon, UsersIcon} from "@heroicons/react/solid";
 import {Modal} from "../modals/modal";
 import {Tooltip, Typography} from "@material-ui/core";
 import {CopyableAddress} from "../CopyableAddress";
+import {useIsProdNetwork} from "../../utils/connection";
+import {useRequestAirdrop} from "../../utils/wallet";
+import {PublicKey} from "@solana/web3.js";
+
+const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
@@ -18,28 +23,31 @@ const balanceFormat = new Intl.NumberFormat(undefined, {
 const toSol = (balance:number) => balanceFormat.format(balance * 10e-10);
 
 const MIN_BALANCE = 10000;  // min lamports in a signer to qualify as "funded"
-const FUND_AMOUNT = 50000;
 
-const fundAmountSol = toSol(FUND_AMOUNT)
-
-const SignerBalanceControl:React.FC<{balance: number}> = ({balance}) => {
-  const [fundConfirm, showFundConfirm] = useState(false);
+const SignerBalanceControl:React.FC<{
+  balance: number,
+  signer: PublicKey
+  refreshCallback?: () => void
+}> = ({balance, signer, refreshCallback}) => {
+  const isProdNetwork = useIsProdNetwork();
+  const requestAirdrop = useRequestAirdrop(refreshCallback);
+  
+  const notFundedTooltip = useMemo(() =>
+      'Signer is not funded.' + (isProdNetwork ? '' : ' Click to airdrop')
+    , [isProdNetwork])
   
   return (
     <div className='pt-1'>
-      <Modal show={fundConfirm} callbacks={{
-        onOK: () => {},// TODO
-        onCancel: () => showFundConfirm(false)
-      }} title='Confirm fund signer?'>
-        <Typography>Fund this signer with {fundAmountSol} SOL?</Typography>
-      </Modal>
       {
       balance > MIN_BALANCE ?
         <Tooltip arrow title={'Signer is funded with ' + toSol(balance) + ' SOL '}><div>
           <CheckCircleIcon className="text-green-500 w-4 h-4"/>
         </div></Tooltip>: 
-        <Tooltip arrow title='Signer is not funded'><div>
-          <ExclamationCircleIcon className="text-yellow-500 w-4 h-4 cursor-pointer" onClick={() => showFundConfirm(true)}/>
+        <Tooltip arrow title={notFundedTooltip}><div>
+          <ExclamationCircleIcon className={classNames(
+            "text-yellow-500 w-4 h-4",
+            isProdNetwork ? '' : 'cursor-pointer'
+          )} onClick={() => isProdNetwork || requestAirdrop(signer)}/>
         </div></Tooltip>
     }
     </div>
@@ -47,11 +55,15 @@ const SignerBalanceControl:React.FC<{balance: number}> = ({balance}) => {
 }
 
 export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => {
+  // hack to trigger refresh of the balance - not sure what the best react way to do this is
+  const [refresh, setRefresh] = useState(0)
   const [signerBalance, setSignerBalance] = useState<number | undefined>();
+  
+  const triggerRefresh = useCallback(() => setRefresh(refresh + 1), [refresh, setRefresh])
   
   useEffect(() => {
     cryptidAccount.signerBalance().then(setSignerBalance);
-  }, [setSignerBalance, cryptidAccount.activeSigningKey])
+  }, [setSignerBalance, cryptidAccount.activeSigningKey, refresh])
   
   return (<div className="flex items-center px-2 py-4 sm:px-6">
       <div className="min-w-0 flex-auto px-2 inline-flex">
@@ -72,7 +84,7 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
         <div className="inline-flex text-sm md:text-lg text-gray-900">
           <CopyableAddress address={cryptidAccount.activeSigningKey} label={`Signer: ${cryptidAccount.activeSigningKeyAlias}`}/>
           {
-            signerBalance !== undefined && <SignerBalanceControl balance={signerBalance}/>
+            signerBalance !== undefined && <SignerBalanceControl balance={signerBalance} signer={cryptidAccount.activeSigningKey} refreshCallback={triggerRefresh}/>
           }
         </div>
       </div>
