@@ -143,7 +143,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                   </>;
                 } else {
                   return (<>
-                    <div className="sm:ml-6 sm:flex">
+                    <div className="ml-6 gap-4 sm:flex">
                       <NetworkSelector/>
                       <IdentitySelector isSignerWindow={isSignerWindow}/>
                     </div>

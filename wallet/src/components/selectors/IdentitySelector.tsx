@@ -52,7 +52,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
   },[selectedCryptidAccount, addCryptidAccount])
 
   return (
-    <div className={isSignerWindow ? "ml-2 flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center"}>
+    <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center"}>
       <AddCryptidAccountDialog
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
@@ -61,7 +61,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
         currentAccountDid={selectedCryptidAccount?.did}
       />
       {/* Identity dropdown */}
-      <Menu as="div" className="ml-3 relative">
+      <Menu as="div" className="relative">
         <div>
           <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
             <span className="sr-only">Select Identity</span>
@@ -90,12 +90,16 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
             {cryptidAccounts.filter(isControlledBy).map((item) =>
               <CryptidAccountMenuItem item={item} setSelectedCryptidAccount={setSelectedCryptidAccount}/>
             )}
-            <hr />
-            <Menu.Item key={'AddCryptid'} onClick={() => setCryptidAccountDialogOpen(true)}>
-              <a className={classNames('bg-gray-100 block px-4 py-2 text-sm text-gray-700')}>
-                Add Cryptid
-              </a>
-            </Menu.Item>
+            {!isSignerWindow &&
+            <>
+              <hr />
+              <Menu.Item key={'AddCryptid'} onClick={() => setCryptidAccountDialogOpen(true)}>
+                <a className={classNames('bg-gray-100 block px-4 py-2 text-sm text-gray-700')}>
+                  Add Cryptid
+                </a>
+              </Menu.Item>
+            </>
+            }
           </Menu.Items>
         </Transition>
       </Menu>

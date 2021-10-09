@@ -126,7 +126,7 @@ export default function SignTransactionFormContent({
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
   const { selectedCryptidAccount } = useCryptid();
-  const [publicKeys] = useCryptidAccountPublicKeys();
+  const [publicKeys] = useCryptidAccountPublicKeys(selectedCryptidAccount);
 
   const [parsing, setParsing] = useState(true);
   // An array of arrays, where each element is the set of instructions for a
