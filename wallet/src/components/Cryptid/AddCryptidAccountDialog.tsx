@@ -56,7 +56,7 @@ export default function AddCryptidAccountDialog(
         (addCryptidType === 'newkey' && hasUnlockedMnemonic) ||
         (addCryptidType === 'importkey' && !!importKeyPair && hasUnlockedMnemonic) ||
         (addCryptidType === 'adapterkey' && !!adapterWallet.publicKey))
-  }, [addCryptidType, importAddress, alias, importKeyPair])
+  }, [addCryptidType, importAddress, alias, importKeyPair, adapterWallet.publicKey, hasUnlockedMnemonic])
 
   const onOK = useCallback(async () => {
     let address;
