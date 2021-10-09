@@ -213,3 +213,9 @@ const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> =
     </div>
   )
 }
+
+const KeyDetailsListItem:React.FC<CryptidDetailsListItemInterface> = (props) => (
+  <CryptidDetailsListItem {...props}>
+    <div>hi!</div>
+  </CryptidDetailsListItem>
+)

@@ -34,19 +34,18 @@ const marketCache = {};
 let marketCacheConnection = null;
 const cacheDuration = 15 * 1000;
 
-export const decodeMessage = async (connection: Connection, wallet: StrictWalletInterface, message: Buffer) => {
+export const decodeMessage = async (connection: Connection, publicKey: PublicKey, message: Buffer) => {
+  console.log("dong!");
   // get message object
   const transactionMessage = Message.from(message);
   if (!transactionMessage?.instructions || !transactionMessage?.accountKeys) {
     return;
   }
 
-  // get owned keys (used for security checks)
-  const publicKey = wallet.publicKey;
-
   // get instructions
   const instructions: any[] = [];
   for (var i = 0; i < transactionMessage.instructions.length; i++) {
+    console.log("ding!");
     let transactionInstruction = transactionMessage.instructions[i];
     const instruction = await toInstruction(
       connection,

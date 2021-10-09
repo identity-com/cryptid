@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {Ref, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useCryptid} from '../utils/Cryptid/cryptid';
 import {PublicKey, Transaction} from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -52,6 +52,7 @@ type Opener = {
   postMessage: (message: ResponseMessage & { jsonrpc: '2.0' }, to: string) => void;
 }
 
+type MessageDisplay = 'tx' | 'utf8' | 'hex';
 export default function PopupPage({opener}: { opener: Opener }) {
   const origin = useMemo(() => {
     let params = new URLSearchParams(window.location.hash.slice(1));
@@ -74,6 +75,7 @@ export default function PopupPage({opener}: { opener: Opener }) {
   ), [opener, origin]);
 
   useEffect(() => {
+    console.log("useEffect: add event listener");
     if (hasConnectedAccount) {
       function unloadHandler() {
         postMessage({method: 'disconnected'});
@@ -87,6 +89,7 @@ export default function PopupPage({opener}: { opener: Opener }) {
   }, [hasConnectedAccount, postMessage, origin]);
 
   useEffect(() => {
+    console.log("useEffect: setConnectedAccount");
     if (
       selectedCryptidAccount &&
       connectedAccount &&
@@ -96,6 +99,7 @@ export default function PopupPage({opener}: { opener: Opener }) {
   }, [connectedAccount, selectedCryptidAccount]);
 
   useEffect(() => {
+    console.log("useEffect: messageHandler");
     function messageHandler(e: MessageEvent<RequestMessage>) {
       if (e.origin === origin && e.source === window.opener) {
         if (
@@ -105,7 +109,7 @@ export default function PopupPage({opener}: { opener: Opener }) {
         ) {
           postMessage({error: 'Unsupported method', id: e.data.id});
         }
-
+        
         setRequests((requests) => [...requests, e.data]);
       }
     }
@@ -118,8 +122,9 @@ export default function PopupPage({opener}: { opener: Opener }) {
 
   const {payloads, messageDisplay}: {
     payloads: (Buffer | Uint8Array)[],
-    messageDisplay: 'tx' | 'utf8' | 'hex'
+    messageDisplay: MessageDisplay
   } = useMemo(() => {
+    console.log("useMemo main switch");
     if (!request || request.method === 'connect') {
       return {payloads: [], messageDisplay: 'tx'};
     }
@@ -328,6 +333,47 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+type FormContentProps = {
+  autoApprove: boolean,
+  buttonRef: Ref<any>,
+  payloads: (Buffer | Uint8Array)[],
+  messageDisplay: MessageDisplay,
+  onApprove: () => void,
+};
+const FormContent:React.FC<FormContentProps> = (
+  {
+    onApprove,
+    messageDisplay, 
+    autoApprove, 
+    buttonRef, 
+    payloads
+  }) => {
+  console.log("useCallback renderFormContent");
+  const mappedPayloads = useMemo(() => {
+    console.log("in useMemo");
+    return payloads.map((tx) => Transaction.from(tx).serializeMessage())
+  }, [])
+  
+  if (messageDisplay === 'tx') {
+    return (
+      <SignTransactionFormContent
+        autoApprove={autoApprove}
+        origin={origin}
+        messages={mappedPayloads}
+        onApprove={onApprove}
+        buttonRef={buttonRef}
+      />
+    );
+  } else {
+    return <SignFormContent
+      origin={origin}
+      message={mappedPayloads[0]}
+      messageDisplay={messageDisplay}
+      buttonRef={buttonRef}
+    />;
+  }
+}
+
 function ApproveConnectionForm({
                                  origin,
                                  onApprove,
@@ -423,7 +469,7 @@ function ApproveConnectionForm({
 type ApproveSignerFormProps = {
   origin: string,
   payloads: (Buffer | Uint8Array)[],
-  messageDisplay: 'tx' | 'utf8' | 'hex',
+  messageDisplay: MessageDisplay,
   onApprove: () => void,
   onReject: () => void,
   autoApprove: boolean,
@@ -436,42 +482,21 @@ function ApproveSignatureForm({
                                 onReject,
                                 autoApprove,
                               }: ApproveSignerFormProps) {
+  console.log("rerender ApproveSignatureForm");
   const classes = useStyles();
 
   const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
-  const mapTransactionToMessageBuffer = (tx) => Transaction.from(tx).serializeMessage();
 
   const buttonRef = useRef<any>();
 
-  if (autoApprove) {
-    onApprove();
-    return (<></>);
-  }
-
-  const renderFormContent = () => {
-    if (messageDisplay === 'tx') {
-      return (
-        <SignTransactionFormContent
-          autoApprove={autoApprove}
-          origin={origin}
-          messages={payloads.map(mapTransactionToMessageBuffer)}
-          onApprove={onApprove}
-          buttonRef={buttonRef}
-        />
-      );
-    } else {
-      return <SignFormContent
-        origin={origin}
-        message={mapTransactionToMessageBuffer(payloads[0])}
-        messageDisplay={messageDisplay}
-        buttonRef={buttonRef}
-      />;
-    }
-  };
-
+  // if (autoApprove) {
+  //   onApprove();
+  //   return (<></>);
+  // }
+  
   return (
     <Card>
-      {renderFormContent()}
+      <FormContent onApprove={onApprove} autoApprove={autoApprove} buttonRef={buttonRef} payloads={payloads} messageDisplay={messageDisplay}/>
       <CardActions className={classes.actions}>
         <Button onClick={onReject}>Cancel</Button>
         <Button

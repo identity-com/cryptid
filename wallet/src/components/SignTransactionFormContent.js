@@ -123,11 +123,12 @@ export default function SignTransactionFormContent({
   autoApprove,
   buttonRef,
 }) {
+  console.log("rerender");
+  
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
   const { selectedCryptidAccount } = useCryptid();
-  const [publicKeys] = useCryptidAccountPublicKeys();
-
+  //
   const [parsing, setParsing] = useState(true);
   // An array of arrays, where each element is the set of instructions for a
   // single transaction.
@@ -135,51 +136,54 @@ export default function SignTransactionFormContent({
 
   const isMultiTx = messages.length > 1;
 
-  const wallet = {
-    publicKey: selectedCryptidAccount.address,
-    signTransaction: selectedCryptidAccount.signTransaction
-  }
+  // const wallet = {
+  //   publicKey: selectedCryptidAccount.address,
+  //   signTransaction: selectedCryptidAccount.signTransaction
+  // }
 
   useEffect(() => {
-    Promise.all(messages.map((m) => decodeMessage(connection, wallet, m))).then(
+    console.log("dang");
+    Promise.all(messages.map((m) => decodeMessage(connection, selectedCryptidAccount.address, m))).then(
       (txInstructions) => {
-        setTxInstructions(txInstructions);
-        setParsing(false);
+        console.log("dung");
+        // setTxInstructions(txInstructions);
+        // setParsing(false);
       },
     );
-  }, [messages, connection, selectedCryptidAccount]);
+  }, [connection, selectedCryptidAccount, setParsing, setTxInstructions]);
 
-  const validator = useMemo(() => {
-    return {
-      safe:
-        publicKeys &&
-        txInstructions &&
-        isSafeInstruction(publicKeys, selectedCryptidAccount.address, txInstructions),
-    };
-  }, [publicKeys, txInstructions, selectedCryptidAccount]);
+  // const validator = useMemo(() => {
+  //   return {
+  //     safe:
+  //       publicKeys &&
+  //       txInstructions &&
+  //       isSafeInstruction(publicKeys, selectedCryptidAccount.address, txInstructions),
+  //   };
+  // }, [publicKeys, txInstructions, selectedCryptidAccount]);
 
-  useEffect(() => {
-    if (validator.safe && autoApprove) {
-      console.log('Auto approving safe transaction');
-      onApprove();
-    } else {
-      // brings window to front when we receive new instructions
-      // this needs to be executed from wallet instead of adapter
-      // to ensure chrome brings window to front
-      window.focus();
-
-      // Scroll to approve button and focus it to enable approve with enter.
-      // Keep currentButtonRef in local variable, so the reference can't become
-      // invalid until the timeout is over. this was happening to all auto-
-      // approvals for unknown reasons.
-      let currentButtonRef = buttonRef.current;
-      if (currentButtonRef) {
-        currentButtonRef.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => currentButtonRef.focus(), 50);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validator, autoApprove, buttonRef]);
+  // useEffect(() => {
+  //   console.log('useEffect autoApprove');
+  //   if (validator.safe && autoApprove) {
+  //     console.log('Auto approving safe transaction');
+  //     onApprove();
+  //   } else {
+  //     // brings window to front when we receive new instructions
+  //     // this needs to be executed from wallet instead of adapter
+  //     // to ensure chrome brings window to front
+  //     window.focus();
+  //
+  //     // Scroll to approve button and focus it to enable approve with enter.
+  //     // Keep currentButtonRef in local variable, so the reference can't become
+  //     // invalid until the timeout is over. this was happening to all auto-
+  //     // approvals for unknown reasons.
+  //     let currentButtonRef = buttonRef.current;
+  //     if (currentButtonRef) {
+  //       currentButtonRef.scrollIntoView({ behavior: 'smooth' });
+  //       setTimeout(() => currentButtonRef.focus(), 50);
+  //     }
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [validator, autoApprove, buttonRef]);
 
   const onOpenAddress = (address) => {
     address &&
