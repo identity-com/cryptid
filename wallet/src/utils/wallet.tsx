@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import * as bs58 from 'bs58';
 import {Account, Keypair, LAMPORTS_PER_SOL, PublicKey, Transaction} from '@solana/web3.js';
 import nacl from 'tweetnacl';
@@ -13,10 +13,12 @@ import {
 } from './tokens/data';
 import {sleep, useListener, useLocalStorageState} from './utils';
 import { useTokenInfo } from './tokens/names';
-import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
+// import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
 import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
+import { useUnlockedMnemonicAndSeed, walletSeedChanged } from "./wallet-seed";
 import {useCallAsync} from "./notifications";
+
 
 type WalletType = 'sw' | 'sw_imported' | 'adapter'
 
@@ -56,7 +58,9 @@ interface WalletContextInterface {
   addWallet: (name: string, useAdapter: boolean, importedKey?: Keypair) => PublicKey,
   hasWallet: (publicKey: PublicKey) => boolean,
   listWallets: () => ExtendedPersistedWalletType[],
-  mnemonic: string | null,
+  showAddMnemonicDialog: boolean,
+  setShowAddMnemonicDialog: (v: boolean) => void
+  hasUnlockedMnemonic: boolean
 }
 
 const DEFAULT_WALLET_INTERFACE = { publicKey: null }
@@ -68,18 +72,33 @@ const WalletContext = React.createContext<WalletContextInterface>({
   addWallet: () => { throw new Error('Not loaded')},
   hasWallet: () => false,
   listWallets: () => [],
-  mnemonic: null
+  showAddMnemonicDialog: false,
+  setShowAddMnemonicDialog: () => {},
+  hasUnlockedMnemonic: false,
 });
 
 export function WalletProvider({ children }) {
-  useListener(walletSeedChanged, 'change');
+  // useListener(walletSeedChanged, 'change');
   const [{
     mnemonic,
     seed,
     importsEncryptionKey,
-    derivationPath,
-  }, hasUnlockedMnemonic ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
+    derivationPath
+  }, loadedingMnemonicPromise ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
+  // const hasUnlockedMnemonic = false
+  // const seed = 'asdf';
+  // const derivationPath= 'asdf'
+  // const importsEncryptionKey = new Uint8Array()
+
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
+  const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
+
+  useEffect(()=> {
+    console.log(`mnemonic changed: ${mnemonic}`)
+    console.log(`seed changed: ${seed}`)
+    console.log(`importsEncryptionKey changed: ${importsEncryptionKey}`)
+    console.log(`derivationPath changed: ${derivationPath}`)
+  }, [mnemonic, seed, importsEncryptionKey, derivationPath])
 
   const adapterWallet = useAdapterWallet()
 
@@ -152,15 +171,22 @@ export function WalletProvider({ children }) {
     return !!persistedWallets[publicKey.toBase58()]
   }, [persistedWallets])
 
-  const connectWallet = useCallback((publicKey: PublicKey) => {
+  const connectWallet = useCallback(async (publicKey: PublicKey) => {
     const persistetWallet = persistedWallets[publicKey.toBase58()];
     if (!persistetWallet) {
       throw new Error(`No persisted wallet found for ${publicKey.toBase58()}`)
     }
 
     if( persistetWallet.type === "adapter" ) {
+      console.log('ADAPTER READY? ' + adapterWallet.ready)
+      if (adapterWallet.ready && !adapterWallet.publicKey) {
+        await adapterWallet.connect()
+      }
+
       if (publicKey.toBase58() !== adapterWallet.publicKey?.toBase58()) {
-        throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
+        console.log('Warning setting adapter Key without that key connected via wallet-adapter')
+        // await adapterWallet.connect()
+        // throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
       }
 
       setWallet(adapterWallet)
@@ -196,7 +222,7 @@ export function WalletProvider({ children }) {
     }
 
     setWallet(new AccountWallet(account))
-  }, [persistedWallets, hasWallet, seed, importsEncryptionKey])
+  }, [persistedWallets, hasWallet, adapterWallet, setWallet, seed, importsEncryptionKey])
 
   const disconnectWallet = useCallback(() => {
     setWallet(DEFAULT_WALLET_INTERFACE)
@@ -215,7 +241,9 @@ export function WalletProvider({ children }) {
         addWallet,
         hasWallet,
         listWallets,
-        mnemonic,
+        showAddMnemonicDialog,
+        setShowAddMnemonicDialog,
+        hasUnlockedMnemonic: !loadedingMnemonicPromise && !!mnemonic
       }}
     >
       {children}
@@ -230,7 +258,7 @@ export function useWalletContext() {
 export function useRequestAirdrop(refreshCallback?: () => void) {
   const callAsync = useCallAsync();
   const connection = useConnection();
-  
+
   const requestAirdrop = (...addresses: PublicKey[]) => {
     addresses.forEach(address => {
       callAsync(
@@ -247,7 +275,7 @@ export function useRequestAirdrop(refreshCallback?: () => void) {
       );
     })
   };
-  
+
   return requestAirdrop
 }
 

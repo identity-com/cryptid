@@ -31,7 +31,7 @@ const SignerBalanceControl:React.FC<{
 }> = ({balance, signer, refreshCallback}) => {
   const isProdNetwork = useIsProdNetwork();
   const requestAirdrop = useRequestAirdrop(refreshCallback);
-  
+
   const notFundedTooltip = useMemo(() =>
       'Signer is not funded.' + (isProdNetwork ? '' : ' Click to airdrop')
     , [isProdNetwork])
@@ -60,7 +60,7 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
   const [signerBalance, setSignerBalance] = useState<number | undefined>();
   
   const triggerRefresh = useCallback(() => setRefresh(refresh + 1), [refresh, setRefresh])
-  
+
   useEffect(() => {
     cryptidAccount.signerBalance().then(setSignerBalance);
   }, [setSignerBalance, cryptidAccount.activeSigningKey, refresh])

@@ -1,10 +1,5 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import DialogActions from '@material-ui/core/DialogActions';
-import Button from '@material-ui/core/Button';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
+import React, {useCallback, useState} from 'react';
 import TextField from '@material-ui/core/TextField';
-import DialogForm from "../DialogForm";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import {convertToPublicKey, isValidPublicKey} from "../../utils/Cryptid/cryptid";
@@ -39,7 +34,7 @@ export default function AddControllerDialog({ open, onAdd, onClose, didPrefix })
       okEnabled={!isInvalidAddress}
       okText='Add'
       callbacks={{
-        onCancel: onClose,
+        onClose,
         onOK: () => onAdd( didPrefix + ':' + address )
       }}
       title="Add Controller DID"

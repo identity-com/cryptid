@@ -30,7 +30,7 @@ export default function DepositDialog({
 
   return (
     <Modal title={title}
-           callbacks={{onOK : () => {}, onCancel: onClose}}
+           callbacks={{onOK : () => {}, onClose}}
            show={open}
            Icon={ArrowCircleDownIcon}
            suppressOKButton={true}

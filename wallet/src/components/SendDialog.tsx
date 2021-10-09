@@ -26,7 +26,7 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   return (
     <Modal 
       show={open} 
-      callbacks={{onOK: () => {}, onCancel: onClose}}
+      callbacks={{onOK: () => {}, onClose}}
       title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
         <SendSplDialog
           onClose={onClose}

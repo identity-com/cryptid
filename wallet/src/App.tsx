@@ -13,32 +13,30 @@ import {TokenRegistryProvider} from './utils/tokens/names';
 import {SnackbarProvider} from 'notistack';
 import {MetaWalletProvider} from './utils/Cryptid/MetaWalletProvider';
 import IdentityPage from './pages/IdentityPage';
-import {useUnlockedMnemonicAndSeed} from './utils/wallet-seed';
 import {createMuiTheme, ThemeProvider} from '@material-ui/core';
 import {red} from "@material-ui/core/colors";
 
 const PageContents: React.FC = () => {
-  const [{mnemonic}] = useUnlockedMnemonicAndSeed();
+  // const [{mnemonic}] = useUnlockedMnemonicAndSeed();
   const {page} = usePage();
-  const suggestionKey = 'private-irgnore-wallet-suggestion';
-  const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
-  if (!mnemonic) {
-    return (
-      <LoginPage/>
-    );
-  }
+
+  // if (!mnemonic) {
+  //   return (
+  //     <LoginPage/>
+  //   );
+  // }
   if (window.opener) {
     return <PopupPage opener={window.opener}/>;
   } else {
     switch (page) {
       case 'Tokens':
         return <WalletPage/>;
-      case 'Collectibles':
-        return <>TODO no page</>;
-      case 'Stake':
-        return <>TODO no page</>;
-      case 'Swap':
-        return <>TODO no page</>;
+      // case 'Collectibles':
+      //   return <>TODO no page</>;
+      // case 'Stake':
+      //   return <>TODO no page</>;
+      // case 'Swap':
+      //   return <>TODO no page</>;
       case 'Identity':
         return <IdentityPage/>;
     }

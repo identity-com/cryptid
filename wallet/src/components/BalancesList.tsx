@@ -103,6 +103,7 @@ export function BalanceListItem({ publicKey, setUsdValue }) {
   const [price, setPrice] = useState<number|undefined>(undefined);
   
   useEffect(() => {
+    console.log('UseEffect in BalanceListItem')
     if (balanceInfo) {
       if (balanceInfo.tokenSymbol) {
         const coin = balanceInfo.tokenSymbol.toUpperCase();

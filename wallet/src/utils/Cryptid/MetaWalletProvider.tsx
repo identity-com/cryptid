@@ -26,7 +26,7 @@ export const MetaWalletProvider = ({ children }) => {
 
   return (
     <SolanaConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets}>
         <WalletProvider>
           <CryptidProvider>
             <WalletModalProvider>

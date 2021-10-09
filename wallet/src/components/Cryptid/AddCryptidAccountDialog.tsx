@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {Modal} from "../modals/modal";
 import {PlusCircleIcon} from "@heroicons/react/outline";
 import { convertToPublicKey, CryptidAccount } from "../../utils/Cryptid/cryptid";
@@ -21,7 +21,7 @@ interface AddCryptidAccountDialogInterface {
 export default function AddCryptidAccountDialog(
   { open, onAdd, onClose, didPrefix }: AddCryptidAccountDialogInterface) {
 
-  const { addWallet } = useWalletContext()
+  const { addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog } = useWalletContext()
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
@@ -40,15 +40,25 @@ export default function AddCryptidAccountDialog(
     setImportKeyPair(decodeAccount(value));
   }, [setImportKeyPair]);
 
+  const onCryptidTypeChange = useCallback((type: AddCrytidType) => {
+    setAddCryptidType(type)
+
+    console.log(`Changed type! hasUnlockedMnemonic: ${hasUnlockedMnemonic}`)
+
+    if (!hasUnlockedMnemonic && (type === 'newkey' || type === 'importkey')) {
+      setShowAddMnemonicDialog(true)
+    }
+  }, [setAddCryptidType, setShowAddMnemonicDialog, hasUnlockedMnemonic])
+
   const okEnabled = useCallback(() => {
     return !!alias &&
       ((addCryptidType === 'import' && !!importAddress) ||
-        (addCryptidType === 'newkey') ||
-        (addCryptidType === 'importkey' && !!importKeyPair) ||
+        (addCryptidType === 'newkey' && hasUnlockedMnemonic) ||
+        (addCryptidType === 'importkey' && !!importKeyPair && hasUnlockedMnemonic) ||
         (addCryptidType === 'adapterkey' && !!adapterWallet.publicKey))
-  }, [addCryptidType, importAddress, alias, importKeyPair])
+  }, [addCryptidType, importAddress, alias, importKeyPair, adapterWallet.publicKey, hasUnlockedMnemonic])
 
-  const onOk = useCallback(async () => {
+  const onOK = useCallback(async () => {
     let address;
 
     if (addCryptidType !== "import") {
@@ -66,12 +76,14 @@ export default function AddCryptidAccountDialog(
     onAdd(address, alias, isControlled)
   }, [addCryptidType, addWallet, importAddress, alias, isControlled])
 
+
+
   return (
     <Modal
       show={open}
       callbacks={{
-        onOK: onOk,
-        onCancel: onClose
+        onOK,
+        onClose
       }}
       title='Add Cryptid Account'
       Icon={PlusCircleIcon}
@@ -87,7 +99,7 @@ export default function AddCryptidAccountDialog(
 
 
               <div className="sm:col-span-6">
-                <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="alias" className="block text-sm font-medium text-gray-700">
                   Alias
                 </label>
                 <div className="mt-1">
@@ -105,13 +117,13 @@ export default function AddCryptidAccountDialog(
                   Type
                 </label>
                 <div className="mt-1">
-                  <CryptidTypeSelector initialType={addCryptidType} onChange={setAddCryptidType} />
+                  <CryptidTypeSelector initialType={addCryptidType} onChange={onCryptidTypeChange} />
                 </div>
               </div>
 
               { addCryptidType === 'importkey' &&
               <div className="sm:col-span-6">
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="importkey" className="block text-sm font-medium text-gray-700">
                       Private Key
                   </label>
                   <div className="mt-1">
