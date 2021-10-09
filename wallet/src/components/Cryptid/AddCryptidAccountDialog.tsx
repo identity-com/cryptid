@@ -17,6 +17,8 @@ import CryptidTypeSelector, { AddCrytidType } from "./CryptidTypeSelector";
 import { useWalletContext } from "../../utils/wallet";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { decodeAccount } from "../../utils/utils";
+import { useWallet as useAdapterWallet } from "@solana/wallet-adapter-react/lib/useWallet";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 
 interface AddCryptidAccountDialogInterface {
@@ -31,6 +33,8 @@ export default function AddCryptidAccountDialog(
   { open, onAdd, onClose, didPrefix, currentAccountDid }: AddCryptidAccountDialogInterface) {
 
   const { addWallet } = useWalletContext()
+  const adapterWallet = useAdapterWallet()
+
 
   const [alias, setAlias] = useState('');
 
@@ -53,7 +57,7 @@ export default function AddCryptidAccountDialog(
       ((addCryptidType === 'import' && !!importAddress) ||
         (addCryptidType === 'newkey') ||
         (addCryptidType === 'importkey' && !!importKeyPair) ||
-        (addCryptidType === 'adapterkey'))
+        (addCryptidType === 'adapterkey' && !!adapterWallet.publicKey))
   }, [addCryptidType, importAddress, alias, importKeyPair])
 
   const onOk = useCallback(async () => {
@@ -127,6 +131,17 @@ export default function AddCryptidAccountDialog(
                              placeholder="Private Key"
                              onChange={(e) => setValidatedImportKeyPair(e.target.value.trim())}
                       />
+                  </div>
+              </div>
+              }
+
+              { addCryptidType === 'adapterkey' &&
+              <div className="sm:col-span-6">
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                      Wallet Adapter
+                  </label>
+                  <div className="mt-1 flex justify-center">
+                    <WalletMultiButton/>
                   </div>
               </div>
               }

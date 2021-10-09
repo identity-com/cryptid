@@ -14,7 +14,7 @@ import { useListener, useLocalStorageState } from './utils';
 import { useTokenInfo } from './tokens/names';
 import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
-import { useWallet as useSolAdapterWallet } from '@solana/wallet-adapter-react';
+import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
 
 type WalletType = 'sw' | 'sw_imported' | 'adapter'
 
@@ -78,7 +78,7 @@ export function WalletProvider({ children }) {
   }, hasUnlockedMnemonic ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
 
-  const walletAdapter = useSolAdapterWallet()
+  const adapterWallet = useAdapterWallet()
 
   const [ persistedWallets, setPersistedWallets ] = useLocalStorageState<KeyedPersistedWalletType>(
     'wallets',
@@ -90,15 +90,15 @@ export function WalletProvider({ children }) {
 
   const addWallet = useCallback((name: string, useAdapter: boolean = false, importedKey?: Keypair): PublicKey => {
     if (useAdapter) {
-      if (!walletAdapter.publicKey) {
+      if (!adapterWallet.publicKey) {
         throw new Error(`Trying to add Wallet from wallet-adapter, but none connected`)
       }
 
-      setPersistedWallets( { ...persistedWallets, [walletAdapter.publicKey.toBase58()]: {
+      setPersistedWallets( { ...persistedWallets, [adapterWallet.publicKey.toBase58()]: {
           type: "adapter",
           name
         }})
-      return walletAdapter.publicKey
+      return adapterWallet.publicKey
     }
 
     if (!seed || !importsEncryptionKey) {
@@ -143,7 +143,7 @@ export function WalletProvider({ children }) {
     setWalletCount(walletCount + 1);
     return account.publicKey
 
-  }, [persistedWallets, setPersistedWallets, walletAdapter, walletCount, setWalletCount, seed, importsEncryptionKey])
+  }, [persistedWallets, setPersistedWallets, adapterWallet, walletCount, setWalletCount, seed, importsEncryptionKey])
 
   const hasWallet = useCallback((publicKey: PublicKey) => {
     return !!persistedWallets[publicKey.toBase58()]
@@ -156,11 +156,11 @@ export function WalletProvider({ children }) {
     }
 
     if( persistetWallet.type === "adapter" ) {
-      if (publicKey.toBase58() !== walletAdapter.publicKey?.toBase58()) {
+      if (publicKey.toBase58() !== adapterWallet.publicKey?.toBase58()) {
         throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
       }
 
-      setWallet(walletAdapter)
+      setWallet(adapterWallet)
       return
     }
 

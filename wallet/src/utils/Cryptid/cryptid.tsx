@@ -113,8 +113,6 @@ export class CryptidAccount {
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()
-    console.log('Returned Document')
-    console.log(this._document)
     return this._document
   }
 
