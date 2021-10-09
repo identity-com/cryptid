@@ -51,7 +51,7 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
   
   useEffect(() => {
     cryptidAccount.signerBalance().then(setSignerBalance);
-  }, [setSignerBalance])
+  }, [setSignerBalance, cryptidAccount.activeSigningKey])
   
   return (<div className="flex items-center px-2 py-4 sm:px-6">
       <div className="min-w-0 flex-auto px-2 inline-flex">
