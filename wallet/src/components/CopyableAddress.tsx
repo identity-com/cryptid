@@ -46,7 +46,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
         show={showQrcode}
         callbacks={{
           onOK: () => {},
-          onCancel: () => setShowQrcode(false)
+          onClose: () => setShowQrcode(false)
         }}>
         <QRCode value={addressString} size={256} includeMargin />
       </Modal>

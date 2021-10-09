@@ -508,10 +508,18 @@ export const CryptidProvider:FC = ({ children }) => {
       loadedCryptidAccounts.push(cryptidAccount)
     }
 
+    // Select the persisted one.
+    if (loadedCryptidAccounts.length > 0) {
+      const selected = loadedCryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || loadedCryptidAccounts[0]
+      console.log('Setting Account for ' + selected.did)
+      setSelectedCryptidAccount(selected)
+    }
+
+
     // console.log(`Setting setCryptidAccounts with: ${loadedCryptidAccounts}`)
     setCryptidAccounts(loadedCryptidAccounts)
     setReady(true) // TODO is this deterministally set at the same time of the array?
-  }, [cryptidExtAccounts, setCryptidAccounts, connection, getDidPrefix, wallet.publicKey])
+  }, [cryptidExtAccounts, setCryptidAccounts, connection, getDidPrefix])
 
   // Load from Storage
   useEffect(() => {
@@ -519,19 +527,6 @@ export const CryptidProvider:FC = ({ children }) => {
     loadCryptidAccounts()
   }, [loadCryptidAccounts])
 
-  // Chose from Selector after (re)loading Accounts
-  useEffect(() => {
-    console.log('useEffect setSelectedCryptidAccount')
-    if (cryptidAccounts.length === 0 || selectedCryptidAccount?.didAddress === cryptidSelector.selectedCryptidAccount) {
-      return
-    }
-
-    // Selected from cryptidSelector or fallback to first.
-    const selected = cryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
-    console.log('Setting Account for ' + selected.did)
-    setSelectedCryptidAccount(selected)
-
-  },[cryptidAccounts, setSelectedCryptidAccount, cryptidSelector.selectedCryptidAccount])
 
   // find and assign Wallet to current account
   useEffect(() => {
@@ -562,7 +557,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   }, [selectedCryptidAccount, wallet.publicKey, hasWallet, connectWallet])
 
-  // find and assign Wallet to current account
+  // // find and assign Wallet to current account
   useEffect(() => {
     console.log('useEffect Update Signer')
 

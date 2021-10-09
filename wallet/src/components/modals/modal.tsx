@@ -10,7 +10,7 @@ type ModalProps = {
   show: boolean,
   callbacks: {
     onOK: () => void,
-    onCancel: () => void
+    onClose: () => void
   },
   okText?: string,
   suppressOKButton?: boolean
@@ -29,7 +29,7 @@ export const Modal:React.FC<ModalProps> = (
     Icon = QuestionMarkCircleIcon,
     iconClasses = '',
     children,
-    callbacks: {onOK, onCancel},
+    callbacks: {onOK, onClose},
     suppressOKButton ,
     okText = 'OK',
     okEnabled,
@@ -41,15 +41,15 @@ export const Modal:React.FC<ModalProps> = (
   okEnabled = okEnabled === undefined ? true : okEnabled; // defaults to true
 
   // prevent closure if suppressClose is set (to allow for multiple stacked modals)
-  const onClose = useCallback(() => {
+  const onCloseInt = useCallback(() => {
     console.log("onClose suppressClose: ", suppressClose);
-    suppressClose || onCancel();
+    suppressClose || onClose();
   }, []);
   
   return (
     <Transition.Root show={show} as={Fragment}>
       <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef}
-              onClose={onClose}
+              onClose={onCloseInt}
       >
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <Transition.Child
@@ -102,7 +102,7 @@ export const Modal:React.FC<ModalProps> = (
                 {suppressCancelButton || <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800 sm:mt-0 sm:w-auto sm:text-sm"
-                  onClick={onCancel}
+                  onClick={onClose}
                   ref={cancelButtonRef}
                 >
                   {cancelText}

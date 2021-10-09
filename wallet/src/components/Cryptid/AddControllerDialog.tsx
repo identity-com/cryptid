@@ -34,7 +34,7 @@ export default function AddControllerDialog({ open, onAdd, onClose, didPrefix })
       okEnabled={!isInvalidAddress}
       okText='Add'
       callbacks={{
-        onCancel: onClose,
+        onClose,
         onOK: () => onAdd( didPrefix + ':' + address )
       }}
       title="Add Controller DID"

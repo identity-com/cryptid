@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import * as bs58 from 'bs58';
 import { Account, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import nacl from 'tweetnacl';
@@ -15,6 +15,7 @@ import { useTokenInfo } from './tokens/names';
 // import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
 import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
+import { useUnlockedMnemonicAndSeed, walletSeedChanged } from "./wallet-seed";
 
 type WalletType = 'sw' | 'sw_imported' | 'adapter'
 
@@ -56,6 +57,7 @@ interface WalletContextInterface {
   listWallets: () => ExtendedPersistedWalletType[],
   showAddMnemonicDialog: boolean,
   setShowAddMnemonicDialog: (v: boolean) => void
+  hasUnlockedMnemonic: boolean
 }
 
 const DEFAULT_WALLET_INTERFACE = { publicKey: null }
@@ -69,24 +71,31 @@ const WalletContext = React.createContext<WalletContextInterface>({
   listWallets: () => [],
   showAddMnemonicDialog: false,
   setShowAddMnemonicDialog: () => {},
+  hasUnlockedMnemonic: false,
 });
 
 export function WalletProvider({ children }) {
   // useListener(walletSeedChanged, 'change');
-  // const [{
-  //   mnemonic,
-  //   seed,
-  //   importsEncryptionKey,
-  //   derivationPath,
-  // }, hasUnlockedMnemonic ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
-
-  const seed = '00'
-  const importsEncryptionKey = new Uint8Array()
-  const derivationPath = 'asdf'
+  const [{
+    mnemonic,
+    seed,
+    importsEncryptionKey,
+    derivationPath
+  }, loadedingMnemonicPromise ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
+  // const hasUnlockedMnemonic = false
+  // const seed = 'asdf';
+  // const derivationPath= 'asdf'
+  // const importsEncryptionKey = new Uint8Array()
 
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
   const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
 
+  useEffect(()=> {
+    console.log(`mnemonic changed: ${mnemonic}`)
+    console.log(`seed changed: ${seed}`)
+    console.log(`importsEncryptionKey changed: ${importsEncryptionKey}`)
+    console.log(`derivationPath changed: ${derivationPath}`)
+  }, [mnemonic, seed, importsEncryptionKey, derivationPath])
 
   const adapterWallet = useAdapterWallet()
 
@@ -153,7 +162,7 @@ export function WalletProvider({ children }) {
     setWalletCount(walletCount + 1);
     return account.publicKey
 
-  }, [persistedWallets, setPersistedWallets, adapterWallet, walletCount, setWalletCount])
+  }, [persistedWallets, setPersistedWallets, adapterWallet, walletCount, setWalletCount, seed, importsEncryptionKey])
 
   const hasWallet = useCallback((publicKey: PublicKey) => {
     return !!persistedWallets[publicKey.toBase58()]
@@ -210,7 +219,7 @@ export function WalletProvider({ children }) {
     }
 
     setWallet(new AccountWallet(account))
-  }, [persistedWallets, hasWallet, adapterWallet, setWallet])
+  }, [persistedWallets, hasWallet, adapterWallet, setWallet, seed, importsEncryptionKey])
 
   const disconnectWallet = useCallback(() => {
     setWallet(DEFAULT_WALLET_INTERFACE)
@@ -231,6 +240,7 @@ export function WalletProvider({ children }) {
         listWallets,
         showAddMnemonicDialog,
         setShowAddMnemonicDialog,
+        hasUnlockedMnemonic: !loadedingMnemonicPromise && !!mnemonic
       }}
     >
       {children}

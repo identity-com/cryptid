@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {Modal} from "../modals/modal";
-import {PlusCircleIcon} from "@heroicons/react/outline";
+import { KeyIcon } from "@heroicons/react/outline";
 import { useWalletContext } from "../../utils/wallet";
 import { useCallAsync } from "../../utils/notifications";
 import { generateMnemonicAndSeed, storeMnemonicAndSeed } from "../../utils/wallet-seed";
@@ -62,11 +62,11 @@ export default function AddMnemonicModal() {
     <Modal
       show={showAddMnemonicDialog}
       callbacks={{
-        onOK: () => submit(),
-        onCancel: () => { setShowAddMnemonicDialog(false) }
+        onOK: () => { submit(); setShowAddMnemonicDialog(false) },
+        onClose: () => { setShowAddMnemonicDialog(false) }
       }}
-      title='Create Or Restore Mnomic Seedphrase'
-      Icon={PlusCircleIcon}
+      title='Mnomic Seedphrase'
+      Icon={KeyIcon}
       iconClasses='text-green-500'
       okText='Add'
       okEnabled={acknowledged && downloaded && confirmedWords === mnemonicAndSeed.mnemonic}
@@ -93,6 +93,7 @@ export default function AddMnemonicModal() {
                   rows={3}
                   className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"
                   value={mnemonicAndSeed.mnemonic}
+                  readOnly={true}
                 />
                 </div>
               </div>

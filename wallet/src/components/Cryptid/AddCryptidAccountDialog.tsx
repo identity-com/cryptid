@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {Modal} from "../modals/modal";
 import {PlusCircleIcon} from "@heroicons/react/outline";
 import { convertToPublicKey, CryptidAccount } from "../../utils/Cryptid/cryptid";
@@ -21,7 +21,7 @@ interface AddCryptidAccountDialogInterface {
 export default function AddCryptidAccountDialog(
   { open, onAdd, onClose, didPrefix }: AddCryptidAccountDialogInterface) {
 
-  const { addWallet } = useWalletContext()
+  const { addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog } = useWalletContext()
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
@@ -40,15 +40,25 @@ export default function AddCryptidAccountDialog(
     setImportKeyPair(decodeAccount(value));
   }, [setImportKeyPair]);
 
+  const onCryptidTypeChange = useCallback((type: AddCrytidType) => {
+    setAddCryptidType(type)
+
+    console.log(`Changed type! hasUnlockedMnemonic: ${hasUnlockedMnemonic}`)
+
+    if (!hasUnlockedMnemonic && (type === 'newkey' || type === 'importkey')) {
+      setShowAddMnemonicDialog(true)
+    }
+  }, [setAddCryptidType, setShowAddMnemonicDialog, hasUnlockedMnemonic])
+
   const okEnabled = useCallback(() => {
     return !!alias &&
       ((addCryptidType === 'import' && !!importAddress) ||
-        (addCryptidType === 'newkey') ||
-        (addCryptidType === 'importkey' && !!importKeyPair) ||
+        (addCryptidType === 'newkey' && hasUnlockedMnemonic) ||
+        (addCryptidType === 'importkey' && !!importKeyPair && hasUnlockedMnemonic) ||
         (addCryptidType === 'adapterkey' && !!adapterWallet.publicKey))
   }, [addCryptidType, importAddress, alias, importKeyPair])
 
-  const onOk = useCallback(async () => {
+  const onOK = useCallback(async () => {
     let address;
 
     if (addCryptidType !== "import") {
@@ -66,12 +76,14 @@ export default function AddCryptidAccountDialog(
     onAdd(address, alias, isControlled)
   }, [addCryptidType, addWallet, importAddress, alias, isControlled])
 
+
+
   return (
     <Modal
       show={open}
       callbacks={{
-        onOK: onOk,
-        onCancel: onClose
+        onOK,
+        onClose
       }}
       title='Add Cryptid Account'
       Icon={PlusCircleIcon}
@@ -105,7 +117,7 @@ export default function AddCryptidAccountDialog(
                   Type
                 </label>
                 <div className="mt-1">
-                  <CryptidTypeSelector initialType={addCryptidType} onChange={setAddCryptidType} />
+                  <CryptidTypeSelector initialType={addCryptidType} onChange={onCryptidTypeChange} />
                 </div>
               </div>
 

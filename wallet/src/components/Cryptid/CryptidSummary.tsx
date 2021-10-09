@@ -29,7 +29,7 @@ const SignerBalanceControl:React.FC<{balance: number}> = ({balance}) => {
     <div className='pt-1'>
       <Modal show={fundConfirm} callbacks={{
         onOK: () => {},// TODO
-        onCancel: () => showFundConfirm(false)
+        onClose: () => showFundConfirm(false)
       }} title='Confirm fund signer?'>
         <Typography>Fund this signer with {fundAmountSol} SOL?</Typography>
       </Modal>

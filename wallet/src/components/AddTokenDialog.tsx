@@ -60,6 +60,8 @@ export default function AddTokenDialog({ open, onClose }) {
   const [tokenSymbol, setTokenSymbol] = useState('');
 
   useEffect(() => {
+    console.log('Use Effect in AddTokenDialog')
+
     if (!popularTokens.length) {
       setTab('manual');
     }
@@ -112,7 +114,7 @@ export default function AddTokenDialog({ open, onClose }) {
       okEnabled={!!mintAddress && !!tokenSymbol && !!tokenName}
       callbacks={{
         onOK: () => onSubmit(),
-        onCancel: onClose
+        onClose
       }}>
       <div className='w-full'>
           <>

@@ -50,6 +50,7 @@ export function useEffectAfterTimeout(effect: () => void, timeout: number) {
 export function useListener(emitter, eventName: string) {
   let [, forceUpdate] = useState(0);
   useEffect(() => {
+    console.log('Generic useListener Emitter')
     let listener = () => forceUpdate((i) => i + 1);
     emitter.on(eventName, listener);
     return () => emitter.removeListener(eventName, listener);
