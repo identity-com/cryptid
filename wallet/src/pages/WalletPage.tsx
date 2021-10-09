@@ -5,6 +5,8 @@ import {useCryptid} from "../utils/Cryptid/cryptid";
 
 export default function WalletPage() {
   const { selectedCryptidAccount } = useCryptid()
+  console.log("rerender ", selectedCryptidAccount);
+  console.log(selectedCryptidAccount?.activeSigningKey?.toBase58());
   return (
     <div className="py-10">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

@@ -161,7 +161,7 @@ export default function AddTokenDialog({ open, onClose }) {
                             autoFocus
                             disabled={sending}
                             value={tokenName}
-                            className="h-8 max-w-lg block w-full shadow-sm border-2 focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+                            className="h-8 max-w-lg block w-full shadow-sm border-2 focus:ring-red-800 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
                           />
                         </div>
                       </div>
@@ -179,7 +179,7 @@ export default function AddTokenDialog({ open, onClose }) {
                             autoFocus
                             disabled={sending}
                             value={tokenSymbol}
-                            className="h-8 block max-w-lg w-full shadow-sm border-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                            className="h-8 block max-w-lg w-full shadow-sm border-2 focus:ring-red-800 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
                           />
                         </div>
                       </div>
@@ -274,7 +274,7 @@ function TokenListItem({ tokenInfo, onSubmit, disabled, existingAccount }) {
         </Button>
       </div>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <CopyableAddress publicKey={tokenInfo.address} label='Mint Address'/>
+        <CopyableAddress address={tokenInfo.address} label='Mint Address'/>
       </Collapse>
     </React.Fragment>
   );

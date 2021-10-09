@@ -19,7 +19,7 @@ interface AddCryptidAccountDialogInterface {
 }
 
 export default function AddCryptidAccountDialog(
-  { open, onAdd, onClose, didPrefix, currentAccountDid }: AddCryptidAccountDialogInterface) {
+  { open, onAdd, onClose, didPrefix }: AddCryptidAccountDialogInterface) {
 
   const { addWallet } = useWalletContext()
   const adapterWallet = useAdapterWallet()
@@ -92,7 +92,7 @@ export default function AddCryptidAccountDialog(
                 </label>
                 <div className="mt-1">
                   <input type="text" name="alias" id="alias" autoComplete="alias"
-                         className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 border rounded-md"
+                         className="px-3 py-2 shadow-sm focus:ring-red-800 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 border rounded-md"
                          placeholder="Alias"
                          value={alias}
                          onChange={(e) => setAlias(e.target.value.trim())}
@@ -116,7 +116,7 @@ export default function AddCryptidAccountDialog(
                   </label>
                   <div className="mt-1">
                       <input type="text" name="importkey" id="importkey" autoComplete="importkey"
-                             className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 border rounded-md"
+                             className="px-3 py-2 shadow-sm focus:ring-red-800 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 border rounded-md"
                              placeholder="Private Key"
                              onChange={(e) => setValidatedImportKeyPair(e.target.value.trim())}
                       />
@@ -146,8 +146,8 @@ export default function AddCryptidAccountDialog(
                         className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                       {didPrefix}:
                     </span>
-                        <input type="text" name="address" id="address" autoComplete="address"
-                               className="flex-1 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md border sm:text-sm border-gray-300"
+                        <input type="text" name="address" id="address"
+                               className="flex-1 px-3 py-2 focus:ring-red-800 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md border sm:text-sm border-gray-300"
                                placeholder="Address"
                                // value={importAddress}
                                onChange={(e) => setValidatedAddress(e.target.value.trim())}

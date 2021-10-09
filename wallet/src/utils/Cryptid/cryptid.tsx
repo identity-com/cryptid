@@ -167,6 +167,19 @@ export class CryptidAccount {
   get activeSigningKey():PublicKey {
     return this._signer.publicKey
   }
+  
+  signerBalance():Promise<number> {
+    const key = this.activeSigningKey;
+    
+    if (!key) return Promise.resolve(0);
+    return this._connection.getBalance(key);
+  }
+
+  get activeSigningKeyAlias():string {
+    const activeVerificationMethod = this.verificationMethods.find(vm => vm.publicKeyBase58 === this.activeSigningKey?.toBase58());
+    if (!activeVerificationMethod) return 'N/A';
+    return activeVerificationMethod.id.replace(/.*#/,'');
+  }
 
   addKey = async (address: PublicKey, alias: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.addKey(address, alias))
@@ -375,6 +388,15 @@ export const convertToPublicKey = (base58: string | undefined) => {
   }
 };
 
+export const isValidPublicKey = (base58: string):boolean => {
+  try {
+    validatePublicKey(base58)
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 const validatePublicKey = (base58: string) => {
   try {
     new PublicKey(base58)
@@ -558,8 +580,6 @@ export const CryptidProvider:FC = ({ children }) => {
       sign: wallet.signTransaction
     })
   }, [wallet, selectedCryptidAccount])
-
-
 
   return (<CryptidContext.Provider
     value={{

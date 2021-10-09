@@ -203,8 +203,9 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
     }
   }
 
+  
   let usdValue;
-  if (amount && price) {
+  if (amount !== undefined && price) {
     usdValue = ((amount / Math.pow(10, decimals)) * price).toFixed(2)
   }
   if (setUsdValue && usdValue) {
@@ -215,15 +216,14 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
     <BalanceListItemView
       mint={mint}
       tokenName={tokenName}
+      tokenSymbol={tokenSymbol}
       decimals={decimals}
       displayName={displayName}
       tokenLogoUri={tokenLogoUri}
       amount={amount}
-      price={price}
       usdValue={usdValue}
       isAssociatedToken={isAssociatedToken}
       publicKey={publicKey}
-      expandable={expandable}     
     />
   );
 }

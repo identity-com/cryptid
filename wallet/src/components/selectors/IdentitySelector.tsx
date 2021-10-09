@@ -63,7 +63,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
       {/* Identity dropdown */}
       <Menu as="div" className="ml-3 relative">
         <div>
-          <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
             <span className="sr-only">Select Identity</span>
             {/*<UserIcon className="h-6 w-6" aria-hidden="true"/>*/}
             <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">

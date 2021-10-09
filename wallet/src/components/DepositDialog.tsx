@@ -11,12 +11,12 @@ import {CopyableAddress} from "./CopyableAddress";
 
 
 export default function DepositDialog({
-  open,
-  onClose,
-  publicKey,
-  balanceInfo,
-  isAssociatedToken,
-}) {
+                                        open,
+                                        onClose,
+                                        publicKey,
+                                        balanceInfo,
+                                        isAssociatedToken,
+                                      }) {
   const urlSuffix = useSolanaExplorerUrlSuffix();
   const { mint, tokenName, tokenSymbol, owner } = balanceInfo;
 
@@ -24,10 +24,10 @@ export default function DepositDialog({
   const depositAddressStr = displaySolAddress
     ? owner.toBase58()
     : publicKey.toBase58();
-  
-  
+
+
   const title = `Deposit ${tokenName ?? mint.toBase58()} ${tokenSymbol ? `(${tokenSymbol})` : ''}`
-  
+
   return (
     <Modal title={title}
            callbacks={{onOK : () => {}, onCancel: onClose}}
@@ -38,21 +38,11 @@ export default function DepositDialog({
     >
       <DialogContent style={{ paddingTop: 16 }}>
         <>
-          {!displaySolAddress && isAssociatedToken === false ? (
-            <DialogContentText>
-              This address can only be used to receive{' '}
-              {tokenSymbol ?? abbreviateAddress(mint)}. Do not send SOL to
-              this address.
-              <br />
-              <b style={{ color: 'red' }}>WARNING</b>: You are using a deprecated account type. Please migrate your tokens. Ideally, create a new wallet. If you send to this address from a poorly implemented wallet, you may burn tokens.
-            </DialogContentText>
-          ) : (
-            <DialogContentText>
-              Receive {tokenSymbol ?? abbreviateAddress(mint)} at:
-            </DialogContentText>
-          )}
+          <DialogContentText>
+            Receive {tokenSymbol ?? abbreviateAddress(mint)} at:
+          </DialogContentText>
           <CopyableAddress
-            publicKey={depositAddressStr}
+            address={depositAddressStr}
             qrCode
           />
         </>

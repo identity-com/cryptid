@@ -16,6 +16,7 @@ type ModalProps = {
   suppressOKButton?: boolean
   okEnabled?: boolean,
   cancelText?: string,
+  suppressCancelButton?: boolean
   title: string,
   Icon?: (props: React.ComponentProps<'svg'>) => JSX.Element
   iconClasses?: string,
@@ -31,7 +32,8 @@ export const Modal:React.FC<ModalProps> = (
     suppressOKButton ,
     okText = 'OK',
     okEnabled,
-    cancelText = 'Cancel'
+    cancelText = 'Cancel',
+    suppressCancelButton
   }) => {
   const cancelButtonRef = useRef(null)
   okEnabled = okEnabled === undefined ? true : okEnabled; // defaults to true
@@ -87,14 +89,14 @@ export const Modal:React.FC<ModalProps> = (
                 >
                   {okText}
                 </button>}
-                <button
+                {suppressCancelButton || <button
                   type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800 sm:mt-0 sm:w-auto sm:text-sm"
                   onClick={onCancel}
                   ref={cancelButtonRef}
                 >
                   {cancelText}
-                </button>
+                </button>}
               </div>
             </div>
           </Transition.Child>

@@ -1,6 +1,6 @@
 import NavigationFrame from './components/NavigationFrame';
 import LoadingIndicator from './components/LoadingIndicator';
-import {Suspense, useState} from 'react';
+import React, {Suspense} from 'react';
 import {PageProvider, usePage} from './utils/page';
 import LoginPage from './pages/LoginPage';
 import PopupPage from './pages/PopupPage';
@@ -13,11 +13,11 @@ import {SnackbarProvider} from 'notistack';
 import {MetaWalletProvider} from './utils/Cryptid/MetaWalletProvider';
 import IdentityPage from './pages/IdentityPage';
 import {useUnlockedMnemonicAndSeed} from './utils/wallet-seed';
+import {createMuiTheme, ThemeProvider} from '@material-ui/core';
+import {red} from "@material-ui/core/colors";
 
 const PageContents: React.FC = () => {
   const [{mnemonic}] = useUnlockedMnemonicAndSeed();
-
-
   const {page} = usePage();
   const suggestionKey = 'private-irgnore-wallet-suggestion';
   const ignoreSuggestion = window.localStorage.getItem(suggestionKey);
@@ -38,8 +38,6 @@ const PageContents: React.FC = () => {
         return <>TODO no page</>;
       case 'Swap':
         return <>TODO no page</>;
-      case 'Connections':
-        return <ConnectionsPage/>;
       case 'Identity':
         return <IdentityPage/>;
     }
@@ -58,9 +56,22 @@ export default function App() {
     </NavigationFrame>
   );
 
+  const theme = React.useMemo(
+    () =>
+      createMuiTheme({
+        palette: {
+          primary: {
+            ...red,
+            main: red[900]
+          },
+        },
+      }),
+    [],
+  );
+
   return (
     <Suspense fallback={<LoadingIndicator/>}>
-      {/*<ThemeProvider theme={theme}>*/}
+      <ThemeProvider theme={theme}>
       <CssBaseline/>
       <ConnectionProvider>
         <TokenRegistryProvider>
@@ -73,7 +84,7 @@ export default function App() {
           </SnackbarProvider>
         </TokenRegistryProvider>
       </ConnectionProvider>
-      {/*</ThemeProvider>*/}
+      </ThemeProvider>
     </Suspense>
   );
 }

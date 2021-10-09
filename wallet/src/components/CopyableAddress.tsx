@@ -5,38 +5,52 @@ import {useSolanaExplorerUrlSuffix} from "../utils/connection";
 import {CameraIcon, ClipboardIcon, QrcodeIcon} from "@heroicons/react/outline";
 import QRCode from 'qrcode.react';
 import {Modal} from "./modals/modal";
+import {useSnackbar} from "notistack";
 
-type Props = { publicKey?: PublicKey | string, label?: string, qrCode?: boolean };
-export const CopyableAddress:React.FC<Props> = ({publicKey, label, qrCode}: Props) => {
+const classNames = (...classes) => classes.filter(Boolean).join(' ');
+
+type Props = { address?: PublicKey | string, label?: string, qrCode?: boolean, className?: string};
+export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode, className}: Props) => {
   const [showQrcode, setShowQrcode] = useState(false);
-  const pubKeyString = "" + publicKey;
-  const title = label || pubKeyString
+  const addressString = "" + address;
+  const title = label || addressString
   const urlSuffix = useSolanaExplorerUrlSuffix();
+  const { enqueueSnackbar } = useSnackbar();
+  
+  const baseRef = `https://explorer.identity.com/address/${addressString.replace(/did:.*:/, '')}`;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(addressString).then(() => {
+      enqueueSnackbar(`Copied ${addressString}`, {
+        variant: 'success',
+        autoHideDuration: 2500,
+      });
+    })
+  };
+
   return (
-    <div className="inline-flex">
-    <Link
-      href={
-        `https://solscan.io/account/${pubKeyString}`
-        + urlSuffix
-      }
-      target="_blank"
-      rel="noopener"
-      className="pl-3"
-    >
-      {title}
-    </Link>
+    <div className="inline-flex align-middle">
+      <Link
+        href={baseRef+ urlSuffix}
+        target="_blank"
+        rel="noopener"
+        className={classNames("pl-3", className)}
+      >
+        {title}
+      </Link>
       <Modal
         Icon={CameraIcon}
         title=''
         suppressOKButton={true}
-        show={showQrcode} 
+        suppressCancelButton={true}
+        show={showQrcode}
         callbacks={{
-        onOK: () => {},
-        onCancel: () => setShowQrcode(false)
-      }}>
-          <QRCode value={pubKeyString} size={256} includeMargin />
+          onOK: () => {},
+          onCancel: () => setShowQrcode(false)
+        }}>
+        <QRCode value={addressString} size={256} includeMargin />
       </Modal>
-      <ClipboardIcon className="inline-flex pl-1 h-5 mb-3" aria-hidden="true"/>
-      {qrCode && <QrcodeIcon className="inline-flex pl-1 h-5 mb-3" aria-hidden="true" onClick={() => setShowQrcode(true)}/>}
+      <ClipboardIcon className="inline-flex pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={copyLink}/>
+      {qrCode && <QrcodeIcon className="inline-flex pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={() => setShowQrcode(true)}/>}
     </div>);
 }
