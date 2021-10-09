@@ -95,9 +95,6 @@ export function useIsExtensionWidth() {
   return useMediaQuery('(max-width:450px)');
 }
 
-export const isExtension = window.location.protocol === 'chrome-extension:';
-
-export const isExtensionPopup = isExtension && window.opener;
 /**
  * Returns an account object when given the private key
  */
@@ -108,6 +105,7 @@ export const decodeAccount = (privateKey: string) => {
     try {
       return Keypair.fromSecretKey(new Uint8Array(bs58.decode(privateKey)));
     } catch (_) {
+      console.log('Could not decode KeyPair: ' + privateKey)
       return undefined;
     }
   }

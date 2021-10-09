@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "@bonfida/spl-name-service": "^0.1.12",
+    "@craco/craco": "^6.3.0",
+    "@headlessui/react": "^1.4.1",
+    "@heroicons/react": "^1.0.4",
     "@identity.com/cryptid": "0.1.0",
     "@ledgerhq/hw-transport-webhid": "^5.51.1",
     "@material-ui/core": "^4.11.4",
@@ -15,8 +18,8 @@
     "@project-serum/token": "^0.0.1-alpha.3",
     "@solana/spl-token-registry": "^0.2.102",
     "@solana/wallet-adapter-base": "^0.6.0",
-    "@solana/wallet-adapter-material-ui": "^0.12.3",
     "@solana/wallet-adapter-react": "^0.12.3",
+    "@solana/wallet-adapter-react-ui": "^0.5.1",
     "@solana/wallet-adapter-wallets": "^0.10.0",
     "@solana/web3.js": "^1.17.0",
     "@testing-library/jest-dom": "^5.11.6",
@@ -35,13 +38,16 @@
     "ed25519-hd-key": "^1.2.0",
     "immutable-tuple": "^0.4.10",
     "material-ui-popup-state": "^1.8.3",
+    "md5": "^2.3.0",
     "mdi-material-ui": "^6.21.0",
     "notistack": "^1.0.2",
     "qrcode.react": "^1.0.0",
+    "ramda": "^0.27.1",
     "react": "^17.0.1",
     "react-async-hook": "^3.6.2",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^17.0.1",
+    "react-gravatar": "^2.6.3",
     "react-scripts": "4.0.1",
     "tweetnacl": "^1.0.3",
     "typescript": "4.1.3",
@@ -52,11 +58,11 @@
     "deploy": "STAGE=${STAGE:-dev} etc/deploy/deploy-site.sh",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.js\" \"extension/src/*.js\" --write",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "craco start",
+    "build": "craco build",
     "build:extension": "yarn build && cp -a ./build/. ./extension/build/ && yarn build:extension-scripts",
     "build:extension-scripts": "cp -a ./extension/src/. ./extension/build/.",
-    "test": "react-scripts test",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -98,9 +104,12 @@
   "devDependencies": {
     "@types/chrome": "^0.0.158",
     "@types/react-copy-to-clipboard": "^5.0.1",
+    "autoprefixer": "^9",
     "gh-pages": "^3.1.0",
     "git-format-staged": "^2.1.0",
     "husky": "^4.3.6",
-    "prettier": "^2.2.1"
+    "postcss": "^7",
+    "prettier": "^2.2.1",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat"
   }
 }

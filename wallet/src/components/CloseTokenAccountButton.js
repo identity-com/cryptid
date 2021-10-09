@@ -7,7 +7,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
 import React from 'react';
 import { useSendTransaction } from '../utils/notifications';
-import { refreshWalletPublicKeys, useWallet } from '../utils/wallet';
+import {refreshCryptidAccountPublicKeys, useCryptid} from "../utils/Cryptid/cryptid";
 
 export default function CloseTokenAccountDialog({
   open,
@@ -15,14 +15,14 @@ export default function CloseTokenAccountDialog({
   publicKey,
   balanceInfo,
 }) {
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
   const [sendTransaction, sending] = useSendTransaction();
   const { mint, tokenName } = balanceInfo;
 
   function onSubmit() {
-    sendTransaction(wallet.closeTokenAccount(publicKey), {
+    sendTransaction(selectedCryptidAccount.closeTokenAccount(publicKey), {
       onSuccess: () => {
-        refreshWalletPublicKeys(wallet);
+        refreshCryptidAccountPublicKeys(selectedCryptidAccount);
         onClose();
       },
     });

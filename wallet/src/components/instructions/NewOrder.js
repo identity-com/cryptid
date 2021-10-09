@@ -1,10 +1,10 @@
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
-import { useWallet } from '../../utils/wallet';
+import {useCryptid} from "../../utils/Cryptid/cryptid";
 
 export default function Neworder({ instruction, onOpenAddress, v3 = false }) {
-  const wallet = useWallet();
+  const { selectedCryptidAccount } = useCryptid();
   const { data, market, marketInfo } = instruction;
   const marketLabel =
     (marketInfo &&
@@ -13,7 +13,7 @@ export default function Neworder({ instruction, onOpenAddress, v3 = false }) {
     'Unknown';
 
   const getAddressValue = (address) => {
-    const isOwner = wallet.publicKey.equals(address);
+    const isOwner = address.equals(selectedCryptidAccount.address);
     return isOwner ? 'This wallet' : address?.toBase58() || 'Unknown';
   };
 

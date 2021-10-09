@@ -1,5 +1,3 @@
-import { useWalletSelector } from "../../utils/wallet";
-
 import Hidden from "@material-ui/core/Hidden";
 import Button from "@material-ui/core/Button";
 import Tooltip from "@material-ui/core/Tooltip";
@@ -9,17 +7,52 @@ import Menu from "@material-ui/core/Menu";
 import Divider from "@material-ui/core/Divider";
 import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-import UsbIcon from "@material-ui/icons/Usb";
 import AddIcon from "@material-ui/icons/Add";
-import ImportExportIcon from "@material-ui/icons/ImportExport";
-import ExitToApp from "@material-ui/icons/ExitToApp";
 import React, { useCallback, useState } from "react";
-import { useStyles } from "../NavigationFrame";
 import CheckIcon from "@material-ui/icons/Check";
 import Typography from "@material-ui/core/Typography";
 import { useCryptid } from "../../utils/Cryptid/cryptid";
-import AddKeyDialog from "./AddKeyDialog";
 import AddCryptidAccountDialog from "./AddCryptidAccountDialog";
+import { makeStyles } from '@material-ui/core/styles';
+
+export const useStyles = makeStyles((theme) => ({
+  content: {
+    flexGrow: 1,
+    paddingBottom: theme.spacing(3),
+    // @ts-ignore
+    [theme.breakpoints.up(theme.ext)]: {
+      paddingTop: theme.spacing(3),
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1),
+    },
+  },
+  title: {
+    flexGrow: 1,
+  },
+  button: {
+    marginLeft: theme.spacing(1),
+  },
+  menuItemIcon: {
+    minWidth: 32,
+  },
+  badge: {
+    backgroundColor: theme.palette.success.main,
+    // @ts-ignore
+    color: theme.palette.text.main,
+    height: 16,
+    width: 16,
+  },
+}));
+
+export const AddCryptidButton = () => {
+  return (
+    <Button
+      color="inherit"
+      onClick={(e) => console.log('Clicked AddCryptid')}>
+      Cryptid
+    </Button>
+  )
+}
 
 export const CryptidSelector = () => {
   const { cryptidAccounts, selectedCryptidAccount, setSelectedCryptidAccount, addCryptidAccount, getDidPrefix } = useCryptid()
@@ -29,14 +62,13 @@ export const CryptidSelector = () => {
 
   const classes = useStyles();
 
-  const onAdd = useCallback(async (address: string, isControlled: boolean) => {
-
+  const onAdd = useCallback(async (address: string, alias: string, isControlled: boolean) => {
     let parent;
     if (isControlled && selectedCryptidAccount) {
       parent = selectedCryptidAccount
     }
 
-    addCryptidAccount(address, parent)
+    addCryptidAccount(address, alias, parent)
     setCryptidAccountDialogOpen(false)
   },[selectedCryptidAccount, addCryptidAccount])
 
@@ -50,7 +82,7 @@ export const CryptidSelector = () => {
         onClose={() => setCryptidAccountDialogOpen(false)}
         onAdd={onAdd}
         didPrefix={getDidPrefix()}
-        currentAccount={selectedCryptidAccount?.did}
+        currentAccountDid={selectedCryptidAccount?.did}
       />
       <Hidden xsDown>
         <Button

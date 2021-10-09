@@ -14,7 +14,7 @@ import {
 import { decodeTokenInstruction } from '@project-serum/token';
 import { PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './tokens/instructions';
-import { Wallet } from './wallet';
+import { StrictWalletInterface } from "./wallet";
 
 const RAYDIUM_STAKE_PROGRAM_ID = new PublicKey(
   'EhhTKczWMGQt46ynNeRX1WfeagwwJd7ufHvCDjRxjo5Q',
@@ -34,7 +34,7 @@ const marketCache = {};
 let marketCacheConnection = null;
 const cacheDuration = 15 * 1000;
 
-export const decodeMessage = async (connection: Connection, wallet: Wallet, message: Buffer) => {
+export const decodeMessage = async (connection: Connection, wallet: StrictWalletInterface, message: Buffer) => {
   // get message object
   const transactionMessage = Message.from(message);
   if (!transactionMessage?.instructions || !transactionMessage?.accountKeys) {
