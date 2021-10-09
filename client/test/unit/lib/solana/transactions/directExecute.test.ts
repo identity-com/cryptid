@@ -85,7 +85,7 @@ describe('transactions/directExecute', () => {
     const transaction = new Transaction();
     transaction.add(instruction);
     const didPDAKey = Keypair.generate().publicKey;
-    const direct_execute = await create(transaction, didPDAKey, []);
+    const direct_execute = (await create(transaction, didPDAKey, []))[0];
     console.log(
       direct_execute.keys.map((key) => ({
         ...key,
