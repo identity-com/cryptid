@@ -450,16 +450,15 @@ function ApproveSignatureForm({
 
   const renderFormContent = () => {
     if (messageDisplay === 'tx') {
+      console.log("First");
       return (
         <SignTransactionFormContent
-          autoApprove={autoApprove}
           origin={origin}
           messages={payloads.map(mapTransactionToMessageBuffer)}
-          onApprove={onApprove}
-          buttonRef={buttonRef}
         />
       );
     } else {
+      console.log("Second");
       return <SignFormContent
         origin={origin}
         message={mapTransactionToMessageBuffer(payloads[0])}
