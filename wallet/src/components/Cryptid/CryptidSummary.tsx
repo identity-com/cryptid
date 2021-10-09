@@ -9,7 +9,13 @@ interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
 }
 
-const toSol = (balance:number) => balance * 10e-9;
+const balanceFormat = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 4,
+  useGrouping: true,
+});
+
+const toSol = (balance:number) => balanceFormat.format(balance * 10e-10);
 
 const MIN_BALANCE = 10000;  // min lamports in a signer to qualify as "funded"
 const FUND_AMOUNT = 50000;
@@ -29,7 +35,7 @@ const SignerBalanceControl:React.FC<{balance: number}> = ({balance}) => {
       </Modal>
       {
       balance > MIN_BALANCE ?
-        <Tooltip arrow title={'Signer is funded with' + toSol(balance) }><div>
+        <Tooltip arrow title={'Signer is funded with ' + toSol(balance) + ' SOL '}><div>
           <CheckCircleIcon className="text-green-500 w-4 h-4"/>
         </div></Tooltip>: 
         <Tooltip arrow title='Signer is not funded'><div>
