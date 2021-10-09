@@ -106,7 +106,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
                   <img
-                    className="block h-32 w-auto"
+                    className="block h-28 w-auto"
                     src="logo300.png"
                     alt="Cryptid squid"
                   />
