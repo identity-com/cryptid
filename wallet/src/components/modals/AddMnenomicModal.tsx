@@ -65,7 +65,7 @@ export default function AddMnemonicModal() {
         onOK: () => { submit(); setShowAddMnemonicDialog(false) },
         onClose: () => { setShowAddMnemonicDialog(false) }
       }}
-      title='Mnomic Seedphrase'
+      title='Mnemonic Seedphrase'
       Icon={KeyIcon}
       iconClasses='text-green-500'
       okText='Add'

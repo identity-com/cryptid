@@ -25,21 +25,21 @@ export async function mnemonicToSeed(mnemonic) {
   return Buffer.from(seed).toString('hex');
 }
 
-interface MnomicInterface {
+interface MnemonicInterface {
   mnemonic: string | null,
   seed: string | null,
   importsEncryptionKey: Buffer | null,
   derivationPath: string | undefined,
 }
 
-const EMPTY_MNEMONIC: MnomicInterface = {
+const EMPTY_MNEMONIC: MnemonicInterface = {
   mnemonic: null,
   seed: null,
   importsEncryptionKey: null,
   derivationPath: undefined,
 };
 
-let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {
+let unlockedMnemonicAndSeed = (async (): Promise<MnemonicInterface> => {
   console.log('unlockedMnemonicAndSeed')
   const unlockedExpiration = localStorage.getItem('unlockedExpiration');
   // Left here to clean up stored mnemonics from previous method
@@ -68,8 +68,8 @@ export function getUnlockedMnemonicAndSeed() {
 }
 
 // returns [mnemonic, loading]
-export function useUnlockedMnemonicAndSeed(): [MnomicInterface, boolean] {
-  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnomicInterface|null>(null);
+export function useUnlockedMnemonicAndSeed(): [MnemonicInterface, boolean] {
+  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnemonicInterface|null>(null);
   
   useEffect(() => {
     console.log('USE EFFECT in useUnlockedMnemonicAndSeed')
