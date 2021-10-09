@@ -64,7 +64,9 @@ export default function PopupPage({opener}: { opener: Opener }) {
   const {selectedCryptidAccount} = useCryptid();
 
   const [connectedAccount, setConnectedAccount] = useState<PublicKey | null>(null);
-  const hasConnectedAccount = !!connectedAccount;
+  const hasConnectedAccount = useMemo(() => {
+    return !!connectedAccount;
+  }, [connectedAccount]);
   const [requests, setRequests] = useState<RequestMessage[]>([]);
   const [autoApprove, setAutoApprove] = useState(false);
   const postMessage = useCallback((
