@@ -87,7 +87,7 @@ export default function AddCryptidAccountDialog(
 
 
               <div className="sm:col-span-6">
-                <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="alias" className="block text-sm font-medium text-gray-700">
                   Alias
                 </label>
                 <div className="mt-1">
@@ -111,7 +111,7 @@ export default function AddCryptidAccountDialog(
 
               { addCryptidType === 'importkey' &&
               <div className="sm:col-span-6">
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="importkey" className="block text-sm font-medium text-gray-700">
                       Private Key
                   </label>
                   <div className="mt-1">

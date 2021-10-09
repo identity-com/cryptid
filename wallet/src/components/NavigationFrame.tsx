@@ -8,6 +8,7 @@ import {Menu, Disclosure, Transition} from "@headlessui/react";
 import { pages } from "../utils/config";
 import IdentitySelector from './selectors/IdentitySelector';
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import AddMnemonicModal from "./modals/AddMnenomicModal";
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -27,6 +28,7 @@ const NetworkSelector = () => {
           setCustomNetworkOpen(false);
         }}
       />
+      <AddMnemonicModal />
       <Menu as="div" className="ml-3 relative">
         <div>
           <Menu.Button

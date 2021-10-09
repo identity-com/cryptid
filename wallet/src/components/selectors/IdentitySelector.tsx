@@ -1,5 +1,5 @@
 import { CryptidAccount, useCryptid } from '../../utils/Cryptid/cryptid';
-import React, { Fragment, SetStateAction, useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import AddCryptidAccountDialog from '../Cryptid/AddCryptidAccountDialog';
 import { Menu, Transition } from '@headlessui/react';
 import { complement } from 'ramda';
@@ -34,6 +34,7 @@ interface IdentitySelectorInterface {
 
 const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
   const {
+    ready,
     cryptidAccounts,
     selectedCryptidAccount,
     setSelectedCryptidAccount,
@@ -50,6 +51,14 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
     addCryptidAccount(address, alias, parent)
     setCryptidAccountDialogOpen(false)
   },[selectedCryptidAccount, addCryptidAccount])
+
+  useEffect(() => {
+    console.log(`READY: ${ready} cryptidAccounts.length: ${cryptidAccounts.length}`)
+    if (ready && cryptidAccounts.length === 0) {
+      setCryptidAccountDialogOpen(true)
+    }
+  }, [ready, cryptidAccounts, setCryptidAccountDialogOpen])
+
 
   return (
     <div className={isSignerWindow ? "ml-2 flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center"}>

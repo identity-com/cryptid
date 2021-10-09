@@ -54,6 +54,8 @@ interface WalletContextInterface {
   addWallet: (name: string, useAdapter: boolean, importedKey?: Keypair) => PublicKey,
   hasWallet: (publicKey: PublicKey) => boolean,
   listWallets: () => ExtendedPersistedWalletType[],
+  showAddMnemonicDialog: boolean,
+  setShowAddMnemonicDialog: (v: boolean) => void
 }
 
 const DEFAULT_WALLET_INTERFACE = { publicKey: null }
@@ -65,6 +67,8 @@ const WalletContext = React.createContext<WalletContextInterface>({
   addWallet: () => { throw new Error('Not loaded')},
   hasWallet: () => false,
   listWallets: () => [],
+  showAddMnemonicDialog: false,
+  setShowAddMnemonicDialog: () => {},
 });
 
 export function WalletProvider({ children }) {
@@ -81,6 +85,8 @@ export function WalletProvider({ children }) {
   const derivationPath = 'asdf'
 
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
+  const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
+
 
   const adapterWallet = useAdapterWallet()
 
@@ -147,7 +153,7 @@ export function WalletProvider({ children }) {
     setWalletCount(walletCount + 1);
     return account.publicKey
 
-  }, [persistedWallets, setPersistedWallets, adapterWallet, walletCount, setWalletCount, seed, importsEncryptionKey])
+  }, [persistedWallets, setPersistedWallets, adapterWallet, walletCount, setWalletCount])
 
   const hasWallet = useCallback((publicKey: PublicKey) => {
     return !!persistedWallets[publicKey.toBase58()]
@@ -160,6 +166,11 @@ export function WalletProvider({ children }) {
     }
 
     if( persistetWallet.type === "adapter" ) {
+      console.log('ADAPTER READY? ' + adapterWallet.ready)
+      if (adapterWallet.ready && !adapterWallet.publicKey) {
+        await adapterWallet.connect()
+      }
+
       if (publicKey.toBase58() !== adapterWallet.publicKey?.toBase58()) {
         console.log('Warning setting adapter Key without that key connected via wallet-adapter')
         // await adapterWallet.connect()
@@ -199,7 +210,7 @@ export function WalletProvider({ children }) {
     }
 
     setWallet(new AccountWallet(account))
-  }, [persistedWallets, hasWallet, seed, importsEncryptionKey, adapterWallet, setWallet])
+  }, [persistedWallets, hasWallet, adapterWallet, setWallet])
 
   const disconnectWallet = useCallback(() => {
     setWallet(DEFAULT_WALLET_INTERFACE)
@@ -218,6 +229,8 @@ export function WalletProvider({ children }) {
         addWallet,
         hasWallet,
         listWallets,
+        showAddMnemonicDialog,
+        setShowAddMnemonicDialog,
       }}
     >
       {children}

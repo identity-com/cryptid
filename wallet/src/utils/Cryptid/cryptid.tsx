@@ -303,7 +303,7 @@ export class CryptidAccount {
   };
 }
 
-export function useCryptidAccountPublicKeys(cryptid: CryptidAccount | null): [PublicKey[], boolean] {
+export function useCryptidAccountPublicKeys(cryptid: CryptidAccount | undefined): [PublicKey[], boolean] {
   let [tokenAccountInfo, loaded] = useAsyncData(
       cryptid ? cryptid.getTokenAccountInfo : async () => [],
       cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
@@ -344,20 +344,22 @@ export type TokenAccountInfo = {
 
 interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
-  selectedCryptidAccount: CryptidAccount | null;
-  setSelectedCryptidAccount: (value: SetStateAction<CryptidAccount | null>) => void,
+  selectedCryptidAccount: CryptidAccount | undefined;
+  setSelectedCryptidAccount: (value: CryptidAccount | undefined) => void,
   addCryptidAccount: (base58Address: string, alias: string, parent?: CryptidAccount) => void
   removeCryptidAccount: (base58Address: string) => void
-  getDidPrefix: () => string
+  getDidPrefix: () => string,
+  ready: boolean,
 }
 
 const CryptidContext = React.createContext<CryptidContextInterface>({
   cryptidAccounts: [],
-  selectedCryptidAccount: null,
+  selectedCryptidAccount: undefined,
   setSelectedCryptidAccount: () => {},
   addCryptidAccount: () => {},
   removeCryptidAccount: () => {},
   getDidPrefix: () => '',
+  ready: false,
 });
 
 interface CryptidSelectorInterface {
@@ -430,6 +432,18 @@ export const CryptidProvider:FC = ({ children }) => {
     [],
   );
 
+  // In order to not
+  const [ready, setReady] = useState(false);
+  const [selectedCryptidAccount, setSelectedCryptidAccountInternal] = useState<CryptidAccount | undefined>();
+  const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
+
+  const setSelectedCryptidAccount = useCallback((account: CryptidAccount | undefined) => {
+    setSelectedCryptidAccountInternal(account)
+    setCryptidSelector({
+      selectedCryptidAccount: selectedCryptidAccount?.didAddress
+    })
+  }, [setSelectedCryptidAccountInternal, setCryptidSelector])
+
   const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
     validatePublicKey(base58);
     
@@ -442,18 +456,14 @@ export const CryptidProvider:FC = ({ children }) => {
       const parentBase58 = parent?.didAddress
       setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
     }
-  }, [setCryptidExtAccounts, setCryptidSelector])
+  }, [cryptidExtAccounts, setCryptidExtAccounts, setCryptidSelector])
 
   const removeCryptidAccount = useCallback((base58: string) => {
     const idx = cryptidExtAccounts.map(x => x.account).indexOf(base58)
     if (idx >= 0) {
       setCryptidExtAccounts(cryptidExtAccounts.splice(idx, 1))
     }
-  }, [setCryptidExtAccounts])
-
-  // In order to not
-  const [selectedCryptidAccount, setSelectedCryptidAccount] = useState<CryptidAccount | null>(null);
-  const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
+  }, [cryptidExtAccounts, setCryptidExtAccounts])
 
   const getDidPrefix = useCallback(() => {
     // sol dids on mainnet have no cluster prefix 
@@ -481,7 +491,7 @@ export const CryptidProvider:FC = ({ children }) => {
     // TODO: This is not robust, since dependent accounts need to be loaded first.
     const loadedCryptidAccounts: CryptidAccount[] = []
     for (const ext of cryptidExtAccounts) {
-      const parentAccount = cryptidAccounts.find(x => x.didAddress === ext.parent)
+      const parentAccount = loadedCryptidAccounts.find(x => x.didAddress === ext.parent)
       let cryptidAccount;
       if (parentAccount) {
         cryptidAccount = await parentAccount.as(ext.account, ext.alias)
@@ -498,9 +508,10 @@ export const CryptidProvider:FC = ({ children }) => {
       loadedCryptidAccounts.push(cryptidAccount)
     }
 
+    // console.log(`Setting setCryptidAccounts with: ${loadedCryptidAccounts}`)
     setCryptidAccounts(loadedCryptidAccounts)
-
-  }, [cluster, cryptidExtAccounts, setCryptidAccounts])
+    setReady(true) // TODO is this deterministally set at the same time of the array?
+  }, [cryptidExtAccounts, setCryptidAccounts, connection, getDidPrefix, wallet.publicKey])
 
   // Load from Storage
   useEffect(() => {
@@ -508,10 +519,10 @@ export const CryptidProvider:FC = ({ children }) => {
     loadCryptidAccounts()
   }, [loadCryptidAccounts])
 
-  // Chose from Selector after reloading
+  // Chose from Selector after (re)loading Accounts
   useEffect(() => {
     console.log('useEffect setSelectedCryptidAccount')
-    if (cryptidAccounts.length == 0) {
+    if (cryptidAccounts.length === 0 || selectedCryptidAccount?.didAddress === cryptidSelector.selectedCryptidAccount) {
       return
     }
 
@@ -520,18 +531,7 @@ export const CryptidProvider:FC = ({ children }) => {
     console.log('Setting Account for ' + selected.did)
     setSelectedCryptidAccount(selected)
 
-  },[cryptidAccounts, setSelectedCryptidAccount])
-
-  // persist selected selectedCryptidAccount to localStorage
-  useEffect(() => {
-    console.log('useEffect setCryptidSelector')
-
-    if (selectedCryptidAccount) {
-      setCryptidSelector({
-        selectedCryptidAccount: selectedCryptidAccount.didAddress
-      })
-    }
-  }, [selectedCryptidAccount])
+  },[cryptidAccounts, setSelectedCryptidAccount, cryptidSelector.selectedCryptidAccount])
 
   // find and assign Wallet to current account
   useEffect(() => {
@@ -552,6 +552,7 @@ export const CryptidProvider:FC = ({ children }) => {
       const pubKey = convertToPublicKey(vm.publicKeyBase58)
       console.log('Matching to Wallet: '+ vm.publicKeyBase58)
 
+      // TODO: this might need to wait for the wallet-adapter to be ready
       if (pubKey && hasWallet(pubKey)) {
           console.log('Changing to Wallet: '+ vm.publicKeyBase58)
           connectWallet(pubKey)
@@ -559,7 +560,7 @@ export const CryptidProvider:FC = ({ children }) => {
         }
     }
 
-  }, [selectedCryptidAccount, wallet, connectWallet])
+  }, [selectedCryptidAccount, wallet.publicKey, hasWallet, connectWallet])
 
   // find and assign Wallet to current account
   useEffect(() => {
@@ -583,6 +584,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   return (<CryptidContext.Provider
     value={{
+      ready,
       cryptidAccounts,
       selectedCryptidAccount,
       setSelectedCryptidAccount,
