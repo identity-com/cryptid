@@ -6,7 +6,7 @@ import {
 import { useListener } from '../utils';
 import { clusterForEndpoint, MAINNET_BACKUP_URL, MAINNET_URL } from '../clusters';
 import { useCallback } from 'react';
-import { PublicKey } from '@solana/web3.js';
+import {clusterApiUrl, PublicKey} from '@solana/web3.js';
 import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
 
 // This list is used for deciding what to display in the popular tokens list
@@ -284,7 +284,27 @@ const POPULAR_TOKENS = {
         'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj/logo.png',
     },
   ],
+  [clusterApiUrl('devnet')]: [
+    {
+      mintAddress: 'H9PDyuBsar5NvaEfAThVqPymQcxUpJhm3CFRakFa6TSp',
+      tokenName: 'devnet Civic',
+      tokenSymbol: 'dCVC',
+      icon:
+        'https://assets.coingecko.com/coins/images/788/small/civic.png?1547034556',
+    },
+    {
+      mintAddress: '97va9dqNvQxsgQNaH5BRj6QWbcvpnrwEGLZZp2P4VBwZ',
+      tokenName: 'devnet USDC',
+      tokenSymbol: 'dUSDC',
+      icon:
+        'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png?1547042389',
+    }
+  ]
 };
+
+const popularTokensForEndpoint = (endpoint: string) => !POPULAR_TOKENS[endpoint]
+  ? []
+  : POPULAR_TOKENS[endpoint];
 
 const TokenListContext = React.createContext<{tokenInfos: TokenInfo[]}>({ tokenInfos: [] });
 
@@ -333,10 +353,12 @@ export function useTokenInfo(mint?: PublicKey) {
   const { endpoint } = useConnectionConfig();
   useListener(nameUpdated, 'update');
   const tokenInfos = useTokenInfos();
-  return getTokenInfo(mint, endpoint, tokenInfos);
+  
+  const tok = popularTokensForEndpoint(endpoint).find(popularToken => popularToken.mintAddress === mint?.toBase58())
+  return getTokenInfo(mint, endpoint, tokenInfos, tok);
 }
 
-export function getTokenInfo(mint: PublicKey | undefined, endpoint: string, tokenInfos: TokenInfo[]) {
+export function getTokenInfo(mint: PublicKey | undefined, endpoint: string, tokenInfos: TokenInfo[], tok?) {
   if (!mint) {
     return { name: null, symbol: null };
   }
@@ -354,7 +376,10 @@ export function getTokenInfo(mint: PublicKey | undefined, endpoint: string, toke
     else {
       info = { ...match, ...info, logoUri: match.logoURI };
     }
+  } else if (tok) {
+    info = { ...info, ...tok, address: tok.mintAddress, logoUri: tok.icon, name: tok.tokenName, symbol: tok.tokenSymbol }
   }
+  
   return { ...info };
 }
 
@@ -384,14 +409,13 @@ export function useUpdateTokenName() {
     [endpoint],
   );
 }
+
 // Returns tokenInfos for the popular tokens list.
 export function usePopularTokens() {
   const tokenInfos = useTokenInfos();
   const { endpoint } = useConnectionConfig();
-  return (!POPULAR_TOKENS[endpoint]
-    ? []
-    : POPULAR_TOKENS[endpoint]
-  ).map((tok) =>
-    getTokenInfo(new PublicKey(tok.mintAddress), endpoint, tokenInfos),
+  
+  return popularTokensForEndpoint(endpoint).map((tok) =>
+    getTokenInfo(new PublicKey(tok.mintAddress), endpoint, tokenInfos, tok),
   );
 }

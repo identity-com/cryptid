@@ -185,13 +185,14 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
     </>)
 }
 
-interface CryptidDetailsListItemInterface {
+type CryptidDetailsListItemInterface = {
   primary: string,
   secondary?: string
   removeCallback: (primary: string) => void
 }
 
-const CryptidDetailsListItem = ({primary, secondary, removeCallback} : CryptidDetailsListItemInterface) => {
+const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> = 
+  ({primary, secondary, removeCallback, children}) => {
   return (
     <div className="min-w-0 max-w-2xl flex-1 flex items-center">
       <div className="text-lg flex-1 flex-shrink-0">

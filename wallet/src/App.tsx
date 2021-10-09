@@ -1,3 +1,4 @@
+import './wdyr'
 import NavigationFrame from './components/NavigationFrame';
 import LoadingIndicator from './components/LoadingIndicator';
 import React, {Suspense} from 'react';

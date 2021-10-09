@@ -75,7 +75,6 @@ export default function BalancesList() {
             key={pk.toString()}
             publicKey={pk}
             setUsdValue={setUsdValuesCallback}
-            expandable={true}
           />
         );
       });
@@ -91,7 +90,7 @@ export default function BalancesList() {
   );
 }
 
-export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
+export function BalanceListItem({ publicKey, setUsdValue }) {
   const { selectedCryptidAccount } = useCryptid();
   const balanceInfo = useBalanceInfo(publicKey);
   const connection = useConnection();
@@ -135,8 +134,6 @@ export function BalanceListItem({ publicKey, expandable, setUsdValue }) {
       }
     }
   }, [price, balanceInfo, connection]);
-
-  expandable = expandable === undefined ? true : expandable;
 
   if (!balanceInfo) {
     return <LoadingIndicator delay={0} />;
