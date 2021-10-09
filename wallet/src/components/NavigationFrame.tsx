@@ -7,6 +7,7 @@ import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import { pages } from "../utils/config";
 import IdentitySelector from './selectors/IdentitySelector';
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -113,9 +114,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                     alt="Cryptid"
                   />
                 </div>
-                {(() => {
-                  if(!isSignerWindow){
-                    return (<div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+                {!isSignerWindow && <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                       {pages.map((item) => (
                         <a
                           href='#'
@@ -132,36 +131,27 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                           {item}
                         </a>
                       ))}
-                    </div>);
-                  }
-                })()}
+                    </div>}
               </div>
-              {(() => {
-                if(isSignerWindow){
-                  return <>
-                    <IdentitySelector isSignerWindow={isSignerWindow}/>
-                  </>;
-                } else {
-                  return (<>
-                    <div className="sm:ml-6 sm:flex">
-                      <NetworkSelector/>
-                      <IdentitySelector isSignerWindow={isSignerWindow}/>
-                    </div>
-                    <div className="-mr-2 flex items-center sm:hidden">
-                      {/* Mobile menu button */}
-                      <Disclosure.Button
-                        className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
-                        <span className="sr-only">Open main menu</span>
-                        {open ? (
-                          <XIcon className="block h-6 w-6" aria-hidden="true"/>
-                        ) : (
-                          <MenuIcon className="block h-6 w-6" aria-hidden="true"/>
-                        )}
-                      </Disclosure.Button>
-                    </div>
-                  </>)
-                }
-              })()}
+
+              <div className="sm:ml-6 sm:flex items-center">
+                <WalletMultiButton />
+                {! isSignerWindow && <NetworkSelector/>}
+                <IdentitySelector isSignerWindow={isSignerWindow}/>
+              </div>
+              <div className="-mr-2 flex items-center sm:hidden">
+                {/* Mobile menu button */}
+                <Disclosure.Button
+                  className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
+                  <span className="sr-only">Open main menu</span>
+                  {open ? (
+                    <XIcon className="block h-6 w-6" aria-hidden="true"/>
+                  ) : (
+                    <MenuIcon className="block h-6 w-6" aria-hidden="true"/>
+                  )}
+                </Disclosure.Button>
+              </div>
+
             </div>
           </div>
         </>

@@ -30,12 +30,12 @@ const PageContents: React.FC = () => {
     switch (page) {
       case 'Tokens':
         return <WalletPage/>;
-      case 'Collectibles':
-        return <>TODO no page</>;
-      case 'Stake':
-        return <>TODO no page</>;
-      case 'Swap':
-        return <>TODO no page</>;
+      // case 'Collectibles':
+      //   return <>TODO no page</>;
+      // case 'Stake':
+      //   return <>TODO no page</>;
+      // case 'Swap':
+      //   return <>TODO no page</>;
       case 'Identity':
         return <IdentityPage/>;
     }

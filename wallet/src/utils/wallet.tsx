@@ -153,7 +153,7 @@ export function WalletProvider({ children }) {
     return !!persistedWallets[publicKey.toBase58()]
   }, [persistedWallets])
 
-  const connectWallet = useCallback((publicKey: PublicKey) => {
+  const connectWallet = useCallback(async (publicKey: PublicKey) => {
     const persistetWallet = persistedWallets[publicKey.toBase58()];
     if (!persistetWallet) {
       throw new Error(`No persisted wallet found for ${publicKey.toBase58()}`)
@@ -161,7 +161,9 @@ export function WalletProvider({ children }) {
 
     if( persistetWallet.type === "adapter" ) {
       if (publicKey.toBase58() !== adapterWallet.publicKey?.toBase58()) {
-        throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
+        console.log('Warning setting adapter Key without that key connected via wallet-adapter')
+        // await adapterWallet.connect()
+        // throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
       }
 
       setWallet(adapterWallet)
@@ -197,7 +199,7 @@ export function WalletProvider({ children }) {
     }
 
     setWallet(new AccountWallet(account))
-  }, [persistedWallets, hasWallet, seed, importsEncryptionKey])
+  }, [persistedWallets, hasWallet, seed, importsEncryptionKey, adapterWallet, setWallet])
 
   const disconnectWallet = useCallback(() => {
     setWallet(DEFAULT_WALLET_INTERFACE)
