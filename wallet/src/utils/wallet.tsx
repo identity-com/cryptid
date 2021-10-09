@@ -42,8 +42,9 @@ interface KeyedPersistedWalletType {
   [bs58PublicKey: string]: PersistedWalletType
 }
 
-interface ExtendedPersistedWalletType extends  PersistedWalletType{
+export interface ExtendedPersistedWalletType extends  PersistedWalletType{
   isActive: boolean
+  bs58PublicKey: string
 }
 
 interface WalletContextInterface {
@@ -201,7 +202,7 @@ export function WalletProvider({ children }) {
 
   const listWallets = useCallback(
     () => Object.keys(persistedWallets).map(key => ({ ...persistedWallets[key], bs58PublicKey: key, isActive: key === wallet.publicKey?.toBase58()})),
-    [persistedWallets])
+    [persistedWallets, wallet])
 
   return (
     <WalletContext.Provider
