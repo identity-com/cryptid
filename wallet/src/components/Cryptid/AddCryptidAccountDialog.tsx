@@ -24,10 +24,9 @@ export default function AddCryptidAccountDialog(
   const { addWallet } = useWalletContext()
   const adapterWallet = useAdapterWallet()
 
-
   const [alias, setAlias] = useState('');
 
-  const [addCryptidType, setAddCryptidType] = useState<AddCrytidType>('newkey');
+  const [addCryptidType, setAddCryptidType] = useState<AddCrytidType>('adapterkey');
   const [importAddress, setImportAddress] = useState<PublicKey|undefined>();
   const [isControlled, setIsControlled] = useState(false);
 
@@ -79,6 +78,7 @@ export default function AddCryptidAccountDialog(
       iconClasses='text-green-500'
       okText='Add'
       okEnabled={okEnabled()}
+      suppressClose={true}
     >
       <div className="w-full">
         <div className="space-y-8 divide-y divide-gray-200 sm:space-y-5">
@@ -91,7 +91,7 @@ export default function AddCryptidAccountDialog(
                   Alias
                 </label>
                 <div className="mt-1">
-                  <input type="text" name="alias" id="alias" autoComplete="alias"
+                  <input type="text" name="alias" id="alias"
                          className="px-3 py-2 shadow-sm focus:ring-red-800 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 border rounded-md"
                          placeholder="Alias"
                          value={alias}
@@ -126,9 +126,6 @@ export default function AddCryptidAccountDialog(
 
               { addCryptidType === 'adapterkey' &&
               <div className="sm:col-span-6">
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                      Wallet Adapter
-                  </label>
                   <div className="mt-1 flex justify-center">
                     <WalletMultiButton/>
                   </div>

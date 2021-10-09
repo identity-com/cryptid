@@ -47,7 +47,7 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
     cryptidAccount.signerBalance().then(setSignerBalance);
   }, [setSignerBalance])
   
-  return (<div className="flex items-center px-2 py-4 sm:px-6 w-1/2">
+  return (<div className="flex items-center px-2 py-4 sm:px-6">
       <div className="min-w-0 flex-auto px-2 inline-flex">
         <UserIcon className="w-8"/>
         <div className="pt-1 text-lg md:text-xl">
@@ -62,13 +62,13 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
           <CopyableAddress address={cryptidAccount.did} label='DID'/>
         </div>
       </div>
-      <div className="min-w-0 inline-flex pt-2 px-2 flex-auto">
-        <div className="text-sm md:text-lg md:block text-gray-900 flex-auto">
+      <div className="min-w-0 pt-2 px-2 flex-auto">
+        <div className="inline-flex text-sm md:text-lg text-gray-900">
           <CopyableAddress address={cryptidAccount.activeSigningKey} label={`Signer: ${cryptidAccount.activeSigningKeyAlias}`}/>
+          {
+            signerBalance !== undefined && <SignerBalanceControl balance={signerBalance}/>
+          }
         </div>
-        {
-          signerBalance !== undefined && <SignerBalanceControl balance={signerBalance}/>
-        }
       </div>
       {cryptidAccount.isControlled &&
       <div className="min-w-0 pt-2 flex-1">

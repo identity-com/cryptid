@@ -39,7 +39,7 @@ export default function TokenButtons() {
             refreshAccountInfo(connection, address);
           },
           successMessage:
-            'Success! Please wait up to 30 seconds for the SOL tokens to appear in your wallet.',
+            'Success!',
         },
       );
     })

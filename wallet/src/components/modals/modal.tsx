@@ -20,6 +20,7 @@ type ModalProps = {
   title: string,
   Icon?: (props: React.ComponentProps<'svg'>) => JSX.Element
   iconClasses?: string,
+  suppressClose?: boolean,
 }
 export const Modal:React.FC<ModalProps> = (
   {
@@ -33,14 +34,23 @@ export const Modal:React.FC<ModalProps> = (
     okText = 'OK',
     okEnabled,
     cancelText = 'Cancel',
-    suppressCancelButton
+    suppressCancelButton,
+    suppressClose
   }) => {
   const cancelButtonRef = useRef(null)
   okEnabled = okEnabled === undefined ? true : okEnabled; // defaults to true
 
+  // prevent closure if suppressClose is set (to allow for multiple stacked modals)
+  const onClose = useCallback(() => {
+    console.log("onClose suppressClose: ", suppressClose);
+    suppressClose || onCancel();
+  }, []);
+  
   return (
     <Transition.Root show={show} as={Fragment}>
-      <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef} onClose={onCancel}>
+      <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef}
+              onClose={onClose}
+      >
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <Transition.Child
             as={Fragment}
