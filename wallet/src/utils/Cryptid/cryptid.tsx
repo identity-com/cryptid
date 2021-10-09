@@ -420,7 +420,7 @@ export const CryptidProvider:FC = ({ children }) => {
       const parentBase58 = parent?.didAddress
       setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
     }
-  }, [setCryptidExtAccounts])
+  }, [setCryptidExtAccounts, setCryptidSelector])
 
   const removeCryptidAccount = useCallback((base58: string) => {
     const idx = cryptidExtAccounts.map(x => x.account).indexOf(base58)
@@ -450,12 +450,14 @@ export const CryptidProvider:FC = ({ children }) => {
     //   return cryptidAccount
     // })
     // const cryptidAccounts = await Promise.all(promises);
+
     const defaultSigner = { // TODO
       publicKey: wallet.publicKey as PublicKey,
       sign: (transaction: Transaction) => Promise.resolve(transaction)
     }
 
     // TODO: This is not robust, since dependent accounts need to be loaded first.
+    const loadedCryptidAccounts: CryptidAccount[] = []
     for (const ext of cryptidExtAccounts) {
       const parentAccount = cryptidAccounts.find(x => x.didAddress === ext.parent)
       let cryptidAccount;
@@ -471,23 +473,32 @@ export const CryptidProvider:FC = ({ children }) => {
           connection
         })
       }
-      cryptidAccounts.push(cryptidAccount)
+      loadedCryptidAccounts.push(cryptidAccount)
     }
 
-    if (cryptidAccounts.length > 0) {
-      // Selected from cryptidSelector or fallback to first.
-      const selected = cryptidAccounts.find(a => a.did === getDidPrefix() + cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
-      console.log('Setting Account for ' + selected.didAddress)
-      setSelectedCryptidAccount(selected)
-    }
+    setCryptidAccounts(loadedCryptidAccounts)
 
-    setCryptidAccounts(cryptidAccounts)
   }, [cluster, cryptidExtAccounts, setCryptidAccounts])
 
+  // Load from Storage
   useEffect(() => {
     console.log('useEffect loadCryptidAccounts')
     loadCryptidAccounts()
   }, [loadCryptidAccounts])
+
+  // Chose from Selector after reloading
+  useEffect(() => {
+    console.log('useEffect setSelectedCryptidAccount')
+    if (cryptidAccounts.length == 0) {
+      return
+    }
+
+    // Selected from cryptidSelector or fallback to first.
+    const selected = cryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
+    console.log('Setting Account for ' + selected.did)
+    setSelectedCryptidAccount(selected)
+
+  },[cryptidAccounts, setSelectedCryptidAccount])
 
   // persist selected selectedCryptidAccount to localStorage
   useEffect(() => {

@@ -1,15 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import DialogActions from '@material-ui/core/DialogActions';
-import Button from '@material-ui/core/Button';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import TextField from '@material-ui/core/TextField';
-import DialogForm from "../DialogForm";
-import Typography from "@material-ui/core/Typography";
-import { makeStyles } from "@material-ui/core/styles";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Switch from "@material-ui/core/Switch";
 import {Modal} from "../modals/modal";
 import {PlusCircleIcon} from "@heroicons/react/outline";
 import { convertToPublicKey, CryptidAccount } from "../../utils/Cryptid/cryptid";
