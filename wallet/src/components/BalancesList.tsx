@@ -208,8 +208,6 @@ export function BalanceListItem({ publicKey, setUsdValue }) {
   if (setUsdValue && usdValue) {
     setUsdValue(publicKey, parseFloat(usdValue));
   }
-  
-  console.log("symbol " + tokenSymbol);
 
   return (
     <BalanceListItemView
