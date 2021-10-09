@@ -17,6 +17,8 @@ import {useLocalStorageState} from '../utils/utils';
 import WarningIcon from '@material-ui/icons/Warning';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
+import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
+import IdentitySelector from "../components/selectors/IdentitySelector";
 
 type ID = any;
 
@@ -340,85 +342,77 @@ function ApproveConnectionForm({
   let [dismissed, setDismissed] = useLocalStorageState('dismissedAutoApproveWarning', false);
   let {selectedCryptidAccount} = useCryptid();
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" component="h1" gutterBottom>
-          Allow {origin} to transact with your Cryptid account?
-        </Typography>
-        <div className={classes.connection}>
-          {(() => {
-            if (!selectedCryptidAccount) {
-              return (<Typography variant="h6">
-                No selected Cryptid account.
-              </Typography>);
-            } else {
-              return (<>
-                <div className="has-tooltip flex justify-center">
-                  <span className="tooltip rounded shadow-lg bg-gray-100">
-                    DID: {selectedCryptidAccount.did}
-                    <br/>
-                    Signer Address: {selectedCryptidAccount.address.toBase58()}
-                  </span>
-                  {/* TODO: Replace with identity picture */}
-                  <svg className="h-6/12 w-6/12 text-gray-300 mr-2 items-center" fill="currentColor"
-                       viewBox="0 0 24 24">
-                    <path
-                      d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"/>
-                  </svg>
-                </div>
-                <p className="text-center">Alias: {selectedCryptidAccount.alias}</p>
-              </>);
-            }
-          })()}
+    <>
+      {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
+      <Card>
+        <CardContent>
+          <Typography variant="h6" component="h1" gutterBottom>
+            Allow {origin} to transact with your Cryptid account {selectedCryptidAccount?.alias}?
+          </Typography>
+          <div className={classes.connection}>
+            {(() => {
+              if (!selectedCryptidAccount) {
+                return (<Typography variant="h6">
+                  No selected Cryptid account.
+                </Typography>);
+              } else {
+                return (
+                  <div className="justify-center align-middle h-32 flex w-screen">
+                    <IdentitySelector isSignerWindow={true}/>
+                  </div>
+                );
+              }
+            })()}
 
-        </div>
-        {/*<Typography>Only connect with sites you trust.</Typography>*/}
-        {/*<Divider className={classes.divider} />*/}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={autoApprove}
-              onChange={() => {
-                setAutoApprove(!autoApprove);
-              }}
-              color="primary"
-            />
-          }
-          label={`Automatically approve transactions from ${origin}`}
-        />
-        {!dismissed && autoApprove && (
-          <SnackbarContent
-            className={classes.warningContainer}
-            message={
-              <div>
+          </div>
+          {/*<Typography>Only connect with sites you trust.</Typography>*/}
+          {/*<Divider className={classes.divider} />*/}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={autoApprove}
+                onChange={() => {
+                  setAutoApprove(!autoApprove);
+                }}
+                color="primary"
+              />
+            }
+            label={`Automatically approve transactions from ${origin}`}
+          />
+          {!dismissed && autoApprove && (
+            <SnackbarContent
+              className={classes.warningContainer}
+              message={
+                <div>
                 <span className={classes.warningTitle}>
                   <WarningIcon className={classes.warningIcon}/>
                   Use at your own risk.
                 </span>
-                <Typography className={classes.warningMessage}>
-                  The site will be able to send any transactions for the whole session without your confirmation. Are
-                  you sure?
-                </Typography>
-              </div>
-            }
-            action={[
-              <Button onClick={() => setDismissed(true)}>I understand</Button>,
-            ]}
-            classes={{root: classes.snackbarRoot}}
-          />
-        )}
-      </CardContent>
-      <CardActions className={classes.actions}>
-        <Button onClick={window.close}>Deny</Button>
-        <Button
-          color="primary"
-          onClick={() => onApprove(autoApprove)}
-          disabled={!dismissed && autoApprove && !selectedCryptidAccount}
-        >
-          Allow
-        </Button>
-      </CardActions>
-    </Card>
+                  <Typography className={classes.warningMessage}>
+                    The site will be able to send any transactions for the whole session without your confirmation. Are
+                    you sure?
+                  </Typography>
+                </div>
+              }
+              action={[
+                <Button onClick={() => setDismissed(true)}>I understand</Button>,
+              ]}
+              classes={{root: classes.snackbarRoot}}
+            />
+          )}
+        </CardContent>
+        <CardActions className={classes.actions}>
+          <Button onClick={window.close}>Deny</Button>
+          <Button
+            color="primary"
+            onClick={() => onApprove(autoApprove)}
+            disabled={!dismissed && autoApprove && !selectedCryptidAccount}
+          >
+            Allow
+          </Button>
+        </CardActions>
+      </Card>
+    </>
   );
 }
 
