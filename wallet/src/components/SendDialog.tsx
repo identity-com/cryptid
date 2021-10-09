@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import TextField from '@material-ui/core/TextField';
-import DialogForm from './DialogForm';
 import { PublicKey } from '@solana/web3.js';
 import { abbreviateAddress } from '../utils/utils';
 import InputAdornment from '@material-ui/core/InputAdornment';
@@ -15,10 +13,9 @@ import {
 } from '../utils/tokens/instructions';
 import { parseTokenAccountData } from '../utils/tokens/data';
 import { Switch } from '@material-ui/core';
-import { resolveDomainName, resolveTwitterHandle } from '../utils/name-service';
 import {useCryptid} from "../utils/Cryptid/cryptid";
-
-
+import { Modal } from "./modals/modal";
+import {useConnection} from "../utils/connection";
 
 export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   const onSubmitRef = useRef();
@@ -27,85 +24,47 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
 
 
   return (
-    <>
-      <DialogForm
-        open={open}
-        onClose={onClose}
-        onSubmit={() => onSubmitRef.current()}
-        fullWidth
-      >
-        <DialogTitle>
-          Send {tokenName ?? abbreviateAddress(mint)}
-          {tokenSymbol ? ` (${tokenSymbol})` : null}
-        </DialogTitle>
+    <Modal 
+      show={open} 
+      callbacks={{onOK: () => {}, onCancel: onClose}}
+      title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
         <SendSplDialog
           onClose={onClose}
           publicKey={publicKey}
           balanceInfo={balanceInfo}
           onSubmitRef={onSubmitRef}
         />
-      </DialogForm>
-    </>
+    </Modal>
   );
 }
 
 function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
+  const connection = useConnection();
   const defaultAddressHelperText =
     !balanceInfo.mint || balanceInfo.mint.equals(WRAPPED_SOL_MINT)
       ? 'Enter Solana Address'
       : 'Enter SPL token or Solana address';
-  // const wallet = useWallet();
   const { selectedCryptidAccount } = useCryptid()
   const [sendTransaction, sending] = useSendTransaction();
   const [addressHelperText, setAddressHelperText] = useState(
     defaultAddressHelperText,
   );
-  const [passValidation, setPassValidation] = useState();
+  const [passValidation, setPassValidation] = useState<boolean | undefined>();
   const [overrideDestinationCheck, setOverrideDestinationCheck] = useState(
     false,
   );
-  const [shouldShowOverride, setShouldShowOverride] = useState();
+  const [shouldShowOverride, setShouldShowOverride] = useState<boolean | undefined>();
   let {
     fields,
     destinationAddress,
     transferAmountString,
     validAmount,
-  } = useForm(balanceInfo, addressHelperText, passValidation);
+  } = useForm(balanceInfo, addressHelperText, passValidation, false);
   const { decimals, mint } = balanceInfo;
   const mintString = mint && mint.toBase58();
-  const [isDomainName, setIsDomainName] = useState(false);
-  const [domainOwner, setDomainOwner] = useState();
 
   useEffect(() => {
     (async () => {
-      if (destinationAddress.startsWith('@')) {
-        const twitterOwner = await resolveTwitterHandle(
-          selectedCryptidAccount.connection,
-          destinationAddress.slice(1),
-        );
-        if (!twitterOwner) {
-          setAddressHelperText(`This Twitter handle is not registered`);
-          setPassValidation(undefined);
-          setShouldShowOverride(undefined);
-          return;
-        }
-        setIsDomainName(true);
-        setDomainOwner(twitterOwner);
-      }
-      if (destinationAddress.endsWith('.sol')) {
-        const domainOwner = await resolveDomainName(
-          selectedCryptidAccount.connection,
-          destinationAddress.slice(0, -4),
-        );
-        if (!domainOwner) {
-          setAddressHelperText(`This domain name is not registered`);
-          setPassValidation(undefined);
-          setShouldShowOverride(undefined);
-          return;
-        }
-        setIsDomainName(true);
-        setDomainOwner(domainOwner);
-      }
       if (!destinationAddress) {
         setAddressHelperText(defaultAddressHelperText);
         setPassValidation(undefined);
@@ -113,12 +72,12 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
         return;
       }
       try {
-        const destinationAccountInfo = await selectedCryptidAccount.connection.getAccountInfo(
-          new PublicKey(isDomainName ? domainOwner : destinationAddress),
+        const destinationAccountInfo = await connection.getAccountInfo(
+          new PublicKey(destinationAddress),
         );
         setShouldShowOverride(false);
 
-        if (destinationAccountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
+        if (destinationAccountInfo?.owner.equals(TOKEN_PROGRAM_ID)) {
           const accountInfo = parseTokenAccountData(
             destinationAccountInfo.data,
           );
@@ -132,9 +91,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
         } else {
           setPassValidation(true);
           setAddressHelperText(
-            `Destination is a Solana address: ${
-              isDomainName ? domainOwner : destinationAddress
-            }`,
+            `Destination is a Solana address: ${destinationAddress}`,
           );
         }
       } catch (e) {
@@ -145,7 +102,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [destinationAddress, selectedCryptidAccount, mintString, isDomainName, domainOwner]);
+  }, [destinationAddress, selectedCryptidAccount, mintString]);
   useEffect(() => {
     return () => {
       setOverrideDestinationCheck(false);
@@ -156,13 +113,13 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     if (!amount || amount <= 0) {
       throw new Error('Invalid amount');
     }
-    return selectedCryptidAccount.transferToken(
+    return selectedCryptidAccount!.transferToken(
       publicKey,
-      new PublicKey(isDomainName ? domainOwner : destinationAddress),
+      new PublicKey(destinationAddress),
       amount,
       balanceInfo.mint,
       decimals,
-      null,
+      undefined,
       overrideDestinationCheck,
     );
   }
@@ -172,6 +129,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     : sending || !validAmount;
 
   async function onSubmit() {
+    if (!selectedCryptidAccount) return;
     return sendTransaction(makeTransaction(), { onSuccess: onClose });
   }
   onSubmitRef.current = onSubmit;
@@ -180,12 +138,12 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
       <DialogContent>{fields}</DialogContent>
       <DialogActions>
         {shouldShowOverride && (
-          <div
-            style={{
-              'align-items': 'center',
-              display: 'flex',
-              'text-align': 'left',
-            }}
+          <div className="items-center flex align-left"
+            // style={{
+            //   'align-items': 'center',
+            //   display: 'flex',
+            //   'text-align': 'left',
+            // }}
           >
             <b>This address has no funds. Are you sure it's correct?</b>
             <Switch
@@ -195,10 +153,6 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
             />
           </div>
         )}
-        <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" color="primary" disabled={disabled}>
-          Send
-        </Button>
       </DialogActions>
     </>
   );
