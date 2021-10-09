@@ -18,7 +18,7 @@ import { Modal } from "./modals/modal";
 import {useConnection} from "../utils/connection";
 
 export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
-  const onSubmitRef = useRef();
+  const onSubmitRef = useRef<() => void>();
 
   const { mint, tokenName, tokenSymbol } = balanceInfo;
 
@@ -26,7 +26,7 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   return (
     <Modal 
       show={open} 
-      callbacks={{onOK: () => {}, onClose}}
+      callbacks={{onOK: () => onSubmitRef.current && onSubmitRef.current(), onClose}}
       title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
         <SendSplDialog
           onClose={onClose}
