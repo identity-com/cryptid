@@ -7,8 +7,6 @@ import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import { pages } from "../utils/config";
 import IdentitySelector from './selectors/IdentitySelector';
-import AddMnemonicModal from "./modals/AddMnenomicModal";
-import WalletConnectModal from "./modals/WalletConnectModal";
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -28,8 +26,6 @@ const NetworkSelector = () => {
           setCustomNetworkOpen(false);
         }}
       />
-      <AddMnemonicModal />
-      <WalletConnectModal />
       <Menu as="div" className="ml-3 relative">
         <div>
           <Menu.Button
