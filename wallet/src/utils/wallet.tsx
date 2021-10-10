@@ -60,6 +60,8 @@ interface WalletContextInterface {
   listWallets: () => ExtendedPersistedWalletType[],
   showAddMnemonicDialog: boolean,
   setShowAddMnemonicDialog: (v: boolean) => void
+  showWalletConnectDialogWithPublicKey: string | undefined,
+  setShowWalletConnectDialogWithPublicKey: (v: string | undefined) => void
   hasUnlockedMnemonic: boolean
 }
 
@@ -74,6 +76,8 @@ const WalletContext = React.createContext<WalletContextInterface>({
   listWallets: () => [],
   showAddMnemonicDialog: false,
   setShowAddMnemonicDialog: () => {},
+  showWalletConnectDialogWithPublicKey: undefined,
+  setShowWalletConnectDialogWithPublicKey: () => {},
   hasUnlockedMnemonic: false,
 });
 
@@ -91,7 +95,11 @@ export function WalletProvider({ children }) {
   // const importsEncryptionKey = new Uint8Array()
 
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
+
+  // globalModals
   const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
+  const [showWalletConnectDialogWithPublicKey, setShowWalletConnectDialogWithPublicKey] = useState<string|undefined>();
+
 
   useEffect(()=> {
     console.log(`mnemonic changed: ${mnemonic}`)
@@ -178,18 +186,23 @@ export function WalletProvider({ children }) {
     }
 
     if( persistetWallet.type === "adapter" ) {
-      console.log('ADAPTER READY? ' + adapterWallet.ready)
-      if (adapterWallet.ready && !adapterWallet.publicKey) {
-        await adapterWallet.connect()
-      }
-
-      if (publicKey.toBase58() !== adapterWallet.publicKey?.toBase58()) {
-        console.log('Warning setting adapter Key without that key connected via wallet-adapter')
-        // await adapterWallet.connect()
-        // throw new Error(`Please connect the wallet ${publicKey.toBase58()} first`)
-      }
-
+      // set to adapter
       setWallet(adapterWallet)
+
+      // preset popup to connect
+      console.log('ADAPTER READY? ' + adapterWallet.ready)
+      if (!adapterWallet.ready) {
+        // show connection model
+        setShowWalletConnectDialogWithPublicKey(publicKey.toBase58())
+      } else {
+        await adapterWallet.connect()
+        // check matching key?
+        if (!adapterWallet.publicKey || !publicKey.equals(adapterWallet.publicKey)) {
+          console.log('Connection to wallet adapter failed or selected wallet does not match requested Key')
+          setShowWalletConnectDialogWithPublicKey(publicKey.toBase58())
+        }
+      }
+
       return
     }
 
@@ -243,6 +256,8 @@ export function WalletProvider({ children }) {
         listWallets,
         showAddMnemonicDialog,
         setShowAddMnemonicDialog,
+        showWalletConnectDialogWithPublicKey,
+        setShowWalletConnectDialogWithPublicKey,
         hasUnlockedMnemonic: !loadedingMnemonicPromise && !!mnemonic
       }}
     >

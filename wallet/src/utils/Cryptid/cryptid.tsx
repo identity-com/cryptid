@@ -440,7 +440,7 @@ export const CryptidProvider:FC = ({ children }) => {
   const setSelectedCryptidAccount = useCallback((account: CryptidAccount | undefined) => {
     setSelectedCryptidAccountInternal(account)
     setCryptidSelector({
-      selectedCryptidAccount: selectedCryptidAccount?.didAddress
+      selectedCryptidAccount: account?.didAddress
     })
   }, [setSelectedCryptidAccountInternal, setCryptidSelector])
 
