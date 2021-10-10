@@ -61,31 +61,47 @@ describe('transactions/directExecute', () => {
   });
 
   it('should create a direct execute', async () => {
-    const dupKey = Keypair.generate().publicKey;
+    const duplicatedKey = Keypair.generate().publicKey;
+    const additionalKey = Keypair.generate().publicKey;
     const instruction = new TransactionInstruction({
       keys: [
         {
-          pubkey: dupKey,
+          pubkey: duplicatedKey,
           isSigner: false,
           isWritable: false,
         },
         {
-          pubkey: Keypair.generate().publicKey,
+          pubkey: additionalKey,
           isSigner: true,
           isWritable: false,
         },
         {
-          pubkey: dupKey,
+          pubkey: duplicatedKey,
           isSigner: true,
           isWritable: true,
         },
       ],
       programId: Keypair.generate().publicKey,
     });
+
     const transaction = new Transaction();
     transaction.add(instruction);
     const didPDAKey = Keypair.generate().publicKey;
-    const direct_execute = (await create(transaction, didPDAKey, []))[0];
+
+    console.log(
+      instruction.keys.map((key) => ({
+        ...key,
+        pubkey: key.pubkey.toBase58(),
+      }))
+    );
+
+    console.log("duplicated key " +duplicatedKey.toBase58());
+    console.log("additional key " +additionalKey.toBase58());
+    console.log("payer " +payer.publicKey.toBase58());
+    console.log("didPDA " +didPDAKey.toBase58());
+
+    const direct_execute = (await create(transaction, didPDAKey, [[normalizeSigner(payer), []]]))[0];
+
     console.log(
       direct_execute.keys.map((key) => ({
         ...key,

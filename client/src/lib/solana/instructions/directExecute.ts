@@ -27,8 +27,6 @@ export const create = async (
     cryptidAccount
   ).then((signer) => signer[0]);
 
-  console.log(unsignedTransaction);
-
   if (signers.length < 1) {
     throw new Error('Not enough signers for directExecute');
   }
@@ -39,26 +37,27 @@ export const create = async (
     signers[0][0].publicKey
   );
 
-  return instructionsLists.flatMap((instructionsList) => {
-    if (instructionsList[1]) {
-      if (instructionsList[0].length == 0) {
-        // `convertToDirectExecute` will build an instruction if given an empty array, this catches that case and prevents excess instructions
-        return [];
-      }
-      return [
-        convertToDirectExecute(
-          instructionsList[0],
-          didPDAKey,
-          signers,
-          cryptidAccount,
-          cryptidSignerKey,
-          debug
-        ),
-      ];
-    } else {
-      return instructionsList[0];
+  const convertOrPassthroughInstructions = ([instructions, shouldUseDirectExecute]: [TransactionInstruction[], boolean]) => {
+    if (!shouldUseDirectExecute) return instructions;
+
+    if (instructions.length === 0) {
+      // `convertToDirectExecute` will build an instruction if given an empty array, this catches that case and prevents excess instructions
+      return [];
     }
-  });
+
+    // otherwise the transactions should be converted
+    const directExecuteInstruction = convertToDirectExecute(
+      instructions,
+      didPDAKey,
+      signers,
+      cryptidAccount,
+      cryptidSignerKey,
+      debug
+    );
+    return [directExecuteInstruction];
+  };
+
+  return instructionsLists.flatMap(convertOrPassthroughInstructions);
 };
 
 function convertToDirectExecute(
