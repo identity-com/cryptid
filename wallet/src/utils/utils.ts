@@ -50,6 +50,7 @@ export function useEffectAfterTimeout(effect: () => void, timeout: number) {
 export function useListener(emitter, eventName: string) {
   let [, forceUpdate] = useState(0);
   useEffect(() => {
+    console.log('Generic useListener Emitter')
     let listener = () => forceUpdate((i) => i + 1);
     emitter.on(eventName, listener);
     return () => emitter.removeListener(eventName, listener);
@@ -95,9 +96,6 @@ export function useIsExtensionWidth() {
   return useMediaQuery('(max-width:450px)');
 }
 
-export const isExtension = window.location.protocol === 'chrome-extension:';
-
-export const isExtensionPopup = isExtension && window.opener;
 /**
  * Returns an account object when given the private key
  */
@@ -108,6 +106,7 @@ export const decodeAccount = (privateKey: string) => {
     try {
       return Keypair.fromSecretKey(new Uint8Array(bs58.decode(privateKey)));
     } catch (_) {
+      console.log('Could not decode KeyPair: ' + privateKey)
       return undefined;
     }
   }

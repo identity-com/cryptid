@@ -44,7 +44,7 @@ export const directExecute = async (
   );
   return createTransaction(
     unsignedTransaction.recentBlockhash,
-    [directExecuteInstruction],
+    directExecuteInstruction,
     payer,
     signersNormalized.map(([signer]) => signer)
   );

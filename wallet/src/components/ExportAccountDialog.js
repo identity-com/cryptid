@@ -7,13 +7,11 @@ import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import DialogForm from './DialogForm';
-import { useWallet } from '../utils/wallet';
 import { useUnlockedMnemonicAndSeed } from '../utils/wallet-seed';
 
 export default function ExportAccountDialog({ open, onClose }) {
-  const wallet = useWallet();
   const [isHidden, setIsHidden] = useState(true);
-  const keyOutput = `[${Array.from(wallet.provider.account.secretKey)}]`;
+  const keyOutput = `[TODO: FIX]`;
   return (
     <DialogForm open={open} onClose={onClose} fullWidth>
       <DialogTitle>Export account</DialogTitle>

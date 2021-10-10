@@ -6,13 +6,15 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Box from '@material-ui/core/Box';
 import { decodeMessage } from '../utils/transactions';
 import { useConnection, useSolanaExplorerUrlSuffix } from '../utils/connection';
-import { useWallet, useWalletPublicKeys } from '../utils/wallet';
 import NewOrder from './instructions/NewOrder';
 import UnknownInstruction from './instructions/UnknownInstruction';
 import StakeInstruction from '../components/instructions/StakeInstruction';
 import SystemInstruction from '../components/instructions/SystemInstruction';
 import DexInstruction from '../components/instructions/DexInstruction';
 import TokenInstruction from '../components/instructions/TokenInstruction';
+import {useCryptid, useCryptidAccountPublicKeys} from "../utils/Cryptid/cryptid";
+import TransactionView from "./instructions/layout/TransactionView";
+import InstructionView from "./instructions/layout/InstructionView";
 
 function isSafeInstruction(publicKeys, owner, txInstructions) {
   let unsafe = false;
@@ -125,15 +127,23 @@ export default function SignTransactionFormContent({
 }) {
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
-  const wallet = useWallet();
-  const [publicKeys] = useWalletPublicKeys();
+  const { selectedCryptidAccount } = useCryptid();
+  const [publicKeys] = useCryptidAccountPublicKeys(selectedCryptidAccount);
 
   const [parsing, setParsing] = useState(true);
   // An array of arrays, where each element is the set of instructions for a
   // single transaction.
   const [txInstructions, setTxInstructions] = useState(null);
 
+  const [expandedTransaction, setExpandedTransaction] = useState(0);
+  const [expandedInstruction, setExpandedInstruction] = useState();
+  
   const isMultiTx = messages.length > 1;
+
+  const wallet = {
+    publicKey: selectedCryptidAccount.address,
+    signTransaction: selectedCryptidAccount.signTransaction
+  }
 
   useEffect(() => {
     Promise.all(messages.map((m) => decodeMessage(connection, wallet, m))).then(
@@ -142,16 +152,16 @@ export default function SignTransactionFormContent({
         setParsing(false);
       },
     );
-  }, [messages, connection, wallet]);
+  }, [messages, connection, selectedCryptidAccount]);
 
   const validator = useMemo(() => {
     return {
       safe:
         publicKeys &&
         txInstructions &&
-        isSafeInstruction(publicKeys, wallet.publicKey, txInstructions),
+        isSafeInstruction(publicKeys, selectedCryptidAccount.address, txInstructions),
     };
-  }, [publicKeys, txInstructions, wallet]);
+  }, [publicKeys, txInstructions, selectedCryptidAccount]);
 
   useEffect(() => {
     if (validator.safe && autoApprove) {
@@ -251,24 +261,14 @@ export default function SignTransactionFormContent({
         );
     }
   };
-
-  const txLabel = (idx) => {
-    return (
-      <>
-        <Typography variant="h6" gutterBottom>
-          Transaction {idx.toString()}
-        </Typography>
-        <Divider style={{ marginTop: 20 }} />
-      </>
-    );
-  };
-
+  
   const txListItem = (instructions, txIdx) => {
     const ixs = instructions.map((instruction, i) => (
-      <Box style={{ marginTop: 20 }} key={i}>
+      <InstructionView index={i} expanded={expandedInstruction === i} setExpanded={(expand) => {
+        expand && setExpandedInstruction(i)
+      }}>
         {getContent(instruction)}
-        <Divider style={{ marginTop: 20 }} />
-      </Box>
+      </InstructionView>
     ));
 
     if (!isMultiTx) {
@@ -276,10 +276,13 @@ export default function SignTransactionFormContent({
     }
 
     return (
-      <Box style={{ marginTop: 20 }} key={txIdx}>
-        {txLabel(txIdx)}
+      <TransactionView index={txIdx}>
         {ixs}
-      </Box>
+      </TransactionView>
+      // <Box style={{ marginTop: 20 }} key={txIdx}>
+      //   {txLabel(txIdx)}
+      //   {ixs}
+      // </Box>
     );
   };
 

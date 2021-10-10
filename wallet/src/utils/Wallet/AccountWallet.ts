@@ -1,10 +1,8 @@
-import { getUnlockedMnemonicAndSeed } from './../wallet-seed';
 import * as bip32 from 'bip32';
 import nacl from 'tweetnacl';
-import { Account, Transaction } from '@solana/web3.js';
-import bs58 from 'bs58';
+import { Account, Keypair, Transaction } from '@solana/web3.js';
 import { derivePath } from 'ed25519-hd-key';
-import { WalletProviderInterface } from './factory';
+import { WalletInterface } from "../wallet";
 
 export const DERIVATION_PATH = {
   deprecated: undefined,
@@ -39,27 +37,17 @@ function deriveSeed(seed: Buffer, walletIndex: number, derivationPath: string | 
   }
 }
 
-export class LocalStorageWalletProvider implements WalletProviderInterface {
-  private readonly account: Account;
+export class AccountWallet implements WalletInterface {
 
-  constructor(args) {
-    this.account = args.account;
+  constructor(private account: Account) {
   }
 
   get publicKey() {
     return this.account.publicKey
   }
 
-  async init() {
-    return this;
-  };
-
   signTransaction = async (transaction: Transaction) => {
     transaction.partialSign(this.account);
     return transaction;
-  };
-
-  createSignature = (message: Uint8Array) => {
-    return bs58.encode(nacl.sign.detached(message, this.account.secretKey));
   };
 }

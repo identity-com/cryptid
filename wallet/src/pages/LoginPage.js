@@ -10,10 +10,10 @@ import {
 import {
   getAccountFromSeed,
   DERIVATION_PATH,
-} from '../utils/walletProvider/localStorage';
+} from '../utils/Wallet/AccountWallet';
 import Container from '@material-ui/core/Container';
 import LoadingIndicator from '../components/LoadingIndicator';
-import { BalanceListItem } from '../components/BalancesList.js';
+import { BalanceListItem } from '../components/BalancesList';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import { DialogActions, DialogContentText, DialogTitle, Typography } from '@material-ui/core';
@@ -57,13 +57,15 @@ export default function LoginPage() {
 
 function CreateWalletForm() {
   const [mnemonicAndSeed, setMnemonicAndSeed] = useState(null);
-  useEffect(() => {
-    generateMnemonicAndSeed().then(setMnemonicAndSeed);
-  }, []);
   const [savedWords, setSavedWords] = useState(false);
   const callAsync = useCallAsync();
 
-  function submit(password) {
+  useEffect(() => {
+    console.log('useEffect CreateWalletForm')
+    generateMnemonicAndSeed().then(setMnemonicAndSeed);
+  }, []);
+
+  const submit = (password) => {
     const { mnemonic, seed } = mnemonicAndSeed;
     callAsync(
       storeMnemonicAndSeed(

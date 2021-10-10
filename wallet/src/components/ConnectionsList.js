@@ -16,7 +16,6 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { DoneAll, ExpandLess, ExpandMore } from '@material-ui/icons';
 import { useConnectedWallets } from '../utils/connected-wallets';
 import { useIsExtensionWidth } from '../utils/utils';
-import { useWalletSelector } from '../utils/wallet';
 
 export default function ConnectionsList() {
   const isExtensionWidth = useIsExtensionWidth();
@@ -86,11 +85,6 @@ function ConnectionsListItem({ origin, connectedWallet }) {
   const appleIconUrl = origin + '/apple-touch-icon.png';
   const faviconUrl = origin + '/favicon.ico';
   const [iconUrl, setIconUrl] = useState(appleIconUrl);
-  const { accounts } = useWalletSelector();
-  // TODO better way to do this
-  const account = accounts.find(
-    (account) => account.address.toBase58() === connectedWallet.publicKey,
-  );
 
   const setAutoApprove = (autoApprove) => {
     chrome.storage.local.get('connectedWallets', (result) => {
@@ -120,7 +114,7 @@ function ConnectionsListItem({ origin, connectedWallet }) {
           </div>
         </ListItemIcon>
         <div style={{ display: 'flex', flex: 1 }}>
-          <ListItemText primary={origin} secondary={account.name} />
+          <ListItemText primary={origin} secondary={'TODO ADD NAME'} />
         </div>
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>

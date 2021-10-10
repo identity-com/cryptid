@@ -7,11 +7,7 @@ import {
   getFilteredProgramAccounts,
   NAME_PROGRAM_ID,
 } from '@bonfida/spl-name-service';
-import { useConnection } from '../connection';
-import { useWallet } from '../wallet';
 import BN from 'bn.js';
-import { useAsyncData } from '../fetch-loop';
-import tuple from 'immutable-tuple';
 
 // Address of the SOL TLD
 export const SOL_TLD_AUTHORITY = new PublicKey(
@@ -98,32 +94,3 @@ export async function performReverseLookup(
   let nameLength = new BN(name.data.slice(0, 4), 'le').toNumber();
   return name.data.slice(4, 4 + nameLength).toString();
 }
-
-export const useUserDomains = () => {
-  const wallet = useWallet();
-  const connection = useConnection();
-  const fn = async () => {
-    const domains = await findOwnedNameAccountsForUser(
-      connection,
-      wallet.publicKey,
-    );
-    let names: { name: string; nameKey: PublicKey }[] = [];
-    const fn = async (d) => {
-      try {
-        const name = await performReverseLookup(connection, d);
-        names.push({ name: name, nameKey: d });
-      } catch (err) {
-        console.log(`Passing account ${d.toBase58()} - err ${err}`);
-      }
-    };
-    const promises = domains.map((d) => fn(d));
-    await Promise.allSettled(promises);
-    return names.sort((a, b) => {
-      return a.name.localeCompare(b.name);
-    });
-  };
-  return useAsyncData(
-    fn,
-    tuple('useUserDomain', wallet?.publicKey?.toBase58()),
-  );
-};

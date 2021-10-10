@@ -3,7 +3,6 @@ import { randomBytes, secretbox } from 'tweetnacl';
 import * as bip32 from 'bip32';
 import bs58 from 'bs58';
 import { EventEmitter } from 'events';
-import { isExtension } from './utils';
 import { useEffect, useState } from 'react';
 
 export function normalizeMnemonic(mnemonic) {
@@ -26,34 +25,22 @@ export async function mnemonicToSeed(mnemonic) {
   return Buffer.from(seed).toString('hex');
 }
 
-async function getExtensionUnlockedMnemonic() {
-  if (!isExtension) {
-    return null;
-  }
-
-  return new Promise<string>((resolve) => {
-    chrome.runtime.sendMessage({
-      channel: 'sollet_extension_mnemonic_channel',
-      method: 'get',
-    }, resolve);
-  })
-}
-
-interface MnomicInterface {
+interface MnemonicInterface {
   mnemonic: string | null,
   seed: string | null,
   importsEncryptionKey: Buffer | null,
   derivationPath: string | undefined,
 }
 
-const EMPTY_MNEMONIC: MnomicInterface = {
+const EMPTY_MNEMONIC: MnemonicInterface = {
   mnemonic: null,
   seed: null,
   importsEncryptionKey: null,
   derivationPath: undefined,
 };
 
-let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {
+let unlockedMnemonicAndSeed = (async (): Promise<MnemonicInterface> => {
+  console.log('unlockedMnemonicAndSeed')
   const unlockedExpiration = localStorage.getItem('unlockedExpiration');
   // Left here to clean up stored mnemonics from previous method
   if (unlockedExpiration && Number(unlockedExpiration) < Date.now()) {
@@ -61,7 +48,6 @@ let unlockedMnemonicAndSeed = (async (): Promise<MnomicInterface> => {
     localStorage.removeItem('unlockedExpiration');
   }
   const stored = JSON.parse(
-    (await getExtensionUnlockedMnemonic()) ||
     sessionStorage.getItem('unlocked') ||
       localStorage.getItem('unlocked') ||
       'null',
@@ -82,13 +68,17 @@ export function getUnlockedMnemonicAndSeed() {
 }
 
 // returns [mnemonic, loading]
-export function useUnlockedMnemonicAndSeed(): [MnomicInterface, boolean] {
-  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnomicInterface|null>(null);
+export function useUnlockedMnemonicAndSeed(): [MnemonicInterface, boolean] {
+  const [currentUnlockedMnemonic, setCurrentUnlockedMnemonic] = useState<MnemonicInterface|null>(null);
   
   useEffect(() => {
+    console.log('USE EFFECT in useUnlockedMnemonicAndSeed')
+
     walletSeedChanged.addListener('change', setCurrentUnlockedMnemonic);
     unlockedMnemonicAndSeed.then(setCurrentUnlockedMnemonic);
     return () => {
+      console.log('USE EFFECT CLEANUP in useUnlockedMnemonicAndSeed')
+
       walletSeedChanged.removeListener('change', setCurrentUnlockedMnemonic);
     }
   }, []);
@@ -152,13 +142,7 @@ export async function storeMnemonicAndSeed(
     localStorage.removeItem('locked');
   }
   sessionStorage.removeItem('unlocked');
-  if (isExtension) {
-    chrome.runtime.sendMessage({
-      channel: 'sollet_extension_mnemonic_channel',
-      method: 'set',
-      data: '',
-    });
-  }
+
   const importsEncryptionKey = deriveImportsEncryptionKey(seed);
   setUnlockedMnemonicAndSeed(
     mnemonic,
@@ -192,15 +176,7 @@ export async function loadMnemonicAndSeed(password, stayLoggedIn) {
   const decodedPlaintext = Buffer.from(plaintext).toString();
   const { mnemonic, seed, derivationPath } = JSON.parse(decodedPlaintext);
   if (stayLoggedIn) {
-    if (isExtension) {
-      chrome.runtime.sendMessage({
-        channel: 'sollet_extension_mnemonic_channel',
-        method: 'set',
-        data: decodedPlaintext,
-      });
-    } else {
-      sessionStorage.setItem('unlocked', decodedPlaintext);
-    }
+    sessionStorage.setItem('unlocked', decodedPlaintext);
   }
   const importsEncryptionKey = deriveImportsEncryptionKey(seed);
   setUnlockedMnemonicAndSeed(
@@ -239,19 +215,9 @@ function deriveImportsEncryptionKey(seed) {
 export function forgetWallet() {
   localStorage.clear();
   sessionStorage.removeItem('unlocked');
-  if (isExtension) {
-    chrome.runtime.sendMessage({
-      channel: 'sollet_extension_mnemonic_channel',
-      method: 'set',
-      data: '',
-    });
-  }
+
   unlockedMnemonicAndSeed = Promise.resolve(EMPTY_MNEMONIC);
   walletSeedChanged.emit('change', unlockedMnemonicAndSeed);
-  if (isExtension) {
-    // Must use wrapper function for window.location.reload
-    chrome.storage.local.clear(() => window.location.reload());
-  } else {
-    window.location.reload();
-  }
+
+  window.location.reload();
 }

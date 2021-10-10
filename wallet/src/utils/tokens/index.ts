@@ -173,7 +173,8 @@ export async function createAssociatedTokenAccount({
   connection,
   wallet,
   splTokenMintAddress,
-}: {connection: Connection, wallet: WalletInterface, splTokenMintAddress: PublicKey}) {
+}: {connection: Connection, wallet: WalletInterface, splTokenMintAddress: PublicKey})
+  :Promise<[PublicKey, string]> {
   const [ix, address] = await createAssociatedTokenAccountIx(
     wallet.publicKey,
     wallet.publicKey,

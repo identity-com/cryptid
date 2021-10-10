@@ -4,9 +4,10 @@ import { useMemo } from "react";
 import {ConnectionProvider as SolanaConnectionProvider, WalletProvider as SolanaWalletProvider} from "@solana/wallet-adapter-react";
 import { WalletProvider } from "../wallet";
 import { CryptidProvider } from "./cryptid";
-import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 
-
+// Default styles that can be overridden by your app
+require('@solana/wallet-adapter-react-ui/styles.css');
 
 export const MetaWalletProvider = ({ children }) => {
 
@@ -25,12 +26,12 @@ export const MetaWalletProvider = ({ children }) => {
 
   return (
     <SolanaConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets}>
         <WalletProvider>
           <CryptidProvider>
-            <WalletDialogProvider>
+            <WalletModalProvider>
               {children}
-            </WalletDialogProvider>
+            </WalletModalProvider>
           </CryptidProvider>
         </WalletProvider>
       </SolanaWalletProvider>

@@ -11,11 +11,16 @@ import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
-import { refreshWalletPublicKeys } from "../../utils/wallet";
+import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
+import {AddressLink} from "../AddressLink";
+import {CryptidButton} from "../balances/CryptidButton";
+import {PaperAirplaneIcon, XCircleIcon} from "@heroicons/react/solid";
+import * as React from "react";
+import {useIsProdNetwork} from "../../utils/connection";
+import {useRequestAirdrop} from "../../utils/wallet";
 
 interface CryptidDetailsInterface {
-  crytidAccount: CryptidAccount
-  setSelectedCryptidAccount: (c: CryptidAccount) => void
+  cryptidAccount: CryptidAccount
 }
 
 type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
@@ -26,39 +31,41 @@ const useForceUpdate = () => {
   return () => setValue(value => value + 1); // update the state to force render
 }
 
-export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
+export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
   const forceUpdate = useForceUpdate();
   const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
+  const isProdNetwork = useIsProdNetwork();
+  const requestAirdrop = useRequestAirdrop();
 
-  useEffect(() => {}, [crytidAccount])
+  useEffect(() => {}, [cryptidAccount])
 
   const onSuccessUpdate = (f?: () => void) => {
     if (f) {
       f();
     }
-    crytidAccount.updateDocument().then(forceUpdate)
+    cryptidAccount.updateDocument().then(forceUpdate)
   }
 
   const addKeyCallback = (address: string, alias: string) => {
     const pk = new PublicKey(address)
-    sendTransaction(crytidAccount.addKey(pk, alias), {
+    sendTransaction(cryptidAccount.addKey(pk, alias), {
       onSuccess: () => onSuccessUpdate(() => setAddKeyDialogOpen(false))
     });
   }
 
-  const removeKeyCallback = (alias: string) => sendTransaction(crytidAccount.removeKey(alias.replace('#','')), {
+  const removeKeyCallback = (alias: string) => sendTransaction(cryptidAccount.removeKey(alias.replace('#','')), {
     onSuccess: () => onSuccessUpdate()
   });
 
-  const addControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.addController(controllerDID), {
+  const addControllerCallback = (controllerDID: string) => sendTransaction(cryptidAccount.addController(controllerDID), {
     onSuccess: () => onSuccessUpdate(() => setAddControllerDialogOpen(false))
   });
 
-  const removeControllerCallback = (controllerDID: string) => sendTransaction(crytidAccount.removeController(controllerDID), {
+  const removeControllerCallback = (controllerDID: string) => sendTransaction(cryptidAccount.removeController(controllerDID), {
     onSuccess: () => onSuccessUpdate()
   });
 
@@ -76,23 +83,63 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
         didPrefix={getDidPrefix()}
       />
       <Card>
+        <div className="p-3 min-w-0 flex-1 flex items-center">
+          <div className="flex-shrink-0">
+            <UserIcon className="h-12 w-12"/>
+          </div>
+          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
+            <p className="mt-2 flex items-center text-lg text-black">
+              <span className="truncate">Identity</span>
+            </p>
+          </div>
+        </div>
+        { cryptidAccount.isControlled &&
         <Typography variant="h6">
-          DID: {crytidAccount.did}
+          controlled by DID: {cryptidAccount.controlledBy}
         </Typography>
-        { crytidAccount.isControlled &&
-          <Typography variant="h6">
-              controlled by DID: {crytidAccount.controlledBy}
-          </Typography>
         }
         <CardContent>
-          <Typography variant="h6">
-            Keys:
-          </Typography>
+          <div className="min-w-0 max-w-2xl flex-1 flex items-center">
+            <div className="text-lg flex-1 flex-shrink-0">
+              Address:
+            </div>
+            <div className="min-w-0 flex-1 px-4 text-gray-500">
+              <AddressLink publicKey={cryptidAccount.address || undefined}/>
+            </div>
+          </div>
+          <div className="min-w-0 max-w-2xl flex-1 flex items-center">
+            <div className="text-lg flex-1 flex-shrink-0">
+              DID:
+            </div>
+            <div className="min-w-0 flex-1 px-4 text-gray-500">
+              <span className="truncate">{cryptidAccount.did}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <div className="p-3 min-w-0 flex-1 flex items-center">
+          <div className="flex-shrink-0">
+            <KeyIcon className="h-12 w-12"/>
+          </div>
+          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
+            <p className="mt-2 flex items-center text-lg text-black">
+              <span className="truncate">Keys</span>
+            </p>
+          </div>
+        </div>
+        <CardContent>
           <List>
-            { crytidAccount.verificationMethods.map(vm => {
+            { cryptidAccount.verificationMethods.map(vm => {
+              if (!vm.publicKeyBase58) return null;
+              const key = new PublicKey(vm.publicKeyBase58);
+              
               return (
-                <CryptidDetailsListItem primary={vm.id.replace(crytidAccount.did, '')} secondary={vm.publicKeyBase58}
-                                        removeCallback={removeKeyCallback}/>
+                <CryptidDetailsListItem primary={vm.id.replace(cryptidAccount.did + '#', '')} secondary={vm.publicKeyBase58}
+                                    removeCallback={removeKeyCallback}>
+                  {isProdNetwork || <CryptidButton label="Request Airdrop" Icon={PaperAirplaneIcon}
+                                                   onClick={() => requestAirdrop(key)}/>}
+                </CryptidDetailsListItem>
               )
             })}
           </List>
@@ -122,11 +169,18 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
       {/*  </CardContent>*/}
       {/*</Card>*/}
       <Card>
+        <div className="p-3 min-w-0 flex-1 flex items-center">
+          <div className="flex-shrink-0">
+            <UsersIcon className="h-12 w-12"/>
+          </div>
+          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
+            <p className="mt-2 flex items-center text-lg text-black">
+              <span className="truncate">Controllers</span>
+            </p>
+          </div>
+        </div>
         <CardContent>
-          <Typography variant="h6">
-            Controller:
-          </Typography>
-          { crytidAccount.controllers.map(c => {
+          { cryptidAccount.controllers.map(c => {
             return (
               <CryptidDetailsListItem primary={c} removeCallback={removeControllerCallback} />
             )
@@ -144,32 +198,33 @@ export const CryptidDetails = ({ crytidAccount } : CryptidDetailsInterface) => {
     </>)
 }
 
-interface CryptidDetailsListItemInterface {
+type CryptidDetailsListItemInterface = {
   primary: string,
   secondary?: string
   removeCallback: (primary: string) => void
 }
 
-const CryptidDetailsListItem = ({primary, secondary, removeCallback} : CryptidDetailsListItemInterface) => {
+const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> = 
+  ({primary, secondary, removeCallback, children}) => {
   return (
-      <ListItem>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <ListItemText
-            primary={
-              <>
-                {primary}
-              </>
-            }
-            secondary={secondary}
-          />
-        </div>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => removeCallback(primary)}
-        >
-          Remove
-        </Button>
-      </ListItem>
+    <div className="min-w-0 max-w-3xl flex-1 flex items-center">
+      <div className="text-lg flex-1 flex-shrink-0">
+        {primary}
+      </div>
+      <div className="min-w-0 flex-auto px-4 text-gray-500">
+        {secondary}
+      </div>
+      {children}
+      <CryptidButton label='Remove' Icon={XCircleIcon} onClick={() => removeCallback(primary)}/>
+      {/*<div className="min-w-0 flex-1 px-4">*/}
+      {/*  <Button*/}
+      {/*    variant="outlined"*/}
+      {/*    color="primary"*/}
+      {/*    onClick={() => removeCallback(primary)}*/}
+      {/*  >*/}
+      {/*    Remove*/}
+      {/*  </Button>*/}
+      {/*</div>*/}
+    </div>
   )
 }
