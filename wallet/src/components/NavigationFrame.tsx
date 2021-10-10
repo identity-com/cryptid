@@ -101,22 +101,22 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
     <Disclosure as="nav" className="bg-white bg-opacity-50 border-b border-gray-200">
       {({ open }) => (
         <>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="md:py-10 w-screen max-w-screen md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
             <div className="flex justify-between h-32">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
                   <img
-                    className="block h-28 w-auto"
+                    className="block h-16 md:h-28 w-auto"
                     src="logo300.png"
                     alt="Cryptid squid"
                   />
                   <img
-                    className="block h-8 w-auto"
+                    className="block h-4 md:h-8 w-auto"
                     src="title.webp"
                     alt="Cryptid"
                   />
                 </div>
-                {!isSignerWindow && <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+                {!isSignerWindow && <div className="ml-6 flex sm:space-x-8">
                       {pages.map((item) => (
                         <a
                           href='#'

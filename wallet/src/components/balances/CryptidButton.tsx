@@ -11,7 +11,6 @@ type TokenButtonProps = {
   disabled?: boolean,
 }
 export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick, additionalClasses = '', disabled }) => {
-  console.log("disabled " + disabled);
   return (<Tooltip title={label} arrow>
       <button
         disabled={!!disabled}
@@ -26,7 +25,7 @@ export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick,
         )}
         onClick={onClick}
       >
-        <span className="pr-2">{label}</span>
+        <span className="hidden sm:inline pr-2">{label}</span>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </button>
     </Tooltip>
