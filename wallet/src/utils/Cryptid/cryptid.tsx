@@ -489,11 +489,13 @@ export const CryptidProvider:FC = ({ children }) => {
     }
 
     // TODO: This is not robust, since dependent accounts need to be loaded first.
+    // (which should be the case as long as the order is preserved.)
     const loadedCryptidAccounts: CryptidAccount[] = []
     for (const ext of cryptidExtAccounts) {
       const parentAccount = loadedCryptidAccounts.find(x => x.didAddress === ext.parent)
       let cryptidAccount;
       if (parentAccount) {
+        console.log('Creating did account for ' + ext.account + ' with parent ' + ext.parent)
         cryptidAccount = await parentAccount.as(ext.account, ext.alias)
       } else {
         console.log('Creating did account for ' + ext.account)
@@ -534,16 +536,19 @@ export const CryptidProvider:FC = ({ children }) => {
 
     if (!selectedCryptidAccount) { return }
 
+    const baseAccount = selectedCryptidAccount.baseAccount()
+
     // already has key assigned?
-    if (wallet.publicKey && selectedCryptidAccount.containsKey(wallet.publicKey)) {
+    if (wallet.publicKey && baseAccount.containsKey(wallet.publicKey)) {
       return
     }
 
     // find and assign wallet
     console.log(`Trying to find wallet for CryptidAccount ${selectedCryptidAccount.address}`)
+    console.log(`BaseAccount ${baseAccount.address}`)
 
     // TODO: consider base-case
-    for (const vm of selectedCryptidAccount.verificationMethods) {
+    for (const vm of baseAccount.verificationMethods) {
       const pubKey = convertToPublicKey(vm.publicKeyBase58)
       console.log('Matching to Wallet: '+ vm.publicKeyBase58)
 
@@ -565,13 +570,15 @@ export const CryptidProvider:FC = ({ children }) => {
       return
     }
 
+    const baseAccount = selectedCryptidAccount.baseAccount()
+
     // already has key assigned in signer
-    if (selectedCryptidAccount.activeSigningKey && wallet.publicKey.equals(selectedCryptidAccount.activeSigningKey)) {
+    if (baseAccount.activeSigningKey && wallet.publicKey.equals(baseAccount.activeSigningKey)) {
       return
     }
 
     console.log(`Updating signer to ${wallet.publicKey}`)
-    selectedCryptidAccount.updateSigner({
+    baseAccount.updateSigner({
       publicKey: wallet.publicKey,
       sign: wallet.signTransaction
     })
