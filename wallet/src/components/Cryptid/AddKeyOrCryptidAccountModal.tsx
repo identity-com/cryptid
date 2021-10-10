@@ -89,7 +89,8 @@ export default function AddKeyOrCryptidAccountModal(
     if (addCryptidType !== "import") {
       // create a wallet for the new Account
       const useAdapter = addCryptidType === 'adapterkey'
-      const publicKey = await addWallet(alias, useAdapter, importKeyPair)
+      const keyAlias = modalType === 'cryptid' ? `${alias}_default` : `${currentAccountAlias}_${alias}`
+      const publicKey = await addWallet(keyAlias, useAdapter, importKeyPair)
       address = publicKey.toBase58();
     }
 
@@ -197,7 +198,7 @@ export default function AddKeyOrCryptidAccountModal(
                       </div>
                   </div>
 
-                {currentAccountAlias && <div className="sm:col-span-6">
+                {currentAccountAlias && modalType === "cryptid" && <div className="sm:col-span-6">
                     <div className="m-1">
                         <Switch.Group as="div" className="flex items-center">
                             <Switch

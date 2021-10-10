@@ -20,6 +20,7 @@ import {useIsProdNetwork} from "../../utils/connection";
 import {useRequestAirdrop} from "../../utils/wallet";
 import AddControllerModal from "../modals/AddControllerModal";
 import AddKeyOrCryptidAccountModal from "./AddKeyOrCryptidAccountModal";
+import KeyList, { KeyListItem } from "./KeyList";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
@@ -71,6 +72,14 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
     onSuccess: () => onSuccessUpdate()
   });
 
+  const getKeyListItems = useCallback((): KeyListItem[] => {
+    return cryptidAccount.verificationMethods.filter(vm => !!vm.publicKeyBase58).map(vm => ({
+      alias: vm.id.replace(cryptidAccount.did + '#', ''),
+      key: vm.publicKeyBase58 as string,
+      isActive: cryptidAccount.activeSigningKey.toBase58() === vm.publicKeyBase58
+    }))
+  }, [cryptidAccount])
+
   return (
     <>
       <AddControllerModal open={addControllerDialogOpen}
@@ -82,6 +91,7 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
         onClose={() => setAddKeyDialogOpen(false)}
         onAddKey={addKeyCallback}
         didPrefix={getDidPrefix()}
+        currentAccountAlias={cryptidAccount.alias}
         modalType={"key"}
       />
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -120,7 +130,7 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
                 </div>
               </dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                Keys go here.
+                <KeyList items={getKeyListItems()}/>
               </dd>
             </div>
             {/*<div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">*/}

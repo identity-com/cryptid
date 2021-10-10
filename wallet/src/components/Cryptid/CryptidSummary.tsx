@@ -41,11 +41,11 @@ const SignerBalanceControl:React.FC<{
       {
       balance > MIN_BALANCE ?
         <Tooltip arrow title={'Signer is funded with ' + toSol(balance) + ' SOL '}><div>
-          <CheckCircleIcon className="text-green-500 w-4 h-4"/>
+          <CheckCircleIcon className="text-green-500 w-5 h-5"/>
         </div></Tooltip>: 
         <Tooltip arrow title={notFundedTooltip}><div>
           <ExclamationCircleIcon className={classNames(
-            "text-yellow-500 w-4 h-4",
+            "text-yellow-500 w-5 h-5",
             isProdNetwork ? '' : 'cursor-pointer'
           )} onClick={() => isProdNetwork || requestAirdrop(signer)}/>
         </div></Tooltip>
@@ -81,7 +81,7 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
         </div>
       </div>
       <div className="min-w-0 pt-2 px-2 flex-auto">
-        <div className="inline-flex text-sm md:text-lg text-gray-900">
+        <div className="inline-flex text-sm md:text-lg text-gray-900 items-center">
           <CopyableAddress address={cryptidAccount.activeSigningKey} label={`Signer: ${cryptidAccount.activeSigningKeyAlias}`}/>
           {
             signerBalance !== undefined && <SignerBalanceControl balance={signerBalance} signer={cryptidAccount.activeSigningKey} refreshCallback={triggerRefresh}/>
