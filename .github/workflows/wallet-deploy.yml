@@ -1,8 +1,6 @@
 name: Wallet
 on:
   push:
-    paths:
-      - 'wallet/**'
     branches:
       - develop
       - main
