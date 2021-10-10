@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal } from "../modals/modal";
 import { PlusCircleIcon } from "@heroicons/react/outline";
 import { convertToPublicKey, CryptidAccount } from "../../utils/Cryptid/cryptid";
-import CryptidTypeSelector, { AddCrytidType } from "./CryptidTypeSelector";
+import CryptidTypeSelector, { AddCryptidOrKeyTextType, AddCryptidOrKeyType } from "./CryptidTypeSelector";
 import { useWalletContext } from "../../utils/wallet";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { decodeAccount } from "../../utils/utils";
@@ -11,27 +11,47 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Switch } from '@headlessui/react'
 
 
-interface AddCryptidAccountDialogInterface {
+interface AddKeyOrCryptidAccountModalInterface {
   open: boolean,
-  onAdd: (address: string, alias: string, isControlled: boolean) => void,
+  onAddCryptidAccount?: (address: string, alias: string, isControlled: boolean) => void,
+  onAddKey?: (address: string, alias: string) => void,
   onClose: () => void,
   didPrefix: string,
   currentAccountAlias?: string
+  modalType: AddCryptidOrKeyTextType
 }
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function AddCryptidAccountDialog(
-  {open, onAdd, onClose, didPrefix, currentAccountAlias}: AddCryptidAccountDialogInterface) {
+type ModalText = {
+  [key in AddCryptidOrKeyTextType]: {
+    title: string
+    importHeadline: string
+  }
+}
+
+const modalText: ModalText = {
+  cryptid: {
+    title: 'Add Cryptid Account',
+    importHeadline: 'Cryptid Account',
+  },
+  key: {
+    title: 'Add Key to Account',
+    importHeadline: 'Address / Public Key',
+  }
+}
+
+export default function AddKeyOrCryptidAccountModal(
+  {open, onAddCryptidAccount, onAddKey, onClose, didPrefix, currentAccountAlias, modalType}: AddKeyOrCryptidAccountModalInterface) {
 
   const {addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog} = useWalletContext()
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
 
-  const [addCryptidType, setAddCryptidType] = useState<AddCrytidType>('adapterkey');
+  const [addCryptidType, setAddCryptidType] = useState<AddCryptidOrKeyType>('adapterkey');
   const [importAddress, setImportAddress] = useState<PublicKey | undefined>();
   const [isControlled, setIsControlled] = useState(false);
 
@@ -45,7 +65,7 @@ export default function AddCryptidAccountDialog(
     setImportKeyPair(decodeAccount(value));
   }, [setImportKeyPair]);
 
-  const onCryptidTypeChange = useCallback((type: AddCrytidType) => {
+  const onCryptidTypeChange = useCallback((type: AddCryptidOrKeyType) => {
     setAddCryptidType(type)
 
     console.log(`Changed type! hasUnlockedMnemonic: ${hasUnlockedMnemonic}`)
@@ -56,7 +76,7 @@ export default function AddCryptidAccountDialog(
   }, [setAddCryptidType, setShowAddMnemonicDialog, hasUnlockedMnemonic])
 
   const okEnabled = useCallback(() => {
-    return !!alias &&
+    return (!!alias) &&
       ((addCryptidType === 'import' && !!importAddress) ||
         (addCryptidType === 'newkey' && hasUnlockedMnemonic) ||
         (addCryptidType === 'importkey' && !!importKeyPair && hasUnlockedMnemonic) ||
@@ -78,7 +98,15 @@ export default function AddCryptidAccountDialog(
       address = (importAddress as PublicKey).toBase58() // okEnabled verifies correct PubKey
     }
 
-    onAdd(address, alias, isControlled)
+    if (modalType === "cryptid" && onAddCryptidAccount) {
+      onAddCryptidAccount(address, alias, isControlled)
+      return
+    }
+
+    if (modalType === "key" && onAddKey) {
+      onAddKey(address, alias)
+      return
+    }
   }, [addCryptidType, addWallet, importAddress, alias, isControlled])
 
 
@@ -89,7 +117,7 @@ export default function AddCryptidAccountDialog(
         onOK,
         onClose
       }}
-      title='Add Cryptid Account'
+      title={modalText[modalType].title}
       Icon={PlusCircleIcon}
       iconClasses='text-green-500'
       okText='Add'
@@ -121,7 +149,7 @@ export default function AddCryptidAccountDialog(
                   Type
                 </label>
                 <div className="mt-1">
-                  <CryptidTypeSelector initialType={addCryptidType} onChange={onCryptidTypeChange}/>
+                  <CryptidTypeSelector textType={modalType} initialType={addCryptidType} onChange={onCryptidTypeChange}/>
                 </div>
               </div>
 
@@ -142,7 +170,7 @@ export default function AddCryptidAccountDialog(
 
               {addCryptidType === 'adapterkey' &&
               <div className="sm:col-span-6">
-                  <div className="mt-1 flex justify-center">
+                  <div className="mb-44 flex justify-center">
                       <WalletMultiButton/>
                   </div>
               </div>
@@ -152,13 +180,14 @@ export default function AddCryptidAccountDialog(
               {addCryptidType === 'import' && <>
                   <div className="sm:col-span-6">
                       <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                          Cryptid Account
+                        {modalText[modalType].importHeadline}
                       </label>
                       <div className="mt-1 flex rounded-md shadow-sm w-full">
-                    <span
-                        className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                      {didPrefix}:
-                    </span>
+                        {modalType === "cryptid" &&
+                          <span
+                            className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                            {didPrefix}:
+                          </span>}
                           <input type="text" name="address" id="address"
                                  className="flex-1 px-3 py-2 focus:ring-red-800 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md border sm:text-sm border-gray-300"
                                  placeholder="Address"

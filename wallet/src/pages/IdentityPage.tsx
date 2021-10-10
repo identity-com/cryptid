@@ -1,5 +1,7 @@
 import React from 'react';
 import {CryptidDetails} from "../components/Cryptid/CryptidDetails";
+import {CryptidDetails as CryptidDetails2} from "../components/Cryptid/CryptidDetails2";
+
 import {useCryptid} from "../utils/Cryptid/cryptid";
 import WalletList from "../components/Wallet/WalletList";
 import { useWalletContext } from "../utils/wallet";
@@ -18,6 +20,12 @@ export default function IdentityPage() {
               <CryptidDetails cryptidAccount={selectedCryptidAccount}/>}
             </ul>
           </div>
+        </div>
+      </div>
+      <div className="py-10">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          {selectedCryptidAccount &&
+          <CryptidDetails2 cryptidAccount={selectedCryptidAccount}/>}
         </div>
       </div>
       <div className="py-10">
