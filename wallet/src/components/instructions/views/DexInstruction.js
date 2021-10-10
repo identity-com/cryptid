@@ -1,7 +1,8 @@
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
-import {useCryptid, useCryptidAccountPublicKeys} from "../../utils/Cryptid/cryptid";
+import {useCryptid, useCryptidAccountPublicKeys} from "../../../utils/Cryptid/cryptid";
+import InstructionView from "../layout/InstructionView";
 
 const TYPE_LABELS = {
   cancelOrder: 'Cancel order',
@@ -18,7 +19,7 @@ const DATA_LABELS = {
   quotePubkey: { label: 'Quote wallet', address: true },
 };
 
-export default function DexInstruction({ instruction, onOpenAddress }) {
+export default function DexInstruction({ instruction, onOpenAddress, index, expanded, setExpanded }) {
   const {selectedCryptidAccount} = useCryptid();
   const [publicKeys] = useCryptidAccountPublicKeys();
   const { type, data, market, marketInfo } = instruction;
@@ -36,8 +37,9 @@ export default function DexInstruction({ instruction, onOpenAddress }) {
       ? 'This wallet'
       : (isOwned ? '(Owned) ' : '') + address?.toBase58();
   };
-
+  
   return (
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
     <>
       <Typography
         variant="subtitle1"
@@ -74,5 +76,6 @@ export default function DexInstruction({ instruction, onOpenAddress }) {
           );
         })}
     </>
+    </InstructionView>
   );
 }

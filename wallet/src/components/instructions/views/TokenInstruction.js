@@ -1,8 +1,8 @@
 import React from 'react';
-import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
 import { TOKEN_MINTS } from '@project-serum/serum';
-import {useCryptid, useCryptidAccountPublicKeys} from "../../utils/Cryptid/cryptid";
+import {useCryptid, useCryptidAccountPublicKeys} from "../../../utils/Cryptid/cryptid";
+import InstructionView from "../layout/InstructionView";
 
 const TYPE_LABELS = {
   initializeMint: 'Initialize mint',
@@ -28,7 +28,7 @@ const DATA_LABELS = {
   source: { label: 'Source', address: true },
 };
 
-export default function TokenInstruction({ instruction, onOpenAddress }) {
+export default function TokenInstruction({ instruction, onOpenAddress, index, expanded, setExpanded }) {
   const {selectedCryptidAccount} = useCryptid();
   const [publicKeys] = useCryptidAccountPublicKeys();
   const { type, data } = instruction;
@@ -42,20 +42,14 @@ export default function TokenInstruction({ instruction, onOpenAddress }) {
     return tokenMint
       ? tokenMint.name
       : isOwner
-      ? 'This wallet'
-      : (isOwned ? '(Owned) ' : '') + address?.toBase58();
+        ? 'This wallet'
+        : (isOwned ? '(Owned) ' : '') + address?.toBase58();
   };
 
   return (
-    <>
-      <Typography
-        variant="subtitle1"
-        style={{ fontWeight: 'bold' }}
-        gutterBottom
-      >
-        {TYPE_LABELS[type]}
-      </Typography>
-      {data &&
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
+      <>
+        {data &&
         Object.entries(data).map(([key, value]) => {
           const dataLabel = DATA_LABELS[key];
           if (!dataLabel) {
@@ -63,15 +57,18 @@ export default function TokenInstruction({ instruction, onOpenAddress }) {
           }
           const { label, address, transform } = dataLabel;
           return (
+            <tr key={key}>
             <LabelValue
               key={key}
               label={label + ''}
               value={address ? getAddressValue(value) : transform ? transform(value) : value}
               link={address}
               onClick={() => address && onOpenAddress(value?.toBase58())}
-            />
+            /><td></td>
+            </tr>
           );
         })}
-    </>
+      </>
+    </InstructionView>
   );
 }
