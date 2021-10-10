@@ -1,6 +1,6 @@
 import React from 'react';
-import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
+import InstructionView from "../layout/InstructionView";
 
 const TYPE_LABELS = {
   systemCreate: 'Create account',
@@ -21,18 +21,12 @@ const DATA_LABELS = {
   lamports: { label: 'Lamports', address: false },
 };
 
-export default function SystemInstruction({ instruction, onOpenAddress }) {
+export default function SystemInstruction({ instruction, onOpenAddress, index, expanded, setExpanded}) {
   const { type, data } = instruction;
 
   return (
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
     <>
-      <Typography
-        variant="subtitle1"
-        style={{ fontWeight: 'bold' }}
-        gutterBottom
-      >
-        {TYPE_LABELS[type]}
-      </Typography>
       {data &&
         Object.entries(data).map(([key, value]) => {
           const dataLabel = DATA_LABELS[key];
@@ -51,5 +45,6 @@ export default function SystemInstruction({ instruction, onOpenAddress }) {
           );
         })}
     </>
+    </InstructionView>
   );
 }

@@ -1,9 +1,9 @@
 import React from 'react';
-import Typography from '@material-ui/core/Typography';
 import LabelValue from './LabelValue';
-import {useCryptid} from "../../utils/Cryptid/cryptid";
+import {useCryptid} from "../../../utils/Cryptid/cryptid";
+import InstructionView from "../layout/InstructionView";
 
-export default function Neworder({ instruction, onOpenAddress, v3 = false }) {
+export default function Neworder({ instruction, onOpenAddress, v3 = false, index, expanded, setExpanded }) {
   const { selectedCryptidAccount } = useCryptid();
   const { data, market, marketInfo } = instruction;
   const marketLabel =
@@ -20,14 +20,8 @@ export default function Neworder({ instruction, onOpenAddress, v3 = false }) {
   const { side, limitPrice, orderType, ownerPubkey } = data;
   const maxQuantity = v3 ? data.maxBaseQuantity : data.maxQuantity;
   return (
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title='Place an order'>
     <>
-      <Typography
-        variant="subtitle1"
-        style={{ fontWeight: 'bold' }}
-        gutterBottom
-      >
-        Place an order
-      </Typography>
       <LabelValue
         label="Market"
         value={marketLabel}
@@ -63,5 +57,6 @@ export default function Neworder({ instruction, onOpenAddress, v3 = false }) {
         }
       />
     </>
+    </InstructionView>
   );
 }

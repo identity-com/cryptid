@@ -1,20 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import bs58 from 'bs58';
-import { Divider, Typography } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
 import CardContent from '@material-ui/core/CardContent';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Box from '@material-ui/core/Box';
-import { decodeMessage } from '../utils/transactions';
+import { decodeMessage, getProgram } from '../utils/transactions';
 import { useConnection, useSolanaExplorerUrlSuffix } from '../utils/connection';
-import NewOrder from './instructions/NewOrder';
-import UnknownInstruction from './instructions/UnknownInstruction';
-import StakeInstruction from '../components/instructions/StakeInstruction';
-import SystemInstruction from '../components/instructions/SystemInstruction';
-import DexInstruction from '../components/instructions/DexInstruction';
-import TokenInstruction from '../components/instructions/TokenInstruction';
+import NewOrder from './instructions/views/NewOrder';
+import UnknownInstruction from './instructions/views/UnknownInstruction';
+import StakeInstruction from '../components/instructions/views/StakeInstruction';
+import SystemInstruction from '../components/instructions/views/SystemInstruction';
+import DexInstruction from '../components/instructions/views/DexInstruction';
+import TokenInstruction from '../components/instructions/views/TokenInstruction';
 import {useCryptid, useCryptidAccountPublicKeys} from "../utils/Cryptid/cryptid";
 import TransactionView from "./instructions/layout/TransactionView";
-import InstructionView from "./instructions/layout/InstructionView";
 
 function isSafeInstruction(publicKeys, owner, txInstructions) {
   let unsafe = false;
@@ -189,12 +187,12 @@ export default function SignTransactionFormContent({
   const onOpenAddress = (address) => {
     address &&
       window.open(
-        'https://solscan.io/account/' + address + explorerUrlSuffix,
+        'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
         '_blank',
       );
   };
-
-  const getContent = (instruction) => {
+  
+  const getContent = (instruction, props) => {
     switch (instruction?.type) {
       case 'cancelOrder':
       case 'cancelOrderV2':
@@ -204,6 +202,7 @@ export default function SignTransactionFormContent({
           <DexInstruction
             instruction={instruction}
             onOpenAddress={onOpenAddress}
+            {...props}
           />
         );
       case 'closeAccount':
@@ -216,6 +215,7 @@ export default function SignTransactionFormContent({
           <TokenInstruction
             instruction={instruction}
             onOpenAddress={onOpenAddress}
+            {...props}
           />
         );
       case 'systemCreateWithSeed':
@@ -225,6 +225,7 @@ export default function SignTransactionFormContent({
           <SystemInstruction
             instruction={instruction}
             onOpenAddress={onOpenAddress}
+            {...props}
           />
         );
       case 'stakeAuthorizeWithSeed':
@@ -238,11 +239,12 @@ export default function SignTransactionFormContent({
           <StakeInstruction
             instruction={instruction}
             onOpenAddress={onOpenAddress}
+            {...props}
           />
         );
       case 'newOrder':
         return (
-          <NewOrder instruction={instruction} onOpenAddress={onOpenAddress} />
+          <NewOrder instruction={instruction} onOpenAddress={onOpenAddress} {...props}/>
         );
       case 'newOrderV3':
         return (
@@ -250,6 +252,7 @@ export default function SignTransactionFormContent({
             instruction={instruction}
             onOpenAddress={onOpenAddress}
             v3={true}
+            {...props}
           />
         );
       default:
@@ -257,6 +260,7 @@ export default function SignTransactionFormContent({
           <UnknownInstruction
             instruction={instruction}
             onOpenAddress={onOpenAddress}
+            {...props}
           />
         );
     }
@@ -264,11 +268,16 @@ export default function SignTransactionFormContent({
   
   const txListItem = (instructions, txIdx) => {
     const ixs = instructions.map((instruction, i) => (
-      <InstructionView index={i} expanded={expandedInstruction === i} setExpanded={(expand) => {
-        expand && setExpandedInstruction(i)
-      }}>
-        {getContent(instruction)}
-      </InstructionView>
+        getContent(instruction, {
+          index: i,
+          expanded: expandedInstruction === i,
+          setExpanded: (expand) => {
+            expand ?  
+              setExpandedInstruction(i) : // expand this instruction
+              (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
+          },
+          program: getProgram(instruction)
+        })
     ));
 
     if (!isMultiTx) {
@@ -314,11 +323,11 @@ export default function SignTransactionFormContent({
         </>
       ) : (
         <>
-          <Typography variant="h6" gutterBottom>
+          <div className='text-2xl pb-3'>
             {txInstructions
-              ? `${origin} wants to:`
+              ? `Approve from ${origin}:`
               : `Unknown transaction data`}
-          </Typography>
+          </div>
           {txInstructions ? (
             txInstructions.map((instructions, txIdx) =>
               txListItem(instructions, txIdx),
