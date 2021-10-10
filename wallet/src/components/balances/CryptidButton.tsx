@@ -19,14 +19,14 @@ export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick,
         className={classNames(
           "group relative inline-flex items-center px-2 py-2",
           "border border-grey-300 bg-white text-sm font-medium text-red-800",
-          "disabled:text-gray-800 disabled:pointer-events-none",
+          "disabled:text-gray-300 disabled:pointer-events-none",
           "hover:bg-red-50 rounded-md",
           "focus:z-10 focus:outline-none focus:ring-1 focus:ring-red-800 focus:border-red-800",
           additionalClasses,
         )}
         onClick={onClick}
       >
-        <span className="hidden md:block pr-2">{label}</span>
+        <span className="pr-2">{label}</span>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </button>
     </Tooltip>
