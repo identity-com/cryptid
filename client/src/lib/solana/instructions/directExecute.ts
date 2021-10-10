@@ -41,6 +41,10 @@ export const create = async (
 
   return instructionsLists.flatMap((instructionsList) => {
     if (instructionsList[1]) {
+      if (instructionsList[0].length == 0) {
+        // `convertToDirectExecute` will build an instruction if given an empty array, this catches that case and prevents excess instructions
+        return [];
+      }
       return [
         convertToDirectExecute(
           instructionsList[0],
