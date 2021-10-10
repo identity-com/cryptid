@@ -61,7 +61,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
 
 
   return (
-    <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center"}>
+    <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center "}>
       <AddCryptidAccountDialog
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
@@ -70,7 +70,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
         currentAccountDid={selectedCryptidAccount?.did}
       />
       {/* Identity dropdown */}
-      <Menu as="div" className="relative">
+      <Menu as="div" className="z-40 relative">
         <div>
           <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
             <span className="sr-only">Select Identity</span>
@@ -91,7 +91,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="z-30 origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <Menu.Items className="overflow-visible z-30 origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
             {cryptidAccounts.filter(complement(isControlledBy)).map((item) =>
               <CryptidAccountMenuItem item={item} setSelectedCryptidAccount={setSelectedCryptidAccount}/>
             )}

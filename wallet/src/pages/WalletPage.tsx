@@ -8,11 +8,9 @@ export default function WalletPage() {
   console.log("rerender ", selectedCryptidAccount);
   console.log(selectedCryptidAccount?.activeSigningKey?.toBase58());
   return (
-    <div className="py-10">
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
-        {selectedCryptidAccount && <BalancesList />}
-      </div>
-    </div>
+    <>
+      {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
+      {selectedCryptidAccount && <BalancesList />}
+    </>
   );
 }

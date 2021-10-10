@@ -50,7 +50,9 @@ export default function App() {
   let appElement = (
     <NavigationFrame isSignerWindow={!!window.opener}>
       <Suspense fallback={<LoadingIndicator/>}>
-        <PageContents/>
+        <div className='py-10 max-w-7xl mx-auto sm:px-6 lg:px-8'>
+          <PageContents/>
+        </div>
       </Suspense>
     </NavigationFrame>
   );
@@ -71,18 +73,18 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingIndicator/>}>
       <ThemeProvider theme={theme}>
-      <CssBaseline/>
-      <ConnectionProvider>
-        <TokenRegistryProvider>
-          <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
-            <PageProvider>
-              <MetaWalletProvider>
-                {appElement}
-              </MetaWalletProvider>
-            </PageProvider>
-          </SnackbarProvider>
-        </TokenRegistryProvider>
-      </ConnectionProvider>
+        <CssBaseline/>
+        <ConnectionProvider>
+          <TokenRegistryProvider>
+            <SnackbarProvider maxSnack={5} autoHideDuration={8000}>
+              <PageProvider>
+                <MetaWalletProvider>
+                  {appElement}
+                </MetaWalletProvider>
+              </PageProvider>
+            </SnackbarProvider>
+          </TokenRegistryProvider>
+        </ConnectionProvider>
       </ThemeProvider>
     </Suspense>
   );

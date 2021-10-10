@@ -16,7 +16,7 @@ import {
   ChevronUpIcon,
   ArrowCircleUpIcon, ArrowCircleDownIcon
 } from "@heroicons/react/solid";
-import {TokenButton} from "./TokenButton";
+import {CryptidButton} from "./CryptidButton";
 import SendDialog from "../SendDialog";
 import DepositDialog from "../DepositDialog";
 import {ClipboardIcon} from "@heroicons/react/outline";
@@ -92,8 +92,8 @@ export function BalanceListItemView({
           </div>
         </div>
         <div className='inline-flex shadow-sm rounded-md'>
-          <TokenButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
-          <TokenButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+          <CryptidButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+          <CryptidButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
         </div>
       </div>
     </li>
