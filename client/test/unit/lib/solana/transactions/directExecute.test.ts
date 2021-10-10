@@ -4,13 +4,13 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { directExecute } from '../../../../../src/lib/solana/transactions/directExecute';
-import { Keypair, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { recentBlockhash } from '../../../../utils/solana';
-import { publicKeyToDid } from '../../../../../src/lib/solana/util';
-import { normalizeSigner } from '../../../../../src/lib/util';
-import { stubGetBlockhash } from '../../../../utils/lang';
-import { create } from '../../../../../src/lib/solana/instructions/directExecute';
+import {directExecute} from '../../../../../src/lib/solana/transactions/directExecute';
+import {Keypair, SystemProgram, Transaction, TransactionInstruction} from '@solana/web3.js';
+import {recentBlockhash} from '../../../../utils/solana';
+import {publicKeyToDid} from '../../../../../src/lib/solana/util';
+import {normalizeSigner} from '../../../../../src/lib/util';
+import {stubGetBlockhash} from '../../../../utils/lang';
+import {create} from '../../../../../src/lib/solana/instructions/directExecute';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -26,10 +26,17 @@ describe('transactions/directExecute', () => {
   beforeEach(() => stubGetBlockhash(sandbox));
   afterEach(sandbox.restore);
 
-  it('should create and sign a directExecute transaction', async () => {
-    const txToWrap = new Transaction({
+  const makeSimpleTransaction = async ():Promise<Transaction> =>
+    new Transaction({
       recentBlockhash: await recentBlockhash(),
-    });
+    }).add(SystemProgram.transfer({
+      fromPubkey: payer.publicKey,
+      lamports: 0,
+      toPubkey: payer.publicKey,
+    }));
+
+  it('should create and sign a directExecute transaction', async () => {
+    const txToWrap = await makeSimpleTransaction();
     const directExecuteTransaction = await directExecute(
       txToWrap,
       did,
@@ -45,9 +52,7 @@ describe('transactions/directExecute', () => {
   it('should sign the directExecute transaction with all passed-in signers', async () => {
     const additionalSigner = Keypair.generate();
 
-    const txToWrap = new Transaction({
-      recentBlockhash: await recentBlockhash(),
-    });
+    const txToWrap = await makeSimpleTransaction();
     const directExecuteTransaction = await directExecute(
       txToWrap,
       did,
