@@ -13,7 +13,7 @@ import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
 import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
 import {AddressLink} from "../AddressLink";
-import {TokenButton} from "../balances/TokenButton";
+import {CryptidButton} from "../balances/CryptidButton";
 import {PaperAirplaneIcon, XCircleIcon} from "@heroicons/react/solid";
 import * as React from "react";
 import {useIsProdNetwork} from "../../utils/connection";
@@ -137,8 +137,8 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
               return (
                 <CryptidDetailsListItem primary={vm.id.replace(cryptidAccount.did + '#', '')} secondary={vm.publicKeyBase58}
                                     removeCallback={removeKeyCallback}>
-                  {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
-                                                 onClick={() => requestAirdrop(key)}/>}
+                  {isProdNetwork || <CryptidButton label="Request Airdrop" Icon={PaperAirplaneIcon}
+                                                   onClick={() => requestAirdrop(key)}/>}
                 </CryptidDetailsListItem>
               )
             })}
@@ -215,7 +215,7 @@ const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> =
         {secondary}
       </div>
       {children}
-      <TokenButton label='Remove' Icon={XCircleIcon} onClick={() => removeCallback(primary)}/>
+      <CryptidButton label='Remove' Icon={XCircleIcon} onClick={() => removeCallback(primary)}/>
       {/*<div className="min-w-0 flex-1 px-4">*/}
       {/*  <Button*/}
       {/*    variant="outlined"*/}

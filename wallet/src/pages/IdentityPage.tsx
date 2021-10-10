@@ -4,7 +4,7 @@ import {useCryptid} from "../utils/Cryptid/cryptid";
 import WalletList from "../components/Wallet/WalletList";
 import { useWalletContext } from "../utils/wallet";
 
-export default function WalletPage() {
+export default function IdentityPage() {
   const { selectedCryptidAccount } = useCryptid()
   const { listWallets, setShowAddMnemonicDialog, showAddMnemonicDialog } = useWalletContext()
 

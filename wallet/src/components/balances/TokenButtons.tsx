@@ -2,7 +2,7 @@
 import {PaperAirplaneIcon, CubeTransparentIcon, PlusCircleIcon, RefreshIcon} from '@heroicons/react/solid'
 import * as React from "react";
 import {refreshAccountInfo, useConnection, useConnectionConfig, useIsProdNetwork} from "../../utils/connection";
-import { TokenButton } from './TokenButton';
+import { CryptidButton } from './CryptidButton';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
 import {abbreviateAddress, sleep} from "../../utils/utils";
 import {createAndInitializeMint} from "../../utils/tokens";
@@ -60,15 +60,15 @@ export default function TokenButtons() {
         open={showAddTokenDialog}
         onClose={() => setShowAddTokenDialog(false)}
       />
-      <TokenButton label="Add Token" Icon={PlusCircleIcon} additionalClasses='rounded-l-md'
-                   onClick={() => {setShowAddTokenDialog(true)}}
+      <CryptidButton label="Add Token" Icon={PlusCircleIcon} additionalClasses='rounded-l-md'
+                     onClick={() => {setShowAddTokenDialog(true)}}
       />
-      {isProdNetwork || <TokenButton label="Request Airdrop" Icon={PaperAirplaneIcon}
-                                     onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey)}/>}
-      {isProdNetwork || <TokenButton label="Mint Test Token" Icon={CubeTransparentIcon}
-                                     onClick={() => mintTestToken(selectedCryptidAccount.address as PublicKey)}/>}
-      <TokenButton label="Refresh" Icon={RefreshIcon} additionalClasses='rounded-r-md'
-                   onClick={() => {}}/>
+      {isProdNetwork || <CryptidButton label="Request Airdrop" Icon={PaperAirplaneIcon}
+                                       onClick={() => requestAirdrop(selectedCryptidAccount.address as PublicKey)}/>}
+      {isProdNetwork || <CryptidButton label="Mint Test Token" Icon={CubeTransparentIcon}
+                                       onClick={() => mintTestToken(selectedCryptidAccount.address as PublicKey)}/>}
+      <CryptidButton label="Refresh" Icon={RefreshIcon} additionalClasses='rounded-r-md'
+                     onClick={() => {}}/>
     </div>
   )
 }

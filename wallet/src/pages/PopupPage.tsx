@@ -19,6 +19,8 @@ import SignTransactionFormContent from '../components/SignTransactionFormContent
 import SignFormContent from '../components/SignFormContent';
 import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
 import IdentitySelector from "../components/selectors/IdentitySelector";
+import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/solid";
+import {CryptidButton} from "../components/balances/CryptidButton";
 
 type ID = any;
 
@@ -344,10 +346,13 @@ function ApproveConnectionForm({
   return (
     <>
       {selectedCryptidAccount && <CryptidSummary cryptidAccount={selectedCryptidAccount}/>}
-      <Card>
+      {/*Workaround for https://github.com/tailwindlabs/headlessui/issues/30  and https://github.com/mui-org/material-ui/issues/2623*/}
+      <Card style={{overflow: 'visible'}}>
         <CardContent>
           <Typography variant="h6" component="h1" gutterBottom>
-            Allow {origin} to transact with your Cryptid account {selectedCryptidAccount?.alias}?
+            Connect identity {selectedCryptidAccount?.alias} 
+            {selectedCryptidAccount?.isControlled && `(controlled by ${selectedCryptidAccount?.controlledBy})`}{' '}
+            with {origin}?
           </Typography>
           <div className={classes.connection}>
             {(() => {
@@ -357,7 +362,7 @@ function ApproveConnectionForm({
                 </Typography>);
               } else {
                 return (
-                  <div className="justify-center align-middle h-32 flex w-screen">
+                  <div className="justify-center align-middle h-32 flex">
                     <IdentitySelector isSignerWindow={true}/>
                   </div>
                 );
@@ -367,49 +372,10 @@ function ApproveConnectionForm({
           </div>
           {/*<Typography>Only connect with sites you trust.</Typography>*/}
           {/*<Divider className={classes.divider} />*/}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={autoApprove}
-                onChange={() => {
-                  setAutoApprove(!autoApprove);
-                }}
-                color="primary"
-              />
-            }
-            label={`Automatically approve transactions from ${origin}`}
-          />
-          {!dismissed && autoApprove && (
-            <SnackbarContent
-              className={classes.warningContainer}
-              message={
-                <div>
-                <span className={classes.warningTitle}>
-                  <WarningIcon className={classes.warningIcon}/>
-                  Use at your own risk.
-                </span>
-                  <Typography className={classes.warningMessage}>
-                    The site will be able to send any transactions for the whole session without your confirmation. Are
-                    you sure?
-                  </Typography>
-                </div>
-              }
-              action={[
-                <Button onClick={() => setDismissed(true)}>I understand</Button>,
-              ]}
-              classes={{root: classes.snackbarRoot}}
-            />
-          )}
         </CardContent>
-        <CardActions className={classes.actions}>
-          <Button onClick={window.close}>Deny</Button>
-          <Button
-            color="primary"
-            onClick={() => onApprove(autoApprove)}
-            disabled={!dismissed && autoApprove && !selectedCryptidAccount}
-          >
-            Allow
-          </Button>
+        <CardActions className='justify-end'>
+          <CryptidButton label='Deny' Icon={XCircleIcon} onClick={window.close}/>
+          <CryptidButton label='Allow' Icon={CheckCircleIcon} disabled={!selectedCryptidAccount || !selectedCryptidAccount.activeSigningKey} onClick={() => onApprove(autoApprove)}/>
         </CardActions>
       </Card>
     </>
