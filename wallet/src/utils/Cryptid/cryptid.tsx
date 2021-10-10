@@ -29,6 +29,7 @@ interface CryptidAccountInitData {
   alias: string,
   signer: Signer,
   connection: Connection,
+  isSelected: (account: CryptidAccount) => boolean
   parent?: CryptidAccount,
 }
 
@@ -41,6 +42,7 @@ export class CryptidAccount {
   private _cryptid: Cryptid;
   private _address: PublicKey;
   private _document: DIDDocument;
+  private _isSelected: (account: CryptidAccount) => boolean;
   // Crypid Account parent if controlled
   private _parent: CryptidAccount | undefined;
 
@@ -50,7 +52,7 @@ export class CryptidAccount {
     return signature;
   }
 
-  private constructor({ didPrefix, didAddress, alias, signer, connection, parent} : CryptidAccountInitData) {
+  private constructor({ didPrefix, didAddress, alias, signer, connection, isSelected, parent} : CryptidAccountInitData) {
     this.didPrefix = didPrefix
     this.didAddress = didAddress
     this.alias = alias
@@ -58,6 +60,7 @@ export class CryptidAccount {
     this._address = new PublicKey(didAddress) // Note this is wrong, but will be updated by INIT, constructor is private
     this._document =  { id: "UNINITIALIZED" }; //Note this is wrong, but will be updated by INIT, constructor is private
     this._signer = signer
+    this._isSelected = isSelected
     this._parent = parent
 
     if (parent) {
@@ -104,7 +107,8 @@ export class CryptidAccount {
       alias: controllerAlias,
       signer: this._signer,
       connection: this._connection,
-      parent: this
+      isSelected: this._isSelected,
+      parent: this,
     })
   }
   
@@ -166,6 +170,10 @@ export class CryptidAccount {
   
   get activeSigningKey():PublicKey {
     return this._signer.publicKey
+  }
+
+  get isSelected() {
+    return this._isSelected(this)
   }
   
   signerBalance():Promise<number | undefined> {
@@ -438,11 +446,16 @@ export const CryptidProvider:FC = ({ children }) => {
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
 
   const setSelectedCryptidAccount = useCallback((account: CryptidAccount | undefined) => {
+    // don't set anything if did already matches (loop-breaker)
+    if (selectedCryptidAccount && selectedCryptidAccount.did === account?.did) {
+      return
+    }
+
     setSelectedCryptidAccountInternal(account)
     setCryptidSelector({
       selectedCryptidAccount: account?.didAddress
     })
-  }, [setSelectedCryptidAccountInternal, setCryptidSelector])
+  }, [selectedCryptidAccount, setSelectedCryptidAccountInternal, setCryptidSelector])
 
   const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
     validatePublicKey(base58);
@@ -471,17 +484,9 @@ export const CryptidProvider:FC = ({ children }) => {
     return `did:sol${clusterPrefix}`;
   },[cluster])
 
+  const isSelectedCryptidAccount = useCallback((account: CryptidAccount) => account.did === selectedCryptidAccount?.did, [selectedCryptidAccount])
+
   const loadCryptidAccounts = useCallback(async () => {
-    // // generative accounts + extAccounts
-    // const allAccounts = accounts.map(a => a.address.toBase58())
-    //
-    // // generated
-    // const promises = allAccounts.map(async (base58) => {
-    //   const cryptidAccount = new CryptidAccount(`${getDidPrefix()}${base58}`, defaultSigner, connection )
-    //   await cryptidAccount.init()
-    //   return cryptidAccount
-    // })
-    // const cryptidAccounts = await Promise.all(promises);
 
     const defaultSigner = { // TODO
       publicKey: wallet.publicKey as PublicKey,
@@ -504,24 +509,28 @@ export const CryptidProvider:FC = ({ children }) => {
           didAddress: ext.account,
           alias: ext.alias,
           signer: defaultSigner,
+          isSelected: isSelectedCryptidAccount,
           connection
         })
       }
       loadedCryptidAccounts.push(cryptidAccount)
     }
 
-    // Select the persisted one.
-    if (loadedCryptidAccounts.length > 0) {
-      const selected = loadedCryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || loadedCryptidAccounts[0]
-      console.log('Setting Account for ' + selected.did)
-      setSelectedCryptidAccount(selected)
-    }
-
-
     // console.log(`Setting setCryptidAccounts with: ${loadedCryptidAccounts}`)
     setCryptidAccounts(loadedCryptidAccounts)
     setReady(true) // TODO is this deterministally set at the same time of the array?
-  }, [cryptidExtAccounts, setCryptidAccounts, connection, getDidPrefix])
+  }, [cryptidExtAccounts, setCryptidAccounts, connection, getDidPrefix, isSelectedCryptidAccount])
+
+  // Select Account when set
+  useEffect(() => {
+    console.log('useEffect setSelectedCryptidAccount')
+    // Select the persisted one.
+    if (cryptidAccounts.length > 0) {
+      const selected = cryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
+      console.log('Setting Account for ' + selected.did)
+      setSelectedCryptidAccount(selected)
+    }
+  }, [cryptidAccounts, setSelectedCryptidAccount, cryptidSelector.selectedCryptidAccount])
 
   // Load from Storage
   useEffect(() => {
