@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {Modal} from "../modals/modal";
-import {PlusCircleIcon} from "@heroicons/react/outline";
+import { Modal } from "../modals/modal";
+import { PlusCircleIcon } from "@heroicons/react/outline";
 import { convertToPublicKey, CryptidAccount } from "../../utils/Cryptid/cryptid";
 import CryptidTypeSelector, { AddCrytidType } from "./CryptidTypeSelector";
 import { useWalletContext } from "../../utils/wallet";
@@ -8,6 +8,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { decodeAccount } from "../../utils/utils";
 import { useWallet as useAdapterWallet } from "@solana/wallet-adapter-react/lib/useWallet";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { Switch } from '@headlessui/react'
 
 
 interface AddCryptidAccountDialogInterface {
@@ -15,22 +16,26 @@ interface AddCryptidAccountDialogInterface {
   onAdd: (address: string, alias: string, isControlled: boolean) => void,
   onClose: () => void,
   didPrefix: string,
-  currentAccountDid?: string
+  currentAccountAlias?: string
+}
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
 }
 
 export default function AddCryptidAccountDialog(
-  { open, onAdd, onClose, didPrefix }: AddCryptidAccountDialogInterface) {
+  {open, onAdd, onClose, didPrefix, currentAccountAlias}: AddCryptidAccountDialogInterface) {
 
-  const { addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog } = useWalletContext()
+  const {addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog} = useWalletContext()
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
 
   const [addCryptidType, setAddCryptidType] = useState<AddCrytidType>('adapterkey');
-  const [importAddress, setImportAddress] = useState<PublicKey|undefined>();
+  const [importAddress, setImportAddress] = useState<PublicKey | undefined>();
   const [isControlled, setIsControlled] = useState(false);
 
-  const [importKeyPair, setImportKeyPair] = useState<Keypair|undefined>();
+  const [importKeyPair, setImportKeyPair] = useState<Keypair | undefined>();
 
   const setValidatedAddress = useCallback((value: string) => {
     setImportAddress(convertToPublicKey(value));
@@ -69,13 +74,12 @@ export default function AddCryptidAccountDialog(
     }
 
     // import case
-    if (!address){
+    if (!address) {
       address = (importAddress as PublicKey).toBase58() // okEnabled verifies correct PubKey
     }
 
     onAdd(address, alias, isControlled)
   }, [addCryptidType, addWallet, importAddress, alias, isControlled])
-
 
 
   return (
@@ -117,11 +121,11 @@ export default function AddCryptidAccountDialog(
                   Type
                 </label>
                 <div className="mt-1">
-                  <CryptidTypeSelector initialType={addCryptidType} onChange={onCryptidTypeChange} />
+                  <CryptidTypeSelector initialType={addCryptidType} onChange={onCryptidTypeChange}/>
                 </div>
               </div>
 
-              { addCryptidType === 'importkey' &&
+              {addCryptidType === 'importkey' &&
               <div className="sm:col-span-6">
                   <label htmlFor="importkey" className="block text-sm font-medium text-gray-700">
                       Private Key
@@ -136,53 +140,64 @@ export default function AddCryptidAccountDialog(
               </div>
               }
 
-              { addCryptidType === 'adapterkey' &&
+              {addCryptidType === 'adapterkey' &&
               <div className="sm:col-span-6">
                   <div className="mt-1 flex justify-center">
-                    <WalletMultiButton/>
+                      <WalletMultiButton/>
                   </div>
               </div>
               }
 
 
-              { addCryptidType === 'import' &&
-                <div className="sm:col-span-6">
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                        Cryptid Account
-                    </label>
-                    <div className="mt-1 flex rounded-md shadow-sm w-full">
+              {addCryptidType === 'import' && <>
+                  <div className="sm:col-span-6">
+                      <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                          Cryptid Account
+                      </label>
+                      <div className="mt-1 flex rounded-md shadow-sm w-full">
                     <span
                         className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
                       {didPrefix}:
                     </span>
-                        <input type="text" name="address" id="address"
-                               className="flex-1 px-3 py-2 focus:ring-red-800 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md border sm:text-sm border-gray-300"
-                               placeholder="Address"
-                               // value={importAddress}
-                               onChange={(e) => setValidatedAddress(e.target.value.trim())}
-                        />
+                          <input type="text" name="address" id="address"
+                                 className="flex-1 px-3 py-2 focus:ring-red-800 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md border sm:text-sm border-gray-300"
+                                 placeholder="Address"
+                            // value={importAddress}
+                                 onChange={(e) => setValidatedAddress(e.target.value.trim())}
+                          />
+                      </div>
+                  </div>
+
+                {currentAccountAlias && <div className="sm:col-span-6">
+                    <div className="m-1">
+                        <Switch.Group as="div" className="flex items-center">
+                            <Switch
+                                checked={isControlled}
+                                onChange={setIsControlled}
+                                className={classNames(
+                                  isControlled ? 'bg-indigo-600' : 'bg-gray-200',
+                                  'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                )}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className={classNames(
+                                      isControlled ? 'translate-x-5' : 'translate-x-0',
+                                      'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200'
+                                    )}
+                                />
+                            </Switch>
+                            <Switch.Label as="span" className="ml-3">
+                                <span className="text-sm text-gray-500">Controlled by </span>
+                                <span className="text-sm font-medium text-gray-900">{currentAccountAlias}</span>
+                            </Switch.Label>
+                        </Switch.Group>
                     </div>
-                </div>
-              }
+                </div>}
+
+              </>}
+            </div>
           </div>
-      </div>
-      {/*{ currentAccount &&*/}
-      {/*<div>*/}
-      {/*  <FormGroup>*/}
-      {/*    <FormControlLabel*/}
-      {/*      control={*/}
-      {/*        <Switch*/}
-      {/*          checked={isControlled}*/}
-      {/*          onChange={() => setIsControlled(!isControlled)}*/}
-      {/*        />*/}
-      {/*      }*/}
-      {/*      label={`Controlled by`}*/}
-      {/*    />*/}
-      {/*  </FormGroup>*/}
-      {/*  <Typography>*/}
-      {/*    {currentAccount}*/}
-      {/*  </Typography>*/}
-      {/*</div> }*/}
         </div>
       </div>
     </Modal>
