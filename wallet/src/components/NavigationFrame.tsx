@@ -1,9 +1,18 @@
-import React, { useState, useMemo, Fragment } from 'react';
+import React, { useState, Fragment } from 'react';
 import { useConnectionConfig } from '../utils/connection';
-import {clusterForEndpoint, getClusters, addCustomCluster, customClusterExists} from '../utils/clusters';
+import {
+  // clusterForEndpoint,
+  getClusters,
+  // addCustomCluster,
+  // customClusterExists,
+} from '../utils/clusters';
 import { usePage } from '../utils/page';
-import AddCustomClusterDialog from "./AddCustomClusterDialog";
-import {CogIcon, MenuIcon, XIcon} from "@heroicons/react/outline";
+// import AddCustomClusterDialog from "./AddCustomClusterDialog";
+import {
+  CogIcon,
+  // MenuIcon,
+  // XIcon,
+} from "@heroicons/react/outline";
 import {Menu, Disclosure, Transition} from "@headlessui/react";
 import { pages } from "../utils/config";
 import IdentitySelector from './selectors/IdentitySelector';
@@ -14,18 +23,18 @@ const classNames = (...classes) => classes.filter(Boolean).join(' ');
 const NetworkSelector = () => {
   const { endpoint, setEndpoint } = useConnectionConfig();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [addCustomNetworkOpen, setCustomNetworkOpen] = useState(false);
+  // const [addCustomNetworkOpen, setCustomNetworkOpen] = useState(false);
 
   return (
     <div className="hidden sm:ml-6 sm:flex sm:items-center">
-      <AddCustomClusterDialog
-        open={addCustomNetworkOpen}
-        onClose={() => setCustomNetworkOpen(false)}
-        onAdd={({ name, apiUrl }) => {
-          addCustomCluster(name, apiUrl);
-          setCustomNetworkOpen(false);
-        }}
-      />
+      {/*<AddCustomClusterDialog*/}
+      {/*  open={addCustomNetworkOpen}*/}
+      {/*  onClose={() => setCustomNetworkOpen(false)}*/}
+      {/*  onAdd={({ name, apiUrl }) => {*/}
+      {/*    addCustomCluster(name, apiUrl);*/}
+      {/*    setCustomNetworkOpen(false);*/}
+      {/*  }}*/}
+      {/*/>*/}
       <Menu as="div" className="ml-3 relative">
         <div>
           <Menu.Button
@@ -67,18 +76,18 @@ const NetworkSelector = () => {
                 )}
               </Menu.Item>
             ))}
-            <Menu.Item
-              onClick={() => {
-                setCustomNetworkOpen(true);
-              }}
-            >
-              <a
-                className="block px-2 py-2 text-sm text-gray-700"
-                onClick={() => {
-                  setCustomNetworkOpen(true);
-                }}>{customClusterExists() ? 'Edit Custom Endpoint' : 'Add Custom Endpoint'}
-              </a>
-            </Menu.Item>
+            {/*<Menu.Item*/}
+            {/*  onClick={() => {*/}
+            {/*    setCustomNetworkOpen(true);*/}
+            {/*  }}*/}
+            {/*>*/}
+            {/*  <a*/}
+            {/*    className="block px-2 py-2 text-sm text-gray-700"*/}
+            {/*    onClick={() => {*/}
+            {/*      setCustomNetworkOpen(true);*/}
+            {/*    }}>{customClusterExists() ? 'Edit Custom Endpoint' : 'Add Custom Endpoint'}*/}
+            {/*  </a>*/}
+            {/*</Menu.Item>*/}
           </Menu.Items>
         </Transition>
       </Menu>
