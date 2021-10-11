@@ -32,6 +32,8 @@ const MANGO_PROGRAM_ID_V2 = new PublicKey(
 const MARKET_PROGRAM_ID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY');
 
 export const getProgram = (instruction) => {
+  if (!instruction?.programId) return 'Unknown Program';
+  
   switch (instruction.programId.toBase58()) {
     case MARKET_PROGRAM_ID.toBase58(): return 'Serum'
     case TOKEN_PROGRAM_ID.toBase58(): return 'Token Program'
