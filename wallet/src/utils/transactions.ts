@@ -120,9 +120,9 @@ const toInstruction = async (
     } else if (programId.equals(StakeProgram.programId)) {
       console.log('[' + index + '] Handled as stake instruction');
       return handleStakeInstruction(publicKey, instruction, accountKeys);
-    } else if (programId.equals(TOKEN_PROGRAM_ID)) {
-      console.log('[' + index + '] Handled as token instruction');
-      return handleTokenInstruction(publicKey, instruction, accountKeys);
+    // } else if (programId.equals(TOKEN_PROGRAM_ID)) {
+    //   console.log('[' + index + '] Handled as token instruction');
+    //   return handleTokenInstruction(publicKey, instruction, accountKeys);
     // } else if (programId.equals(MARKET_PROGRAM_ID)) {
     //   console.log('[' + index + '] Handled as dex instruction');
     //   let decodedInstruction = decodeInstruction(decoded);
