@@ -8,7 +8,7 @@ import { useWalletContext } from "../utils/wallet";
 
 export default function IdentityPage() {
   const { selectedCryptidAccount } = useCryptid()
-  const { listWallets, setShowAddMnemonicDialog, showAddMnemonicDialog } = useWalletContext()
+  const { listWallets, connectWallet, wallet } = useWalletContext()
 
   return (
     <>
@@ -17,7 +17,7 @@ export default function IdentityPage() {
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul role="list" className="divide-y divide-gray-200">
               {selectedCryptidAccount &&
-              <CryptidDetails cryptidAccount={selectedCryptidAccount}/>}
+              <CryptidDetails cryptidAccount={selectedCryptidAccount} connectWallet={connectWallet} wallet={wallet}/>}
             </ul>
           </div>
         </div>

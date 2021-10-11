@@ -17,13 +17,15 @@ import {CryptidButton} from "../balances/CryptidButton";
 import {PlusCircleIcon, XCircleIcon} from "@heroicons/react/outline";
 import * as React from "react";
 import {useIsProdNetwork} from "../../utils/connection";
-import {useRequestAirdrop} from "../../utils/wallet";
+import { useRequestAirdrop, WalletInterface } from "../../utils/wallet";
 import AddControllerModal from "../modals/AddControllerModal";
 import AddKeyOrCryptidAccountModal from "./AddKeyOrCryptidAccountModal";
 import KeyList, { KeyListItem } from "./KeyList";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
+  connectWallet: (publicKey) => void
+  wallet: WalletInterface
 }
 
 type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
@@ -34,23 +36,31 @@ const useForceUpdate = () => {
   return () => setValue(value => value + 1); // update the state to force render
 }
 
-export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => {
+export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
   const forceUpdate = useForceUpdate();
-  const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
+  const [ sendTransaction ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
-  const isProdNetwork = useIsProdNetwork();
   const requestAirdrop = useRequestAirdrop();
 
-  useEffect(() => {console.log(`Cryptiddetails changed: ${cryptidAccount.did}`)}, [cryptidAccount])
 
   const onSuccessUpdate = (f?: () => void) => {
     if (f) {
       f();
     }
     cryptidAccount.updateDocument().then(forceUpdate)
+  }
+
+  const selectKeyCB = (base58Key: string, alias: string) => {
+    const pk = new PublicKey(base58Key)
+    connectWallet(pk)
+  }
+
+  const requestAirDrop = (base58Key: string) => {
+    const pk = new PublicKey(base58Key)
+    requestAirdrop(pk)
   }
 
   const addKeyCallback = (address: string, alias: string) => {
@@ -75,10 +85,13 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
   const getKeyListItems = useCallback((): KeyListItem[] => {
     return cryptidAccount.verificationMethods.filter(vm => !!vm.publicKeyBase58).map(vm => ({
       alias: vm.id.replace(cryptidAccount.did + '#', ''),
-      key: vm.publicKeyBase58 as string,
-      isActive: cryptidAccount.activeSigningKey.toBase58() === vm.publicKeyBase58
+      base58Key: vm.publicKeyBase58 as string,
+      isActive: wallet.publicKey?.toBase58() === vm.publicKeyBase58,
+      airdropCB: requestAirDrop,
+      selectCB: selectKeyCB,
+      removeCB: (key, alias) => removeKeyCallback(alias)
     }))
-  }, [cryptidAccount])
+  }, [cryptidAccount.verificationMethods, cryptidAccount.did, wallet.publicKey])
 
   return (
     <>

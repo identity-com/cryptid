@@ -128,7 +128,7 @@ export class CryptidAccount {
     return this._parent != null ? this._parent.did : this.did
   }
 
-  baseAccount = () => {
+  baseAccount = (): CryptidAccount => {
     if (this._parent) {
       return this._parent.baseAccount()
     }
