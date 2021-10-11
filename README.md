@@ -1,13 +1,14 @@
 # Cryptid
-Cryptid is a protocol and client-suite that brings the power of [DIDs](https://www.w3.org/TR/did-core/) to
+Cryptid is a protocol and client-suite that brings the power of Identity to
 [Solana](https://solana.com).
 
 The way to identity yourself on the blockchain at the moment is through ownership of a private key. 
 You essentially are your private key. Assets are owned and transactions are signed using this key.
 
-Cryptid provides a basis for an identity layer on the blockchain, specifically on Solana. It does this by providing a 
-flexible layer between the user and one or more private keys. Instead of assets being owned and transactions signed by 
-a single private key, these assets are now owned and transactions are signed by a Cryptid account.
+Cryptid changes this, by establishing an identity layer on the blockchain, specifically on Solana. It does this by 
+providing a general-purpose, flexible proxy account between the user and their private keys. Instead of assets being 
+owned and transactions signed by a single private key, these assets are now owned and transactions are signed by a 
+Cryptid account.
 
 Try it out at https://cryptid.identity.com/ or install the [cli](./cli/).
 
@@ -27,8 +28,12 @@ Try it out at https://cryptid.identity.com/ or install the [cli](./cli/).
 * Create a Cryptid account from your existing Solana wallet
 * Access your funds across multiple devices using different keys
 * Rotate keys as needed
-* Allow other Cryptid accounts to transact on your behalf
+* Grant permissions to other Cryptid accounts to transact on your behalf
 * Perform standard Solana transactions
+* Through the "controller" feature, Cryptid accounts can be connected together. This allows
+  * fully on-chain and secure trust accounts
+  * individuals can control assets belonging to dependents
+  * corporate wallets - company executives can share control of a company wallet without sharing keys
 
 ### On Our Roadmap
 
@@ -45,7 +50,6 @@ _thing_ you can think of.
 
 By allowing for multiple keys on a single identity, a Cryptid account can perform actions like:
 * Multiple devices accessing the account
-* Assigning control of the account to other Cryptid accounts
 * Key rotation and account recovery
 * Hot and cold storage
 * And more...
@@ -64,42 +68,6 @@ Advanced usage of Cryptid requires additional information to be registered on-ch
 Solana. The details of these costs are explained in detail in the 
 [Solana documentation](https://docs.solana.com/developing/programming-model/accounts#calculation-of-rent)
 
-
-
-<!--
-
-
-
-
-### What is Cryptid?
-Cryptid is a protocol and client-suite that brings the power of [DIDs](https://www.w3.org/TR/did-core/) to 
-[Solana](https://solana.com). Specifically, it allows for a construct whereby a wallet is owned by a DID, and the DID 
-defines the keys that are capable of transacting with that wallet.
-
-### How secure is Cryptid?
-All functionality, key generation and blockchain interaction happens directly on the client. No information is stored in
-any centralized database outside of your control.
-
-### How decentralized is Cryptid?
-Cryptid only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) endpoint to Solana and all
-transactions are executed on the blockchain. Keys are generated and stored on your local environment and never stored
-on a centralized database.
-
-### Can I use Cryptid on Mainnet?
-The Cryptid Solana program is currently available on Devnet. 
-
-### How do I add an additional key to my DID?
-Once your account has been created, click the "Add Key" button under the Keys section. You will need to provide the
-public key, and a key name unique to your DID.
-
-### How can I add a controller to my DID?
-In the controller section of your account view, click "Add Controller". Enter the DID of the controller you would like
-to add.
-
-### How much does it cost to create a DID?
-Creating a DID is free. Adding additional keys, services or controllers to the DID will require a transaction and 
-incur additional costs as [rent](https://docs.solana.com/developing/programming-model/accounts#rent).
--->
 
 ## Getting Started
 To contribute to Cryptid, please check out the [code of conduct](./CODE_OF_CONDUCT.md).
@@ -185,3 +153,30 @@ yarn workspace @identity.com/cryptid-wallet start
 ```
 
 # Technical Details
+Cryptid uses meta-transactions to abstract the key from the identity.
+Transactions signed by a cryptid account are, in fact, wrapped in a meta transaction.
+The meta-transaction is signed by a private key and then sent to the [Cryptid program](./programs/cryptid_signer)
+The Cryptid program validates that the private key has the permissions to sign the transaction from the Cryptid account,
+according to the associated identity stored on chain.
+
+The identity information is represented as a DID, using the SOL-DID program. It associates an identity with
+* a set of rotatable keys
+* a set of permissions on those keys
+* a set of controllers
+
+## Signing permissions
+A key is permitted to sign a transaction from a Cryptid account if:
+
+It is listed on the DID as a "capabilityInvocation" key
+
+OR
+
+It is permitted to sign on one of the controllers of the DID. Controllers of DIDs are themselves DIDs, and
+the controller relationship is transitive. So a controller of a DID may sign transactions for that DID, or any DIDs 
+that it, in turn, controls.
+
+## Meta-Transactions
+The initial instructions in a transaction are serialised and added as data to the Cryptid transaction.
+This serialisation adds some overhead to the transaction size, meaning that some transactions that initially fit within 
+the transaction size limit may now exceed it. On the roadmap are plans to allow transactions to be chunked to avoid this
+limitation.
