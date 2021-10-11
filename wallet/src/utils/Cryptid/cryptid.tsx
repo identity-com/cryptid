@@ -128,7 +128,11 @@ export class CryptidAccount {
     return this._parent != null ? this._parent.did : this.did
   }
 
-  baseAccount = () => {
+  get controllerMatches() {
+    return !!this.controllers.find(x => x === this.controlledBy)
+  }
+
+  baseAccount = (): CryptidAccount => {
     if (this._parent) {
       return this._parent.baseAccount()
     }
@@ -169,7 +173,7 @@ export class CryptidAccount {
   }
   
   get activeSigningKey():PublicKey {
-    return this._signer.publicKey
+    return this.baseAccount()._signer.publicKey
   }
 
   get isSelected() {
@@ -184,7 +188,7 @@ export class CryptidAccount {
   }
 
   get activeSigningKeyAlias():string {
-    const activeVerificationMethod = this.verificationMethods.find(vm => vm.publicKeyBase58 === this.activeSigningKey?.toBase58());
+    const activeVerificationMethod = this.baseAccount().verificationMethods.find(vm => vm.publicKeyBase58 === this.activeSigningKey?.toBase58());
     if (!activeVerificationMethod) return 'NOT SET!';
     return activeVerificationMethod.id.replace(/.*#/,'');
   }
@@ -549,6 +553,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
     // already has key assigned?
     if (wallet.publicKey && baseAccount.containsKey(wallet.publicKey)) {
+      console.log(`findWallet: Key already set to  ${wallet.publicKey.toBase58()}`)
       return
     }
 

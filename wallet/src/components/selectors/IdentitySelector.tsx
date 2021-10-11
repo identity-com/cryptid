@@ -1,6 +1,6 @@
 import { CryptidAccount, useCryptid } from '../../utils/Cryptid/cryptid';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import AddCryptidAccountDialog from '../Cryptid/AddCryptidAccountDialog';
+import AddKeyOrCryptidAccountModal from '../Cryptid/AddKeyOrCryptidAccountModal';
 import { Menu, Transition } from '@headlessui/react';
 import { complement } from 'ramda';
 import {CheckIcon} from "@heroicons/react/outline";
@@ -22,7 +22,7 @@ const CryptidAccountMenuItem = ({item, setSelectedCryptidAccount}: CryptidAccoun
         )}
       >
         {item.alias}
-        {item.isSelected && <CheckIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />}
+        {item.isSelected && <CheckIcon className="ml-1 h-5 w-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />}
       </a>
     )}
   </Menu.Item>
@@ -44,7 +44,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
     getDidPrefix } = useCryptid()
   const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
 
-  const onAdd = useCallback(async (address: string, alias: string, isControlled: boolean) => {
+  const onAddCryptidAccount = useCallback(async (address: string, alias: string, isControlled: boolean) => {
     let parent;
     if (isControlled && selectedCryptidAccount) {
       parent = selectedCryptidAccount
@@ -64,12 +64,13 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
 
   return (
     <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center "}>
-      <AddCryptidAccountDialog
+      <AddKeyOrCryptidAccountModal
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
-        onAdd={onAdd}
+        onAddCryptidAccount={onAddCryptidAccount}
         didPrefix={getDidPrefix()}
         currentAccountAlias={selectedCryptidAccount?.alias}
+        modalType={"cryptid"}
       />
       {/* Identity dropdown */}
       <Menu as="div" className="z-40 relative">

@@ -89,10 +89,6 @@ export function WalletProvider({ children }) {
     importsEncryptionKey,
     derivationPath
   }, loadedingMnemonicPromise ] = useUnlockedMnemonicAndSeed(); // TODO how can these not be optional?
-  // const hasUnlockedMnemonic = false
-  // const seed = 'asdf';
-  // const derivationPath= 'asdf'
-  // const importsEncryptionKey = new Uint8Array()
 
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
 
@@ -100,13 +96,6 @@ export function WalletProvider({ children }) {
   const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
   const [showWalletConnectDialogWithPublicKey, setShowWalletConnectDialogWithPublicKey] = useState<string|undefined>();
 
-
-  useEffect(()=> {
-    console.log(`mnemonic changed: ${mnemonic}`)
-    console.log(`seed changed: ${seed}`)
-    console.log(`importsEncryptionKey changed: ${importsEncryptionKey}`)
-    console.log(`derivationPath changed: ${derivationPath}`)
-  }, [mnemonic, seed, importsEncryptionKey, derivationPath])
 
   const adapterWallet = useAdapterWallet()
 
