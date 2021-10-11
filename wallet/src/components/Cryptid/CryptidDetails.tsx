@@ -1,26 +1,20 @@
-import { Card, CardContent, List, ListItem, Typography } from "@material-ui/core";
 import { CryptidAccount, useCryptid } from "../../utils/Cryptid/cryptid";
-import Button from "@material-ui/core/Button";
-import AddKeyIcon from "@material-ui/icons/VpnKeyOutlined";
-import AddServiceIcon from "@material-ui/icons/RoomServiceOutlined";
-import AddControllerIcon from "@material-ui/icons/SupervisorAccountOutlined";
-import ListItemText from "@material-ui/core/ListItemText";
-import AddKeyDialog from "./AddKeyDialog";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { PublicKey, TransactionSignature } from "@solana/web3.js";
-import { useSnackbar } from "notistack";
-import AddControllerDialog from "./AddControllerDialog";
 import { useSendTransaction } from "../../utils/notifications";
-import {KeyIcon, UserIcon, UsersIcon} from "@heroicons/react/outline";
-import {AddressLink} from "../AddressLink";
 import {CryptidButton} from "../balances/CryptidButton";
-import {PaperAirplaneIcon, XCircleIcon} from "@heroicons/react/solid";
+import { CheckCircleIcon, PlusCircleIcon, XCircleIcon } from "@heroicons/react/outline";
 import * as React from "react";
-import {useIsProdNetwork} from "../../utils/connection";
-import {useRequestAirdrop} from "../../utils/wallet";
+import { useRequestAirdrop, WalletInterface } from "../../utils/wallet";
+import AddControllerModal from "../modals/AddControllerModal";
+import AddKeyOrCryptidAccountModal from "./AddKeyOrCryptidAccountModal";
+import KeyList, { KeyListItem } from "./KeyList";
+import ControllerList, { ControllerListItem } from "./ControllerList";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
+  connectWallet: (publicKey) => void
+  wallet: WalletInterface
 }
 
 type SendTransaction = (s: Promise<TransactionSignature>, c: { onSuccess?: () => void; onError?: (err: any) => void } ) => void
@@ -31,23 +25,31 @@ const useForceUpdate = () => {
   return () => setValue(value => value + 1); // update the state to force render
 }
 
-export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => {
+export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
   const forceUpdate = useForceUpdate();
-  const [ sendTransaction, sending ] = useSendTransaction() as [SendTransaction, boolean]
+  const [ sendTransaction ] = useSendTransaction() as [SendTransaction, boolean]
   const [addKeyDialogOpen, setAddKeyDialogOpen] = useState(false);
   const [addControllerDialogOpen, setAddControllerDialogOpen] = useState(false);
-  const isProdNetwork = useIsProdNetwork();
   const requestAirdrop = useRequestAirdrop();
 
-  useEffect(() => {}, [cryptidAccount])
 
   const onSuccessUpdate = (f?: () => void) => {
     if (f) {
       f();
     }
     cryptidAccount.updateDocument().then(forceUpdate)
+  }
+
+  const selectKeyCB = (base58Key: string, alias: string) => {
+    const pk = new PublicKey(base58Key)
+    connectWallet(pk)
+  }
+
+  const requestAirDrop = (base58Key: string) => {
+    const pk = new PublicKey(base58Key)
+    requestAirdrop(pk)
   }
 
   const addKeyCallback = (address: string, alias: string) => {
@@ -61,7 +63,7 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
     onSuccess: () => onSuccessUpdate()
   });
 
-  const addControllerCallback = (controllerDID: string) => sendTransaction(cryptidAccount.addController(controllerDID), {
+  const addControllerCallback = (controllerPublicKey: PublicKey) => sendTransaction(cryptidAccount.addController(`${getDidPrefix()}:${controllerPublicKey.toBase58()}`), {
     onSuccess: () => onSuccessUpdate(() => setAddControllerDialogOpen(false))
   });
 
@@ -69,133 +71,107 @@ export const CryptidDetails = ({ cryptidAccount } : CryptidDetailsInterface) => 
     onSuccess: () => onSuccessUpdate()
   });
 
+  const getKeyListItems = useCallback((): KeyListItem[] => {
+    return cryptidAccount.verificationMethods.filter(vm => !!vm.publicKeyBase58).map(vm => ({
+      alias: vm.id.replace(cryptidAccount.did + '#', ''),
+      base58Key: vm.publicKeyBase58 as string,
+      isActive: wallet.publicKey?.toBase58() === vm.publicKeyBase58,
+      airdropCB: requestAirDrop,
+      selectCB: selectKeyCB,
+      removeCB: (key, alias) => removeKeyCallback(alias)
+    }))
+  }, [cryptidAccount.verificationMethods, cryptidAccount.did, wallet.publicKey])
+
+  const getControllerListItems = useCallback((): ControllerListItem[] => {
+    return cryptidAccount.controllers.map(c => ({
+      controllerDid: c,
+      removeCB: (c) => removeControllerCallback(c)
+    }))
+  }, [cryptidAccount.controllers])
+
   return (
     <>
-      <AddKeyDialog
+      <AddControllerModal open={addControllerDialogOpen}
+                          onAdd={addControllerCallback}
+                          onClose={() => setAddControllerDialogOpen(false)}
+                          didPrefix={getDidPrefix()} />
+      <AddKeyOrCryptidAccountModal
         open={addKeyDialogOpen}
         onClose={() => setAddKeyDialogOpen(false)}
-        onAdd={addKeyCallback}
-      />
-      <AddControllerDialog
-        open={addControllerDialogOpen}
-        onClose={() => setAddControllerDialogOpen(false)}
-        onAdd={addControllerCallback}
+        onAddKey={addKeyCallback}
         didPrefix={getDidPrefix()}
+        currentAccountAlias={cryptidAccount.alias}
+        modalType={"key"}
       />
-      <Card>
-        <div className="p-3 min-w-0 flex-1 flex items-center">
-          <div className="flex-shrink-0">
-            <UserIcon className="h-12 w-12"/>
-          </div>
-          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
-            <p className="mt-2 flex items-center text-lg text-black">
-              <span className="truncate">Identity</span>
-            </p>
-          </div>
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">Cryptid Account - {cryptidAccount.alias}</h3>
+          {/*<p className="mt-1 max-w-2xl text-sm text-gray-500">Personal details and application.</p>*/}
         </div>
-        { cryptidAccount.isControlled &&
-        <Typography variant="h6">
-          controlled by DID: {cryptidAccount.controlledBy}
-        </Typography>
-        }
-        <CardContent>
-          <div className="min-w-0 max-w-2xl flex-1 flex items-center">
-            <div className="text-lg flex-1 flex-shrink-0">
-              Address:
+        <div className="border-t border-gray-200">
+          <dl>
+            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Alias</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.alias}</dd>
             </div>
-            <div className="min-w-0 flex-1 px-4 text-gray-500">
-              <AddressLink publicKey={cryptidAccount.address || undefined}/>
+            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Identifier</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.did}</dd>
             </div>
-          </div>
-          <div className="min-w-0 max-w-2xl flex-1 flex items-center">
-            <div className="text-lg flex-1 flex-shrink-0">
-              DID:
+            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Cryptid address</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.address.toBase58()}</dd>
             </div>
-            <div className="min-w-0 flex-1 px-4 text-gray-500">
-              <span className="truncate">{cryptidAccount.did}</span>
+            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Controlled By</dt>
+              {cryptidAccount.isControlled &&
+                <dd className="mt-1">
+                  <div className="inline-flex items-center">
+                    <p className="text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      {cryptidAccount.controlledBy}
+                    </p>
+                    {cryptidAccount.controllerMatches && <CheckCircleIcon className="ml-1 text-green-500 w-6 h-6"/>}
+                    {!cryptidAccount.controllerMatches && <XCircleIcon className="ml-1 text-red-500 w-6 h-6"/>}
+                  </div>
+                </dd>
+              }
+              {!cryptidAccount.isControlled &&
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Self-Controlled</dd>
+              }
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <div className="p-3 min-w-0 flex-1 flex items-center">
-          <div className="flex-shrink-0">
-            <KeyIcon className="h-12 w-12"/>
-          </div>
-          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
-            <p className="mt-2 flex items-center text-lg text-black">
-              <span className="truncate">Keys</span>
-            </p>
-          </div>
+            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt>
+                <div className="flex items-center">
+                  <p className="text-sm font-medium text-gray-500">Keys</p>
+                  <button className="ml-4" onClick={() => setAddKeyDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" aria-hidden="true"/></button>
+                </div>
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <KeyList items={getKeyListItems()}/>
+              </dd>
+            </div>
+            {/*<div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">*/}
+            {/*  <dt className="text-sm font-medium text-gray-500">Services</dt>*/}
+            {/*  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">*/}
+            {/*    Services go here.*/}
+            {/*  </dd>*/}
+            {/*</div>*/}
+            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt>
+                <div className="flex items-center">
+                  <p className="text-sm font-medium text-gray-500">Controllers</p>
+                  <button className="ml-4" onClick={() => setAddControllerDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" aria-hidden="true"/></button>
+                </div>
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <ControllerList items={getControllerListItems()}/>
+              </dd>
+            </div>
+          </dl>
         </div>
-        <CardContent>
-          <List>
-            { cryptidAccount.verificationMethods.map(vm => {
-              if (!vm.publicKeyBase58) return null;
-              const key = new PublicKey(vm.publicKeyBase58);
-              
-              return (
-                <CryptidDetailsListItem primary={vm.id.replace(cryptidAccount.did + '#', '')} secondary={vm.publicKeyBase58}
-                                    removeCallback={removeKeyCallback}>
-                  {isProdNetwork || <CryptidButton label="Request Airdrop" Icon={PaperAirplaneIcon}
-                                                   onClick={() => requestAirdrop(key)}/>}
-                </CryptidDetailsListItem>
-              )
-            })}
-          </List>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddKeyIcon />}
-            onClick={() => setAddKeyDialogOpen(true)}
-          >
-            Add Key
-          </Button>
-        </CardContent>
-      </Card>
-      {/*<Card>*/}
-      {/*  <CardContent>*/}
-      {/*    <Typography variant="h6">*/}
-      {/*      Services:*/}
-      {/*    </Typography>*/}
-      {/*    <Button*/}
-      {/*      variant="outlined"*/}
-      {/*      color="primary"*/}
-      {/*      startIcon={<AddServiceIcon />}*/}
-      {/*      onClick={() => alert('Add Service clicked')}*/}
-      {/*    >*/}
-      {/*      Add Service*/}
-      {/*    </Button>*/}
-      {/*  </CardContent>*/}
-      {/*</Card>*/}
-      <Card>
-        <div className="p-3 min-w-0 flex-1 flex items-center">
-          <div className="flex-shrink-0">
-            <UsersIcon className="h-12 w-12"/>
-          </div>
-          <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
-            <p className="mt-2 flex items-center text-lg text-black">
-              <span className="truncate">Controllers</span>
-            </p>
-          </div>
-        </div>
-        <CardContent>
-          { cryptidAccount.controllers.map(c => {
-            return (
-              <CryptidDetailsListItem primary={c} removeCallback={removeControllerCallback} />
-            )
-          })}
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddControllerIcon />}
-            onClick={() => setAddControllerDialogOpen(true)}
-          >
-            Add Controller
-          </Button>
-        </CardContent>
-      </Card>
-    </>)
+      </div>
+    </>
+  )
 }
 
 type CryptidDetailsListItemInterface = {

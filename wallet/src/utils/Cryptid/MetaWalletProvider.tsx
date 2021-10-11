@@ -1,10 +1,12 @@
 import { useConnectionConfig } from "../connection";
 import { getLedgerWallet, getPhantomWallet, getSolflareWallet } from "@solana/wallet-adapter-wallets";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import {ConnectionProvider as SolanaConnectionProvider, WalletProvider as SolanaWalletProvider} from "@solana/wallet-adapter-react";
 import { WalletProvider } from "../wallet";
 import { CryptidProvider } from "./cryptid";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import AddMnemonicModal from "../../components/modals/AddMnenomicModal";
+import WalletConnectModal from "../../components/modals/WalletConnectModal";
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -30,6 +32,8 @@ export const MetaWalletProvider = ({ children }) => {
         <WalletProvider>
           <CryptidProvider>
             <WalletModalProvider>
+              <AddMnemonicModal />
+              <WalletConnectModal />
               {children}
             </WalletModalProvider>
           </CryptidProvider>

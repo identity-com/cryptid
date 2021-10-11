@@ -1,8 +1,10 @@
 import { CryptidAccount, useCryptid } from '../../utils/Cryptid/cryptid';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import AddCryptidAccountDialog from '../Cryptid/AddCryptidAccountDialog';
+import AddKeyOrCryptidAccountModal from '../Cryptid/AddKeyOrCryptidAccountModal';
 import { Menu, Transition } from '@headlessui/react';
 import { complement } from 'ramda';
+import {CheckIcon} from "@heroicons/react/outline";
+
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -14,13 +16,13 @@ const CryptidAccountMenuItem = ({item, setSelectedCryptidAccount}: CryptidAccoun
   <Menu.Item key={item.alias || item.did} onClick={() => setSelectedCryptidAccount(item)}>
     {({ active }) => (
       <a
-        // href={item.did}
         className={classNames(
           active ? 'bg-gray-100' : '',
-          'block px-4 py-2 text-sm text-gray-700'
+          'group flex px-4 py-2 text-sm text-gray-700'
         )}
       >
         {item.alias}
+        {item.isSelected && <CheckIcon className="ml-1 h-5 w-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />}
       </a>
     )}
   </Menu.Item>
@@ -42,7 +44,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
     getDidPrefix } = useCryptid()
   const [addCryptidAccountDialogOpen, setCryptidAccountDialogOpen] = useState(false);
 
-  const onAdd = useCallback(async (address: string, alias: string, isControlled: boolean) => {
+  const onAddCryptidAccount = useCallback(async (address: string, alias: string, isControlled: boolean) => {
     let parent;
     if (isControlled && selectedCryptidAccount) {
       parent = selectedCryptidAccount
@@ -62,12 +64,13 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
 
   return (
     <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center "}>
-      <AddCryptidAccountDialog
+      <AddKeyOrCryptidAccountModal
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
-        onAdd={onAdd}
+        onAddCryptidAccount={onAddCryptidAccount}
         didPrefix={getDidPrefix()}
         currentAccountAlias={selectedCryptidAccount?.alias}
+        modalType={"cryptid"}
       />
       {/* Identity dropdown */}
       <Menu as="div" className="z-40 relative">

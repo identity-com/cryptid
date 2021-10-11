@@ -21,9 +21,6 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import Collapse from '@material-ui/core/Collapse';
 import { useSolanaExplorerUrlSuffix } from '../utils/connection';
 import Link from '@material-ui/core/Link';
-import CopyableDisplay from './CopyableDisplay';
-import DialogForm from './DialogForm';
-import { showSwapAddress } from '../utils/config';
 import TokenIcon from './TokenIcon';
 import {
   refreshCryptidAccountPublicKeys,
@@ -31,9 +28,6 @@ import {
   useCryptidAccountTokenAccounts
 } from "../utils/Cryptid/cryptid";
 import { Modal } from "./modals/modal";
-import { BalanceListItemDetails } from "./balances/BalanceListItemDetails";
-import { serumMarkets } from "../utils/markets";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/solid";
 import {CheckCircleIcon, PlusCircleIcon} from "@heroicons/react/outline";
 import {CopyableAddress} from "./CopyableAddress";
 

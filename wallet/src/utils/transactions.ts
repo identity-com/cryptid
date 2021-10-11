@@ -29,6 +29,15 @@ const MANGO_PROGRAM_ID = new PublicKey(
 const MANGO_PROGRAM_ID_V2 = new PublicKey(
   '5fNfvyp5czQVX77yoACa3JJVEhdRaWjPuazuWgjhTqEH',
 );
+const MARKET_PROGRAM_ID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY');
+
+export const getProgram = (instruction) => {
+  switch (instruction.programId.toBase58()) {
+    case MARKET_PROGRAM_ID.toBase58(): return 'Serum'
+    case TOKEN_PROGRAM_ID.toBase58(): return 'Token Program'
+    case SystemProgram.programId.toBase58(): return 'System Program'
+  }
+}
 
 const marketCache = {};
 let marketCacheConnection = null;
@@ -99,22 +108,20 @@ const toInstruction = async (
     } else if (programId.equals(StakeProgram.programId)) {
       console.log('[' + index + '] Handled as stake instruction');
       return handleStakeInstruction(publicKey, instruction, accountKeys);
-    // } else if (programId.equals(TOKEN_PROGRAM_ID)) {
-    //   console.log('[' + index + '] Handled as token instruction');
-    //   return handleTokenInstruction(publicKey, instruction, accountKeys);
-    // } else if (
-    //   MARKETS.some(
-    //     (market) => market.programId && market.programId.equals(programId),
-    //   )
-    // ) {
+    } else if (programId.equals(TOKEN_PROGRAM_ID)) {
+      console.log('[' + index + '] Handled as token instruction');
+      return handleTokenInstruction(publicKey, instruction, accountKeys);
+    // } else if (programId.equals(MARKET_PROGRAM_ID)) {
     //   console.log('[' + index + '] Handled as dex instruction');
     //   let decodedInstruction = decodeInstruction(decoded);
-    //   return await handleDexInstruction(
+    //   const details = handleDexInstruction(
     //     connection,
     //     instruction,
     //     accountKeys,
     //     decodedInstruction,
     //   );
+    //   console.log(details);
+    //   return details;
     } else if (programId.equals(RAYDIUM_STAKE_PROGRAM_ID)) {
       console.log('[' + index + '] Handled as raydium stake instruction');
       // @ts-ignore
@@ -216,7 +223,7 @@ const decodeLpInstruction = () => {
   return undefined;
 };
 
-const handleDexInstruction = async (
+const handleDexInstruction = (
   connection,
   instruction,
   accountKeys,
@@ -227,50 +234,6 @@ const handleDexInstruction = async (
   }
 
   const { accounts, programIdIndex } = instruction;
-
-  // get market info
-  const marketInfo =
-    accountKeys &&
-    MARKETS.find(
-      (market) =>
-        accountKeys.findIndex((accountKey) =>
-          accountKey.equals(market.address),
-        ) > -1,
-    );
-
-  // get market
-  let market, programIdAddress;
-  try {
-    const marketAddress =
-      marketInfo?.address || getAccountByIndex(accounts, accountKeys, 0);
-    programIdAddress =
-      marketInfo?.programId ||
-      getAccountByIndex([programIdIndex], accountKeys, 0);
-    const strAddress = marketAddress.toBase58();
-    const now = new Date().getTime();
-    if (
-      !(
-        connection === marketCacheConnection &&
-        strAddress in marketCache &&
-        now - marketCache[strAddress].ts < cacheDuration
-      )
-    ) {
-      marketCacheConnection = connection;
-      console.log('Loading market', strAddress);
-      marketCache[strAddress] = {
-        market: await Market.load(
-          connection,
-          marketAddress,
-          {},
-          programIdAddress,
-        ),
-        ts: now,
-      };
-    }
-    market = marketCache[strAddress].market;
-  } catch (e) {
-    console.log('Error loading market: ' + e.message);
-  }
 
   // get data
   const type = Object.keys(decodedInstruction)[0];
@@ -292,8 +255,6 @@ const handleDexInstruction = async (
   return {
     type,
     data,
-    market,
-    marketInfo,
   };
 };
 

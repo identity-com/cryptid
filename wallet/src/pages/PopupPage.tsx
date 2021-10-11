@@ -434,17 +434,9 @@ function ApproveSignatureForm({
   return (
     <Card>
       {renderFormContent()}
-      <CardActions className={classes.actions}>
-        <Button onClick={onReject}>Cancel</Button>
-        <Button
-          ref={buttonRef}
-          className={classes.approveButton}
-          variant="contained"
-          color="primary"
-          onClick={onApprove}
-        >
-          Approve{isMultiTx ? ' All' : ''}
-        </Button>
+      <CardActions className='justify-end'>
+        <CryptidButton label='Cancel' Icon={XCircleIcon} onClick={onReject}/>
+        <CryptidButton label={'Approve' + (isMultiTx ? ' All' : '')} Icon={CheckCircleIcon} onClick={onApprove}/>
       </CardActions>
     </Card>
   );
