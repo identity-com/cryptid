@@ -39,7 +39,7 @@ export default function DexInstruction({ instruction, onOpenAddress, index, expa
   };
   
   return (
-    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]} instruction={instruction}>
     <>
       <Typography
         variant="subtitle1"
