@@ -48,11 +48,10 @@ Try it out at [cryptid.identity.com](https://cryptid.identity.com/) or install t
 
 ### On Our Roadmap
 
-* M-of-N Multisig
-  * Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig.
-* Rules and permissions
-* Spending limits and control
-* Secure and non-custodial standing orders
+#### M-of-N Multisig
+Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig.
+
+#### Spending limits and restrictions
 
 An important part of the Cryptid model is the ability to add restrictions to a Cryptid account. We plan to support:
 
@@ -68,15 +67,15 @@ This will allow use-cases such as:
 
 #### Self-Sovereign Identities
 
-DIDs (Decentralized Identifiers) are the standard identifier for self-sovereign identity. It is a globally unique
-identifier, independent of any central authority.
+DIDs ([Decentralized Identifiers](https://www.w3.org/TR/did-core/)) are the standard identifier for self-sovereign identity. It is a globally unique
+identifier and independent of any central authority.
 
 Cryptid use the `did:sol` did method on Solana. The use of DIDs in Cryptid means that we can tie it to up to verifiable
 credentials, and add claims on your Cryptid account.
 
 As an example. We can have a verifiable way that an NFT creator that has created an NFT under key X is a 
 particular artists. We can add a verifiable credential to that identity, have it discoverable on-chain 
-(either directly on chain, or via a link that’s discoverable on-chain) - that attests to who they are.
+(either directly on-chain, or via a link that's discoverable on-chain) - that attests to who they are.
 
 ## Frequently Asked Questions (FAQs)
 
