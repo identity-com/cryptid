@@ -30,18 +30,22 @@ Try it out at https://cryptid.identity.com/ or install the [cli](./cli/).
 ## Features
 
 * Create a Cryptid account from your existing Solana wallet
-* Access your funds across multiple devices using different keys
-* Rotate keys as needed
+* Access your funds across multiple devices without sharing key material or relying on off-chain infrastructure
+* Cryptid allows you to rotate your key if it becomes compromised, ensuring you can keep control of your identity even 
+  if your wallet is breached. Even your initial wallet key can be rotated!
 * Grant permissions to other Cryptid accounts to transact on your behalf
-* Perform standard Solana transactions
-* Through the "controller" feature, Cryptid accounts can be connected together. This allows
+* Interact with dApps
+  * Cryptid behaves just like any other wallet 
+    (Visit [dex-cryptid.civic.finance](https://dex-cryptid.civic.finance) for a demo)
+* Through the "controller" feature, Cryptid accounts can be connected together. This allows:
   * fully on-chain and secure trust accounts
   * individuals can control assets belonging to dependents
   * corporate wallets - company executives can share control of a company wallet without sharing keys
 
 ### On Our Roadmap
 
-* Multisig
+* M-of-N Multisig 
+  * Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig.
 * Rules and permissions
 * Spending limits and control
 * Secure and non-custodial standing orders
@@ -62,7 +66,10 @@ By allowing for multiple keys on a single identity, a Cryptid account can perfor
 If you have a Solana wallet, you already have a Cryptid account. You can select from an existing supported wallet to
 activate your encrypted account, or import your existing keys.
 
-If you don't have an account yet, just follow our on screen instructions to create one.
+All existing Solana wallets are automatically compatible with Cryptid. If you have a wallet, you have a Cryptid account 
+automatically. Connect your wallet at [cryptid.identity.com](https://cryptid.identity.com) to test 
+(devnet only at present). Your cryptid account has a new address, but is backed by your existing wallet, and 
+transactions you make with it are signed with your existing wallet key.
 
 ### How much does a Cryptid account cost?
 By default, your Cryptid account is free. Anyone with an existing Solana account already has a Cryptid account they can
@@ -158,12 +165,12 @@ yarn workspace @identity.com/cryptid-wallet start
 
 # Technical Details
 Cryptid uses meta-transactions to abstract the key from the identity.
-Transactions signed by a cryptid account are, in fact, wrapped in a meta transaction.
+Transactions signed by a Cryptid account are, in fact, wrapped in a meta-transaction.
 The meta-transaction is signed by a private key and then sent to the [Cryptid program](./programs/cryptid_signer)
 The Cryptid program validates that the private key has the permissions to sign the transaction from the Cryptid account,
 according to the associated identity stored on chain.
 
-The identity information is represented as a DID, using the SOL-DID program. It associates an identity with
+The identity information is represented as a DID, using the SOL-DID program. It associates an identity with:
 * a set of rotatable keys
 * a set of permissions on those keys
 * a set of controllers
@@ -171,7 +178,7 @@ The identity information is represented as a DID, using the SOL-DID program. It 
 ## Signing permissions
 A key is permitted to sign a transaction from a Cryptid account if:
 
-It is listed on the DID as a "capabilityInvocation" key
+It is listed on the DID as a `capabilityInvocation` key
 
 OR
 
@@ -181,6 +188,6 @@ that it, in turn, controls.
 
 ## Meta-Transactions
 The initial instructions in a transaction are serialised and added as data to the Cryptid transaction.
-This serialisation adds some overhead to the transaction size, meaning that some transactions that initially fit within 
+This serialization adds some overhead to the transaction size, meaning that some transactions that initially fit within 
 the transaction size limit may now exceed it. On the roadmap are plans to allow transactions to be chunked to avoid this
 limitation.
