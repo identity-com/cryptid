@@ -57,11 +57,12 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   const onSubmitRef = useRef<() => void>();
 
   const { mint, tokenName, tokenSymbol } = balanceInfo;
-
+  const [enabled, setEnabled] = useState(false);
 
   return (
     <Modal 
       show={open} 
+      okEnabled={enabled}
       callbacks={{onOK: () => onSubmitRef.current && onSubmitRef.current(), onClose}}
       title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
         <SendSplDialog
@@ -69,12 +70,13 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
           publicKey={publicKey}
           balanceInfo={balanceInfo}
           onSubmitRef={onSubmitRef}
+          setEnabled={setEnabled}
         />
     </Modal>
   );
 }
 
-function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
+function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef, setEnabled }) {
   const connection = useConnection();
   const defaultAddressHelperText =
     !balanceInfo.mint || balanceInfo.mint.equals(WRAPPED_SOL_MINT)
@@ -105,6 +107,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
         setAddressHelperText(defaultAddressHelperText);
         setPassValidation(undefined);
         setShouldShowOverride(undefined);
+        setEnabled(false);
         return;
       }
       try {
@@ -139,11 +142,10 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinationAddress, selectedCryptidAccount, mintString]);
-  useEffect(() => {
-    return () => {
+  useEffect(() =>
+    () => {
       setOverrideDestinationCheck(false);
-    };
-  }, [setOverrideDestinationCheck]);
+    }, [setOverrideDestinationCheck]);
   async function makeTransaction() {
     let amount = Math.round(parseFloat(transferAmountString) * 10 ** decimals);
     if (!amount || amount <= 0) {
@@ -160,9 +162,13 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     );
   }
 
-  const disabled = shouldShowOverride
-    ? !overrideDestinationCheck || sending || !validAmount
-    : sending || !validAmount;
+  useEffect(() => {
+    const disabled = shouldShowOverride
+      ? !overrideDestinationCheck || sending || !validAmount
+      : sending || !validAmount;
+    setEnabled(!disabled);
+  }, [shouldShowOverride, destinationAddress, validAmount, sending, overrideDestinationCheck])
+ 
 
   async function onSubmit() {
     if (!selectedCryptidAccount) return;
