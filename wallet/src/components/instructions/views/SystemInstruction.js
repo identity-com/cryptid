@@ -25,7 +25,7 @@ export default function SystemInstruction({ instruction, onOpenAddress, index, e
   const { type, data } = instruction;
 
   return (
-    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]} instruction={instruction}>
     <>
       {data &&
         Object.entries(data).map(([key, value]) => {

@@ -47,7 +47,7 @@ export default function TokenInstruction({ instruction, onOpenAddress, index, ex
   };
 
   return (
-    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]}>
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={TYPE_LABELS[type]} instruction={instruction}>
       <>
         {data &&
         Object.entries(data).map(([key, value]) => {
@@ -64,7 +64,7 @@ export default function TokenInstruction({ instruction, onOpenAddress, index, ex
               value={address ? getAddressValue(value) : transform ? transform(value) : value}
               link={address}
               onClick={() => address && onOpenAddress(value?.toBase58())}
-            /><td></td>
+            /><td/>
             </tr>
           );
         })}

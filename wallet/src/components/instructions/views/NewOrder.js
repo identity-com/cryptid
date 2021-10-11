@@ -20,7 +20,7 @@ export default function Neworder({ instruction, onOpenAddress, v3 = false, index
   const { side, limitPrice, orderType, ownerPubkey } = data;
   const maxQuantity = v3 ? data.maxBaseQuantity : data.maxQuantity;
   return (
-    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title='Place an order'>
+    <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title='Place an order' instruction={instruction}>
     <>
       <LabelValue
         label="Market"
