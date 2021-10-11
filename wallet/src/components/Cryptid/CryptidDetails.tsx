@@ -21,6 +21,7 @@ import { useRequestAirdrop, WalletInterface } from "../../utils/wallet";
 import AddControllerModal from "../modals/AddControllerModal";
 import AddKeyOrCryptidAccountModal from "./AddKeyOrCryptidAccountModal";
 import KeyList, { KeyListItem } from "./KeyList";
+import ControllerList, { ControllerListItem } from "./ControllerList";
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
@@ -93,6 +94,13 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
     }))
   }, [cryptidAccount.verificationMethods, cryptidAccount.did, wallet.publicKey])
 
+  const getControllerListItems = useCallback((): ControllerListItem[] => {
+    return cryptidAccount.controllers.map(c => ({
+      controllerDid: c,
+      removeCB: (c) => removeControllerCallback(c)
+    }))
+  }, [cryptidAccount.verificationMethods])
+
   return (
     <>
       <AddControllerModal open={addControllerDialogOpen}
@@ -132,7 +140,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.controlledBy}</dd>
               }
               {!cryptidAccount.isControlled &&
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><XCircleIcon className="h-7 w-7" aria-hidden="true" /></dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Self-Controlled</dd>
               }
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -160,7 +168,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
                 </div>
               </dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                Controllers go here.
+                <ControllerList items={getControllerListItems()}/>
               </dd>
             </div>
           </dl>
