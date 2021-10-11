@@ -5,24 +5,27 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export type AddCrytidType = 'newkey' | 'importkey' | 'adapterkey' | 'import'
+export type AddCryptidOrKeyType = 'newkey' | 'importkey' | 'adapterkey' | 'import'
+export type AddCryptidOrKeyTextType = 'cryptid' | 'key'
 
-interface AddCrytidTypeInfo {
+
+interface AddCrytidOrTypeInfo {
   headline: string,
   subtext: string,
-  type: AddCrytidType
+  type: AddCryptidOrKeyType
 }
 
-interface CryptidTypeSelectorInterface {
-  initialType?: AddCrytidType
-  onChange: (t: AddCrytidType) => void
+interface CryptidOrKeyTypeSelectorInterface {
+  textType: AddCryptidOrKeyTextType
+  initialType?: AddCryptidOrKeyType
+  onChange: (t: AddCryptidOrKeyType) => void
 }
 
 
-const addCrytidTypes: AddCrytidTypeInfo[] = [
+const addCrytidTypes: (type: AddCryptidOrKeyTextType) => AddCrytidOrTypeInfo[] = (type) => ([
   {
     headline: 'Connect Wallet',
-    subtext: 'Connect Cryptid to an external wallet',
+    subtext: type === 'cryptid' ? 'Connect Cryptid to an external wallet' : 'Use external wallet to add key',
     type: 'adapterkey',
   },
   {
@@ -31,21 +34,21 @@ const addCrytidTypes: AddCrytidTypeInfo[] = [
     type: 'newkey',
   },
   {
-    headline: 'Import Key',
+    headline: 'Import Keypair',
     subtext: 'Paste an existing private key',
     type: 'importkey',
   },
   {
-    headline: 'Import Cryptid Account',
-    subtext: 'Import an existing account without a key',
+    headline: type === 'cryptid' ? 'Import Cryptid Account' : 'Import Address',
+    subtext: type === 'cryptid' ? 'Import an existing account without a key' : 'Import address without a private key',
     type: 'import',
   }
-]
+])
 
-const CryptidTypeSelector = ({initialType, onChange} : CryptidTypeSelectorInterface) => {
+const CryptidTypeSelector = ({textType, initialType, onChange} : CryptidOrKeyTypeSelectorInterface) => {
 
-  const [selected, setSelected] = useState(addCrytidTypes.find(i => i.type === initialType))
-  const onChangeInternal = useCallback((info: AddCrytidTypeInfo) => {
+  const [selected, setSelected] = useState(addCrytidTypes(textType).find(i => i.type === initialType))
+  const onChangeInternal = useCallback((info: AddCrytidOrTypeInfo) => {
     setSelected(info)
     onChange(info.type)
   }, [setSelected, onChange])
@@ -54,7 +57,7 @@ const CryptidTypeSelector = ({initialType, onChange} : CryptidTypeSelectorInterf
     <RadioGroup value={selected} onChange={onChangeInternal}>
       <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
       <div className="space-y-4">
-        {addCrytidTypes.map((v) => (
+        {addCrytidTypes(textType).map((v) => (
           <RadioGroup.Option
             key={v.headline}
             value={v}
