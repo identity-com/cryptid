@@ -46,12 +46,12 @@ Try it out at [cryptid.identity.com](https://cryptid.identity.com/) or install t
   * individuals can control assets belonging to dependents
   * corporate wallets - company executives can share control of a company wallet without sharing keys
 
-### On Our Roadmap
+## On Our Roadmap
 
-#### M-of-N Multisig
+### M-of-N Multisig
 Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig.
 
-#### Spending limits and restrictions
+### Spending limits and restrictions
 
 An important part of the Cryptid model is the ability to add restrictions to a Cryptid account. We plan to support:
 
@@ -65,7 +65,7 @@ This will allow use-cases such as:
 * non-custodial account recovery, either social or via a third-party
 * subscriptions - secure and non-custodial standing orders for periodic payments on-chain.
 
-#### Self-Sovereign Identities
+### Self-Sovereign Identities
 
 DIDs ([Decentralized Identifiers](https://www.w3.org/TR/did-core/)) are the standard identifier for self-sovereign identity. It is a globally unique
 identifier and independent of any central authority.
