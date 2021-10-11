@@ -20,7 +20,11 @@ Try it out at https://cryptid.identity.com/ or install the [cli](./cli/).
 * [Technical Details](#technical-details)
 
 ## Demo
-![Placeholder Account Screen](./docs/placeholder.png)
+### Balances
+![Balances Screen](./docs/screen_balances.png)
+
+### ID Overview
+![Balances Screen](./docs/screen_idoverview.png)
 
 ## Features
 
