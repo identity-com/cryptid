@@ -22,6 +22,12 @@ import {useCallAsync} from "./notifications";
 
 type WalletType = 'sw' | 'sw_imported' | 'adapter'
 
+export const WalletTypeString = {
+  sw: 'Seed Derived',
+  sw_imported: 'Imported Private Key',
+  adapter: 'Wallet Adapter'
+}
+
 export interface WalletInterface {
   publicKey: PublicKey | null;
   signTransaction?(transaction: Transaction): Promise<Transaction>;
