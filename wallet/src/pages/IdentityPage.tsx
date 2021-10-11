@@ -24,7 +24,7 @@ export default function IdentityPage() {
 
       <div className="py-10">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <WalletList wallets={listWallets()} />
+          <WalletList wallets={listWallets()} removeCB={() => alert('Remove not implemented')} />
         </div>
       </div>
       {/*<div className="py-10">*/}
