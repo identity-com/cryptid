@@ -1,9 +1,9 @@
 import { CryptidAccount, useCryptid } from "../../utils/Cryptid/cryptid";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { PublicKey, TransactionSignature } from "@solana/web3.js";
 import { useSendTransaction } from "../../utils/notifications";
 import {CryptidButton} from "../balances/CryptidButton";
-import {PlusCircleIcon, XCircleIcon} from "@heroicons/react/outline";
+import { CheckCircleIcon, PlusCircleIcon, XCircleIcon } from "@heroicons/react/outline";
 import * as React from "react";
 import { useRequestAirdrop, WalletInterface } from "../../utils/wallet";
 import AddControllerModal from "../modals/AddControllerModal";
@@ -125,7 +125,15 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Controlled By</dt>
               {cryptidAccount.isControlled &&
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.controlledBy}</dd>
+                <dd className="mt-1">
+                  <div className="inline-flex items-center">
+                    <p className="text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      {cryptidAccount.controlledBy}
+                    </p>
+                    {cryptidAccount.controllerMatches && <CheckCircleIcon className="ml-1 text-green-500 w-6 h-6"/>}
+                    {!cryptidAccount.controllerMatches && <XCircleIcon className="ml-1 text-red-500 w-6 h-6"/>}
+                  </div>
+                </dd>
               }
               {!cryptidAccount.isControlled &&
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Self-Controlled</dd>
