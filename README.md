@@ -18,7 +18,7 @@ Try it out at [cryptid.identity.com](https://cryptid.identity.com/) or install t
 * [Demo](#demo)
 * [Features](#features)
 * [On Our Roadmap](#on-our-roadmap)
-* [Frequently Asked Questions (FAQs)](#frequently-asked-questions--faqs-)
+* [Frequently Asked Questions (FAQs)](#frequently-asked-questions-faqs)
 * [Getting started](#getting-started)
 * [Technical Details](#technical-details)
 
