@@ -87,7 +87,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
       controllerDid: c,
       removeCB: (c) => removeControllerCallback(c)
     }))
-  }, [cryptidAccount.verificationMethods])
+  }, [cryptidAccount.controllers])
 
   return (
     <>
