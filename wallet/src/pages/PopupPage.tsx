@@ -350,8 +350,8 @@ function ApproveConnectionForm({
       <Card style={{overflow: 'visible'}}>
         <CardContent>
           <Typography variant="h6" component="h1" gutterBottom>
-            Connect identity {selectedCryptidAccount?.alias} 
-            {selectedCryptidAccount?.isControlled && `(controlled by ${selectedCryptidAccount?.controlledBy})`}{' '}
+            Connect identity {selectedCryptidAccount?.alias}{' '}
+            {selectedCryptidAccount?.isControlled && `(controlled by ${selectedCryptidAccount?.baseAccount().alias})`}{' '}
             with {origin}?
           </Typography>
           <div className={classes.connection}>
