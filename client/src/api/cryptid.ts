@@ -20,34 +20,77 @@ export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
 
 export interface Cryptid {
   /**
-   * The signing key or callback used by the cryptid instance
-   * Must be a key oo the DID, or a controlling DID
+   * The signing key or callback used by the Cryptid instance
+   * Must be a key on the DID, or a controlling DID
    */
   readonly signer: Signer;
 
   /**
-   * The DID that owns this cryptid instance
+   * The DID that owns this Cryptid instance
    */
   readonly did: string;
 
   /**
-   * Signs a transaction from the DID. Returns a metatransaction
-   * that wraps the transaction into a call to the DOA program,
-   * @param transaction
+   * Signs a transaction from the DID. Returns a meta-transaction
+   * that wraps the transaction into a call to the DOA program
+   * @param transaction The transaction to sign
    */
   sign(transaction: Transaction): Promise<Transaction[]>;
 
+  /**
+   * Adds a key to your the Crytid account
+   * @param publicKey The public key to add
+   * @param alias A unique alias for that key
+   */
   addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature>;
+
+  /**
+   * Removes a key from the account
+   * @param alias The alias of the key to remove
+   */
   removeKey(alias: string): Promise<TransactionSignature>;
+
+  /**
+   * Adds a service to the Cryptid account instance
+   * @param service The service to add
+   */
   addService(service: ServiceEndpoint): Promise<TransactionSignature>;
+
+  /**
+   * Removes a service form the Cryptid account
+   * @param alias The alias of the service to remove
+   */
   removeService(alias: string): Promise<TransactionSignature>;
+
+  /**
+   * Adds a controller to the Cryptid account
+   * @param did The DID of the controller to add
+   */
   addController(did: string): Promise<TransactionSignature>;
+
+  /**
+   * Removes a controller from the Cryptis account
+   * @param did The DID of the controller to remove
+   */
   removeController(did: string): Promise<TransactionSignature>;
 
+  /**
+   * Retrieves the DID document for this Cryptid account
+   */
   document(): Promise<DIDDocument>;
+
+  /**
+   * Gets the Cryptid address for the account
+   */
   address(): Promise<PublicKey>;
 
+  /**
+   * Allows the current Cryptid instance to sign as another Cryptid account it is a controller of.
+   * A new Cryptid instance is returned.
+   * @param did The DID of the account to sign on behalf of.
+   */
   as(did: string): Cryptid;
+
   additionalKeys(): Promise<PublicKey[]>;
 
   // TODO: Remove in future PR (lazy init the interface). Only selectedCryptidAccount has builder.
