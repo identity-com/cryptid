@@ -9,6 +9,7 @@ import { decodeAccount } from "../../utils/utils";
 import { useWallet as useAdapterWallet } from "@solana/wallet-adapter-react/lib/useWallet";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Switch } from '@headlessui/react'
+import AddMnemonicModal from "../modals/AddMnenomicModal";
 
 
 interface AddKeyOrCryptidAccountModalInterface {
@@ -125,6 +126,7 @@ export default function AddKeyOrCryptidAccountModal(
       okEnabled={okEnabled()}
       suppressClose={true}
     >
+      <AddMnemonicModal />
       <div className="w-full">
         <div className="space-y-8 divide-y divide-gray-200 sm:space-y-5">
           <div>

@@ -32,7 +32,6 @@ export const MetaWalletProvider = ({ children }) => {
         <WalletProvider>
           <CryptidProvider>
             <WalletModalProvider>
-              <AddMnemonicModal />
               <WalletConnectModal />
               {children}
             </WalletModalProvider>
