@@ -1,103 +1,165 @@
-# TSDX User Guide
+# Cryptid
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+The Cryptid client library provides functionality for signing transactions and managing Cryptid DID wallets.
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
+# Install
 
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
-
-## Commands
-
-TSDX scaffolds your new library inside `/src`.
-
-To run TSDX, use:
-
-```bash
-npm start # or yarn start
+```sh
+npm i --save @identity.com/cryptid
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+# Usage
 
-To do a one-off build, use `npm run build` or `yarn build`.
+## Creating a Cryptid instance
 
-To run tests, use `npm test` or `yarn test`.
+This example shows creating a new keypair, creating a Cryptid instance and funding the accounts via an airdrop.
 
-## Configuration
+```javascript
+import { Connection, Keypair, clusterApiUrl, SystemProgram } from '@solana/web3.js';
+import { build, util } from '@identity/cryptid';
 
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
+const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-### Jest
+// Create (or provide) a Solana keypair
+const key = Keypair.generate();
+const did = util.publicKeyToDid(key.publicKey, 'devnet');
 
-Jest tests are set up to run with `npm test` or `yarn test`.
+// Create the Cryptid instance
+const cryptid = build(did, key, {
+    connection,
+    waitForConfirmation: true
+});
 
-### Bundle Analysis
+// Airdrop to fund the main Cryptid account
+let airdropSignature = await connection.requestAirdrop(cryptidAddress, LAMPORTS_PER_SOL);
+await connection.confirmTransaction(airdropSignature);
 
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
+// Airdrop to cover fees
+airdropSignature = await connection.requestAirdrop(key.publicKey, 5_000_000);
+await connection.confirmTransaction(airdropSignature);
 ```
 
-### Rollup
+Note that the above details are re-used in the examples below.
 
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
+## Cryptid Account Management
 
-### TypeScript
+### Managing Keys
 
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
+This example shows adding and removing additional keys
 
-## Continuous Integration
+```javascript
+const pubKey = Keypair.generate().publicKey;
+const alias = 'mobile';
 
-### GitHub Actions
+// Add a key to the Cryptid account
+await cryptid.addKey(pubKey, alias);
 
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
-}
+// Remove a key from the Cryptid account
+await cryptid.removeKey(alias);
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+### Managing Services
 
-## Module Formats
+This example show adding and removing of services
 
-CJS, ESModules, and UMD module formats are supported.
+```javascript
+const alias = 'domains';
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+// Add a service to a Cryptid account
+await cryptid.addService({
+  id: `${did}#${alias}`,
+  type: alias,
+  serviceEndpoint: 'https://example.com',
+  description: 'Domains'
+});
 
-## Named Exports
+// Remove a service from the Cryptid account
+await cryptid.removeService(alias);
+```
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+### Managing Controllers
 
-## Including Styles
+This example show adding and removing of controllers
+```javascript
+const controllerDid = 'did:sol:devnet:GxsFhrQNMU4HDgJ69vvYUmnzwzXNEve4tskCqTx7SsHK';
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+// Add a controller to the Cryptid acccount
+await cryptid.addController(controllerDid);
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+// Remove a controller from Cryptid acccount
+await cryptid.removeController(controllerDid);
+```
 
-## Publishing to NPM
+### Retrieving the DID document
 
-We recommend using [np](https://github.com/sindresorhus/np).
+Retrieve the DID document associated with your Cryptid account
+```javascript
+const didDocument = await cryptid.document();
+```
+
+## Usage Examples
+
+### Signing a transaction
+An example of using Cryptid to sign multiple transactions and send it
+```javascript
+const instruction1 = SystemProgram.transfer({
+    fromPubkey: cryptid.address(),
+    toPubkey: recipient,
+    lamports: lamportsToTransfer,
+});
+const instruction2 = SystemProgram.transfer({
+    fromPubkey: cryptid.address(),
+    toPubkey: recipient,
+    lamports: lamportsToTransfer,
+});
+
+const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+
+return new Transaction({ recentBlockhash, feePayer: cryptid.address() }).add(
+  ...instructions
+);
+
+const [cryptidTx] = await cryptid.sign(tx);
+
+const txSignature = await connection.sendRawTransaction(tx.serialize());
+await connection.confirmTransaction(txSignature);
+```
+
+### Controller relationship
+This example shows how a Cryptid account can control and transact on behalf of another Cryptid account.
+
+```javascript
+// Create a new Cryptid instance to be controlled
+const controlledDIDKey = Keypair.generate();
+const controlledDID = publicKeyToDid(controlledDIDKey.publicKey, 'devnet');
+
+const controlledCryptid = build(controlledDID, controlledDIDKey, {
+  connection,
+  waitForConfirmation: true,
+});
+
+// ... airdrop as per the example above
+
+// Add the Cryptid instance as the controller to the new instance
+await controlledCryptid.addController(did);
+
+// Create the controller Cryptid instance
+const controllerCryptid = cryptid.as(controlledDID);
+
+// Create a transaction from the controlled Cryptid instance
+const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+const tx = new Transaction({ recentBlockhash, feePayer: controllerCryptid.address() }).add(
+  SystemProgram.transfer({
+    fromPubkey: controllerCryptid.address(),
+    toPubkey: recipient,
+    lamports: lamportsToTransfer,
+  })
+);
+
+// Sign the transaction with the controller Cryptid instance
+const [cryptidTx] = await controllerCryptid.sign(tx);
+
+// Send and confirm the transaction
+const txSignature = await connection.sendRawTransaction(tx.serialize());
+await connection.confirmTransaction(txSignature);
+```
