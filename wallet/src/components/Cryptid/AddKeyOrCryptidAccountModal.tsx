@@ -47,7 +47,9 @@ const modalText: ModalText = {
 export default function AddKeyOrCryptidAccountModal(
   {open, onAddCryptidAccount, onAddKey, onClose, didPrefix, currentAccountAlias, modalType}: AddKeyOrCryptidAccountModalInterface) {
 
-  const {addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog} = useWalletContext()
+  const {addWallet, hasUnlockedMnemonic} = useWalletContext()
+  const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
+
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
@@ -126,7 +128,7 @@ export default function AddKeyOrCryptidAccountModal(
       okEnabled={okEnabled()}
       suppressClose={true}
     >
-      <AddMnemonicModal />
+      <AddMnemonicModal show={showAddMnemonicDialog} onOK={() => setShowAddMnemonicDialog(false)} onClose={() => setShowAddMnemonicDialog(false)} />
       <div className="w-full">
         <div className="space-y-8 divide-y divide-gray-200 sm:space-y-5">
           <div>

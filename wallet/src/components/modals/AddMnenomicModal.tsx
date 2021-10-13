@@ -11,9 +11,13 @@ type MnemonicAndSeedType = {
   seed: string | undefined,
 }
 
-export default function AddMnemonicModal() {
+type AddMnemonicModalInterface = {
+  show: boolean,
+  onOK: () => void,
+  onClose: () => void
+}
 
-  const { showAddMnemonicDialog, setShowAddMnemonicDialog } = useWalletContext();
+export default function AddMnemonicModal({show, onOK, onClose}: AddMnemonicModalInterface) {
 
   const [mnemonicAndSeed, setMnemonicAndSeed] = useState<MnemonicAndSeedType>({ mnemonic: undefined, seed: undefined });
   const [acknowledged, setAcknowledged] = useState(false);
@@ -42,12 +46,12 @@ export default function AddMnemonicModal() {
 
   useEffect(() => {
     console.log('useEffect AddMnemonicModal')
-    if (!showAddMnemonicDialog) {
+    if (!show) {
       return
     }
 
     generateMnemonicAndSeed().then(setMnemonicAndSeed);
-  }, [ showAddMnemonicDialog ]);
+  }, [ show ]);
 
   const downloadMnemonic = (mnemonic) => {
     const url = window.URL.createObjectURL(new Blob([mnemonic]));
@@ -60,10 +64,10 @@ export default function AddMnemonicModal() {
 
   return (
     <Modal
-      show={showAddMnemonicDialog}
+      show={show}
       callbacks={{
-        onOK: () => { submit(); setShowAddMnemonicDialog(false) },
-        onClose: () => { setShowAddMnemonicDialog(false) }
+        onOK: () => { submit(); onOK() },
+        onClose
       }}
       title='Mnemonic Seedphrase'
       Icon={KeyIcon}
