@@ -5,9 +5,9 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use solana_generator::*;
 
-use crate::account::DOAAddress;
+use crate::account::CryptidAccountAddress;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
-use crate::state::{DOAAccount, InstructionData, TransactionAccount};
+use crate::state::{CryptidAccount, InstructionData, TransactionAccount};
 
 /// Proposes a new transaction that can be approved and appended to
 #[derive(Debug)]
@@ -27,18 +27,20 @@ impl Instruction for ProposeTransaction {
         mut data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
-        let (key_threshold, settings_sequence) = match &accounts.doa {
-            DOAAddress::OnChain(account) => (account.key_threshold, account.settings_sequence),
-            DOAAddress::Generative(account) => {
-                DOAAddress::verify_seeds(
+        let (key_threshold, settings_sequence) = match &accounts.cryptid_account {
+            CryptidAccountAddress::OnChain(account) => {
+                (account.key_threshold, account.settings_sequence)
+            }
+            CryptidAccountAddress::Generative(account) => {
+                CryptidAccountAddress::verify_seeds(
                     account.key,
                     program_id,
                     accounts.did_program.key,
                     accounts.did.key,
                 )?;
                 (
-                    DOAAccount::GENERATIVE_DOA_KEY_THRESHOLD,
-                    DOAAccount::GENERATIVE_DOA_SETTINGS_SEQUENCE,
+                    CryptidAccount::GENERATIVE_CRYPTID_KEY_THRESHOLD,
+                    CryptidAccount::GENERATIVE_CRYPTID_SETTINGS_SEQUENCE,
                 )
             }
         };
@@ -56,7 +58,7 @@ impl Instruction for ProposeTransaction {
             },
         );
 
-        accounts.transaction_account.doa = accounts.doa.info().key;
+        accounts.transaction_account.cryptid_account = accounts.cryptid_account.info().key;
         accounts.transaction_account.transaction_instructions = vec![];
         swap(
             &mut accounts.transaction_account.transaction_instructions,
@@ -97,7 +99,7 @@ impl Instruction for ProposeTransaction {
         let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.transaction_account, !arg.transaction_account_is_zeroed),
-            SolanaAccountMeta::new_readonly(arg.doa, false),
+            SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
             SolanaAccountMeta::new_readonly(system_program_id(), false),
@@ -116,9 +118,9 @@ pub struct ProposeTransactionAccounts {
     pub funder: AccountInfo,
     /// The account that will store the transaction information, can be init or zeroed
     pub transaction_account: InitOrZeroedAccount<TransactionAccount>,
-    /// The DOA to execute for
-    pub doa: DOAAddress,
-    /// The DID for the DOA
+    /// The cryptid account to execute for
+    pub cryptid_account: CryptidAccountAddress,
+    /// The DID for `cryptid_account`
     pub did: AccountInfo,
     /// The program for the DID
     pub did_program: AccountInfo,
@@ -149,9 +151,9 @@ pub struct ProposeTransactionBuild {
     pub transaction_account: Pubkey,
     /// [`true`] if [`transaction_account`](ProposeTransactionBuild::transaction_account) is zeored, [`false`] if init
     pub transaction_account_is_zeroed: bool,
-    /// The DOA to execute for
-    pub doa: Pubkey,
-    /// The DID for the DOA
+    /// The Cryptid Account to execute for
+    pub cryptid_account: Pubkey,
+    /// The DID for the Cryptid Account
     pub did: SolanaAccountMeta,
     /// The program for the DID
     pub did_program: Pubkey,

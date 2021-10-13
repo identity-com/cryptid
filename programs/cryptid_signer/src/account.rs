@@ -5,23 +5,23 @@ use std::iter::once;
 use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 
-use crate::state::DOAAccount;
-use crate::GenerativeDOASeeder;
+use crate::state::CryptidAccount;
+use crate::GenerativeCryptidSeeder;
 
-/// A DOA address, supporting generative (derived from inputs) or on-chain (data stored on-chain)
+/// A cryptid account address, supporting generative (derived from inputs) or on-chain (data stored on-chain)
 #[derive(Debug)]
-pub enum DOAAddress {
-    /// DOA Data is stored on-chain
-    OnChain(ProgramAccount<DOAAccount>),
-    /// DOA is not on-chain, deriving fields
+pub enum CryptidAccountAddress {
+    /// Cryptid Account Data is stored on-chain
+    OnChain(ProgramAccount<CryptidAccount>),
+    /// Cryptid Account is not on-chain, deriving fields
     Generative(AccountInfo),
 }
-impl DOAAddress {
-    /// The [`AccountInfo`] of the DOA
+impl CryptidAccountAddress {
+    /// The [`AccountInfo`] of the Cryptid Account
     pub fn info(&self) -> &AccountInfo {
         match self {
-            DOAAddress::OnChain(account) => &account.info,
-            DOAAddress::Generative(account) => account,
+            CryptidAccountAddress::OnChain(account) => &account.info,
+            CryptidAccountAddress::Generative(account) => account,
         }
     }
 
@@ -32,30 +32,34 @@ impl DOAAddress {
         did_program: Pubkey,
         did: Pubkey,
     ) -> GeneratorResult<u8> {
-        PDAGenerator::new(program_id, GenerativeDOASeeder { did_program, did })
+        PDAGenerator::new(program_id, GenerativeCryptidSeeder { did_program, did })
             .verify_address_without_nonce(account)
     }
 }
-impl AccountArgument for DOAAddress {
+impl AccountArgument for CryptidAccountAddress {
     fn write_back(
         self,
         program_id: Pubkey,
         system_program: Option<&SystemProgram>,
     ) -> GeneratorResult<()> {
         match self {
-            DOAAddress::OnChain(account) => account.write_back(program_id, system_program),
-            DOAAddress::Generative(account) => account.write_back(program_id, system_program),
+            CryptidAccountAddress::OnChain(account) => {
+                account.write_back(program_id, system_program)
+            }
+            CryptidAccountAddress::Generative(account) => {
+                account.write_back(program_id, system_program)
+            }
         }
     }
 
     fn add_keys(&self, add: impl FnMut(Pubkey) -> GeneratorResult<()>) -> GeneratorResult<()> {
         match self {
-            DOAAddress::OnChain(account) => account.add_keys(add),
-            DOAAddress::Generative(account) => account.add_keys(add),
+            CryptidAccountAddress::OnChain(account) => account.add_keys(add),
+            CryptidAccountAddress::Generative(account) => account.add_keys(add),
         }
     }
 }
-impl FromAccounts<()> for DOAAddress {
+impl FromAccounts<()> for CryptidAccountAddress {
     fn from_accounts(
         program_id: Pubkey,
         infos: &mut impl AccountInfoIterator,

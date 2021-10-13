@@ -8,37 +8,37 @@ use solana_generator::{
 };
 use std::collections::HashMap;
 
-/// The data for an on-chain DOA
+/// The data for an on-chain Cryptid Account
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [1])]
-pub struct DOAAccount {
-    /// The DID for this DOA
+pub struct CryptidAccount {
+    /// The DID for this
     pub did: Pubkey,
     /// The program for the DID
     pub did_program: Pubkey,
-    /// The nonce of the DOA Signer
+    /// The nonce of the Cryptid Signer
     pub signer_nonce: u8,
     /// The number of keys needed for transactions to be executed
     pub key_threshold: u8,
-    /// A tracker to invalidate transactions when DOA settings change
+    /// A tracker to invalidate transactions when settings change
     pub settings_sequence: u16,
     // TODO: Implement when permissions added
     // pub sign_permissions: ?,
     // pub execute_permissions: ?,
     // pub remove_permissions: ?,
 }
-impl DOAAccount {
-    /// The value for [`DOAAccount::key_threshold`] on a generative DOA
-    pub const GENERATIVE_DOA_KEY_THRESHOLD: u8 = 1;
+impl CryptidAccount {
+    /// The value for [`CryptidAccount::key_threshold`] on a generative cryptid account
+    pub const GENERATIVE_CRYPTID_KEY_THRESHOLD: u8 = 1;
 
-    /// The [`DOAAccount::settings_sequence`] value when the DOA is locked
-    pub const LOCKED_DOA_SETTINGS_SEQUENCE: u16 = 0;
-    /// The [`DOAAccount::settings_sequence`] value when the DOA is generative
-    pub const GENERATIVE_DOA_SETTINGS_SEQUENCE: u16 = 1;
-    /// The [`DOAAccount::settings_sequence`] start value
+    /// The [`CryptidAccount::settings_sequence`] value when the cryptid account is locked
+    pub const LOCKED_CRYPTID_SETTINGS_SEQUENCE: u16 = 0;
+    /// The [`CryptidAccount::settings_sequence`] value when the cryptid account is generative
+    pub const GENERATIVE_CRYPTID_SETTINGS_SEQUENCE: u16 = 1;
+    /// The [`CryptidAccount::settings_sequence`] start value
     pub const SETTINGS_SEQUENCE_START: u16 = 2;
 
-    /// Verifies that this DOA comes from the DID and DID Program
+    /// Verifies that this Cryptid Account comes from the DID and DID Program
     pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
         if did != self.did {
             Err(CryptidSignerError::WrongDID {
@@ -62,15 +62,17 @@ impl DOAAccount {
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [2])]
 pub struct TransactionAccount {
-    /// The DOA for the transaction
-    pub doa: Pubkey,
+    /// The cryptid account for the transaction
+    pub cryptid_account: Pubkey,
+    /// The accounts `transaction_instructions` references
+    pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
     pub signers: Vec<(Pubkey, UnixTimestamp)>,
     /// Whether or not this has executed
     pub has_executed: bool,
-    /// The value of [`DOAAccount::settings_sequence`] when this was proposed, only valid while that's the same
+    /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
     pub settings_sequence: u16,
 }
 
