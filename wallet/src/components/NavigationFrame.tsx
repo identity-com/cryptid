@@ -118,7 +118,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                   />
                   <img
                     className="block h-8 w-auto"
-                    src="title.webp"
+                    src="title.png"
                     alt="Cryptid"
                   />
                 </div>
