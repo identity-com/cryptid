@@ -221,7 +221,7 @@ function TokenListItem({ tokenInfo, onSubmit, disabled, existingAccount }) {
   const [open, setOpen] = useState(false);
   const urlSuffix = useSolanaExplorerUrlSuffix();
   const alreadyExists = !!existingAccount;
-
+  
   return (
     <React.Fragment>
       <div style={{ display: 'flex' }} key={tokenInfo.name}>

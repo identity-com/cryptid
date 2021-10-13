@@ -290,7 +290,7 @@ const POPULAR_TOKENS = {
       tokenName: 'devnet Civic',
       tokenSymbol: 'dCVC',
       icon:
-        'https://assets.coingecko.com/coins/images/788/small/civic.png?1547034556',
+        './civic_monogram.png',
     },
     {
       mintAddress: '97va9dqNvQxsgQNaH5BRj6QWbcvpnrwEGLZZp2P4VBwZ',

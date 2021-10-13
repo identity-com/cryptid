@@ -21,7 +21,6 @@ interface CryptidOrKeyTypeSelectorInterface {
   onChange: (t: AddCryptidOrKeyType) => void
 }
 
-
 const addCrytidTypes: (type: AddCryptidOrKeyTextType) => AddCrytidOrTypeInfo[] = (type) => ([
   {
     headline: 'Connect Wallet',

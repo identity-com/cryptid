@@ -21,7 +21,7 @@ const ConnectionContext = React.createContext<{
 export function ConnectionProvider({ children }) {
   const [endpoint, setEndpoint] = useLocalStorageState(
     'connectionEndpoint',
-    MAINNET_URL,
+    clusterApiUrl('devnet'),
   );
 
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [

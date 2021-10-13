@@ -52,11 +52,8 @@ type ResponseMessage = {
 } | {
   result: { transactions: string[] },
 }
-type Opener = {
-  postMessage: (message: ResponseMessage & { jsonrpc: '2.0' }, to: string) => void;
-}
 
-export default function PopupPage({opener}: { opener: Opener }) {
+export default function PopupPage({opener}: { opener: Window }) {
   const origin = useMemo(() => {
     let params = new URLSearchParams(window.location.hash.slice(1));
     const origin = params.get('origin');
@@ -131,11 +128,13 @@ export default function PopupPage({opener}: { opener: Opener }) {
     }
     switch (request.method) {
       case 'signTransaction':
+        window.focus();
         return {
           payloads: [bs58.decode(request.params.transaction)],
           messageDisplay: 'tx',
         };
       case 'signAllTransactions':
+        window.focus();
         return {
           payloads: request.params.transactions.map((t) => bs58.decode(t)),
           messageDisplay: 'tx',
@@ -144,6 +143,7 @@ export default function PopupPage({opener}: { opener: Opener }) {
         if (!(request.params.data instanceof Uint8Array)) {
           throw new Error('Data must be instance of Uint8Array');
         }
+        window.focus();
         return {
           payloads: [request.params.data],
           messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
@@ -207,9 +207,11 @@ export default function PopupPage({opener}: { opener: Opener }) {
       case 'sign':
         throw new Error('onApprove: Not supported');
       case 'signTransaction':
+        opener.focus();
         await sendTransaction(payloads[0]);
         break;
       case 'signAllTransactions':
+        opener.focus();
         await sendTransactions(payloads);
         break;
       default:

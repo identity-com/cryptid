@@ -6,7 +6,7 @@ export default function TokenIcon({ mint, url, tokenName, size = 20, ...props })
   if (!url && mint === null) {
     url = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png';
   }
-
+  
   if (hasError || !url) {
     return (
       <div
@@ -19,7 +19,7 @@ export default function TokenIcon({ mint, url, tokenName, size = 20, ...props })
       />
     );
   }
-
+  
   return (
     <img
       src={url}
@@ -29,7 +29,7 @@ export default function TokenIcon({ mint, url, tokenName, size = 20, ...props })
         width: size,
         height: size,
         backgroundColor: 'white',
-        borderRadius: size / 2,
+        ...(tokenName === 'devnet Civic' ? {}: {borderRadius: size / 2})
       }}
       onError={() => setHasError(true)}
       {...props}

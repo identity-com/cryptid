@@ -74,7 +74,7 @@ export function BalanceListItemView({
           mint={mint}
           tokenName={tokenName}
           url={tokenLogoUri}
-          size={28}
+          size={30}
         />
         <div className="min-w-0 flex-1 flex px-4 md:gap-4">
           <div className='text-sm md:text-lg flex-1'>
