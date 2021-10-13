@@ -2,7 +2,7 @@
 
 A browser based UI for managing your Cryptid accounts.
 
-See [identity.cryptid.com](https://identity.cryptid.com) to try it out.
+See [cryptid.identity.com](https://cryptid.identity.com) to try it out.
 
 Some features include:
 * Connect using your existing Solana wallet
