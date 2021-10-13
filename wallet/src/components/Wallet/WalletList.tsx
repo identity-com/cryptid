@@ -26,7 +26,7 @@ export default function WalletList({ wallets, removeCB }: WalletListInterface) {
       <AddKeyOrCryptidAccountModal
         open={addKeyDialogOpen}
         onClose={() => setAddKeyDialogOpen(false)}
-        onAddKey={() => {console.log('Modal already adds Key')}}
+        onAddKey={() => setAddKeyDialogOpen(false)} // Note: Modal add's keys internally already.
         currentAccountAlias={'Direct'}
         didPrefix={getDidPrefix()}
         modalType={"key"}
