@@ -1,11 +1,13 @@
-# SPL Token Wallet
+# Cryptid Wallet UI
 
-Example Solana wallet with support for [SPL tokens](https://spl.solana.com/token) and Serum integration.
+A browser based UI for managing your Cryptid accounts.
 
-See [sollet.io](https://www.sollet.io) or the [Sollet Chrome Extension](https://chrome.google.com/webstore/detail/sollet/fhmfendgdocmcbmfikdcogofphimnkno) for a demo.
+See [identity.cryptid.com](https://identity.cryptid.com) to try it out.
 
-Wallet keys are stored in `localStorage`, optionally encrypted by a password.
+Some features include:
+* Connect using your existing Solana wallet
+* Manage your keys and account control
+* Send SOL & SPL tokens
+* Interact with dApps
 
-Run `yarn start` to start a development server or `yarn build` to create a production build that can be served by a static file server.
-
-See the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started) for other commands and options.
+See the Cryptid documentation [here](../README.md) for more information
