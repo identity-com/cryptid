@@ -111,6 +111,7 @@ describe('DID Key operations', function () {
 
         const document = await cryptid.document();
         expectDocumentToIncludeKey(document, newKey);
+        expect(document.capabilityInvocation).to.have.lengthOf(3);
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);

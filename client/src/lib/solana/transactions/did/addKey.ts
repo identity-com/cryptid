@@ -2,7 +2,26 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { makeVerificationMethod } from '../../../did';
 import { resolve } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
-import {registerOrUpdate} from "./util";
+import {isDefault, registerOrUpdate} from "./util";
+import {DIDDocument, VerificationMethod} from "did-resolver";
+
+
+const updatedCapabilityInvocation = (existingDocument: DIDDocument, newVerificationMethod: VerificationMethod) => {
+  if (!existingDocument.capabilityInvocation) {
+    return [newVerificationMethod.id]
+  }
+
+  if (existingDocument.capabilityInvocation.length === 1) {
+    if (isDefault(existingDocument.capabilityInvocation[0])) {
+      // this is added by default when capabilityInvocation is empty on chain
+      // when adding a new one, include it to avoid overwriting
+      return [...existingDocument.capabilityInvocation, newVerificationMethod.id];}
+  }
+
+  // no need to add existing capabilityInvocations as we are using merge behaviour "append"
+
+  return [newVerificationMethod.id];
+}
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -24,10 +43,7 @@ export const addKey = async (
   const verificationMethod = makeVerificationMethod(did, newKey, alias);
   const document = {
     verificationMethod: [verificationMethod],
-    capabilityInvocation: [
-      ...(existingDocument.capabilityInvocation || []),
-      verificationMethod.id,
-    ],
+    capabilityInvocation: updatedCapabilityInvocation(existingDocument, verificationMethod),
   };
 
   return registerOrUpdate(did, document, connection, payer, signers);

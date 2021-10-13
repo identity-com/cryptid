@@ -59,6 +59,8 @@ export const hasAlias = (alias:string) => (component: DIDComponent | string):boo
   component.id.endsWith(`#${alias}`) : // DIDComponent case ID must match #alias
   component.endsWith(`#${alias}`); // string case - must match #alias
 
+export const isDefault = hasAlias('default');
+
 export const findVerificationMethodWithAlias = (document: Partial<DIDDocument>, alias:string):VerificationMethod|undefined =>
   document.verificationMethod?.find(hasAlias(alias));
 
@@ -69,7 +71,7 @@ export const findVerificationMethodWithAlias = (document: Partial<DIDDocument>, 
 export const sanitizeDefaultKeys = (document: Partial<DIDDocument>):void => {
   // if verificationMethod contains the default key, remove it (it is always added by default)
   if (document.verificationMethod && findVerificationMethodWithAlias(document, 'default')) {
-    document.verificationMethod = filter((x: VerificationMethod | string) => !(hasAlias('default')(x)), document.verificationMethod);
+    document.verificationMethod = filter((x) => !isDefault(x), document.verificationMethod);
 
     // if this now means the verification method array is empty, remove the array
     if (document.verificationMethod.length === 0) {
@@ -77,7 +79,7 @@ export const sanitizeDefaultKeys = (document: Partial<DIDDocument>):void => {
     }
   }
 
-  if (document.capabilityInvocation?.length === 1 && hasAlias('default')(document.capabilityInvocation[0])) {
+  if (document.capabilityInvocation?.length === 1 && isDefault(document.capabilityInvocation[0])) {
     delete document.capabilityInvocation;
   }
 
