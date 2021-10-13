@@ -9,7 +9,7 @@ This is the Cryptid Signer Program. It currently supports direct execution of tr
 
 ## Data Types
 The Cryptid Signer Program operates with 2 types of data accounts: Cryptid Accounts and Transaction Accounts.
-There is also a single Cryptid Signer for each Cryptid Account that is used for signing all transactions.
+There is also a single Cryptid Address for each Cryptid Account that is used for signing all transactions.
 
 There are also generative versions of the Cryptid Account, meaning versions that store no data on chain. 
 This is explained further in the Cryptid Account section.
@@ -33,7 +33,7 @@ pub struct CryptidAccount {
 }
 ```
 The cryptid account stores the did and program that it signs for. 
-It also stores the nonce of the signer, the number of keys needed for signing and a tracker for settings changes.
+It also stores the nonce of the cryptid address, the number of keys needed for signing and a tracker for settings changes.
 A single did and program combo can have any number of Cryptid Accounts, but only a single Generative Cryptid Account.
 A Generative Cryptid Account's address is derived from the did and did program combo.
 
