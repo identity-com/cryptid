@@ -5,7 +5,7 @@ import {
 import { Signer } from '../../../../types/crypto';
 import {DIDDocument} from "did-resolver";
 import {pick, without} from "ramda";
-import {findVerificationMethodWithAlias, hasAlias, registerOrUpdate, sanitizeDefaultKeys} from "./util";
+import {findVerificationMethodWithAlias, isDefault, registerOrUpdate, sanitizeDefaultKeys} from "./util";
 
 /**
  * Creates a transaction that removes a key to a DID.
@@ -42,10 +42,10 @@ export const removeKey = async (
   // filter default keys from capability invocation and verification method
   // if they are the only ones, as they are added by the client by default, and do not need
   // to be stored on chain
-  if (document.verificationMethod?.length === 1 && hasAlias('default')(document.verificationMethod[0])) {
+  if (document.verificationMethod?.length === 1 && isDefault(document.verificationMethod[0])) {
     delete document.verificationMethod;
   }
-  if (document.capabilityInvocation?.length === 1 && hasAlias('default')(document.capabilityInvocation[0])) {
+  if (document.capabilityInvocation?.length === 1 && isDefault(document.capabilityInvocation[0])) {
     delete document.capabilityInvocation;
   }
 

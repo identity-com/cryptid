@@ -29,13 +29,14 @@ describe('SPL-Token transfers', function () {
   let token: Token;
   let cryptidTokenATA: PublicKey;
   let recipientATA: PublicKey;
+  let mintAuthority: Keypair;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
-    const mintAuthority = Keypair.generate();
+    mintAuthority = Keypair.generate();
 
     cryptid = build(did, key, { connection, waitForConfirmation: true });
 
@@ -63,11 +64,42 @@ describe('SPL-Token transfers', function () {
       mintAuthority,
       recipient
     )
-    console.log(cryptidTokenATA.toBase58());
     await token.mintTo(cryptidTokenATA, mintAuthority, [], 10_000_000);
   });
 
   context('a simple cryptid', () => {
+    it.skip('should create an ATA for another cryptid account', async () => {
+      const cryptid = build(did, key, { connection });
+
+      const recipientCryptidKey = Keypair.generate();
+      did = publicKeyToDid(recipientCryptidKey.publicKey, 'localnet');
+      const recipientCryptid = build(did, recipientCryptidKey, { connection });
+      const recipientAddress = await recipientCryptid.address();
+
+      const newToken = await Token.createMint(
+        connection, mintAuthority, mintAuthority.publicKey, null, 2, TOKEN_PROGRAM_ID
+      )
+
+      const associatedTokenAccount = await getAssociatedTokenAccount(
+        newToken.publicKey,
+        recipientAddress
+      );
+      const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        newToken.publicKey,
+        associatedTokenAccount,
+        recipientAddress,
+        doaSigner
+      );
+      const transaction = await createTransaction(connection, doaSigner, [
+        createATAInstruction,
+      ]);
+
+      const [cryptidTx] = await cryptid.sign(transaction);
+      await sendAndConfirmCryptidTransaction(connection, cryptidTx);
+    });
+
     it('should send tokens from a DID', async () => {
       const cryptid = build(did, key, { connection });
 
