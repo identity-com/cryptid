@@ -19,7 +19,7 @@ $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
 $ cryptid (-v|--version|version)
-@identity.com/cryptid-cli/0.0.0 darwin-x64 node-v16.0.0
+@identity.com/cryptid-cli/0.0.0 darwin-x64 node-v16.10.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -30,21 +30,20 @@ USAGE
 <!-- commands -->
 * [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
 * [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
-* [`cryptid balance [FILE]`](#cryptid-balance-file)
+* [`cryptid balance`](#cryptid-balance)
+* [`cryptid base`](#cryptid-base)
 * [`cryptid config [SUBCOMMAND] [KEY] [VALUE]`](#cryptid-config-subcommand-key-value)
-* [`cryptid control [FILE]`](#cryptid-control-file)
 * [`cryptid controller:add [DID]`](#cryptid-controlleradd-did)
 * [`cryptid controller:remove [DID]`](#cryptid-controllerremove-did)
 * [`cryptid controller:show [DID]`](#cryptid-controllershow-did)
 * [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
-* [`cryptid init [FILE]`](#cryptid-init-file)
+* [`cryptid init`](#cryptid-init)
 * [`cryptid key:add [KEY] [ALIAS]`](#cryptid-keyadd-key-alias)
 * [`cryptid key:remove [ALIAS]`](#cryptid-keyremove-alias)
 * [`cryptid key:show`](#cryptid-keyshow)
-* [`cryptid token [SUBCOMMAND]`](#cryptid-token-subcommand)
-* [`cryptid token:balance [FILE]`](#cryptid-tokenbalance-file)
-* [`cryptid token:show [FILE]`](#cryptid-tokenshow-file)
+* [`cryptid token:balance MINT`](#cryptid-tokenbalance-mint)
+* [`cryptid token:show`](#cryptid-tokenshow)
 * [`cryptid token:transfer TO AMOUNT`](#cryptid-tokentransfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
@@ -59,13 +58,14 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/airdrop.ts)_
 
 ## `cryptid alias [NAME] [DID]`
 
-describe the command here
+Associate a DID with an alias
 
 ```
 USAGE
@@ -74,25 +74,41 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
   -u, --unset          unset an alias
 ```
 
 _See code: [src/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/alias.ts)_
 
-## `cryptid balance [FILE]`
+## `cryptid balance`
 
 Show the cryptid account SOL balance
 
 ```
 USAGE
-  $ cryptid balance [FILE]
+  $ cryptid balance
 
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/balance.ts)_
+
+## `cryptid base`
+
+```
+USAGE
+  $ cryptid base
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+```
+
+_See code: [src/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/base.ts)_
 
 ## `cryptid config [SUBCOMMAND] [KEY] [VALUE]`
 
@@ -105,24 +121,10 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
-
-## `cryptid control [FILE]`
-
-describe the command here
-
-```
-USAGE
-  $ cryptid control [FILE]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-```
-
-_See code: [src/commands/control.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/control.ts)_
 
 ## `cryptid controller:add [DID]`
 
@@ -135,13 +137,14 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/controller/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/add.ts)_
 
 ## `cryptid controller:remove [DID]`
 
-Add a controller to a cryptid account
+Remove a controller from a cryptid account
 
 ```
 USAGE
@@ -150,13 +153,14 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/controller/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/remove.ts)_
 
 ## `cryptid controller:show [DID]`
 
-Add a controller to a cryptid account
+Show the controllers of a cryptid account
 
 ```
 USAGE
@@ -165,6 +169,7 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/controller/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/show.ts)_
@@ -180,6 +185,7 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/document.ts)_
@@ -201,13 +207,13 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3/src/commands/help.ts)_
 
-## `cryptid init [FILE]`
+## `cryptid init`
 
 Initialise the cryptid library
 
 ```
 USAGE
-  $ cryptid init [FILE]
+  $ cryptid init
 
 OPTIONS
   -h, --help             show CLI help
@@ -230,6 +236,7 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/key/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/add.ts)_
@@ -245,6 +252,7 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/key/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/remove.ts)_
@@ -260,6 +268,7 @@ USAGE
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 
 ALIASES
   $ cryptid
@@ -267,52 +276,37 @@ ALIASES
 
 _See code: [src/commands/key/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/show.ts)_
 
-## `cryptid token [SUBCOMMAND]`
+## `cryptid token:balance MINT`
 
-describe the command here
+show an SPL Token balance
 
 ```
 USAGE
-  $ cryptid token [SUBCOMMAND]
+  $ cryptid token balance MINT
+
+ARGUMENTS
+  MINT  The SPL-Token mint(base58)
 
 OPTIONS
-  -a, --amount=amount  (required) The amount in lamports to transfer
   -c, --config=config  Path to config file
   -h, --help           show CLI help
-  -m, --mint=mint      (required) The SPL-Token mint(base58)
-  -t, --to=to          (required) Recipient public key (base58)
-```
-
-_See code: [src/commands/token.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token.ts)_
-
-## `cryptid token:balance [FILE]`
-
-describe the command here
-
-```
-USAGE
-  $ cryptid token balance [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/token/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/balance.ts)_
 
-## `cryptid token:show [FILE]`
+## `cryptid token:show`
 
-describe the command here
+show all SPL Token balances
 
 ```
 USAGE
-  $ cryptid token show [FILE]
+  $ cryptid token show
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/token/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/show.ts)_
@@ -330,9 +324,11 @@ ARGUMENTS
   AMOUNT  The amount in lamports to transfer
 
 OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -m, --mint=mint      (required) The SPL-Token mint(base58)
+  -c, --config=config           Path to config file
+  -f, --allowUnfundedRecipient  Create a token account for the recipient if needed
+  -h, --help                    show CLI help
+  -m, --mint=mint               (required) The SPL-Token mint(base58)
+  -s, --as=as                   Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/token/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/transfer.ts)_
@@ -352,6 +348,7 @@ ARGUMENTS
 OPTIONS
   -c, --config=config  Path to config file
   -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
 _See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/transfer.ts)_
