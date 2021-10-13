@@ -15,17 +15,15 @@ export function useLocalStorageState<T>(
   const [state, setState] = useState<T>(() => {
     let storedState = localStorage.getItem(key);
     if (storedState) {
-      return JSON.parse(storedState);
+      return JSON.parse(storedState) as T;
     }
     return defaultState;
   });
 
   const setLocalStorageState = useCallback(
     (newState: T|null) => {
-      let changed = state !== newState;
-      if (!changed) {
-        return;
-      }
+      if (state === newState) return;
+
       if (newState === null) {
         setState(defaultState)
         localStorage.removeItem(key);
@@ -34,7 +32,7 @@ export function useLocalStorageState<T>(
         localStorage.setItem(key, JSON.stringify(newState));
       }
     },
-    [state, key],
+    [state, key, setState, defaultState],
   );
 
   return [state, setLocalStorageState];
