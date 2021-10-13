@@ -12,7 +12,7 @@ npm i --save @identity.com/cryptid
 
 ## Creating a Cryptid instance
 
-This example shows creating a new keypair, creating a Cryptid instance and funding the accounts via an airdrop.
+This example shows creating a new keypair, and a Cryptid instance.
 
 ```javascript
 import {Connection, Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction} from '@solana/web3.js';
@@ -29,25 +29,13 @@ const cryptid = build(did, key, {
   connection,
   waitForConfirmation: true,
 });
-
-const cryptidAddress = await cryptid.address();
-
-// Airdrop to fund the main Cryptid account
-let airdropSignature = await connection.requestAirdrop(cryptidAddress, LAMPORTS_PER_SOL);
-await connection.confirmTransaction(airdropSignature);
-
-// Airdrop to cover fees
-airdropSignature = await connection.requestAirdrop(key.publicKey, 5_000_000);
-await connection.confirmTransaction(airdropSignature);
 ```
 
-*Note* that the above details are re-used in the examples below.
+*Note* both accounts would need to be funded (e.g. via an Airdrop)
 
 ## Cryptid Account Management
 
 ### Managing Keys
-
-This example shows adding and removing additional keys
 
 ```javascript
 const pubKey = Keypair.generate().publicKey;
@@ -61,8 +49,6 @@ await cryptid.removeKey(keyAlias);
 ```
 
 ### Managing Services
-
-This example show adding and removing of services
 
 ```javascript
 const serviceAlias = 'domains';
@@ -81,7 +67,6 @@ await cryptid.removeService(serviceAlias);
 
 ### Managing Controllers
 
-This example show adding and removing of controllers
 ```javascript
 const controllerDid = 'did:sol:devnet:GxsFhrQNMU4HDgJ69vvYUmnzwzXNEve4tskCqTx7SsHK';
 
@@ -102,27 +87,14 @@ const didDocument = await cryptid.document();
 ## Usage Examples
 
 ### Signing a transaction
-An example of using Cryptid to sign multiple transactions to send
+An example of using Cryptid to sign a transaction to send
 ```javascript
-const recipient = Keypair.generate().publicKey;
-const lamportsToTransfer = 20_000;
-
-const instruction1 = SystemProgram.transfer({
-  fromPubkey: cryptidAddress,
-  toPubkey: recipient,
-  lamports: lamportsToTransfer,
-});
-const instruction2 = SystemProgram.transfer({
-  fromPubkey: cryptidAddress,
-  toPubkey: recipient,
-  lamports: lamportsToTransfer,
-});
-
 const {blockhash: recentBlockhash} = await connection.getRecentBlockhash();
-const transferTx = new Transaction({recentBlockhash, feePayer: cryptidAddress}).add(
-  instruction1,
-  instruction2
-);
+const transferTx = new Transaction({recentBlockhash, feePayer: cryptidAddress}).add(SystemProgram.transfer({
+  fromPubkey: cryptidAddress,
+  toPubkey: recipient,
+  lamports: lamportsToTransfer,
+}));
 
 const [cryptidTransferTx] = await cryptid.sign(transferTx);
 
@@ -134,34 +106,17 @@ await connection.confirmTransaction(transferTxSignature);
 This example shows how a Cryptid account can control and transact on behalf of another Cryptid account.
 
 ```javascript
-// Create (or import) a key to be controlled
-const controlledDIDKey = Keypair.generate();
-const controlledDID = util.publicKeyToDid(controlledDIDKey.publicKey, 'devnet');
-
-const controlledCryptid = build(controlledDID, controlledDIDKey, {
+const cryptid = build(controllerDID, controllerDidKey, {
   connection,
   waitForConfirmation: true,
 });
-
-const controlledCryptidAddress = await controlledCryptid.address();
-
-// Airdrop to fund the main Cryptid account
-airdropSignature = await connection.requestAirdrop(controlledCryptidAddress, LAMPORTS_PER_SOL);
-await connection.confirmTransaction(airdropSignature);
-
-// Airdrop to cover fees
-airdropSignature = await connection.requestAirdrop(controlledDIDKey.publicKey, 5_000_000);
-await connection.confirmTransaction(airdropSignature);
-
-// Add the Cryptid instance as the controller to the new instance
-await controlledCryptid.addController(did);
 
 // Create the controller Cryptid instance
 const controllerCryptid = cryptid.as(controlledDID);
 
 // Create a transaction from the controlled Cryptid instance
-const {blockhash: controlledRecentBlockhash} = await connection.getRecentBlockhash();
-const tx = new Transaction({recentBlockhash: controlledRecentBlockhash, feePayer: controlledCryptidAddress}).add(
+const {blockhash: recentBlockhash} = await connection.getRecentBlockhash();
+const tx = new Transaction({recentBlockhash, feePayer: controlledCryptidAddress}).add(
   SystemProgram.transfer({
     fromPubkey: controlledCryptidAddress,
     toPubkey: recipient,
@@ -170,47 +125,5 @@ const tx = new Transaction({recentBlockhash: controlledRecentBlockhash, feePayer
 );
 
 // Sign the transaction with the controller Cryptid instance
-const [controllerTx] = await controllerCryptid.sign(tx);
-
-// Send and confirm the transaction
-const txSignature = await connection.sendRawTransaction(controllerTx.serialize());
-await connection.confirmTransaction(txSignature);
-```
-
-### Add a key to another Cryptid and sign on it's behalf
-
-This example shows how a Cryptid account can add a key from another device and have transactions signed with it
-
-```javascript
-// Create (or import) the new key that will be added to the DID
-const device2Key = Keypair.generate();
-const device2Alias = 'device2';
-
-// Airdrop to cover fees
-airdropSignature = await connection.requestAirdrop(device2Key.publicKey, 5_000_000);
-await connection.confirmTransaction(airdropSignature);
-
-// add the new key and create a cryptid client for device 2
-await cryptid.addKey(device2Key.publicKey, device2Alias);
-const cryptidForDevice2 = await build(did, device2Key, {
-  connection,
-  waitForConfirmation: true,
-});
-
-const device2CryptidAddress = await cryptidForDevice2.address();
-
-// create a transfer and sign with cryptid for device 2
-const {blockhash: device2RecentBlockhash} = await connection.getRecentBlockhash();
-const device2Tx = new Transaction({recentBlockhash: device2RecentBlockhash, feePayer: device2CryptidAddress}).add(
-  SystemProgram.transfer({
-    fromPubkey: device2CryptidAddress,
-    toPubkey: recipient,
-    lamports: lamportsToTransfer,
-  })
-);
-
-const [device2CryptidTx] = await cryptidForDevice2.sign(device2Tx);
-
-const device2TxSignature = await connection.sendRawTransaction(device2CryptidTx.serialize());
-await connection.confirmTransaction(device2TxSignature);
+const [txSignedByController] = await controllerCryptid.sign(tx);
 ```
