@@ -2,14 +2,20 @@ import chai from 'chai';
 
 import { build, Cryptid } from '../../../src';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import {
   airdrop,
-  createAssociatedTokenAddress, createTokenTransferTransaction, createTransaction, getAssociatedTokenAccount,
+  createAssociatedTokenAddress,
+  createTokenTransferTransaction,
+  createTransaction,
+  getAssociatedTokenAccount,
   sendAndConfirmCryptidTransaction,
 } from '../../utils/solana';
 import { publicKeyToDid } from '../../../src/lib/solana/util';
-
 
 const { expect } = chai;
 
@@ -21,7 +27,7 @@ describe('SPL-Token transfers', function () {
 
   let key: Keypair;
   let did: string;
-  let doaSigner: PublicKey;
+  let cryptidSigner: PublicKey;
   let recipient: PublicKey;
 
   let cryptid: Cryptid;
@@ -40,30 +46,35 @@ describe('SPL-Token transfers', function () {
 
     cryptid = build(did, key, { connection, waitForConfirmation: true });
 
-    doaSigner = await cryptid.address();
+    cryptidSigner = await cryptid.address();
 
     await Promise.all([
-      airdrop(connection, doaSigner), // the main funds for the cryptid account
+      airdrop(connection, cryptidSigner), // the main funds for the cryptid account
       airdrop(connection, key.publicKey, 5_000_000), // to cover fees only
       airdrop(connection, mintAuthority.publicKey), // cover creating the mint and minting tokens
     ]);
 
     token = await Token.createMint(
-      connection, mintAuthority, mintAuthority.publicKey, null, 2, TOKEN_PROGRAM_ID
-    )
+      connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      2,
+      TOKEN_PROGRAM_ID
+    );
 
     cryptidTokenATA = await createAssociatedTokenAddress(
       connection,
       token.publicKey,
       mintAuthority,
-      doaSigner
-    )
+      cryptidSigner
+    );
     recipientATA = await createAssociatedTokenAddress(
       connection,
       token.publicKey,
       mintAuthority,
       recipient
-    )
+    );
     await token.mintTo(cryptidTokenATA, mintAuthority, [], 10_000_000);
   });
 
@@ -77,22 +88,28 @@ describe('SPL-Token transfers', function () {
       const recipientAddress = await recipientCryptid.address();
 
       const newToken = await Token.createMint(
-        connection, mintAuthority, mintAuthority.publicKey, null, 2, TOKEN_PROGRAM_ID
-      )
+        connection,
+        mintAuthority,
+        mintAuthority.publicKey,
+        null,
+        2,
+        TOKEN_PROGRAM_ID
+      );
 
       const associatedTokenAccount = await getAssociatedTokenAccount(
         newToken.publicKey,
         recipientAddress
       );
-      const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        newToken.publicKey,
-        associatedTokenAccount,
-        recipientAddress,
-        doaSigner
-      );
-      const transaction = await createTransaction(connection, doaSigner, [
+      const createATAInstruction =
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          newToken.publicKey,
+          associatedTokenAccount,
+          recipientAddress,
+          cryptidSigner
+        );
+      const transaction = await createTransaction(connection, cryptidSigner, [
         createATAInstruction,
       ]);
 
@@ -106,138 +123,179 @@ describe('SPL-Token transfers', function () {
       const tx = await createTokenTransferTransaction(
         connection,
         token.publicKey,
-        doaSigner,
+        cryptidSigner,
         recipientATA,
         tokensToTransfer
       );
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceBefore = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceBefore = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
       const [cryptidTx] = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceAfter = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceAfter = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
-      expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(-tokensToTransfer);
+      expect(tokenBalanceAfter - tokenBalanceBefore).to.equal(
+        -tokensToTransfer
+      );
     });
 
     it('should create a recipient ATA', async () => {
-      const recipientSOL = Keypair.generate().publicKey
+      const recipientSOL = Keypair.generate().publicKey;
       const cryptid = build(did, key, { connection });
-      const recipientATA = await getAssociatedTokenAccount(token.publicKey, recipientSOL);
-
-      const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
+      const recipientATA = await getAssociatedTokenAccount(
         token.publicKey,
-        recipientATA,
-        recipientSOL,
-        doaSigner
+        recipientSOL
       );
-      const tx = await createTransaction(connection, doaSigner, [createATAInstruction])
+
+      const createATAInstruction =
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          token.publicKey,
+          recipientATA,
+          recipientSOL,
+          cryptidSigner
+        );
+      const tx = await createTransaction(connection, cryptidSigner, [
+        createATAInstruction,
+      ]);
 
       const [cryptidTx] = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       const createdAccount = await connection.getAccountInfo(recipientATA);
-      expect(createdAccount?.owner.toString()).to.equal(TOKEN_PROGRAM_ID.toString());
+      expect(createdAccount?.owner.toString()).to.equal(
+        TOKEN_PROGRAM_ID.toString()
+      );
     });
 
     it('should create the recipient ATA and send tokens in two transactions', async () => {
-      const recipientSOL = Keypair.generate().publicKey
+      const recipientSOL = Keypair.generate().publicKey;
       const cryptid = build(did, key, { connection });
       const cryptidATA = await getAssociatedTokenAccount(
         token.publicKey,
-        doaSigner
+        cryptidSigner
       );
       const recipientATA = await getAssociatedTokenAccount(
         token.publicKey,
-        recipientSOL,
+        recipientSOL
       );
 
-      const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        token.publicKey,
-        recipientATA,
-        recipientSOL,
-        doaSigner
-      );
-      const tx1 = await createTransaction(connection, doaSigner, [createATAInstruction]);
+      const createATAInstruction =
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          token.publicKey,
+          recipientATA,
+          recipientSOL,
+          cryptidSigner
+        );
+      const tx1 = await createTransaction(connection, cryptidSigner, [
+        createATAInstruction,
+      ]);
 
       const transferInstruction = Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
         cryptidATA,
         recipientATA,
-        doaSigner,
+        cryptidSigner,
         [],
         tokensToTransfer
       );
-      const tx2 = await createTransaction(connection, doaSigner, [transferInstruction]);
+      const tx2 = await createTransaction(connection, cryptidSigner, [
+        transferInstruction,
+      ]);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceBefore = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceBefore = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
       // send the txes
-      console.log("Creating ATA");
+      console.log('Creating ATA');
       const [cryptidTx1] = await cryptid.sign(tx1);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx1);
 
-      console.log("ATA created");
+      console.log('ATA created');
 
       const [cryptidTx2] = await cryptid.sign(tx2);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx2);
 
-      console.log("Transfer complete");
+      console.log('Transfer complete');
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceAfter = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceAfter = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
-      expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(-tokensToTransfer);
+      expect(tokenBalanceAfter - tokenBalanceBefore).to.equal(
+        -tokensToTransfer
+      );
     });
 
     it('should create the recipient ATA and send tokens in one transaction', async () => {
-      const recipientSOL = Keypair.generate().publicKey
+      const recipientSOL = Keypair.generate().publicKey;
       const cryptid = build(did, key, { connection });
       const cryptidATA = await getAssociatedTokenAccount(
         token.publicKey,
-        doaSigner
+        cryptidSigner
       );
       const recipientATA = await getAssociatedTokenAccount(
         token.publicKey,
-        recipientSOL,
+        recipientSOL
       );
 
-      const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        token.publicKey,
-        recipientATA,
-        recipientSOL,
-        doaSigner
-      );
+      const createATAInstruction =
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          token.publicKey,
+          recipientATA,
+          recipientSOL,
+          cryptidSigner
+        );
       const transferInstruction = Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
         cryptidATA,
         recipientATA,
-        doaSigner,
+        cryptidSigner,
         [],
         tokensToTransfer
       );
-      const tx = await createTransaction(connection, doaSigner, [createATAInstruction, transferInstruction]);
+      const tx = await createTransaction(connection, cryptidSigner, [
+        createATAInstruction,
+        transferInstruction,
+      ]);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceBefore = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceBefore = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
       const [cryptidTx] = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (there is a type issue in spl-token that does not recognise toNumber as being on u64)
-      const tokenBalanceAfter = (await token.getAccountInfo(cryptidTokenATA)).amount.toNumber();
+      const tokenBalanceAfter = (
+        await token.getAccountInfo(cryptidTokenATA)
+      ).amount.toNumber();
 
-      expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(-tokensToTransfer);
+      expect(tokenBalanceAfter - tokenBalanceBefore).to.equal(
+        -tokensToTransfer
+      );
     });
   });
 });

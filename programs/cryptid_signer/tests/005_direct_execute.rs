@@ -7,7 +7,7 @@ use cryptid_signer::instruction::{
     CryptidInstruction, DirectExecuteBuild, DirectExecuteFlags, SigningKeyBuild,
 };
 use cryptid_signer::state::InstructionData;
-use cryptid_signer::{DOASignerSeeder, GenerativeDOASeeder};
+use cryptid_signer::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 use dummy_program::DummyInstruction;
 use log::trace;
 use sol_did::id as sol_did_id;
@@ -52,23 +52,23 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
 
     let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
-    let (doa, _doa_nonce) = PDAGenerator::new(
+    let (cryptid_account, _cryptid_nonce) = PDAGenerator::new(
         cryptid_id,
-        GenerativeDOASeeder {
+        GenerativeCryptidSeeder {
             did_program: sol_did_id(),
             did: did_pda,
         },
     )
     .find_address();
-    trace!(target: LOG_TARGET, "doa: {}", doa);
-    let (doa_signer, _doa_signer_nonce) =
-        PDAGenerator::new(cryptid_id, DOASignerSeeder { doa }).find_address();
-    trace!(target: LOG_TARGET, "doa_signer: {}", doa_signer);
+    trace!(target: LOG_TARGET, "cryptid_account: {}", cryptid_account);
+    let (cryptid_signer, _cryptid_signer_nonce) =
+        PDAGenerator::new(cryptid_id, CryptidSignerSeeder { cryptid_account }).find_address();
+    trace!(target: LOG_TARGET, "cryptid_signer: {}", cryptid_signer);
 
     let dummy_instruction1: SolanaInstruction = build_instruction!(
         dummy_program_id,
         DummyInstruction,
-        RequireSigner(doa_signer)
+        RequireSigner(cryptid_signer)
     )
     .expect("Could not create dummy instruction 1");
     trace!(
@@ -128,7 +128,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
     );
 
     let direct_execute_data = DirectExecuteBuild {
-        doa,
+        cryptid_account,
         did: SolanaAccountMeta::new_readonly(did_pda, false),
         did_program: sol_did_id(),
         signing_keys: vec![SigningKeyBuild {
@@ -177,23 +177,23 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
     let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
-    let (doa, _doa_nonce) = PDAGenerator::new(
+    let (cryptid_account, _cryptid_nonce) = PDAGenerator::new(
         cryptid_id,
-        GenerativeDOASeeder {
+        GenerativeCryptidSeeder {
             did_program: sol_did_id(),
             did: did_pda,
         },
     )
     .find_address();
-    trace!(target: LOG_TARGET, "doa: {}", doa);
-    let (doa_signer, _doa_signer_nonce) =
-        PDAGenerator::new(cryptid_id, DOASignerSeeder { doa }).find_address();
-    trace!(target: LOG_TARGET, "doa_signer: {}", doa_signer);
+    trace!(target: LOG_TARGET, "cryptid_account: {}", cryptid_account);
+    let (cryptid_signer, _cryptid_signer_nonce) =
+        PDAGenerator::new(cryptid_id, CryptidSignerSeeder { cryptid_account }).find_address();
+    trace!(target: LOG_TARGET, "cryptid_signer: {}", cryptid_signer);
 
     let dummy_instruction1: SolanaInstruction = build_instruction!(
         dummy_program_id,
         DummyInstruction,
-        RequireSigner(doa_signer)
+        RequireSigner(cryptid_signer)
     )
     .expect("Could not create dummy instruction 1");
 
@@ -221,7 +221,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
         .map(|instruction| InstructionData::from_instruction(instruction, &instruction_map))
         .collect::<Vec<_>>();
     let direct_execute_data = DirectExecuteBuild {
-        doa,
+        cryptid_account,
         did: SolanaAccountMeta::new_readonly(did_pda, false),
         did_program: sol_did_id(),
         signing_keys: vec![SigningKeyBuild {
