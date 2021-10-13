@@ -64,6 +64,8 @@ impl CryptidAccount {
 pub struct TransactionAccount {
     /// The cryptid account for the transaction
     pub cryptid_account: Pubkey,
+    /// The accounts `transaction_instructions` references
+    pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
