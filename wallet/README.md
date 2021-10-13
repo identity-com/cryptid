@@ -1,6 +1,6 @@
 # Cryptid Wallet UI
 
-A browser based UI for managing your Cryptid accounts.
+A browser-based UI for managing your Cryptid accounts.
 
 See [cryptid.identity.com](https://cryptid.identity.com) to try it out.
 
