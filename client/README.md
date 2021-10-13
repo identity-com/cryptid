@@ -79,7 +79,6 @@ await cryptid.removeController(controllerDid);
 
 ### Retrieving the DID document
 
-Retrieve the DID document associated with your Cryptid account
 ```javascript
 const didDocument = await cryptid.document();
 ```
