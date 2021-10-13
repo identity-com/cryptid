@@ -111,7 +111,7 @@ export default function AddKeyOrCryptidAccountModal(
       onAddKey(address, alias)
       return
     }
-  }, [addCryptidType, addWallet, importAddress, alias, isControlled])
+  }, [addCryptidType, addWallet, importAddress, alias, isControlled, importKeyPair])
 
 
   return (
