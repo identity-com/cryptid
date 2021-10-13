@@ -4,7 +4,7 @@ import { mapObjIndexed } from "ramda";
 import Base from "./base";
 
 export default class Alias extends Base {
-  static description = "describe the command here";
+  static description = "Associate a DID with an alias";
 
   static flags = {
     ...Flags.common,
