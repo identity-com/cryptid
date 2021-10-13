@@ -128,7 +128,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
                 <dd className="mt-1">
                   <div className="inline-flex items-center">
                     <p className="text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                      {cryptidAccount.controlledBy}
+                      {cryptidAccount.baseAccount().alias}
                     </p>
                     {cryptidAccount.controllerMatches && <CheckCircleIcon className="ml-1 text-green-500 w-6 h-6"/>}
                     {!cryptidAccount.controllerMatches && <XCircleIcon className="ml-1 text-red-500 w-6 h-6"/>}

@@ -64,8 +64,6 @@ interface WalletContextInterface {
   addWallet: (name: string, useAdapter: boolean, importedKey?: Keypair) => PublicKey,
   hasWallet: (publicKey: PublicKey) => boolean,
   listWallets: () => ExtendedPersistedWalletType[],
-  showAddMnemonicDialog: boolean,
-  setShowAddMnemonicDialog: (v: boolean) => void
   showWalletConnectDialogWithPublicKey: string | undefined,
   setShowWalletConnectDialogWithPublicKey: (v: string | undefined) => void
   hasUnlockedMnemonic: boolean
@@ -80,8 +78,6 @@ const WalletContext = React.createContext<WalletContextInterface>({
   addWallet: () => { throw new Error('Not loaded')},
   hasWallet: () => false,
   listWallets: () => [],
-  showAddMnemonicDialog: false,
-  setShowAddMnemonicDialog: () => {},
   showWalletConnectDialogWithPublicKey: undefined,
   setShowWalletConnectDialogWithPublicKey: () => {},
   hasUnlockedMnemonic: false,
@@ -99,7 +95,6 @@ export function WalletProvider({ children }) {
   const [wallet, setWallet] = useState<WalletInterface>(DEFAULT_WALLET_INTERFACE); // we mirror the wallet-adapter interface
 
   // globalModals
-  const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
   const [showWalletConnectDialogWithPublicKey, setShowWalletConnectDialogWithPublicKey] = useState<string|undefined>();
 
 
@@ -249,8 +244,6 @@ export function WalletProvider({ children }) {
         addWallet,
         hasWallet,
         listWallets,
-        showAddMnemonicDialog,
-        setShowAddMnemonicDialog,
         showWalletConnectDialogWithPublicKey,
         setShowWalletConnectDialogWithPublicKey,
         hasUnlockedMnemonic: !loadedingMnemonicPromise && !!mnemonic
