@@ -1,11 +1,6 @@
 [workspace]
-exclude = [
-    "solana_generator",
-]
 members = [
     "programs/dummy_program",
     "programs/cryptid_signer",
     "programs/test_utils",
-    "solana_generator",
-    "solana_generator/derive",
 ]
