@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import * as bs58 from 'bs58';
 import {Account, Keypair, LAMPORTS_PER_SOL, PublicKey, Transaction} from '@solana/web3.js';
 import nacl from 'tweetnacl';
@@ -11,12 +11,12 @@ import {
   parseMintData,
   parseTokenAccountData,
 } from './tokens/data';
-import {sleep, useListener, useLocalStorageState} from './utils';
+import {sleep, useLocalStorageState} from './utils';
 import { useTokenInfo } from './tokens/names';
 // import { useUnlockedMnemonicAndSeed, walletSeedChanged } from './wallet-seed';
 import { getAccountFromSeed, AccountWallet } from './Wallet/AccountWallet';
 import { useWallet as useAdapterWallet } from '@solana/wallet-adapter-react';
-import { useUnlockedMnemonicAndSeed, walletSeedChanged } from "./wallet-seed";
+import { useUnlockedMnemonicAndSeed } from "./wallet-seed";
 import {useCallAsync} from "./notifications";
 
 
@@ -262,10 +262,22 @@ export function useRequestAirdrop(refreshCallback?: () => void) {
   const callAsync = useCallAsync();
   const connection = useConnection();
 
-  const requestAirdrop = (...addresses: PublicKey[]) => {
+  return (...addresses: PublicKey[]) => {
     addresses.forEach(address => {
       callAsync(
-        connection.requestAirdrop(address, LAMPORTS_PER_SOL),
+        (async () => {
+          try {
+            await connection.requestAirdrop(address, LAMPORTS_PER_SOL * 5);
+          } catch (e) {
+            if (e instanceof Error && e.message.startsWith("429 Too Many Requests:")){
+              console.log("Too many requests, trying again after 10000ms");
+              await new Promise(resolve => setTimeout(resolve, 10000));
+              await connection.requestAirdrop(address, LAMPORTS_PER_SOL * 5);
+            } else {
+              throw e;
+            }
+          }
+        })(),
         {
           onSuccess: async () => {
             await sleep(5000);
@@ -278,8 +290,6 @@ export function useRequestAirdrop(refreshCallback?: () => void) {
       );
     })
   };
-
-  return requestAirdrop
 }
 
 export function useBalanceInfo(publicKey) {
