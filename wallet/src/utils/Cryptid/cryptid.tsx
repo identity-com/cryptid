@@ -11,7 +11,7 @@ import { Connection, PublicKey, Transaction, TransactionSignature } from "@solan
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { refreshCache, useAsyncData } from "../fetch-loop";
-import { useLocalStorageState, useRefEqual } from "../utils";
+import { getItemLocalStorage, setItemLocalStorage, useLocalStorageState, useRefEqual } from "../utils";
 import {
   closeTokenAccount,
   createAssociatedTokenAccount,
@@ -28,7 +28,6 @@ interface CryptidAccountInitData {
   didAddress: string,
   alias: string,
   connection: Connection,
-  isSelected: (account: CryptidAccount) => boolean
   buildCryptidClient: (account: CryptidAccount) => Cryptid
   parent?: CryptidAccount,
 }
@@ -38,10 +37,10 @@ export class CryptidAccount {
   public readonly didAddress: string;
   public readonly alias: string;
   private _connection: Connection;
-  private _isSelected: (account: CryptidAccount) => boolean;
+  public selected: boolean;
   private _buildCryptidClient: (account: CryptidAccount) => Cryptid;
   // Crypid Account parent if controlled
-  private _parent: CryptidAccount | undefined;
+  public _parent: CryptidAccount | undefined;
 
   private _address: PublicKey;
   private _document: DIDDocument;
@@ -52,7 +51,7 @@ export class CryptidAccount {
     return signature;
   }
 
-  private constructor({ didPrefix, didAddress, alias, connection, isSelected, buildCryptidClient, parent} : CryptidAccountInitData) {
+  private constructor({ didPrefix, didAddress, alias, connection, buildCryptidClient, parent} : CryptidAccountInitData) {
     this.didPrefix = didPrefix
     this.didAddress = didAddress
     this.alias = alias
@@ -60,7 +59,7 @@ export class CryptidAccount {
     this._address = new PublicKey(didAddress) // Note this is wrong, but will be updated by INIT, constructor is private
     this._document =  { id: "UNINITIALIZED" }; //Note this is wrong, but will be updated by INIT, constructor is private
     this._buildCryptidClient = buildCryptidClient
-    this._isSelected = isSelected
+    this.selected = false
     this._parent = parent
 
   }
@@ -79,6 +78,10 @@ export class CryptidAccount {
 
   get cryptid() {
     return this._buildCryptidClient(this)
+  }
+
+  get parent() {
+    return this._parent
   }
 
   static async create(init: CryptidAccountInitData) {
@@ -100,7 +103,6 @@ export class CryptidAccount {
       alias: controllerAlias,
       connection: this._connection,
       buildCryptidClient: this._buildCryptidClient,
-      isSelected: this._isSelected,
       parent: this,
     })
   }
@@ -159,17 +161,13 @@ export class CryptidAccount {
   }
 
   containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
-
-  get isInitialized() {
-    return this._address !== null && this._document !== null
-  }
   
   get activeSigningKey():PublicKey {
     return this.cryptid.signer.publicKey
   }
 
   get isSelected() {
-    return this._isSelected(this)
+    return this.selected;
   }
   
   signerBalance():Promise<number | undefined> {
@@ -344,9 +342,9 @@ export type TokenAccountInfo = {
 interface CryptidContextInterface {
   cryptidAccounts: CryptidAccount[];
   selectedCryptidAccount: CryptidAccount | undefined;
-  setSelectedCryptidAccount: (value: CryptidAccount | undefined) => void,
+  setSelectedCryptidAccount: (value: CryptidAccount) => void,
   addCryptidAccount: (base58Address: string, alias: string, parent?: CryptidAccount) => void
-  removeCryptidAccount: (base58Address: string) => void
+  removeCryptidAccount: (account: CryptidAccount) => void
   getDidPrefix: () => string,
   ready: boolean,
 }
@@ -426,22 +424,22 @@ export const CryptidProvider:FC = ({ children }) => {
     DEFAULT_CRYPTID_SELECTOR,
   );
 
-  //
-  const [cryptidExtAccounts, setCryptidExtAccounts] = useLocalStorageState<StoredCryptidAccount[]>(
-    'cryptidExternalAccounts',
-    [],
-  );
-
   // In order to not
   const [ready, setReady] = useState(false);
   const [selectedCryptidAccount, setSelectedCryptidAccountInternal] = useState<CryptidAccount | undefined>();
   const [cryptidAccounts, setCryptidAccounts] = useState<CryptidAccount[]>([])
 
-  const setSelectedCryptidAccount = useCallback((account: CryptidAccount | undefined) => {
+  const setSelectedCryptidAccount = useCallback((account: CryptidAccount) => {
     // don't set anything if did already matches (loop-breaker)
     if (selectedCryptidAccount && selectedCryptidAccount.did === account?.did) {
       return
     }
+
+    if (selectedCryptidAccount) {
+      selectedCryptidAccount.selected = false
+    }
+
+    account.selected = true
 
     setSelectedCryptidAccountInternal(account)
     setCryptidSelector({
@@ -456,8 +454,10 @@ export const CryptidProvider:FC = ({ children }) => {
     return `did:sol${clusterPrefix}`;
   },[cluster])
 
-  const isSelectedCryptidAccount = useCallback((account: CryptidAccount) => account.did === selectedCryptidAccount?.did, [selectedCryptidAccount])
   const buildCryptidClient = useCallback((account: CryptidAccount) => {
+    console.log('buildCryptidClient called')
+    console.log(`current wallet: ${wallet.publicKey}`)
+
     // always use the base account for client interface
     const signer: Signer = {
       publicKey: wallet.publicKey as PublicKey, // TODO hack until interface improves
@@ -474,7 +474,6 @@ export const CryptidProvider:FC = ({ children }) => {
     // returns all accounts from [ baseAccount to account ]
     for (const acc of account.baseAccountPath()) {
       // console.log(`Crypid ${cryptid.did} as ${acc.did}`)
-
       cryptid = cryptid.as(acc.did)
     }
 
@@ -489,42 +488,30 @@ export const CryptidProvider:FC = ({ children }) => {
       alias,
       connection,
       buildCryptidClient,
-      isSelected: isSelectedCryptidAccount
     })
-  }, [getDidPrefix, isSelectedCryptidAccount, buildCryptidClient, connection])
+  }, [getDidPrefix, buildCryptidClient, connection])
 
-  const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
-    validatePublicKey(base58);
-    // TODO: This should NOT work with the LocalStorage State bug add to cryptidAccounts directly. Changes there are then persisted
-
-    if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
-      // set to new account
-      setCryptidSelector({
-        selectedCryptidAccount: base58
-      })
-
-      const parentBase58 = parent?.didAddress
-      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
+  const getStoredCryptidAccounts = useCallback(async (): Promise<CryptidAccount[]> => {
+    let storedCryptidAccounts = getItemLocalStorage<StoredCryptidAccount[]>('cryptidExternalAccounts')
+    if (storedCryptidAccounts === null) {
+      storedCryptidAccounts = []
     }
-  }, [cryptidExtAccounts, setCryptidExtAccounts, setCryptidSelector])
 
-  const removeCryptidAccount = useCallback((base58: string) => {
-    // TODO: This should NOT work with the LocalStorage State bug add to cryptidAccounts directly. Changes there are then persisted
-    // TODO: Make sure if the current one is remove that it's still working.
+    // Sort, so that dependent parents are first in array
+    storedCryptidAccounts.sort( (a, b) => {
+      if (a.parent === b.account) {
+        return 1;
+      }
 
-    const idx = cryptidExtAccounts.map(x => x.account).indexOf(base58)
-    if (idx >= 0) {
-      setCryptidExtAccounts(cryptidExtAccounts.splice(idx, 1))
-    }
-  }, [cryptidExtAccounts, setCryptidExtAccounts])
+      if (b.parent === a.account) {
+        return -1;
+      }
 
+      return 0;
+    })
 
-  const loadCryptidAccounts = useCallback(async () => {
-
-    // TODO: This is not robust, since dependent accounts need to be loaded first.
-    // (which should be the case as long as the order is preserved.)
     const loadedCryptidAccounts: CryptidAccount[] = []
-    for (const ext of cryptidExtAccounts) {
+    for (const ext of storedCryptidAccounts) {
       const parentAccount = loadedCryptidAccounts.find(x => x.didAddress === ext.parent)
       let cryptidAccount;
       if (parentAccount) {
@@ -537,27 +524,67 @@ export const CryptidProvider:FC = ({ children }) => {
       loadedCryptidAccounts.push(cryptidAccount)
     }
 
+
+    return loadedCryptidAccounts
+  }, [createCryptidAccount])
+
+  const setStoredCryptidAccounts = (accounts: CryptidAccount[]) => {
+    setItemLocalStorage<StoredCryptidAccount[]>('cryptidExternalAccounts', accounts.map(x => ({
+      account: x.didAddress,
+      alias: x.alias,
+      parent: x.parent ? x.parent.didAddress : undefined
+    })))
+  }
+
+  const addCryptidAccount = useCallback(async (base58: string, alias: string, parent?: CryptidAccount) => {
+    validatePublicKey(base58);
+
+    // already exists
+    if (!!cryptidAccounts.find(x => x.didAddress === base58)) {
+      return
+    }
+
+    const newAccount = await (parent ? parent.as(base58, alias) : createCryptidAccount(base58, alias));
+    const updatedCryptidAccounts = [ ...cryptidAccounts, newAccount]
+    setCryptidAccounts(updatedCryptidAccounts)
+    setStoredCryptidAccounts(updatedCryptidAccounts)
+
+  }, [cryptidAccounts, createCryptidAccount])
+
+  const removeCryptidAccount = useCallback((account: CryptidAccount) => {
+    const idx = cryptidAccounts.indexOf(account)
+    const updatedCryptidAccounts = cryptidAccounts.splice(idx, 1)
+    if (idx >= 0) {
+      setCryptidAccounts(updatedCryptidAccounts)
+      setStoredCryptidAccounts(updatedCryptidAccounts)
+    }
+  }, [cryptidAccounts, setCryptidAccounts])
+
+
+  const loadCryptidAccounts = useCallback(async () => {
+    const loadedCryptidAccounts = await getStoredCryptidAccounts()
+
     // console.log(`Setting setCryptidAccounts with: ${loadedCryptidAccounts}`)
     setCryptidAccounts(loadedCryptidAccounts)
     setReady(true) // TODO is this deterministally set at the same time of the array?
-  }, [cryptidExtAccounts, setCryptidAccounts, createCryptidAccount])
+  }, [setCryptidAccounts, setReady, getStoredCryptidAccounts]) // not, this only runs once during load.
 
   // Select Account when set
-  useEffect(() => {
-    console.log('useEffect setSelectedCryptidAccount')
-    // Select the persisted one.
-    if (cryptidAccounts.length > 0) {
-      const selected = cryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
-      console.log('Setting Account for ' + selected.did)
-      setSelectedCryptidAccount(selected)
-    }
-  }, [cryptidAccounts, setSelectedCryptidAccount, cryptidSelector.selectedCryptidAccount])
+  // useEffect(() => {
+  //   console.log('useEffect setSelectedCryptidAccount')
+  //   // Select the persisted one.
+  //   if (cryptidAccounts.length > 0) {
+  //     const selected = cryptidAccounts.find(a => a.didAddress === cryptidSelector.selectedCryptidAccount) || cryptidAccounts[0]
+  //     console.log('Setting Account for ' + selected.did)
+  //     setSelectedCryptidAccount(selected)
+  //   }
+  // }, [cryptidAccounts, setSelectedCryptidAccount, cryptidSelector.selectedCryptidAccount])
 
   // Load from Storage
   useEffect(() => {
     console.log('useEffect loadCryptidAccounts')
     loadCryptidAccounts()
-  }, [loadCryptidAccounts])
+  },[]) // Initial account loading only happens once.
 
 
   // find and assign Wallet to current account

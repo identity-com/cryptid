@@ -7,7 +7,6 @@ export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-
 export function useLocalStorageState<T>(
   key: string,
   defaultState: T,
@@ -36,6 +35,23 @@ export function useLocalStorageState<T>(
   );
 
   return [state, setLocalStorageState];
+}
+
+export const setItemLocalStorage = <T>(key: string, item: T|null) => {
+  if (item == null) {
+    localStorage.removeItem(key);
+  } else {
+    localStorage.setItem(key, JSON.stringify(item));
+  }
+}
+
+export const getItemLocalStorage = <T>(key: string): T|null => {
+  const storedItem = localStorage.getItem(key);
+  if (storedItem === null) {
+    return null
+  }
+
+  return JSON.parse(storedItem)
 }
 
 export function useEffectAfterTimeout(effect: () => void, timeout: number) {
