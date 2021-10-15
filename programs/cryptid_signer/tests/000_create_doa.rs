@@ -14,7 +14,7 @@ use solana_generator::{build_instruction, Account, PDAGenerator, SolanaAccountMe
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
 use test_utils::rand::Rng;
-use test_utils::start_tests;
+use test_utils::{start_tests, ClientExpansion};
 
 #[tokio::test]
 async fn create_cryptid() {
@@ -76,7 +76,7 @@ async fn create_cryptid() {
     );
     trace!(target: LOG_TARGET, "transaction built");
     banks
-        .process_transaction(transaction)
+        .process_transaction_longer_timeout(transaction)
         .await
         .expect("Transaction failed");
 

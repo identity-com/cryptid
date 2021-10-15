@@ -4,16 +4,23 @@
 pub extern crate rand;
 
 use array_init::array_init;
+use async_trait::async_trait;
 use log::{info, trace};
 use rand::{random, CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use solana_program_test::{BanksClient, ProgramTest};
+use solana_sdk::commitment_config::CommitmentLevel;
 use solana_sdk::hash::Hash;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
+use solana_sdk::transaction::Transaction;
+use solana_sdk::transport;
 use std::array::IntoIter;
 use std::collections::HashMap;
+use std::io;
+use std::time::Duration;
+use tarpc::context;
 
 pub async fn start_tests<const N: usize>(
     log_target: &'static str,
@@ -88,4 +95,52 @@ pub fn generate_test<const N: usize>(
         );
     }
     (test, program_map, rng)
+}
+
+#[async_trait]
+pub trait ClientExpansion: private::Sealed {
+    async fn process_transaction_longer_timeout(
+        &mut self,
+        transaction: Transaction,
+    ) -> transport::Result<()> {
+        self.process_transaction_with_timeout_and_commitment(
+            transaction,
+            Duration::from_secs(60 * 3),
+            CommitmentLevel::default(),
+        )
+        .await
+    }
+
+    async fn process_transaction_with_timeout_and_commitment(
+        &mut self,
+        transaction: Transaction,
+        timeout: Duration,
+        commitment: CommitmentLevel,
+    ) -> transport::Result<()>;
+}
+impl private::Sealed for BanksClient {}
+#[async_trait]
+impl ClientExpansion for BanksClient {
+    async fn process_transaction_with_timeout_and_commitment(
+        &mut self,
+        transaction: Transaction,
+        timeout: Duration,
+        commitment: CommitmentLevel,
+    ) -> transport::Result<()> {
+        let mut ctx = context::current();
+        ctx.deadline += timeout;
+        let result = self
+            .process_transaction_with_commitment_and_context(ctx, transaction, commitment)
+            .await?;
+        match result {
+            None => Err(
+                io::Error::new(io::ErrorKind::TimedOut, "invalid blockhash or fee-payer").into(),
+            ),
+            Some(transaction_result) => Ok(transaction_result?),
+        }
+    }
+}
+
+mod private {
+    pub trait Sealed {}
 }
