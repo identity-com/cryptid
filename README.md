@@ -110,10 +110,10 @@ Solana. The details of these costs are explained in detail in the
 ### Do dApps need a special integration to use Crytpid?
 No! We are planning to include Cryptid as a supported wallet within 
 [Solana's Wallet Adapter](https://github.com/solana-labs/wallet-adapter) which would make the utilization of Cryptid 
-completely transparent towards the dApp. It's just one more option for the user to chose from!
+completely transparent towards the dApp. It's just one more option for the user to chose from.
 
 ### Who really owns the funds in my Cryptid address?
-Technically your Cryptid address is owned by the [Cryptid Signer program](./programs/cryptid_signer) which makes sure
+On-chain your Cryptid address is owned by the [Cryptid Signer program](./programs/cryptid_signer) which makes sure
 that only keys and/or controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, 
 your funds are too.
 
@@ -121,7 +121,7 @@ Before launching Cryptid on Mainnet we will go through an extensive audit proces
 our word for it!
 
 Lastly, since Solana generally allows programs to be updated, there would be a potential attack vector there. We will make
-sure that the Cryptid program is either (1) not upgradable or (2) in the complete control over a multi-sig DAO structure.
+sure that the Cryptid program is either (1) not upgradable or (2) in the complete control of a multi-sig DAO structure.
 The latter would even be able to support account recoveries via the DAO. 
 
 ### Why does the world need Cryptid?
