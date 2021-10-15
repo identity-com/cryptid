@@ -113,9 +113,9 @@ No! We are planning to include Cryptid as a supported wallet within
 completely transparent towards the dApp. It's just one more option for the user to chose from.
 
 ### Who really owns the funds in my Cryptid address?
-On-chain your Cryptid address is owned by the [Cryptid Signer program](./programs/cryptid_signer) which makes sure
-that only keys and/or controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, 
-your funds are too.
+On-chain your Cryptid address is owned by the System Program however the 
+[Cryptid Signer program](./programs/cryptid_signer) is the authority for it which makes sure that only keys and/or 
+controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, your funds are too.
 
 Before launching Cryptid on Mainnet we will go through an extensive audit process, so that you don't only need to take
 our word for it!
