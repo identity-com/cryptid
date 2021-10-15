@@ -108,33 +108,30 @@ Solana. The details of these costs are explained in detail in the
 [Solana documentation](https://docs.solana.com/developing/programming-model/accounts#calculation-of-rent)
 
 ### Do dApps need a special integration to use Crytpid?
-Generally no! We are planning to include Cryptid as a supported wallet within [Solana's Wallet Adapter](https://github.com/solana-labs/wallet-adapter)
-which would make the utilization of Cryptid completely transparent towards the dApp. It's just one more option for the
-user to chose from!
+No! We are planning to include Cryptid as a supported wallet within 
+[Solana's Wallet Adapter](https://github.com/solana-labs/wallet-adapter) which would make the utilization of Cryptid 
+completely transparent towards the dApp. It's just one more option for the user to chose from!
 
 ### Who really owns the funds in my Cryptid address?
-Technically your Cryptid address is owned by the [Cryptid Signer program](./programs/cryptid_signer) which makes sure that
-only keys and/or controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, your
-funds are too.
+Technically your Cryptid address is owned by the [Cryptid Signer program](./programs/cryptid_signer) which makes sure
+that only keys and/or controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, 
+your funds are too.
 
-Before putting Cryptid on Mainnet we will go through an extensive audit process, so that you don't only need to take
-our word for it.
+Before launching Cryptid on Mainnet we will go through an extensive audit process, so that you don't only need to take
+our word for it!
 
 Lastly, since Solana generally allows programs to be updated, there would be a potential attack vector there. We will make
 sure that the Cryptid program is either (1) not upgradable or (2) in the complete control over a multi-sig DAO structure.
-The latter would be able to support account recoveries via the DAO. 
+The latter would even be able to support account recoveries via the DAO. 
 
 ### Why does the world need Cryptid?
 We understand that direct private key ownership is the ultimate level of control for any address or program on a blockchain. 
-However we envision the future world of web3 much more nuanced than this. Private Key ownership is absolute, either you
+However, we envision the future world of web3 much more nuanced than this! Private Key ownership is absolute, either you
 have it or you don't. With this restriction, all higher level access mechanism are pushed off-chain into a world of
 centralized services like custodial wallets or exchanges.
 
-In contrast, we would like to see all these features realized on-chain where everyone can transparently see and verify them.
-- Key rotation
-- Controller relationships
-- Middleware Layer to support things like spending limits, subscriptions models and much more!
-
+In contrast, we would like to see all these [current](#features) and [future](#on-our-roadmap) features realized on-chain
+where everyone can transparently see and verify them.
 
 ## Getting Started
 
