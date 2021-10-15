@@ -1,0 +1,25 @@
+{
+  "short_name": "Solana Wallet",
+  "name": "Solana SPL Token Wallet",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo300.png",
+      "type": "image/png",
+      "sizes": "300x264"
+    },
+    {
+      "src": "logo600.png",
+      "type": "image/png",
+      "sizes": "600x528"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

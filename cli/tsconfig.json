@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "outDir": "lib",
+    "rootDir": "src",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2017",
+    "types": ["mocha", "node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

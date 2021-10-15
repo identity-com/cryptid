@@ -1,0 +1,25 @@
+[package]
+name = "dummy_program"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana_generator = { git = "https://github.com/identity-com/solana_generator", rev = "998effcfe68b55e392821084992082a38b028012" }
+borsh = "0.9.1"
+
+[dev-dependencies]
+solana-sdk = "1.7.12"
+solana-program-test = "1.7.12"
+tokio = "1.11.0"
+log = "0.4.14"
+test_utils = { path = "../test_utils" }
+
+[features]
+default = []
+no-entrypoint = []
+test-bpf = []

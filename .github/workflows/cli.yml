@@ -1,0 +1,45 @@
+name: CLI
+on:
+  push:
+    paths:
+      - 'cli/**'
+  pull_request:
+jobs:
+  build:
+    name: Build, lint, and test the cryptid cli on Node ${{ matrix.node }} and ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ['16.x']
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node dependencies
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install
+        run: yarn
+
+      - name: Build Dependencies
+        run: yarn workspace @identity.com/cryptid build
+
+      - name: Lint
+        run: yarn workspace @identity.com/cryptid-cli lint
+
+      - name: Test
+        run: yarn workspace @identity.com/cryptid-cli test
+
+      - name: Build
+        run: yarn workspace @identity.com/cryptid-cli pack

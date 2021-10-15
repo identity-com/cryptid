@@ -1,0 +1,6 @@
+*-debug.log
+*-error.log
+/lib
+/package-lock.json
+/tmp
+identity.com-cryptid-cli-*.tgz
