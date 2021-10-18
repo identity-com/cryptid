@@ -64,7 +64,7 @@ const IdentitySelector = ({ isSignerWindow }: IdentitySelectorInterface ) => {
 
 
   return (
-    <div className={isSignerWindow ? "flex items-center" : "hidden sm:ml-2 sm:flex sm:items-center "}>
+    <div className="flex items-center m-2">
       <AddKeyOrCryptidAccountModal
         open={addCryptidAccountDialogOpen}
         onClose={() => setCryptidAccountDialogOpen(false)}
