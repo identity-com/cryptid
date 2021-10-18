@@ -12,20 +12,57 @@ import {
   WRAPPED_SOL_MINT,
 } from '../utils/tokens/instructions';
 import { parseTokenAccountData } from '../utils/tokens/data';
-import { Switch } from '@material-ui/core';
 import {useCryptid} from "../utils/Cryptid/cryptid";
 import { Modal } from "./modals/modal";
 import {useConnection} from "../utils/connection";
+import { Switch } from '@headlessui/react'
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
+}
+
+const Toggle:React.FC<{title: string, description?: string, onChange: (enabled: boolean) => void, enabled: boolean}> = ({title, description, enabled, onChange}) => {
+  return (
+    <Switch.Group as="div" className="flex items-center justify-between">
+      <span className="flex-grow flex flex-col">
+        <Switch.Label as="span" className="text-sm font-medium text-gray-900" passive>
+          {title}
+        </Switch.Label>
+        {description && <Switch.Description as="span" className="text-sm text-gray-500">
+          {description}
+        </Switch.Description>}
+      </span>
+      <Switch
+        checked={enabled}
+        onChange={onChange}
+        className={classNames(
+          enabled ? 'bg-red-600' : 'bg-gray-200',
+          'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={classNames(
+            enabled ? 'translate-x-5' : 'translate-x-0',
+            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200'
+          )}
+        />
+      </Switch>
+    </Switch.Group>
+  )
+}
+
 
 export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   const onSubmitRef = useRef<() => void>();
 
   const { mint, tokenName, tokenSymbol } = balanceInfo;
-
+  const [enabled, setEnabled] = useState(false);
 
   return (
     <Modal 
       show={open} 
+      okEnabled={enabled}
       callbacks={{onOK: () => onSubmitRef.current && onSubmitRef.current(), onClose}}
       title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
         <SendSplDialog
@@ -33,12 +70,13 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
           publicKey={publicKey}
           balanceInfo={balanceInfo}
           onSubmitRef={onSubmitRef}
+          setEnabled={setEnabled}
         />
     </Modal>
   );
 }
 
-function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
+function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef, setEnabled }) {
   const connection = useConnection();
   const defaultAddressHelperText =
     !balanceInfo.mint || balanceInfo.mint.equals(WRAPPED_SOL_MINT)
@@ -69,6 +107,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
         setAddressHelperText(defaultAddressHelperText);
         setPassValidation(undefined);
         setShouldShowOverride(undefined);
+        setEnabled(false);
         return;
       }
       try {
@@ -103,11 +142,10 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinationAddress, selectedCryptidAccount, mintString]);
-  useEffect(() => {
-    return () => {
+  useEffect(() =>
+    () => {
       setOverrideDestinationCheck(false);
-    };
-  }, [setOverrideDestinationCheck]);
+    }, [setOverrideDestinationCheck]);
   async function makeTransaction() {
     let amount = Math.round(parseFloat(transferAmountString) * 10 ** decimals);
     if (!amount || amount <= 0) {
@@ -124,9 +162,13 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
     );
   }
 
-  const disabled = shouldShowOverride
-    ? !overrideDestinationCheck || sending || !validAmount
-    : sending || !validAmount;
+  useEffect(() => {
+    const disabled = shouldShowOverride
+      ? !overrideDestinationCheck || sending || !validAmount
+      : sending || !validAmount;
+    setEnabled(!disabled);
+  }, [shouldShowOverride, destinationAddress, validAmount, sending, overrideDestinationCheck])
+ 
 
   async function onSubmit() {
     if (!selectedCryptidAccount) return;
@@ -134,27 +176,18 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef }) {
   }
   onSubmitRef.current = onSubmit;
   return (
-    <>
-      <DialogContent>{fields}</DialogContent>
-      <DialogActions>
+    <DialogContent>
+        {fields}
         {shouldShowOverride && (
-          <div className="items-center flex align-left"
-            // style={{
-            //   'align-items': 'center',
-            //   display: 'flex',
-            //   'text-align': 'left',
-            // }}
-          >
-            <b>This address has no funds. Are you sure it's correct?</b>
-            <Switch
-              checked={overrideDestinationCheck}
-              onChange={(e) => setOverrideDestinationCheck(e.target.checked)}
-              color="primary"
+          <div>
+            <Toggle
+              enabled={overrideDestinationCheck}
+              title='Send to unfunded address?'
+              onChange={(enabled: boolean) => setOverrideDestinationCheck(enabled)}
             />
           </div>
         )}
-      </DialogActions>
-    </>
+    </DialogContent>
   );
 }
 

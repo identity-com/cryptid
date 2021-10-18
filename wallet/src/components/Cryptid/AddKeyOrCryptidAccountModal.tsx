@@ -9,6 +9,7 @@ import { decodeAccount } from "../../utils/utils";
 import { useWallet as useAdapterWallet } from "@solana/wallet-adapter-react/lib/useWallet";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Switch } from '@headlessui/react'
+import AddMnemonicModal from "../modals/AddMnenomicModal";
 
 
 interface AddKeyOrCryptidAccountModalInterface {
@@ -46,7 +47,9 @@ const modalText: ModalText = {
 export default function AddKeyOrCryptidAccountModal(
   {open, onAddCryptidAccount, onAddKey, onClose, didPrefix, currentAccountAlias, modalType}: AddKeyOrCryptidAccountModalInterface) {
 
-  const {addWallet, hasUnlockedMnemonic, setShowAddMnemonicDialog} = useWalletContext()
+  const {addWallet, hasUnlockedMnemonic} = useWalletContext()
+  const [showAddMnemonicDialog, setShowAddMnemonicDialog] = useState(false);
+
   const adapterWallet = useAdapterWallet()
 
   const [alias, setAlias] = useState('');
@@ -108,7 +111,7 @@ export default function AddKeyOrCryptidAccountModal(
       onAddKey(address, alias)
       return
     }
-  }, [addCryptidType, addWallet, importAddress, alias, isControlled])
+  }, [addCryptidType, addWallet, importAddress, alias, isControlled, importKeyPair])
 
 
   return (
@@ -125,6 +128,7 @@ export default function AddKeyOrCryptidAccountModal(
       okEnabled={okEnabled()}
       suppressClose={true}
     >
+      <AddMnemonicModal show={showAddMnemonicDialog} onOK={() => setShowAddMnemonicDialog(false)} onClose={() => setShowAddMnemonicDialog(false)} />
       <div className="w-full">
         <div className="space-y-8 divide-y divide-gray-200 sm:space-y-5">
           <div>

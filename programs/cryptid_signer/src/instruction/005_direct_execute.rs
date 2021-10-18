@@ -2,11 +2,11 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use solana_generator::*;
 
-use crate::account::DOAAddress;
+use crate::account::CryptidAccountAddress;
 use crate::error::CryptidSignerError;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{AccountMeta, InstructionData};
-use crate::DOASignerSeeder;
+use crate::CryptidSignerSeeder;
 use bitflags::bitflags;
 use solana_generator::solana_program::log::sol_log_compute_units;
 use std::collections::HashMap;
@@ -34,27 +34,42 @@ impl Instruction for DirectExecute {
             accounts.print_keys();
         }
 
-        // Retrieve needed data from doa
-        let (key_threshold, signer_generator, signer_key, signer_nonce) = match &accounts.doa {
-            DOAAddress::OnChain(doa) => {
-                doa.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
-                let generator =
-                    PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.info.key });
-                let signer_key = generator.create_address(doa.signer_nonce)?;
-                (doa.key_threshold, generator, signer_key, [doa.signer_nonce])
-            }
-            DOAAddress::Generative(doa) => {
-                DOAAddress::verify_seeds(
-                    doa.key,
-                    program_id,
-                    accounts.did_program.key,
-                    accounts.did.key,
-                )?;
-                let generator = PDAGenerator::new(program_id, DOASignerSeeder { doa: doa.key });
-                let (signer_key, signer_nonce) = generator.find_address();
-                (1, generator, signer_key, [signer_nonce])
-            }
-        };
+        // Retrieve needed data from cryptid account
+        let (key_threshold, signer_generator, signer_key, signer_nonce) =
+            match &accounts.cryptid_account {
+                CryptidAccountAddress::OnChain(cryptid) => {
+                    cryptid.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
+                    let generator = PDAGenerator::new(
+                        program_id,
+                        CryptidSignerSeeder {
+                            cryptid_account: cryptid.info.key,
+                        },
+                    );
+                    let signer_key = generator.create_address(cryptid.signer_nonce)?;
+                    (
+                        cryptid.key_threshold,
+                        generator,
+                        signer_key,
+                        [cryptid.signer_nonce],
+                    )
+                }
+                CryptidAccountAddress::Generative(cryptid) => {
+                    CryptidAccountAddress::verify_seeds(
+                        cryptid.key,
+                        program_id,
+                        accounts.did_program.key,
+                        accounts.did.key,
+                    )?;
+                    let generator = PDAGenerator::new(
+                        program_id,
+                        CryptidSignerSeeder {
+                            cryptid_account: cryptid.key,
+                        },
+                    );
+                    let (signer_key, signer_nonce) = generator.find_address();
+                    (1, generator, signer_key, [signer_nonce])
+                }
+            };
 
         // Error if there aren't enough signers
         if data.signers_extras.len() < key_threshold as usize {
@@ -132,9 +147,14 @@ impl Instruction for DirectExecute {
         program_id: Pubkey,
         arg: Self::BuildArg,
     ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
-        let signer_key = PDAGenerator::new(program_id, DOASignerSeeder { doa: arg.doa })
-            .find_address()
-            .0;
+        let signer_key = PDAGenerator::new(
+            program_id,
+            CryptidSignerSeeder {
+                cryptid_account: arg.cryptid_account,
+            },
+        )
+        .find_address()
+        .0;
         let mut instruction_accounts = HashMap::new();
 
         // Go through all the instructions and collect all the accounts together
@@ -181,7 +201,7 @@ impl Instruction for DirectExecute {
             flags: arg.flags,
         };
         let mut accounts = vec![
-            SolanaAccountMeta::new_readonly(arg.doa, false),
+            SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
         ];
@@ -201,7 +221,7 @@ impl Instruction for DirectExecute {
 #[account_argument(instruction_data = signers_extras: Vec<u8>)]
 pub struct DirectExecuteAccounts {
     /// The DOA to execute with
-    pub doa: DOAAddress,
+    pub cryptid_account: CryptidAccountAddress,
     /// The DID on the DOA
     pub did: AccountInfo,
     /// The program for the DID
@@ -215,7 +235,7 @@ pub struct DirectExecuteAccounts {
 impl DirectExecuteAccounts {
     /// Prints all the keys to the program log (compute budget intensive)
     pub fn print_keys(&self) {
-        msg!("doa: {}", self.doa.info().key);
+        msg!("cryptid_account: {}", self.cryptid_account.info().key);
         msg!("did: {}", self.did.key);
         msg!("did_program: {}", self.did_program.key);
         msg!(
@@ -251,7 +271,7 @@ pub struct DirectExecuteData {
 #[derive(Debug)]
 pub struct DirectExecuteBuild {
     /// The DOA to execute with
-    pub doa: Pubkey,
+    pub cryptid_account: Pubkey,
     /// The DID for the DOA
     pub did: SolanaAccountMeta,
     /// The program for the DID

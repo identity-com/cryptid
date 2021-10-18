@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Link from '@material-ui/core/Link';
-import Typography from '@material-ui/core/Typography';
 import { useCryptid } from "../../../utils/Cryptid/cryptid";
 
 export default function LabelValue({

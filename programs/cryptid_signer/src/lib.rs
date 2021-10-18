@@ -17,37 +17,37 @@ pub mod state;
 #[cfg(not(feature = "no-entrypoint"))]
 entrypoint_list!(CryptidInstruction);
 
-/// The seed for the DOA signer
-pub const DOA_SIGNER_SEED: &str = "cryptid_signer";
-/// The seed for generative DOAs
-pub const GENERATIVE_DOA_SEED: &str = "cryptid_doa";
+/// The seed for the Cryptid signer
+pub const CRYPTID_SIGNER_SEED: &str = "cryptid_signer";
+/// The seed for generative Cryptid Accounts
+pub const GENERATIVE_CRYPTID_SEED: &str = "cryptid_doa";
 
-/// The seeder for DOA signers
+/// The seeder for cryptid signers
 #[derive(Debug)]
-pub struct DOASignerSeeder {
-    /// The key of the doa for this signer
-    pub doa: Pubkey,
+pub struct CryptidSignerSeeder {
+    /// The key of the cryptid account for this signer
+    pub cryptid_account: Pubkey,
 }
-impl<'a> PDASeeder<'a> for DOASignerSeeder {
+impl<'a> PDASeeder<'a> for CryptidSignerSeeder {
     type Iterator = IntoIter<&'a dyn PDASeed, 2>;
 
     fn seeds(&'a self) -> Self::Iterator {
-        IntoIter::new([&DOA_SIGNER_SEED, &self.doa])
+        IntoIter::new([&CRYPTID_SIGNER_SEED, &self.cryptid_account])
     }
 }
 
-/// The seeder for generative DOAs
+/// The seeder for generative Cryptid Accounts
 #[derive(Debug)]
-pub struct GenerativeDOASeeder {
-    /// The DID program's key for this DOA
+pub struct GenerativeCryptidSeeder {
+    /// The DID program's key
     pub did_program: Pubkey,
-    /// The DID's key for this DOA
+    /// The DID's key
     pub did: Pubkey,
 }
-impl<'a> PDASeeder<'a> for GenerativeDOASeeder {
+impl<'a> PDASeeder<'a> for GenerativeCryptidSeeder {
     type Iterator = IntoIter<&'a dyn PDASeed, 3>;
 
     fn seeds(&'a self) -> Self::Iterator {
-        IntoIter::new([&GENERATIVE_DOA_SEED, &self.did_program, &self.did])
+        IntoIter::new([&GENERATIVE_CRYPTID_SEED, &self.did_program, &self.did])
     }
 }

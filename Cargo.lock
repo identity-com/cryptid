@@ -2482,12 +2482,12 @@ dependencies = [
 [[package]]
 name = "solana_generator"
 version = "0.1.0"
+source = "git+https://github.com/identity-com/solana_generator?rev=998effcfe68b55e392821084992082a38b028012#998effcfe68b55e392821084992082a38b028012"
 dependencies = [
  "array-init",
  "bincode",
  "borsh",
  "num-traits",
- "rand 0.8.4",
  "solana-program",
  "solana_generator_derive",
  "strum",
@@ -2497,13 +2497,13 @@ dependencies = [
 [[package]]
 name = "solana_generator_derive"
 version = "0.1.0"
+source = "git+https://github.com/identity-com/solana_generator?rev=998effcfe68b55e392821084992082a38b028012#998effcfe68b55e392821084992082a38b028012"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro-error",
  "proc-macro2 1.0.29",
  "quote 1.0.9",
  "sha2",
- "solana_generator",
  "syn 1.0.77",
 ]
 

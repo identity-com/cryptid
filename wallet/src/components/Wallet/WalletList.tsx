@@ -26,7 +26,7 @@ export default function WalletList({ wallets, removeCB }: WalletListInterface) {
       <AddKeyOrCryptidAccountModal
         open={addKeyDialogOpen}
         onClose={() => setAddKeyDialogOpen(false)}
-        onAddKey={() => {console.log('Modal already adds Key')}}
+        onAddKey={() => setAddKeyDialogOpen(false)} // Note: Modal add's keys internally already.
         currentAccountAlias={'Direct'}
         didPrefix={getDidPrefix()}
         modalType={"key"}
@@ -57,7 +57,7 @@ export default function WalletList({ wallets, removeCB }: WalletListInterface) {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Lokal Key
+                    Local Key
                   </th>
                   <th
                     scope="col"
@@ -88,8 +88,11 @@ export default function WalletList({ wallets, removeCB }: WalletListInterface) {
                       <div className="text-sm text-gray-900">{WalletTypeString[wallet.type]}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {hasLocalKey && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      {hasLocalKey(wallet) && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                           Yes
+                        </span>}
+                      {!hasLocalKey(wallet) && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          No
                         </span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

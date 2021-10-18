@@ -16,6 +16,16 @@ import { PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './tokens/instructions';
 import { StrictWalletInterface } from "./wallet";
 
+type DecodedInstructionView = {
+  programId: PublicKey,
+  type: string,
+  data?: any,
+  accountMetas?: {
+    publicKey: PublicKey,
+    isWritable: boolean
+  }[]
+}
+
 const RAYDIUM_STAKE_PROGRAM_ID = new PublicKey(
   'EhhTKczWMGQt46ynNeRX1WfeagwwJd7ufHvCDjRxjo5Q',
 );
@@ -32,6 +42,8 @@ const MANGO_PROGRAM_ID_V2 = new PublicKey(
 const MARKET_PROGRAM_ID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY');
 
 export const getProgram = (instruction) => {
+  if (!instruction?.programId) return 'Unknown Program';
+  
   switch (instruction.programId.toBase58()) {
     case MARKET_PROGRAM_ID.toBase58(): return 'Serum'
     case TOKEN_PROGRAM_ID.toBase58(): return 'Token Program'
@@ -80,7 +92,7 @@ const toInstruction = async (
   instruction,
   transactionMessage: Message,
   index: number,
-) => {
+):Promise<DecodedInstructionView|undefined> => {
   if (
     instruction?.data == null ||
     !instruction?.accounts ||
@@ -98,7 +110,7 @@ const toInstruction = async (
     0,
   );
   if (!programId) {
-    return null;
+    return;
   }
 
   try {
@@ -108,9 +120,9 @@ const toInstruction = async (
     } else if (programId.equals(StakeProgram.programId)) {
       console.log('[' + index + '] Handled as stake instruction');
       return handleStakeInstruction(publicKey, instruction, accountKeys);
-    } else if (programId.equals(TOKEN_PROGRAM_ID)) {
-      console.log('[' + index + '] Handled as token instruction');
-      return handleTokenInstruction(publicKey, instruction, accountKeys);
+    // } else if (programId.equals(TOKEN_PROGRAM_ID)) {
+    //   console.log('[' + index + '] Handled as token instruction');
+    //   return handleTokenInstruction(publicKey, instruction, accountKeys);
     // } else if (programId.equals(MARKET_PROGRAM_ID)) {
     //   console.log('[' + index + '] Handled as dex instruction');
     //   let decodedInstruction = decodeInstruction(decoded);
@@ -177,10 +189,12 @@ const handleMangoInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-) => {
+):Promise<DecodedInstructionView | undefined> => {
   // TODO
   return {
     type: 'mango',
+    data: [],
+    programId: MANGO_PROGRAM_ID
   };
 };
 
@@ -189,10 +203,12 @@ const handleRayStakeInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-) => {
+):Promise<DecodedInstructionView | undefined> => {
   // TODO
   return {
     type: 'raydium',
+    data: [],
+    programId: RAYDIUM_STAKE_PROGRAM_ID
   };
 };
 
@@ -201,10 +217,12 @@ const handleRayLpInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-) => {
+):Promise<DecodedInstructionView | undefined>  => {
   // TODO
   return {
     type: 'raydium',
+    data: [],
+    programId: RAYDIUM_LP_PROGRAM_ID
   };
 };
 
@@ -228,7 +246,7 @@ const handleDexInstruction = (
   instruction,
   accountKeys,
   decodedInstruction,
-) => {
+):DecodedInstructionView|undefined => {
   if (!decodedInstruction || Object.keys(decodedInstruction).length > 1) {
     return;
   }
@@ -255,10 +273,11 @@ const handleDexInstruction = (
   return {
     type,
     data,
+    programId: accountKeys[programIdIndex]
   };
 };
 
-const handleSystemInstruction = (publicKey, instruction, accountKeys) => {
+const handleSystemInstruction = (publicKey, instruction, accountKeys):DecodedInstructionView|undefined => {
   const { programIdIndex, accounts, data } = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
@@ -324,10 +343,11 @@ const handleSystemInstruction = (publicKey, instruction, accountKeys) => {
   return {
     type: 'system' + type,
     data: decoded,
+    programId: systemInstruction.programId
   };
 };
 
-const handleStakeInstruction = (publicKey, instruction, accountKeys) => {
+const handleStakeInstruction = (publicKey, instruction, accountKeys):DecodedInstructionView|undefined => {
   const { programIdIndex, accounts, data } = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
@@ -392,6 +412,7 @@ const handleStakeInstruction = (publicKey, instruction, accountKeys) => {
   return {
     type: 'stake' + type,
     data: decoded,
+    programId: stakeInstruction.programId
   };
 };
 
@@ -399,7 +420,7 @@ const handleTokenInstruction = (
   publicKey: PublicKey,
   instruction,
   accountKeys,
-) => {
+):DecodedInstructionView|undefined => {
   const { programIdIndex, accounts, data } = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
@@ -419,6 +440,7 @@ const handleTokenInstruction = (
   return {
     type: decoded.type,
     data: decoded.params,
+    programId: tokenInstruction.programId
   }
 };
 

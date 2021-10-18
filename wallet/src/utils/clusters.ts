@@ -6,42 +6,42 @@ export const MAINNET_URL = 'https://solana-api.projectserum.com';
 export const MAINNET_BACKUP_URL = 'https://solana-api.projectserum.com/';
 
 export const CLUSTERS = [
-  {
-    name: 'mainnet-beta',
-    apiUrl: MAINNET_URL,
-    label: 'Mainnet Beta',
-    clusterSlug: 'mainnet-beta',
-  },
-  {
-    name: 'mainnet-beta-backup',
-    apiUrl: MAINNET_BACKUP_URL,
-      label: 'Mainnet Beta Backup',
-    clusterSlug: 'mainnet-beta',
-  },
+  // {
+  //   name: 'mainnet-beta',
+  //   apiUrl: MAINNET_URL,
+  //   label: 'Mainnet Beta',
+  //   clusterSlug: 'mainnet-beta',
+  // },
+  // {
+  //   name: 'mainnet-beta-backup',
+  //   apiUrl: MAINNET_BACKUP_URL,
+  //     label: 'Mainnet Beta Backup',
+  //   clusterSlug: 'mainnet-beta',
+  // },
   {
     name: 'devnet',
     apiUrl: clusterApiUrl('devnet'),
     label: 'Devnet',
     clusterSlug: 'devnet',
   },
-  {
-    name: 'testnet',
-    apiUrl: clusterApiUrl('testnet'),
-    label: 'Testnet',
-    clusterSlug: 'testnet',
-  },
+  // {
+  //   name: 'testnet',
+  //   apiUrl: clusterApiUrl('testnet'),
+  //   label: 'Testnet',
+  //   clusterSlug: 'testnet',
+  // },
   {
     name: 'localnet',
     apiUrl: 'http://localhost:8899',
     label: null,
     clusterSlug: 'localnet',
   },
-  {
-    name: 'civic',
-    apiUrl: 'https://d3ab7dlfud2b5u.cloudfront.net',
-    label: null,
-    clusterSlug: 'civicnet',
-  }
+  // {
+  //   name: 'civic',
+  //   apiUrl: 'https://d3ab7dlfud2b5u.cloudfront.net',
+  //   label: null,
+  //   clusterSlug: 'civicnet',
+  // }
 ];
 
 export function clusterForEndpoint(endpoint) {

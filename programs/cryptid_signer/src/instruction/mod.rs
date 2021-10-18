@@ -1,7 +1,7 @@
 //! Instructions for `cryptid_signer`
 
-#[path = "./000_create_doa.rs"]
-mod create_doa;
+#[path = "./000_create_cryptid.rs"]
+mod create_cryptid;
 #[path = "./005_direct_execute.rs"]
 mod direct_execute;
 #[path = "./001_propose_transaction.rs"]
@@ -9,7 +9,7 @@ mod propose_transaction;
 #[path = "./254_test_instruction.rs"]
 mod test_instruction;
 
-pub use create_doa::*;
+pub use create_cryptid::*;
 pub use direct_execute::*;
 pub use propose_transaction::*;
 use std::borrow::Cow;
@@ -27,9 +27,9 @@ pub enum CryptidInstruction {
     /// A test instruction that logs a success message
     #[instruction_list(instruction = TestInstruction, discriminant = 254)]
     Test,
-    /// Creates a new DOA account on-chain
-    #[instruction_list(instruction = CreateDOA, discriminant = 0)]
-    CreateDOA,
+    /// Creates a new Cryptid Account on-chain
+    #[instruction_list(instruction = CreateCryptid, discriminant = 0)]
+    CreateCryptid,
     /// Proposes a new transaction that can be approved and appended to
     #[instruction_list(instruction = ProposeTransaction, discriminant = 1)]
     ProposeTransaction,
