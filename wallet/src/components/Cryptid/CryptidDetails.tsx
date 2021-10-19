@@ -25,6 +25,11 @@ const useForceUpdate = () => {
   return () => setValue(value => value + 1); // update the state to force render
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : CryptidDetailsInterface) => {
   // Hooks
   const { getDidPrefix } = useCryptid();
@@ -39,7 +44,8 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
     if (f) {
       f();
     }
-    cryptidAccount.updateDocument().then(forceUpdate)
+    // intro a short sleep
+    sleep(500).then(cryptidAccount.updateDocument).then(forceUpdate)
   }
 
   const selectKeyCB = (base58Key: string, alias: string) => {
