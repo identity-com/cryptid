@@ -50,7 +50,7 @@ export default function App() {
   let appElement = (
     <NavigationFrame isSignerWindow={!!window.opener}>
       <Suspense fallback={<LoadingIndicator/>}>
-        <div className='py-10 max-w-7xl mx-auto sm:px-6 lg:px-8'>
+        <div className='md:py-10 w-screen max-w-screen md:max-w-7xl md:mx-auto md:px-6 lg:px-8'>
           <PageContents/>
         </div>
       </Suspense>

@@ -76,7 +76,7 @@ export function BalanceListItemView({
           url={tokenLogoUri}
           size={30}
         />
-        <div className="min-w-0 flex-1 flex px-4 md:gap-4">
+        <div className="min-w-0 w-1.5 md:max-w-max flex-1 flex pl-4 md:pr-4 md:gap-4">
           <div className='text-sm md:text-lg flex-1'>
             {balanceFormat.format(amount / Math.pow(10, decimals))} {tokenSymbol}{
             usdValue &&
@@ -86,7 +86,7 @@ export function BalanceListItemView({
           }
           </div>
         </div>
-        <div className="min-w-0 flex-1 flex px-4 md:gap-4">
+        <div className="hidden md:block min-w-0 flex-1 flex md:px-4 md:gap-4">
           <div>
             <CopyableAddress address={publicKey} label={displayName} className="text-sm md:text-lg font-medium text-indigo-600 truncate"/>
           </div>

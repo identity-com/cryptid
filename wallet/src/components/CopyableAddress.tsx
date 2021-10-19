@@ -29,7 +29,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
   };
 
   return (
-    <div className="inline-flex align-middle">
+    <div className="inline-flex items-center">
       <Link
         href={baseRef+ urlSuffix}
         target="_blank"
@@ -50,7 +50,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
         }}>
         <QRCode value={addressString} size={256} includeMargin />
       </Modal>
-      <ClipboardIcon className="inline-flex pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={copyLink}/>
-      {qrCode && <QrcodeIcon className="inline-flex pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={() => setShowQrcode(true)}/>}
+      <ClipboardIcon className="pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={copyLink}/>
+      {qrCode && <QrcodeIcon className="pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={() => setShowQrcode(true)}/>}
     </div>);
 }
