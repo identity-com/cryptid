@@ -2682,11 +2682,13 @@ name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "array-init",
+ "async-trait",
  "log",
  "rand 0.7.3",
  "rand_chacha 0.2.2",
  "solana-program-test",
  "solana-sdk",
+ "tarpc",
 ]
 
 [[package]]

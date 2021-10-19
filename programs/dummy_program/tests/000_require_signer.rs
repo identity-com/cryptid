@@ -13,7 +13,7 @@ use solana_sdk::signer::Signer;
 use solana_sdk::transaction::{Transaction, TransactionError};
 use solana_sdk::transport::TransportError;
 use std::error::Error;
-use test_utils::start_tests;
+use test_utils::{start_tests, ClientExpansion};
 
 #[tokio::test]
 async fn require_signer_should_succeed() -> Result<(), Box<dyn Error>> {
@@ -31,7 +31,9 @@ async fn require_signer_should_succeed() -> Result<(), Box<dyn Error>> {
         &[&signer, &funder],
         banks.get_recent_blockhash().await?,
     );
-    banks.process_transaction(transaction).await?;
+    banks
+        .process_transaction_longer_timeout(transaction)
+        .await?;
 
     Ok(())
 }
@@ -52,7 +54,7 @@ async fn require_signer_should_fail() -> Result<(), Box<dyn Error>> {
         &[&funder],
         banks.get_recent_blockhash().await?,
     );
-    match banks.process_transaction(transaction).await {
+    match banks.process_transaction_longer_timeout(transaction).await {
         Ok(_) => panic!("Transaction did not err!"),
         Err(TransportError::TransactionError(TransactionError::InstructionError(
             0,

@@ -23,7 +23,7 @@ use std::array::IntoIter;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::iter::once;
-use test_utils::start_tests;
+use test_utils::{start_tests, ClientExpansion};
 
 #[tokio::test]
 async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>> {
@@ -152,7 +152,9 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         &[&funder, &did, &return_account],
         banks.get_recent_blockhash().await?,
     );
-    banks.process_transaction(transaction).await?;
+    banks
+        .process_transaction_longer_timeout(transaction)
+        .await?;
 
     assert_eq!(
         banks
@@ -245,7 +247,10 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
         &[&funder],
         banks.get_recent_blockhash().await?,
     );
-    let error = banks.process_transaction(transaction).await.unwrap_err();
+    let error = banks
+        .process_transaction_longer_timeout(transaction)
+        .await
+        .unwrap_err();
     match error {
         TransportError::TransactionError(TransactionError::InstructionError(
             0,

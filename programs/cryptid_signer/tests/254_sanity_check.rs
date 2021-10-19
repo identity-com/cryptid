@@ -8,7 +8,7 @@ use dummy_program::DummyInstruction;
 use solana_generator::build_instruction;
 use solana_sdk::signature::Signer;
 use solana_sdk::transaction::Transaction;
-use test_utils::start_tests;
+use test_utils::{start_tests, ClientExpansion};
 
 #[tokio::test]
 async fn sanity_check() {
@@ -33,7 +33,7 @@ async fn sanity_check() {
             .expect("Could not get recent blockhash"),
     );
     banks
-        .process_transaction(transaction)
+        .process_transaction_longer_timeout(transaction)
         .await
         .expect("Could not process transaction");
 }
