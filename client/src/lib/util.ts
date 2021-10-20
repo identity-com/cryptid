@@ -1,5 +1,7 @@
+import nacl from 'tweetnacl';
+
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { SignCallback, Signer } from '../types/crypto';
+import { SignMessageCallback, SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
 import { complement, isNil } from 'ramda';
@@ -12,9 +14,16 @@ const defaultSignCallback =
     return transaction;
   };
 
+const defaultSignMessageCallback =
+  (keypair: Keypair): SignMessageCallback =>
+  async (message) => {
+    return nacl.sign.detached(message, keypair.secretKey);
+  };
+
 export const toSigner = (keypair: Keypair): Signer => ({
   publicKey: keypair.publicKey,
   sign: defaultSignCallback(keypair),
+  signMessage: defaultSignMessageCallback(keypair),
 });
 
 export const isKeypair = (

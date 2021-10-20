@@ -95,6 +95,7 @@
     "@solana/web3.js": "^1.27.0",
     "@types/ramda": "^0.27.1",
     "did-resolver": "^3.1.0",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^3.0.0",
+    "tweetnacl": "^1.0.3"
   }
 }

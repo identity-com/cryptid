@@ -3,18 +3,13 @@ import {useCryptid} from '../utils/Cryptid/cryptid';
 import {PublicKey, Transaction} from '@solana/web3.js';
 import bs58 from 'bs58';
 import {
-  Button,
   CardContent,
-  FormControlLabel,
   Typography,
   Card,
-  Switch,
-  SnackbarContent,
   CardActions,
 } from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {useLocalStorageState} from '../utils/utils';
-import WarningIcon from '@material-ui/icons/Warning';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
 import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
@@ -37,6 +32,11 @@ type RequestMessage = {
 } | {
   method: 'sign',
   params: { data: any, display: string },
+} | {
+  method: 'signWithDIDKey',
+  params: { message: Uint8Array },
+} | {
+  method: 'getDID',
 })
 
 type ResponseMessage = {
@@ -51,6 +51,10 @@ type ResponseMessage = {
   result: { transaction: string },
 } | {
   result: { transactions: string[] },
+} | {
+  did: string,
+} | {
+  signature: Uint8Array,
 }
 
 export default function PopupPage({opener}: { opener: Window }) {
@@ -148,8 +152,44 @@ export default function PopupPage({opener}: { opener: Window }) {
           payloads: [request.params.data],
           messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
         };
+      case 'getDID':
+        if (!selectedCryptidAccount){
+          postMessage({
+            error: 'No selected cryptid account',
+            id: request.id,
+          });
+        } else {
+          postMessage({
+            did: selectedCryptidAccount.did
+          });
+        }
+        popRequest();
+        return { payloads: [], messageDisplay: 'tx' }
+      case 'signWithDIDKey':
+        if (!selectedCryptidAccount){
+          postMessage({
+            error: 'No selected cryptid account',
+            id: request.id,
+          });
+        } else {
+          (async () => {
+            const signature = await selectedCryptidAccount.baseAccount().signMessage(request.params.message)
+            if(!signature){
+              postMessage({
+                error: 'Wallet does not support signing messages',
+                id: request.id,
+              })
+            } else {
+              postMessage({
+                signature,
+              })
+            }
+          })()
+        }
+        popRequest();
+        return { payloads: [], messageDisplay: 'tx' }
     }
-  }, [request]);
+  }, [request, postMessage, selectedCryptidAccount]);
 
   if (hasConnectedAccount && requests.length === 0) {
     focusParent();
