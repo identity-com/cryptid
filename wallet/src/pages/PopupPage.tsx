@@ -108,7 +108,9 @@ export default function PopupPage({opener}: { opener: Window }) {
         if (
           e.data.method !== 'signTransaction' &&
           e.data.method !== 'signAllTransactions' &&
-          e.data.method !== 'sign'
+          e.data.method !== 'sign' &&
+          e.data.method !== 'getDID' &&
+          e.data.method !== 'signWithDIDKey'
         ) {
           postMessage({error: 'Unsupported method', id: e.data.id});
         }
@@ -231,7 +233,9 @@ export default function PopupPage({opener}: { opener: Window }) {
   }
   if (!(request.method === 'signTransaction' ||
     request.method === 'signAllTransactions' ||
-    request.method === 'sign')) {
+    request.method === 'sign' ||
+    request.method === 'getDID' ||
+    request.method === 'signWithDIDKey')) {
     throw new Error('Unknown method');
   }
   if (!selectedCryptidAccount) {
