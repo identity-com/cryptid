@@ -9,7 +9,7 @@ edition = "2018"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-solana_generator = { git = "https://github.com/identity-com/solana_generator", rev = "998effcfe68b55e392821084992082a38b028012" }
+solana_generator = { git = "https://github.com/identity-com/solana_generator", rev = "e8ce32472f667363cd64309c7c32a8b00b897f6c" }
 borsh = "0.9.1"
 bitflags = "1.3.2"
 sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b227cec59795ae6bf23ef987f7ce3a6ea6b6108c", features = ["no-entrypoint"] }
