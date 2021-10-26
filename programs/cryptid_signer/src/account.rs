@@ -33,7 +33,7 @@ impl CryptidAccountAddress {
         did: Pubkey,
     ) -> GeneratorResult<u8> {
         PDAGenerator::new(program_id, GenerativeCryptidSeeder { did_program, did })
-            .verify_address_without_nonce(account)
+            .verify_address_find_nonce(account)
     }
 }
 impl AccountArgument for CryptidAccountAddress {
