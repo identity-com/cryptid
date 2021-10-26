@@ -64,7 +64,6 @@ async fn create_cryptid() {
                     extra_accounts: vec![],
                 }, // Sign as generative
                 did: SolanaAccountMeta::new_readonly(did_pda, false),
-                account_nonce: None,
             })
         )
         .expect("Could not create instruction")],

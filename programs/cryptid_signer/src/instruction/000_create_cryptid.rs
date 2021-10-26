@@ -4,7 +4,7 @@ use solana_generator::*;
 
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::CryptidAccount;
-use crate::{CryptidSignerSeeder, GenerativeCryptidSeeder};
+use crate::CryptidSignerSeeder;
 use std::iter::once;
 
 /// Creates a new Cryptid Account on-chain
@@ -26,27 +26,13 @@ impl Instruction for CreateCryptid {
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
         // Verify the cryptid signer can be made from the nonce
-        let signer_seeds = CryptidSignerSeeder {
-            cryptid_account: accounts.cryptid_account.info().key,
-        };
-        let signer = PDAGenerator::new(program_id, &signer_seeds)
-            .create_address_with_nonce(data.signer_nonce)?;
-
-        if signer == accounts.funder.key {
-            accounts
-                .cryptid_account
-                .set_funder_seeds(Box::new(signer_seeds));
-        }
-
-        if let Some(nonce) = data.account_nonce {
-            let seeder = Box::new(GenerativeCryptidSeeder {
-                did_program: accounts.did_program.key,
-                did: accounts.did.key,
-            });
-            PDAGenerator::new(program_id, &seeder)
-                .verify_address_with_nonce(accounts.cryptid_account.info().key, nonce)?;
-            accounts.cryptid_account.set_account_seeds(seeder);
-        }
+        PDAGenerator::new(
+            program_id,
+            CryptidSignerSeeder {
+                cryptid_account: accounts.cryptid_account.info().key,
+            },
+        )
+        .create_address(data.signer_nonce)?;
 
         verify_keys(
             &accounts.did_program,
@@ -88,7 +74,6 @@ impl Instruction for CreateCryptid {
                 extra_signer_accounts: arg.signing_key.extra_count(),
                 signer_nonce,
                 key_threshold: arg.key_threshold,
-                account_nonce: arg.account_nonce,
             },
         ))
     }
@@ -132,8 +117,6 @@ pub struct CreateCryptidBuild {
     pub signing_key: SigningKeyBuild,
     /// The number of keys needed to sign transactions with the DOA
     pub key_threshold: u8,
-    /// The nonce of the cryptid account if generative
-    pub account_nonce: Option<u8>,
 }
 
 /// The instruction data for [`CreateCryptid`]
@@ -145,8 +128,6 @@ pub struct CreateCryptidData {
     pub signer_nonce: u8,
     /// The number of keys needed to sign transactions with the DOA
     pub key_threshold: u8,
-    /// The nonce of the cryptid account if upgrading generative
-    pub account_nonce: Option<u8>,
     // TODO: Add when permissions added
     // pub sign_permissions: ?,
     // pub execute_permissions: ?,

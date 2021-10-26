@@ -28,12 +28,11 @@ pub struct CryptidSignerSeeder {
     /// The key of the cryptid account for this signer
     pub cryptid_account: Pubkey,
 }
-impl PDASeeder for CryptidSignerSeeder {
-    fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
-        Box::new(IntoIter::new([
-            &CRYPTID_SIGNER_SEED as &dyn PDASeed,
-            &self.cryptid_account,
-        ]))
+impl<'a> PDASeeder<'a> for CryptidSignerSeeder {
+    type Iterator = IntoIter<&'a dyn PDASeed, 2>;
+
+    fn seeds(&'a self) -> Self::Iterator {
+        IntoIter::new([&CRYPTID_SIGNER_SEED, &self.cryptid_account])
     }
 }
 
@@ -45,12 +44,10 @@ pub struct GenerativeCryptidSeeder {
     /// The DID's key
     pub did: Pubkey,
 }
-impl PDASeeder for GenerativeCryptidSeeder {
-    fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
-        Box::new(IntoIter::new([
-            &GENERATIVE_CRYPTID_SEED as &dyn PDASeed,
-            &self.did_program,
-            &self.did,
-        ]))
+impl<'a> PDASeeder<'a> for GenerativeCryptidSeeder {
+    type Iterator = IntoIter<&'a dyn PDASeed, 3>;
+
+    fn seeds(&'a self) -> Self::Iterator {
+        IntoIter::new([&GENERATIVE_CRYPTID_SEED, &self.did_program, &self.did])
     }
 }

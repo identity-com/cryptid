@@ -45,7 +45,7 @@ impl Instruction for DirectExecute {
                             cryptid_account: cryptid.info.key,
                         },
                     );
-                    let signer_key = generator.create_address_with_nonce(cryptid.signer_nonce)?;
+                    let signer_key = generator.create_address(cryptid.signer_nonce)?;
                     (
                         cryptid.key_threshold,
                         generator,
@@ -94,9 +94,7 @@ impl Instruction for DirectExecute {
             .iter()
             .map(|account| account.key)
             .collect::<Vec<_>>();
-        let signer_seeds = signer_generator
-            .seeds_to_bytes_with_nonce(&signer_nonce)
-            .collect::<Vec<_>>();
+        let signer_seeds = signer_generator.seeds_to_bytes(Some(&signer_nonce));
 
         msg!("Executing instructions");
         // Execute instructions
