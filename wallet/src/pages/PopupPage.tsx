@@ -16,6 +16,7 @@ import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
 import IdentitySelector from "../components/selectors/IdentitySelector";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/solid";
 import {CryptidButton} from "../components/balances/CryptidButton";
+import {useWalletContext} from '../utils/wallet';
 
 type ID = any;
 
@@ -80,6 +81,8 @@ export default function PopupPage({opener}: { opener: Window }) {
       opener.postMessage({jsonrpc: '2.0', ...message}, origin);
     }
   ), [opener, origin]);
+
+  const { wallet } = useWalletContext();
 
   useEffect(() => {
     if (hasConnectedAccount) {
@@ -170,30 +173,22 @@ export default function PopupPage({opener}: { opener: Window }) {
         popRequest();
         return { payloads: [], messageDisplay: 'tx' }
       case 'signWithDIDKey':
-        if (!selectedCryptidAccount){
-          postMessage({
-            error: 'No selected cryptid account',
-            id: request.id,
-          });
-        } else {
-          (async () => {
-            const signature = await selectedCryptidAccount.baseAccount().signMessage(request.params.message)
-            if(!signature){
-              postMessage({
-                error: 'Wallet does not support signing messages',
-                id: request.id,
-              })
-            } else {
-              postMessage({
-                signature,
-              })
-            }
-          })()
-        }
+        (async () => {
+          if (wallet.signMessage !== undefined){
+            postMessage({
+              signature: await wallet.signMessage(request.params.message),
+            })
+          } else {
+            postMessage({
+              error: 'Wallet does not support signing messages',
+              id: request.id,
+            })
+          }
+        })();
         popRequest();
         return { payloads: [], messageDisplay: 'tx' }
     }
-  }, [request, postMessage, selectedCryptidAccount]);
+  }, [request, postMessage, selectedCryptidAccount, wallet]);
 
   if (hasConnectedAccount && requests.length === 0) {
     focusParent();

@@ -500,7 +500,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
 
-    const defaultSigner = { // TODO
+    const defaultSigner: Signer = { // TODO
       publicKey: wallet.publicKey as PublicKey,
       sign: (transaction: Transaction) => Promise.resolve(transaction)
     }

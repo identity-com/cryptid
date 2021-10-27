@@ -31,11 +31,13 @@ export const WalletTypeString = {
 export interface WalletInterface {
   publicKey: PublicKey | null;
   signTransaction?(transaction: Transaction): Promise<Transaction>;
+  signMessage?(message: Uint8Array): Promise<Uint8Array>;
 }
 
 export interface StrictWalletInterface {
   publicKey: PublicKey;
   signTransaction(transaction: Transaction): Promise<Transaction>;
+  signMessage?(message: Uint8Array): Promise<Uint8Array>;
 }
 
 interface PersistedWalletType {

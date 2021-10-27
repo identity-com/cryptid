@@ -14,7 +14,7 @@ const defaultSignCallback =
     return transaction;
   };
 
-const defaultSignMessageCallback =
+export const defaultSignMessageCallback =
   (keypair: Keypair): SignMessageCallback =>
   async (message) => {
     return nacl.sign.detached(message, keypair.secretKey);

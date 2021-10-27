@@ -5,5 +5,4 @@ export type SignMessageCallback = (message: Uint8Array) => Promise<Uint8Array>;
 export type Signer = {
   publicKey: PublicKey;
   sign: SignCallback;
-  signMessage?: SignMessageCallback;
 };
