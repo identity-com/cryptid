@@ -53,6 +53,7 @@ type ResponseMessage = {
   result: { transactions: string[] },
 } | {
   did: string,
+  keyName: string,
 } | {
   signature: Uint8Array,
 }
@@ -162,7 +163,8 @@ export default function PopupPage({opener}: { opener: Window }) {
           });
         } else {
           postMessage({
-            did: selectedCryptidAccount.did
+            did: selectedCryptidAccount.did,
+            keyName: selectedCryptidAccount.baseAccount().activeSigningKeyAlias,
           });
         }
         popRequest();
