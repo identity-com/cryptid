@@ -115,14 +115,6 @@ export class CryptidAccount {
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
     this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
 
-  signMessage = async (message: Uint8Array): Promise<Uint8Array | undefined> => {
-    if (this._signer.signMessage){
-      return await this._signer.signMessage(message);
-    } else {
-      return undefined;
-    }
-  }
-
   updateDocument = async () => {
     this._document = await this.cryptid.document()
     return this._document
