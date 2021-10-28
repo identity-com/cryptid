@@ -1,7 +1,7 @@
 import { airdrop } from "../service/cryptid";
 import Base from "./base";
 
-const DEFAULT_AIRDROP_LAMPORTS = 50_000_000;
+const DEFAULT_AIRDROP_LAMPORTS = 1_000_000_000;
 
 export default class Airdrop extends Base {
   static description = "Airdrop funds into the cryptid account and owner key";
@@ -19,6 +19,6 @@ export default class Airdrop extends Base {
   async run(): Promise<void> {
     const { args } = this.parse(Airdrop);
 
-    await airdrop(this.cryptid, this.cryptidConfig, args.amount);
+    await airdrop(this.cryptid, this.cryptidConfig, args.amount, this.log);
   }
 }
