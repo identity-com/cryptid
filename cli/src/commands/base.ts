@@ -28,7 +28,7 @@ export default abstract class Base extends Command {
   }
 
   async init(): Promise<void> {
-    // workaround for usinng static flags and args in base oclif command classes
+    // workaround for using static flags and args in base oclif command classes
     // note, each subclass must define its own args and flags to avoid inconsistencies
     // https://github.com/oclif/oclif/issues/225#issuecomment-806318444
     const { flags } = this.parse(this.ctor as typeof Base);
