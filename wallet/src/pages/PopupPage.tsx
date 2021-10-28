@@ -216,8 +216,7 @@ export default function PopupPage({opener}: { opener: Window }) {
       focusParent();
     }
 
-    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove}
-                                  setAutoApprove={setAutoApprove}/>;
+    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove}/>;
   }
 
   if (!request) {
@@ -391,11 +390,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ApproveConnectionForm({
-                                 origin,
-                                 onApprove,
-                                 autoApprove,
-                               }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }) {
+function ApproveConnectionForm({ origin, onApprove, autoApprove }: {
+  origin: string,
+  onApprove: (boolean) => void,
+  autoApprove: boolean,
+}) {
   const classes = useStyles();
   let {selectedCryptidAccount} = useCryptid();
   return (
