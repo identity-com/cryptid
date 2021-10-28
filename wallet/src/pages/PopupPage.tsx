@@ -6,10 +6,9 @@ import {
   CardContent,
   Typography,
   Card,
-  CardActions,
+  CardActions, Divider,
 } from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
-import {useLocalStorageState} from '../utils/utils';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
 import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
@@ -131,7 +130,7 @@ export default function PopupPage({opener}: { opener: Window }) {
 
   const {payloads, messageDisplay}: {
     payloads: (Buffer | Uint8Array)[],
-    messageDisplay: 'tx' | 'utf8' | 'hex'
+    messageDisplay: 'tx' | 'utf8' | 'hex' | 'message'
   } = useMemo(() => {
     if (!request || request.method === 'connect') {
       return {payloads: [], messageDisplay: 'tx'};
@@ -173,20 +172,16 @@ export default function PopupPage({opener}: { opener: Window }) {
         popRequest();
         return { payloads: [], messageDisplay: 'tx' }
       case 'signWithDIDKey':
-        (async () => {
-          if (wallet.signMessage !== undefined){
-            postMessage({
-              signature: await wallet.signMessage(request.params.message),
-            })
-          } else {
-            postMessage({
-              error: 'Wallet does not support signing messages',
-              id: request.id,
-            })
-          }
-        })();
-        popRequest();
-        return { payloads: [], messageDisplay: 'tx' }
+        if (wallet.signMessage !== undefined){
+          return { payloads: [request.params.message], messageDisplay: 'message' }
+        } else {
+          postMessage({
+            error: 'Wallet does not support signing messages',
+            id: request.id,
+          });
+          popRequest();
+          return { payloads: [], messageDisplay: 'tx' }
+        }
     }
   }, [request, postMessage, selectedCryptidAccount, wallet]);
 
@@ -255,6 +250,18 @@ export default function PopupPage({opener}: { opener: Window }) {
         opener.focus();
         await sendTransactions(payloads);
         break;
+      case 'signWithDIDKey':
+        if (wallet.signMessage !== undefined){
+          postMessage({
+            signature: await wallet.signMessage(request.params.message),
+          })
+        } else {
+          postMessage({
+            error: 'Wallet does not support signing messages',
+            id: request.id,
+          })
+        }
+        break;
       default:
         throw new Error('onApprove: Unexpected method: ' + request.method);
     }
@@ -306,10 +313,17 @@ export default function PopupPage({opener}: { opener: Window }) {
       throw new Error('sendTransactions: no request');
     }
     popRequest();
-    postMessage({
-      error: 'Transaction cancelled',
-      id: request.id,
-    });
+    if (request.method === 'signWithDIDKey'){
+      postMessage({
+        error: 'Message signing cancelled',
+        id: request.id,
+      })
+    } else {
+      postMessage({
+        error: 'Transaction cancelled',
+        id: request.id,
+      });
+    }
   }
 
   return (
@@ -381,10 +395,8 @@ function ApproveConnectionForm({
                                  origin,
                                  onApprove,
                                  autoApprove,
-                                 setAutoApprove,
                                }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }) {
   const classes = useStyles();
-  let [dismissed, setDismissed] = useLocalStorageState('dismissedAutoApproveWarning', false);
   let {selectedCryptidAccount} = useCryptid();
   return (
     <>
@@ -428,7 +440,7 @@ function ApproveConnectionForm({
 type ApproveSignerFormProps = {
   origin: string,
   payloads: (Buffer | Uint8Array)[],
-  messageDisplay: 'tx' | 'utf8' | 'hex',
+  messageDisplay: 'tx' | 'utf8' | 'hex' | 'message',
   onApprove: () => void,
   onReject: () => void,
   autoApprove: boolean,
@@ -441,8 +453,6 @@ function ApproveSignatureForm({
                                 onReject,
                                 autoApprove,
                               }: ApproveSignerFormProps) {
-  const classes = useStyles();
-
   const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
   const mapTransactionToMessageBuffer = (tx) => Transaction.from(tx).serializeMessage();
 
@@ -464,6 +474,15 @@ function ApproveSignatureForm({
           buttonRef={buttonRef}
         />
       );
+    } else if (messageDisplay === 'message') {
+      return <CardContent>
+        <Typography variant="h6" gutterBottom>
+          {`${origin} wants to sign a message: `}
+        </Typography>
+        <Divider style={{ margin: 20 }} />
+        <Typography style={{ wordBreak: 'break-all' }}>{bs58.encode(payloads[0])}</Typography>
+        <Divider style={{ margin: 20 }} />
+      </CardContent>;
     } else {
       return <SignFormContent
         origin={origin}
