@@ -28,6 +28,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`cryptid address [FILE]`](#cryptid-address-file)
 * [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
 * [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
 * [`cryptid balance`](#cryptid-balance)
@@ -46,6 +47,22 @@ USAGE
 * [`cryptid token:show`](#cryptid-tokenshow)
 * [`cryptid token:transfer TO AMOUNT`](#cryptid-tokentransfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
+
+## `cryptid address [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ cryptid address [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.1.4/src/commands/address.ts)_
 
 ## `cryptid airdrop [AMOUNT]`
 
