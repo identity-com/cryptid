@@ -19,7 +19,10 @@ export const toSigner = (keypair: Keypair): Signer => ({
 
 export const isKeypair = (
   keypairOrSigner: Keypair | Signer
-): keypairOrSigner is Keypair => keypairOrSigner instanceof Keypair;
+): keypairOrSigner is Keypair =>
+  keypairOrSigner instanceof Keypair ||
+  // IDCOM-1340 this clause is added to handle type erasure on compiled TS
+  keypairOrSigner.constructor.name === 'Keypair';
 export const normalizeSigner = (keypairOrSigner: Keypair | Signer): Signer =>
   isKeypair(keypairOrSigner) ? toSigner(keypairOrSigner) : keypairOrSigner;
 
