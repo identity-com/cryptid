@@ -1,7 +1,7 @@
 {
   "name": "@identity.com/cryptid-cli",
   "description": "Sign transactions and configure Cryptid DID Wallets",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "author": "identity.com",
   "bin": {
     "cryptid": "./bin/run"
