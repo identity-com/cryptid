@@ -137,6 +137,18 @@ export const getRecipientAddressForDid = async (
   did: string
 ): Promise<PublicKey> => util.didToDefaultDOASigner(did);
 
+export const resolveDIDOrAlias = (
+  aliasOrDid: string | undefined,
+  config: Config
+): string | undefined => {
+  if (!aliasOrDid) return aliasOrDid;
+
+  if (config.config.aliases[aliasOrDid])
+    return config.config.aliases[aliasOrDid];
+
+  return aliasOrDid;
+};
+
 export const resolveRecipient = async (
   recipient: string,
   config: Config

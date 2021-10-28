@@ -1,7 +1,7 @@
 import { Command } from "@oclif/command";
 import * as Flags from "../lib/flags";
 import { Config } from "../service/config";
-import { build } from "../service/cryptid";
+import { build, resolveDIDOrAlias } from "../service/cryptid";
 import { Cryptid } from "@identity.com/cryptid";
 import { Connection } from "@solana/web3.js";
 
@@ -34,6 +34,9 @@ export default abstract class Base extends Command {
     const { flags } = this.parse(this.ctor as typeof Base);
 
     this._config = new Config(flags.config);
-    this._cryptid = build(this._config, flags.as);
+    this._cryptid = build(
+      this._config,
+      resolveDIDOrAlias(flags.as, this._config)
+    );
   }
 }
