@@ -50,4 +50,8 @@ export class AccountWallet implements WalletInterface {
     transaction.partialSign(this.account);
     return transaction;
   };
+
+  signMessage(message: Uint8Array): Promise<Uint8Array> {
+    return Promise.resolve(nacl.sign.detached(message, this.account.secretKey));
+  }
 }

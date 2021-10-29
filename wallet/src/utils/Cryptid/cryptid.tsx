@@ -5,7 +5,7 @@
  * - Generative Method from Wallet keys
  * -
  */
-import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
@@ -492,7 +492,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
 
-    const defaultSigner = { // TODO
+    const defaultSigner: Signer = { // TODO
       publicKey: wallet.publicKey as PublicKey,
       sign: (transaction: Transaction) => Promise.resolve(transaction)
     }
