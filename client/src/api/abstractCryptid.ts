@@ -74,7 +74,7 @@ export abstract class AbstractCryptid implements Cryptid {
 
   protected async getPayerForInternalTransaction(): Promise<Signer> {
     switch (this.options.rentPayer) {
-      // use Cryptid to sign and send the tx, so that any rent  is paid by the cryptid account
+      // use Cryptid to sign and send the tx, so that any rent is paid by the cryptid account
       case 'DID_PAYS':
         return this.asSigner();
       // use the signer key to sign and send the tx, so that any rent is paid by the signer key
