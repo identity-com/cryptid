@@ -1,7 +1,7 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {registerOrUpdate} from "./util";
-import {DIDDocument, ServiceEndpoint} from "did-resolver";
+import { DIDOperationPayer, registerOrUpdate } from './util';
+import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 
 /**
  * Creates a transaction that adds a service to a DID.
@@ -12,13 +12,13 @@ import {DIDDocument, ServiceEndpoint} from "did-resolver";
 export const addService = async (
   connection: Connection,
   did: string,
-  payer: PublicKey,
+  payer: DIDOperationPayer,
   service: ServiceEndpoint,
-  signers: Signer[]
+  authority: Signer
 ): Promise<Transaction> => {
   const document: Partial<DIDDocument> = {
-    service: [service]
+    service: [service],
   };
 
-  return registerOrUpdate(did, document, connection, payer, signers);
+  return registerOrUpdate(did, document, connection, payer, authority);
 };

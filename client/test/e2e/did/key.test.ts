@@ -3,7 +3,10 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { airdrop, Balances } from '../../utils/solana';
 import { publicKeyToDid } from '../../../src/lib/solana/util';
 import chai from 'chai';
-import {expectDocumentNotToIncludeKey, expectDocumentToIncludeKey} from "../../utils/did";
+import {
+  expectDocumentNotToIncludeKey,
+  expectDocumentToIncludeKey,
+} from '../../utils/did';
 
 const { expect } = chai;
 
@@ -145,7 +148,7 @@ describe('DID Key operations', function () {
     beforeEach(async () => {
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -190,8 +193,8 @@ describe('DID Key operations', function () {
         const document = await cryptid.document();
         expectDocumentNotToIncludeKey(document, ledgerKey.publicKey);
         expectDocumentToIncludeKey(document, key.publicKey);
-        expect(document.verificationMethod).to.have.lengthOf(1)
-        expect(document.capabilityInvocation).to.have.lengthOf(1)
+        expect(document.verificationMethod).to.have.lengthOf(1);
+        expect(document.capabilityInvocation).to.have.lengthOf(1);
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
@@ -199,7 +202,7 @@ describe('DID Key operations', function () {
         expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
       });
 
-      it('should use the added key to remove the original key', async () => {
+      it.only('should use the added key to remove the original key', async () => {
         // create a cryptid object using the ledger key instead of the default one
         cryptid = await build(did, ledgerKey, {
           connection,
