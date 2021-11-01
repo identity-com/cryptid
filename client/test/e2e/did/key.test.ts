@@ -179,7 +179,10 @@ describe('DID Key operations', function () {
       beforeEach(async () => {
         // add a key to upgrade (anchor) the did
         ledgerKey = Keypair.generate();
-        await cryptid.addKey(ledgerKey.publicKey, 'ledger');
+        await Promise.all([
+          cryptid.addKey(ledgerKey.publicKey, 'ledger'),
+          airdrop(connection, ledgerKey.publicKey),
+        ]);
 
         // re-record the before balances, now that everything is set up
         await balances.recordBefore();
@@ -202,7 +205,7 @@ describe('DID Key operations', function () {
         expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
       });
 
-      it.only('should use the added key to remove the original key', async () => {
+      it('should use the added key to remove the original key', async () => {
         // create a cryptid object using the ledger key instead of the default one
         cryptid = await build(did, ledgerKey, {
           connection,
