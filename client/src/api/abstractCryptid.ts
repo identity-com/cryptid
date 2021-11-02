@@ -92,7 +92,6 @@ export abstract class AbstractCryptid implements Cryptid {
   ): Promise<TransactionSignature> {
     const payer = await this.getPayerForInternalTransaction();
     const authority = await this.signer;
-
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
@@ -101,7 +100,6 @@ export abstract class AbstractCryptid implements Cryptid {
       alias,
       authority
     );
-
     return this.send(transaction);
   }
 

@@ -4,13 +4,18 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import {directExecute} from '../../../../../src/lib/solana/transactions/directExecute';
-import {Keypair, SystemProgram, Transaction, TransactionInstruction} from '@solana/web3.js';
-import {recentBlockhash} from '../../../../utils/solana';
-import {publicKeyToDid} from '../../../../../src/lib/solana/util';
-import {normalizeSigner} from '../../../../../src/lib/util';
-import {stubGetBlockhash} from '../../../../utils/lang';
-import {create} from '../../../../../src/lib/solana/instructions/directExecute';
+import { directExecute } from '../../../../../src/lib/solana/transactions/directExecute';
+import {
+  Keypair,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
+import { recentBlockhash } from '../../../../utils/solana';
+import { publicKeyToDid } from '../../../../../src/lib/solana/util';
+import { normalizeSigner } from '../../../../../src/lib/util';
+import { stubGetBlockhash } from '../../../../utils/lang';
+import { create } from '../../../../../src/lib/solana/instructions/directExecute';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -26,14 +31,16 @@ describe('transactions/directExecute', () => {
   beforeEach(() => stubGetBlockhash(sandbox));
   afterEach(sandbox.restore);
 
-  const makeSimpleTransaction = async ():Promise<Transaction> =>
+  const makeSimpleTransaction = async (): Promise<Transaction> =>
     new Transaction({
       recentBlockhash: await recentBlockhash(),
-    }).add(SystemProgram.transfer({
-      fromPubkey: payer.publicKey,
-      lamports: 0,
-      toPubkey: payer.publicKey,
-    }));
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey: payer.publicKey,
+        lamports: 0,
+        toPubkey: payer.publicKey,
+      })
+    );
 
   it('should create and sign a directExecute transaction', async () => {
     const txToWrap = await makeSimpleTransaction();
@@ -100,12 +107,14 @@ describe('transactions/directExecute', () => {
       }))
     );
 
-    console.log("duplicated key " +duplicatedKey.toBase58());
-    console.log("additional key " +additionalKey.toBase58());
-    console.log("payer " +payer.publicKey.toBase58());
-    console.log("didPDA " +didPDAKey.toBase58());
+    console.log('duplicated key ' + duplicatedKey.toBase58());
+    console.log('additional key ' + additionalKey.toBase58());
+    console.log('payer ' + payer.publicKey.toBase58());
+    console.log('didPDA ' + didPDAKey.toBase58());
 
-    const direct_execute = (await create(transaction, didPDAKey, [[normalizeSigner(payer), []]]))[0];
+    const direct_execute = (
+      await create(transaction, didPDAKey, [[normalizeSigner(payer), []]])
+    )[0];
 
     console.log(
       direct_execute.keys.map((key) => ({
