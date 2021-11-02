@@ -95,7 +95,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
   const getKeyListItems = useCallback((): KeyListItem[] => {
     const capabilityInvocations = cryptidAccount.capabilityInvocations;
     const capabilityInvocationStrings = capabilityInvocations
-      .filter((ci): ci is string => typeof ci === 'string')
+      .filter((ci: string | VerificationMethod): ci is string => typeof ci === 'string')
       .map((string) => string.replace(cryptidAccount.did + '#', ''));
 
     return cryptidAccount.verificationMethods
@@ -106,7 +106,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
         ))
       )
       .concat(capabilityInvocations
-        .filter((ci): ci is VerificationMethod => typeof ci !== 'string')
+        .filter((ci: string | VerificationMethod): ci is VerificationMethod => typeof ci !== 'string')
         .map((vm) => vmToKey(vm, true))
       );
   }, [cryptidAccount.verificationMethods, cryptidAccount.did, cryptidAccount.capabilityInvocations, vmToKey])
