@@ -4,16 +4,20 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import {addService} from "../../../../../../src/lib/solana/transactions/did/addService";
-import {connection, pubkey, stubConnection} from "../../../../../utils/solana";
-import {Keypair, TransactionInstruction} from "@solana/web3.js";
-import {publicKeyToDid} from "../../../../../../src/lib/solana/util";
-import {normalizeSigner} from "../../../../../../src/lib/util";
-import * as SolDid from "@identity.com/sol-did-client";
-import {stubResolveDID as stubResolve} from "../../../../../utils/did";
-import {SOL_DID_PROGRAM_ID} from "../../../../../../src/lib/constants";
-import {ServiceEndpoint} from "did-resolver";
-import * as DIDUtil from "../../../../../../src/lib/solana/transactions/did/util";
+import { addService } from '../../../../../../src/lib/solana/transactions/did/addService';
+import {
+  connection,
+  pubkey,
+  stubConnection,
+} from '../../../../../utils/solana';
+import { Keypair, TransactionInstruction } from '@solana/web3.js';
+import { publicKeyToDid } from '../../../../../../src/lib/solana/util';
+import { normalizeSigner } from '../../../../../../src/lib/util';
+import * as SolDid from '@identity.com/sol-did-client';
+import { stubResolveDID as stubResolve } from '../../../../../utils/did';
+import { SOL_DID_PROGRAM_ID } from '../../../../../../src/lib/constants';
+import { ServiceEndpoint } from 'did-resolver';
+import * as DIDUtil from '../../../../../../src/lib/solana/transactions/did/util';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -22,7 +26,7 @@ const { expect } = chai;
 
 const sandbox = sinon.createSandbox();
 
-const stubResolveDID = stubResolve(sandbox)
+const stubResolveDID = stubResolve(sandbox);
 
 describe('transactions/did/addService', () => {
   const key = Keypair.generate();
@@ -30,7 +34,7 @@ describe('transactions/did/addService', () => {
   const service: ServiceEndpoint = {
     id: `${did}#service1`,
     type: 'some service',
-    serviceEndpoint: 'somewhere'
+    serviceEndpoint: 'somewhere',
   };
 
   beforeEach(() => stubConnection(sandbox));
@@ -39,35 +43,66 @@ describe('transactions/did/addService', () => {
 
   it('should create an update instruction if the DID is registered', async () => {
     await stubResolveDID(did, key, true);
-    const dummyUpdateInstruction = new TransactionInstruction({keys: [], programId: SOL_DID_PROGRAM_ID});
-    sandbox.stub(SolDid, 'createUpdateInstruction').resolves(dummyUpdateInstruction);
+    const dummyUpdateInstruction = new TransactionInstruction({
+      keys: [],
+      programId: SOL_DID_PROGRAM_ID,
+    });
+    sandbox
+      .stub(SolDid, 'createUpdateInstruction')
+      .resolves(dummyUpdateInstruction);
 
-    const transaction = await addService(connection(), did, key.publicKey, service, [normalizeSigner(key)]);
+    const transaction = await addService(
+      connection(),
+      did,
+      normalizeSigner(key),
+      service,
+      key.publicKey
+    );
 
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyUpdateInstruction);
-  })
+  });
 
   it('should create a register instruction if the DID is not yet registered', async () => {
     await stubResolveDID(did, key, false);
-    const dummyRegisterInstruction = new TransactionInstruction({keys: [], programId: SOL_DID_PROGRAM_ID});
-    sandbox.stub(SolDid, 'createRegisterInstruction').resolves([dummyRegisterInstruction, pubkey()]);
+    const dummyRegisterInstruction = new TransactionInstruction({
+      keys: [],
+      programId: SOL_DID_PROGRAM_ID,
+    });
+    sandbox
+      .stub(SolDid, 'createRegisterInstruction')
+      .resolves([dummyRegisterInstruction, pubkey()]);
 
-    const transaction = await addService(connection(), did, key.publicKey, service, [normalizeSigner(key)]);
+    const transaction = await addService(
+      connection(),
+      did,
+      normalizeSigner(key),
+      service,
+      key.publicKey
+    );
 
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyRegisterInstruction);
-  })
+  });
 
   it('should add the service', async () => {
     await stubResolveDID(did, key, false);
 
-    const expectedDocument = sinon.match({ service: [service]})
+    const expectedDocument = sinon.match({ service: [service] });
 
-    const expectation = sandbox.mock(DIDUtil).expects('registerOrUpdate').withArgs(did, expectedDocument)
+    const expectation = sandbox
+      .mock(DIDUtil)
+      .expects('registerOrUpdate')
+      .withArgs(did, expectedDocument);
 
-    await addService(connection(), did, key.publicKey, service, [normalizeSigner(key)]);
+    await addService(
+      connection(),
+      did,
+      normalizeSigner(key),
+      service,
+      key.publicKey
+    );
 
     expectation.verify();
-  })
+  });
 });

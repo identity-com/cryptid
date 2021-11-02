@@ -31,11 +31,12 @@
     "forceConsistentCasingInFileNames": true,
     // `tsdx build` ignores this option, but it is commonly used when type-checking separately with `tsc`
     "noEmit": true,
-    "types": ["mocha", "node", "chai"]
+    "types": ["mocha", "node", "chai"],
+    "target": "ES5"
   },
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs",
+      "module": "commonjs"
     }
   }
 }
