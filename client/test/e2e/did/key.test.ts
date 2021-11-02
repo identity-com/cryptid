@@ -7,6 +7,7 @@ import {
   expectDocumentNotToIncludeKey,
   expectDocumentToIncludeKey,
 } from '../../utils/did';
+import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 const { expect } = chai;
 
@@ -211,11 +212,23 @@ describe('DID Key operations', function () {
           connection,
           waitForConfirmation: true,
         });
+
+        const defaultId = DecentralizedIdentifier.parse(cryptid.did);
+        defaultId.urlField = 'default';
+        const ledgerId = DecentralizedIdentifier.parse(cryptid.did);
+        ledgerId.urlField = 'ledger';
+
+        let document = await cryptid.document();
+        expect(document.capabilityInvocation).to.include(defaultId.toString());
+        expect(document.capabilityInvocation).to.include(ledgerId.toString());
+
         await cryptid.removeKey('default');
 
-        const document = await cryptid.document();
-        expectDocumentNotToIncludeKey(document, key.publicKey);
-        expectDocumentToIncludeKey(document, ledgerKey.publicKey);
+        document = await cryptid.document();
+        expect(document.capabilityInvocation).to.not.include(
+          defaultId.toString()
+        );
+        expect(document.capabilityInvocation).to.include(ledgerId.toString());
         expect(document.capabilityInvocation).to.have.lengthOf(1);
       });
     });
