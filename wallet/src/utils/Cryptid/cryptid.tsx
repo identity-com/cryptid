@@ -142,10 +142,18 @@ export class CryptidAccount {
 
   get verificationMethods() {
     if (!this._document || !this._document.verificationMethod) {
-      return []
+      return [];
     }
 
-    return this._document.verificationMethod
+    return this._document.verificationMethod;
+  }
+
+  get capabilityInvocations() {
+    if (!this._document || !this._document.capabilityInvocation){
+      return [];
+    }
+
+    return this._document.capabilityInvocation;
   }
 
   get controllers() {
