@@ -5,12 +5,10 @@ import {
   MergeBehaviour,
 } from '@identity.com/sol-did-client';
 import { filterNotNil } from '../../../util';
-import { Connection, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
 import { didToPublicKey } from '../../util';
-import { has, filter, any } from 'ramda';
-
-export type DIDOperationPayer = 'AuthorityPays' | { cryptidPays: Signer };
+import { filter, has } from 'ramda';
 
 /**
  * Creates a transaction that updates a DID Document.
@@ -20,7 +18,7 @@ export type DIDOperationPayer = 'AuthorityPays' | { cryptidPays: Signer };
  * @param did
  * @param document
  * @param connection
- * @param payer
+ * @param signer
  * @param authority The authority for the did, if being created must be the did key
  * @param mergeBehaviour
  */
@@ -28,34 +26,29 @@ export const registerOrUpdate = async (
   did: string,
   document: Partial<DIDDocument>,
   connection: Connection,
-  payer: DIDOperationPayer,
-  authority: Signer,
+  signer: Signer,
+  authority: PublicKey,
   mergeBehaviour: MergeBehaviour = 'Append'
 ): Promise<Transaction> => {
-  const payerPubkey =
-    payer === 'AuthorityPays'
-      ? authority.publicKey
-      : payer.cryptidPays.publicKey;
-
   // if the did is not registered, register it with the new document
   // if the did is registered, this will return null
   const registerInstruction = await registerInstructionIfNeeded(
     connection,
     did,
-    payerPubkey,
+    signer.publicKey,
     document
   );
 
   let instructions;
   if (registerInstruction) {
-    if (!authority.publicKey.equals(didToPublicKey(did))) {
+    if (!authority.equals(didToPublicKey(did))) {
       throw new Error('Authority must be did for creation');
     }
     instructions = [registerInstruction];
   } else {
     // if the did is registered, update it
     const updateInstruction = await createUpdateInstruction({
-      authority: authority.publicKey,
+      authority: authority,
       identifier: did,
       document,
       mergeBehaviour,
@@ -66,23 +59,12 @@ export const registerOrUpdate = async (
 
   const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
 
-  const transaction = await createTransaction(
+  return await createTransaction(
     recentBlockhash,
     filterNotNil(instructions),
-    payerPubkey,
-    // Assumption here that if cryptid is paying the authority will be signed for
-    [...(payer === 'AuthorityPays' ? [authority] : [payer.cryptidPays])]
+    signer.publicKey,
+    [signer]
   );
-  // Verify the assumption
-  if (
-    !any(
-      (signaturePair) => signaturePair.publicKey.equals(authority.publicKey),
-      transaction.signatures
-    )
-  ) {
-    throw new Error('No authority signature on transaction!');
-  }
-  return transaction;
 };
 
 export type DIDComponent = { id: string };

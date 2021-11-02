@@ -1,11 +1,6 @@
-import { Connection, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {
-  DIDOperationPayer,
-  hasAlias,
-  registerOrUpdate,
-  sanitizeDefaultKeys,
-} from './util';
+import { hasAlias, registerOrUpdate, sanitizeDefaultKeys } from './util';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { pick, without } from 'ramda';
@@ -21,9 +16,9 @@ const findServiceWithAlias = (
 export const removeService = async (
   connection: Connection,
   did: string,
-  payer: DIDOperationPayer,
+  signer: Signer,
   alias: string,
-  authority: Signer
+  authority: PublicKey
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did, { connection });
   const serviceToRemove = findServiceWithAlias(existingDocument, alias);
@@ -60,7 +55,7 @@ export const removeService = async (
     did,
     document,
     connection,
-    payer,
+    signer,
     authority,
     'Overwrite'
   );

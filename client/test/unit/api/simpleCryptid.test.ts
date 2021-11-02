@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { Cryptid } from '../../../src';
+import { Cryptid, Signer } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { did, makeKeypair, makeService } from '../../utils/did';
@@ -89,10 +89,14 @@ describe('SimpleCryptid', () => {
         .withArgs(
           sandbox.match.instanceOf(Connection),
           did(keypair),
-          'AuthorityPays',
+          sandbox.match((signer: Signer) =>
+            signer.publicKey.equals(keypair.publicKey)
+          ),
           sandbox.match.instanceOf(PublicKey),
           'alias',
-          sandbox.match.defined
+          sandbox.match((authority: PublicKey) =>
+            authority.equals(keypair.publicKey)
+          )
         );
       expectation.resolves(new Transaction());
 

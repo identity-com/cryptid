@@ -54,9 +54,9 @@ describe('transactions/did/addService', () => {
     const transaction = await addService(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       service,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -76,9 +76,9 @@ describe('transactions/did/addService', () => {
     const transaction = await addService(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       service,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -98,9 +98,9 @@ describe('transactions/did/addService', () => {
     await addService(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       service,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();

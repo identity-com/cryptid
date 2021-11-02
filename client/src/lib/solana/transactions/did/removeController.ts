@@ -1,10 +1,6 @@
-import { Connection, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import {
-  DIDOperationPayer,
-  registerOrUpdate,
-  sanitizeDefaultKeys,
-} from './util';
+import { registerOrUpdate, sanitizeDefaultKeys } from './util';
 import { DIDDocument } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { filterNotNil } from '../../../util';
@@ -29,9 +25,9 @@ const hasController = (document: DIDDocument, controller: string): boolean => {
 export const removeController = async (
   connection: Connection,
   did: string,
-  payer: DIDOperationPayer,
+  signer: Signer,
   controller: string,
-  authority: Signer
+  authority: PublicKey
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did, { connection });
 
@@ -67,7 +63,7 @@ export const removeController = async (
     did,
     document,
     connection,
-    payer,
+    signer,
     authority,
     'Overwrite'
   );

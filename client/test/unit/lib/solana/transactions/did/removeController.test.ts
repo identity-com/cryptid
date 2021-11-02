@@ -68,9 +68,9 @@ describe('transactions/did/removeController', () => {
     const transaction = await removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -87,9 +87,9 @@ describe('transactions/did/removeController', () => {
     await removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -109,9 +109,9 @@ describe('transactions/did/removeController', () => {
     await removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -128,9 +128,9 @@ describe('transactions/did/removeController', () => {
     await removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -177,9 +177,9 @@ describe('transactions/did/removeController', () => {
     await removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -191,9 +191,9 @@ describe('transactions/did/removeController', () => {
     const shouldFail = removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     return expect(shouldFail).to.be.rejectedWith(/not found/);
@@ -205,9 +205,9 @@ describe('transactions/did/removeController', () => {
     const shouldFail = removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     return expect(shouldFail).to.be.rejectedWith(/not found/);
@@ -219,9 +219,9 @@ describe('transactions/did/removeController', () => {
     const shouldFail = removeController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     return expect(shouldFail).to.be.rejectedWith(/not found/);

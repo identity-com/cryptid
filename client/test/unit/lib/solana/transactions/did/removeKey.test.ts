@@ -73,9 +73,9 @@ describe('transactions/did/removeKey', () => {
     const transaction = await removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -95,9 +95,9 @@ describe('transactions/did/removeKey', () => {
     const transaction = await removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -107,7 +107,10 @@ describe('transactions/did/removeKey', () => {
   it('should retain all other data', async () => {
     // add a load of random keys
     const document = await stubResolveDID(did, key, false);
-    document.verificationMethod!.push(
+    if (!document.verificationMethod) {
+      document.verificationMethod = [];
+    }
+    document.verificationMethod.push(
       {
         id: `${did}#default`,
         type: 'Ed25519VerificationKey2018',
@@ -145,9 +148,9 @@ describe('transactions/did/removeKey', () => {
     await removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -178,9 +181,9 @@ describe('transactions/did/removeKey', () => {
     await removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();
@@ -193,9 +196,9 @@ describe('transactions/did/removeKey', () => {
     const shouldFail = removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     return expect(shouldFail).to.be.rejectedWith(/not found/);
@@ -211,9 +214,9 @@ describe('transactions/did/removeKey', () => {
     const shouldFail = removeKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       alias,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     return expect(shouldFail).to.be.rejectedWith(/not found/);

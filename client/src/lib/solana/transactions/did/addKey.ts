@@ -2,7 +2,7 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { makeVerificationMethod } from '../../../did';
 import { resolve } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
-import { DIDOperationPayer, isDefault, registerOrUpdate } from './util';
+import { isDefault, registerOrUpdate } from './util';
 import { DIDDocument, VerificationMethod } from 'did-resolver';
 
 const updatedCapabilityInvocation = (
@@ -38,10 +38,10 @@ const updatedCapabilityInvocation = (
 export const addKey = async (
   connection: Connection,
   did: string,
-  payer: DIDOperationPayer,
+  signer: Signer,
   newKey: PublicKey,
   alias: string,
-  authority: Signer
+  authority: PublicKey
 ): Promise<Transaction> => {
   // resolve the existing document so that any existing capability invocation keys can be included in the registered version
   // if this is missed, registering with a new key removes the old key, which we don't want in this case.
@@ -55,5 +55,5 @@ export const addKey = async (
     ),
   };
 
-  return registerOrUpdate(did, document, connection, payer, authority);
+  return registerOrUpdate(did, document, connection, signer, authority);
 };

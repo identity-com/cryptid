@@ -48,10 +48,10 @@ describe('transactions/did/addKey', () => {
     const transaction = await addKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       newKey.publicKey,
       'newKey',
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -71,10 +71,10 @@ describe('transactions/did/addKey', () => {
     const transaction = await addKey(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       newKey.publicKey,
       'newKey',
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);

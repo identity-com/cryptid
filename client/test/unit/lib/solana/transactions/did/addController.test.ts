@@ -49,9 +49,9 @@ describe('transactions/did/addController', () => {
     const transaction = await addController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -71,9 +71,9 @@ describe('transactions/did/addController', () => {
     const transaction = await addController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expect(transaction.instructions).to.have.length(1);
@@ -93,9 +93,9 @@ describe('transactions/did/addController', () => {
     await addController(
       connection(),
       did,
-      'AuthorityPays',
+      normalizeSigner(key),
       controller,
-      normalizeSigner(key)
+      key.publicKey
     );
 
     expectation.verify();

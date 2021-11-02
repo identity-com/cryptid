@@ -11,7 +11,6 @@ import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
-import { DIDOperationPayer } from '../lib/solana/transactions/did/util';
 
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
@@ -73,14 +72,14 @@ export abstract class AbstractCryptid implements Cryptid {
 
   abstract get signer(): Signer;
 
-  protected async getPayerForInternalTransaction(): Promise<DIDOperationPayer> {
+  protected async getSignerForInternalTransaction(): Promise<Signer> {
     switch (this.options.rentPayer) {
       // use Cryptid to sign and send the tx, so that any rent is paid by the cryptid account
       case 'DID_PAYS':
-        return { cryptidPays: await this.asSigner() };
+        return this.asSigner();
       // use the signer key to sign and send the tx, so that any rent is paid by the signer key
       case 'SIGNER_PAYS':
-        return 'AuthorityPays';
+        return this.signer;
       default:
         throw new Error(`Unsupported payer option: ${this.options.rentPayer}`);
     }
@@ -90,12 +89,12 @@ export abstract class AbstractCryptid implements Cryptid {
     publicKey: PublicKey,
     alias: string
   ): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       publicKey,
       alias,
       authority
@@ -104,13 +103,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async removeKey(alias: string): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeKeyTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       alias,
       authority
     );
@@ -119,13 +118,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async addService(service: ServiceEndpoint): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await addServiceTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       service,
       authority
     );
@@ -134,13 +133,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async removeService(alias: string): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeServiceTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       alias,
       authority
     );
@@ -149,13 +148,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async addController(controller: string): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await addControllerTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       controller,
       authority
     );
@@ -164,13 +163,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async removeController(controller: string): Promise<TransactionSignature> {
-    const payer = await this.getPayerForInternalTransaction();
-    const authority = await this.signer;
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeControllerTransaction(
       this.options.connection,
       this.did,
-      payer,
+      signer,
       controller,
       authority
     );

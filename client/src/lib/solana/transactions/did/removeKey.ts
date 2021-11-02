@@ -1,10 +1,9 @@
-import { Connection, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { resolve } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
 import { DIDDocument } from 'did-resolver';
 import { pick, without } from 'ramda';
 import {
-  DIDOperationPayer,
   findVerificationMethodWithAlias,
   isDefault,
   registerOrUpdate,
@@ -20,9 +19,9 @@ import {
 export const removeKey = async (
   connection: Connection,
   did: string,
-  payer: DIDOperationPayer,
+  signer: Signer,
   alias: string,
-  authority: Signer
+  authority: PublicKey
 ): Promise<Transaction> => {
   const existingDocument = await resolve(did, { connection });
   const verificationMethodToRemove = findVerificationMethodWithAlias(
@@ -90,7 +89,7 @@ export const removeKey = async (
     did,
     document,
     connection,
-    payer,
+    signer,
     authority,
     'Overwrite'
   );
