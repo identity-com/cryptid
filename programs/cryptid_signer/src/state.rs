@@ -1,11 +1,10 @@
 //! The types that are stored in accounts for `cryptid_signer`
 
 use crate::error::CryptidSignerError;
+use crate::instruction::SigningKeyData;
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_generator::{
-    Account, GeneratorResult, Pubkey, SolanaAccountMeta, SolanaInstruction, UnixTimestamp,
-};
+use solana_generator::*;
 use std::collections::HashMap;
 
 /// The data for an on-chain Cryptid Account
@@ -69,11 +68,72 @@ pub struct TransactionAccount {
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
-    pub signers: Vec<(Pubkey, UnixTimestamp)>,
-    /// Whether or not this has executed
-    pub has_executed: bool,
+    pub signers: Vec<(SigningKeyData, UnixTimestamp)>,
+    /// The state of the transaction
+    pub state: TransactionState,
     /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
     pub settings_sequence: u16,
+}
+impl TransactionAccount {
+    fn instruction_index_error(&self, index: u8) -> Box<dyn Error> {
+        msg!("Instruction index out of range!");
+        GeneratorError::IndexOutOfRange {
+            index: index.to_string(),
+            possible_range: format!("0..{}", self.transaction_instructions.len()),
+        }
+        .into()
+    }
+    fn account_index_error(&self, index: u8) -> Box<dyn Error> {
+        msg!("Account index out of range!");
+        GeneratorError::IndexOutOfRange {
+            index: index.to_string(),
+            possible_range: format!("0..{}", self.accounts.len()),
+        }
+        .into()
+    }
+
+    /// Gets an instruction or errors if no instruction at index
+    pub fn get_instruction_mut(&mut self, index: u8) -> GeneratorResult<&mut InstructionData> {
+        if index as usize >= self.transaction_instructions.len() {
+            Err(self.instruction_index_error(index))
+        } else {
+            Ok(&mut self.transaction_instructions[index as usize])
+        }
+    }
+
+    /// Checks if a given index is valid for the instructions list
+    pub fn check_instruction_index(&self, index: u8) -> GeneratorResult<()> {
+        if index as usize >= self.transaction_instructions.len() {
+            Err(self.instruction_index_error(index))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Checks of a given index is valid for the accounts list
+    pub fn check_account_index(&self, index: u8) -> GeneratorResult<()> {
+        if index as usize >= self.accounts.len() {
+            Err(self.account_index_error(index))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// A [`TransactionAccount`]'s state
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq, Copy, Clone)]
+pub enum TransactionState {
+    /// Transaction account is not ready to execute
+    NotReady,
+    /// Transaction account is ready to execute
+    Ready,
+    /// Transaction account has executed
+    Executed,
+}
+impl Default for TransactionState {
+    fn default() -> Self {
+        Self::NotReady
+    }
 }
 
 /// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
