@@ -1,24 +1,34 @@
 //! Instructions for `cryptid_signer`
 
+/// Crates a cryptid account
 #[path = "./000_create_cryptid.rs"]
-mod create_cryptid;
+pub mod create_cryptid;
+/// Directly executes a transaction
 #[path = "./005_direct_execute.rs"]
-mod direct_execute;
+pub mod direct_execute;
+/// Expands a proposed transaction
+#[path = "./002_expand_transaction.rs"]
+pub mod expand_transaction;
+/// Proposes a transaction
 #[path = "./001_propose_transaction.rs"]
-mod propose_transaction;
+pub mod propose_transaction;
+/// A test instruction
 #[path = "./254_test_instruction.rs"]
-mod test_instruction;
+pub mod test_instruction;
 
-pub use create_cryptid::*;
-pub use direct_execute::*;
-pub use propose_transaction::*;
 use std::borrow::Cow;
-pub use test_instruction::*;
 
 use crate::error::CryptidSignerError;
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 use std::iter::once;
+
+use create_cryptid::CreateCryptid;
+use direct_execute::DirectExecute;
+use expand_transaction::ExpandTransaction;
+use propose_transaction::ProposeTransaction;
+use test_instruction::TestInstruction;
 
 /// The instructions for `cryptid_signer`
 #[allow(clippy::large_enum_variant)]
@@ -33,6 +43,9 @@ pub enum CryptidInstruction {
     /// Proposes a new transaction that can be approved and appended to
     #[instruction_list(instruction = ProposeTransaction, discriminant = 1)]
     ProposeTransaction,
+    /// Expands a transaction
+    #[instruction_list(instruction = ExpandTransaction, discriminant = 2)]
+    ExpandTransaction,
     /// Executes a transaction directly if all required keys sign
     #[instruction_list(instruction = DirectExecute, discriminant = 5)]
     DirectExecute,
@@ -94,6 +107,18 @@ impl SigningKey {
                 .collect::<Vec<_>>()
         )
     }
+
+    /// Turns the keys into the on-chain data format
+    pub fn to_key_data(&self) -> SigningKeyData {
+        SigningKeyData {
+            key: self.signing_key.key,
+            extra_keys: self
+                .extra_accounts
+                .iter()
+                .map(|account| account.key)
+                .collect(),
+        }
+    }
 }
 impl FromAccounts<()> for SigningKey {
     fn from_accounts(
@@ -108,6 +133,15 @@ impl FromAccounts<()> for SigningKey {
             extra_accounts,
         })
     }
+}
+
+/// The on-chain format of [`SigningKey`]
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq)]
+pub struct SigningKeyData {
+    /// The signing key
+    pub key: Pubkey,
+    /// Extra keys needed for signing
+    pub extra_keys: Vec<Pubkey>,
 }
 
 /// A builder for [`SigningKey`]
