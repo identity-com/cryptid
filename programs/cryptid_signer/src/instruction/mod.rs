@@ -136,16 +136,23 @@ impl FromAccounts<()> for SigningKey {
 }
 
 /// The on-chain format of [`SigningKey`]
-#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq)]
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq, Clone)]
 pub struct SigningKeyData {
     /// The signing key
     pub key: Pubkey,
     /// Extra keys needed for signing
     pub extra_keys: Vec<Pubkey>,
 }
+impl SigningKeyData {
+    /// Calculates the on-chain size of a [`SigningKeyData`]
+    pub const fn calculate_size(num_extras: usize) -> usize {
+        32 //key
+        + 4 + 32 * num_extras //extra_keys
+    }
+}
 
 /// A builder for [`SigningKey`]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SigningKeyBuild {
     /// The key that constitutes the signature
     pub signing_key: SolanaAccountMeta,
@@ -161,5 +168,17 @@ impl SigningKeyBuild {
     /// Returns the size of [`SigningKeyBuild::extra_accounts`]
     pub fn extra_count(&self) -> u8 {
         self.extra_accounts.len() as u8
+    }
+
+    /// Turns this into a [`SigningKeyData`]
+    pub fn to_data(&self) -> SigningKeyData {
+        SigningKeyData {
+            key: self.signing_key.pubkey,
+            extra_keys: self
+                .extra_accounts
+                .iter()
+                .map(|account| account.pubkey)
+                .collect(),
+        }
     }
 }

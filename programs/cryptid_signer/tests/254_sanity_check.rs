@@ -1,7 +1,6 @@
 #![cfg(feature = "test-bpf")]
 
-mod constants;
-use constants::{CRYPTID_SIGNER_PROGRAM_NAME, DUMMY_PROGRAM_NAME, LOG_TARGET};
+mod util;
 
 use cryptid_signer::instruction::CryptidInstruction;
 use dummy_program::DummyInstruction;
@@ -9,6 +8,7 @@ use solana_generator::build_instruction;
 use solana_sdk::signature::Signer;
 use solana_sdk::transaction::Transaction;
 use test_utils::{start_tests, ClientExpansion};
+use util::{CRYPTID_SIGNER_PROGRAM_NAME, DUMMY_PROGRAM_NAME, LOG_TARGET};
 
 #[tokio::test]
 async fn sanity_check() {

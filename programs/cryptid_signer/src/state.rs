@@ -57,6 +57,26 @@ impl CryptidAccount {
     }
 }
 
+/// A helper struct for calculating [`InstructionData`] size
+#[derive(Debug)]
+pub struct InstructionSize {
+    /// The number of accounts in the instruction
+    pub accounts: usize,
+    /// The size of the instruction data
+    pub data_len: usize,
+}
+impl InstructionSize {
+    /// Creates a size iterator from an iterator of data refs
+    pub fn from_iter_to_iter<'a>(
+        iter: impl Iterator<Item = &'a InstructionData> + 'a,
+    ) -> impl Iterator<Item = InstructionSize> + 'a {
+        iter.map(|instruction| Self {
+            accounts: instruction.accounts.len(),
+            data_len: instruction.data.len(),
+        })
+    }
+}
+
 /// The data to store about a proposed transaction
 #[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[account(discriminant = [2])]
@@ -75,6 +95,25 @@ pub struct TransactionAccount {
     pub settings_sequence: u16,
 }
 impl TransactionAccount {
+    /// Calculates the on-chain size of a [`TransactionAccount`]
+    pub fn calculate_size(
+        num_accounts: usize,
+        instruction_sizes: impl Iterator<Item = InstructionSize>,
+        signer_extras: impl Iterator<Item = usize>,
+    ) -> usize {
+        <Self as Account>::DISCRIMINANT.discriminant_serialized_length().unwrap()
+        + 32 //cryptid_account
+        + 4 + 32 * num_accounts //accounts
+        + 4 + instruction_sizes.into_iter().map(InstructionData::calculate_size).sum::<usize>() //transaction_instructions
+        + 4 + signer_extras
+            .into_iter()
+            .map(SigningKeyData::calculate_size)
+            .map(|size|size + 8) //Expiry time
+            .sum::<usize>() //signers
+        + TransactionState::calculate_size() //state
+        + 2 //settings_sequence
+    }
+
     fn instruction_index_error(&self, index: u8) -> Box<dyn Error> {
         msg!("Instruction index out of range!");
         GeneratorError::IndexOutOfRange {
@@ -130,6 +169,12 @@ pub enum TransactionState {
     /// Transaction account has executed
     Executed,
 }
+impl TransactionState {
+    /// Calculates the on-chain size of a [`TransactionState`]
+    pub const fn calculate_size() -> usize {
+        1 //enum
+    }
+}
 impl Default for TransactionState {
     fn default() -> Self {
         Self::NotReady
@@ -137,7 +182,7 @@ impl Default for TransactionState {
 }
 
 /// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
-#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq, Clone)]
 pub struct InstructionData {
     /// The program to execute
     pub program_id: u8,
@@ -147,6 +192,13 @@ pub struct InstructionData {
     pub data: Vec<u8>,
 }
 impl InstructionData {
+    /// Calculates the on-chain size of a [`InstructionData`]
+    pub const fn calculate_size(size: InstructionSize) -> usize {
+        1 //program_id
+        + 4 + TransactionAccountMeta::calculate_size() * size.accounts //accounts
+        + 4 + size.data_len //data
+    }
+
     /// Creates an [`InstructionData`] from a given [`SolanaInstruction`]
     pub fn from_instruction(
         instruction: SolanaInstruction,
@@ -183,7 +235,7 @@ impl InstructionData {
 }
 
 /// An account for an instruction, similar to Solana's [`AccountMeta`](SolanaAccountMeta)
-#[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq)]
 pub struct TransactionAccountMeta {
     /// The key of the account
     pub key: u8,
@@ -191,6 +243,12 @@ pub struct TransactionAccountMeta {
     pub meta: AccountMeta,
 }
 impl TransactionAccountMeta {
+    /// Calculates the on-chain size of a [`TransactionAccountMeta`]
+    pub const fn calculate_size() -> usize {
+        1 //key
+        + AccountMeta::calculate_size() //meta
+    }
+
     /// Creates a [`TransactionAccountMeta`] from a given [`SolanaAccountMeta`]
     pub fn from_solana_account_meta(
         meta: SolanaAccountMeta,
@@ -225,6 +283,11 @@ bitflags! {
     }
 }
 impl AccountMeta {
+    /// Calculates the on-chain size of a [`AccountMeta`]
+    pub const fn calculate_size() -> usize {
+        1 //u8 size
+    }
+
     /// Creates a new [`AccountMeta`] from the given arguments
     pub fn new(is_signer: bool, is_writable: bool) -> Self {
         Self::from_bits(
@@ -237,7 +300,8 @@ impl AccountMeta {
 
 #[cfg(test)]
 mod test {
-    use crate::state::AccountMeta;
+    use super::*;
+    use std::iter::once;
 
     #[test]
     fn account_meta_from_bools() {
@@ -245,5 +309,46 @@ mod test {
         assert_eq!(AccountMeta::new(true, false), AccountMeta::IS_SIGNER);
         assert_eq!(AccountMeta::new(false, true), AccountMeta::IS_WRITABLE);
         assert_eq!(AccountMeta::new(true, true), AccountMeta::all());
+    }
+
+    #[test]
+    fn calculate_size() {
+        let size = TransactionAccount::calculate_size(
+            1,
+            once(InstructionSize {
+                accounts: 1,
+                data_len: 1,
+            }),
+            once(1),
+        );
+        println!("Size: {}", size);
+
+        let account = TransactionAccount {
+            cryptid_account: Default::default(),
+            accounts: vec![Default::default()],
+            transaction_instructions: vec![InstructionData {
+                program_id: 0,
+                accounts: vec![TransactionAccountMeta {
+                    key: 0,
+                    meta: AccountMeta::empty(),
+                }],
+                data: vec![0],
+            }],
+            signers: vec![(
+                SigningKeyData {
+                    key: Default::default(),
+                    extra_keys: vec![Default::default()],
+                },
+                0,
+            )],
+            state: Default::default(),
+            settings_sequence: 0,
+        };
+        let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len()
+            + TransactionAccount::DISCRIMINANT
+                .discriminant_serialized_length()
+                .unwrap();
+        println!("SerSize: {}", ser_size);
+        assert_eq!(size, ser_size);
     }
 }

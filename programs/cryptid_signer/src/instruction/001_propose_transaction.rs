@@ -96,6 +96,7 @@ impl Instruction for ProposeTransaction {
         }
         accounts.transaction_account.account_seeds =
             Some(PDASeedSet::new(transaction_seeder, transaction_nonce));
+        accounts.transaction_account.init_size = InitSize::SetSize(data.account_size as u64);
 
         verify_keys(
             &accounts.did_program,
@@ -132,7 +133,7 @@ impl Instruction for ProposeTransaction {
                 }
                 .find_address(program_id)
                 .0,
-                !arg.transaction_account_is_zeroed,
+                false,
             ),
             SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
             arg.did,
@@ -188,8 +189,6 @@ pub struct ProposeTransactionData {
 pub struct ProposeTransactionBuild {
     /// The funder that will pay the rent
     pub funder: Pubkey,
-    /// [`true`] if [`transaction_account`](ProposeTransactionBuild::transaction_account) is zeored, [`false`] if init
-    pub transaction_account_is_zeroed: bool,
     /// The Cryptid Account to execute for
     pub cryptid_account: Pubkey,
     /// The DID for the Cryptid Account
