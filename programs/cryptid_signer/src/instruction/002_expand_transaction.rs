@@ -60,19 +60,18 @@ impl Instruction for ExpandTransaction {
         }
 
         for (index, account_operation) in data.account_operations.into_iter().enumerate() {
-            if let Err(error) = accounts
-                .transaction_account
-                .handle_account_operation(account_operation)
+            if let Err(error) =
+                handle_account_operation(&mut accounts.transaction_account, account_operation)
             {
                 msg!("Error in account operation {}", index);
                 return Err(error);
             }
         }
         for (index, instruction_operation) in data.instruction_operations.into_iter().enumerate() {
-            if let Err(error) = accounts
-                .transaction_account
-                .handle_instruction_operation(instruction_operation)
-            {
+            if let Err(error) = handle_instruction_operation(
+                &mut accounts.transaction_account,
+                instruction_operation,
+            ) {
                 msg!("Error in instruction operation {}", index);
                 return Err(error);
             }
@@ -194,15 +193,19 @@ pub enum InstructionOperation {
     /// Adds an account to an instruction
     AddAccount {
         /// The index of the instruction
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         index: u8,
         /// The account to add
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         account: TransactionAccountMeta,
     },
     /// Adds multiple accounts to an instruction. More space efficient than [`InstructionOperation::AddAccount`] when adding > 5 accounts.
     AddAccounts {
         /// The index of the instruction
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         index: u8,
         /// The accounts to add
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         accounts: Vec<TransactionAccountMeta>,
     },
     /// Clears the accounts of an instruction
@@ -210,65 +213,73 @@ pub enum InstructionOperation {
     /// Adds data to an instruction
     AddData {
         /// The index of the instruction
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         index: u8,
         /// The data to add
+        #[allow(dead_code)] //TODO: Figure out why this needs to be here
         data: Vec<u8>,
     },
     /// Clears the data of an instruction
     ClearData(u8),
 }
-impl TransactionAccount {
-    fn handle_instruction_operation(
-        &mut self,
-        operation: InstructionOperation,
-    ) -> GeneratorResult<()> {
-        match operation {
-            InstructionOperation::Add(instruction) => {
-                for account in &instruction.accounts {
-                    self.check_account_index(account.key)?;
-                }
-                self.transaction_instructions.push(instruction);
+fn handle_instruction_operation(
+    transaction: &mut TransactionAccount,
+    operation: InstructionOperation,
+) -> GeneratorResult<()> {
+    match operation {
+        InstructionOperation::Add(instruction) => {
+            for account in &instruction.accounts {
+                transaction.check_account_index(account.key)?;
             }
-            InstructionOperation::Remove(index) => {
-                self.check_instruction_index(index)?;
-                self.transaction_instructions.remove(index as usize);
-            }
-            InstructionOperation::AddAccount { index, account } => {
-                self.check_account_index(account.key)?;
-                self.get_instruction_mut(index)?.accounts.push(account);
-            }
-            InstructionOperation::AddAccounts { index, accounts } => {
-                for account in &accounts {
-                    self.check_account_index(account.key)?;
-                }
-                self.get_instruction_mut(index)?
-                    .accounts
-                    .extend(accounts.into_iter());
-            }
-            InstructionOperation::ClearAccounts(index) => {
-                self.get_instruction_mut(index)?.accounts.clear();
-            }
-            InstructionOperation::AddData { index, data } => {
-                self.get_instruction_mut(index)?
-                    .data
-                    .extend(data.into_iter());
-            }
-            InstructionOperation::ClearData(index) => {
-                self.get_instruction_mut(index)?.data.clear();
-            }
+            transaction.transaction_instructions.push(instruction);
         }
-        Ok(())
+        InstructionOperation::Remove(index) => {
+            transaction.check_instruction_index(index)?;
+            transaction.transaction_instructions.remove(index as usize);
+        }
+        InstructionOperation::AddAccount { index, account } => {
+            transaction.check_account_index(account.key)?;
+            transaction
+                .get_instruction_mut(index)?
+                .accounts
+                .push(account);
+        }
+        InstructionOperation::AddAccounts { index, accounts } => {
+            for account in &accounts {
+                transaction.check_account_index(account.key)?;
+            }
+            transaction
+                .get_instruction_mut(index)?
+                .accounts
+                .extend(accounts.into_iter());
+        }
+        InstructionOperation::ClearAccounts(index) => {
+            transaction.get_instruction_mut(index)?.accounts.clear();
+        }
+        InstructionOperation::AddData { index, data } => {
+            transaction
+                .get_instruction_mut(index)?
+                .data
+                .extend(data.into_iter());
+        }
+        InstructionOperation::ClearData(index) => {
+            transaction.get_instruction_mut(index)?.data.clear();
+        }
     }
+    Ok(())
+}
 
-    fn handle_account_operation(&mut self, operation: AccountOperation) -> GeneratorResult<()> {
-        match operation {
-            AccountOperation::Add(account) => self.accounts.push(account),
-            AccountOperation::Clear => {
-                self.transaction_instructions.clear();
-                self.accounts.clear();
-            }
-            AccountOperation::AddMany(accounts) => self.accounts.extend(accounts.into_iter()),
+fn handle_account_operation(
+    transaction: &mut TransactionAccount,
+    operation: AccountOperation,
+) -> GeneratorResult<()> {
+    match operation {
+        AccountOperation::Add(account) => transaction.accounts.push(account),
+        AccountOperation::Clear => {
+            transaction.transaction_instructions.clear();
+            transaction.accounts.clear();
         }
-        Ok(())
+        AccountOperation::AddMany(accounts) => transaction.accounts.extend(accounts.into_iter()),
     }
+    Ok(())
 }

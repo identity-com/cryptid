@@ -1,10 +1,10 @@
 #![cfg(feature = "test-bpf")]
 
-mod constants;
-use constants::{CRYPTID_SIGNER_PROGRAM_NAME, LOG_TARGET};
+mod util;
 
 use borsh::BorshDeserialize;
-use cryptid_signer::instruction::{CreateCryptidBuild, CryptidInstruction, SigningKeyBuild};
+use cryptid_signer::instruction::create_cryptid::CreateCryptidBuild;
+use cryptid_signer::instruction::{CryptidInstruction, SigningKeyBuild};
 use cryptid_signer::state::CryptidAccount;
 use cryptid_signer::CryptidSignerSeeder;
 use log::trace;
@@ -15,6 +15,7 @@ use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::Transaction;
 use test_utils::rand::Rng;
 use test_utils::{start_tests, ClientExpansion};
+use util::*;
 
 #[tokio::test]
 async fn create_cryptid() {
@@ -35,13 +36,10 @@ async fn create_cryptid() {
     trace!(target: LOG_TARGET, "did_program: {}", did_program);
     let key_threshold = rng.gen();
     trace!(target: LOG_TARGET, "key_threshold: {}", key_threshold);
-    let (signer, signer_nonce) = PDAGenerator::new(
-        cryptid_id,
-        CryptidSignerSeeder {
-            cryptid_account: cryptid_address.pubkey(),
-        },
-    )
-    .find_address();
+    let (signer, signer_nonce) = CryptidSignerSeeder {
+        cryptid_account: cryptid_address.pubkey(),
+    }
+    .find_address(cryptid_id);
     trace!(
         target: LOG_TARGET,
         "(signer, nonce): ({}, {})",

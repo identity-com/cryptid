@@ -29,7 +29,7 @@ pub async fn start_tests<const N: usize>(
     BanksClient,
     Keypair,
     Hash,
-    impl SeedableRng + CryptoRng + RngCore,
+    impl SeedableRng + CryptoRng + RngCore + Clone,
     [Pubkey; N],
 ) {
     let (test, program_map, rng) = generate_test(log_target, programs);
@@ -79,7 +79,7 @@ pub fn generate_test<const N: usize>(
 ) -> (
     ProgramTest,
     HashMap<&'static str, Pubkey>,
-    impl SeedableRng + CryptoRng + RngCore,
+    impl SeedableRng + CryptoRng + RngCore + Clone,
 ) {
     let mut test = ProgramTest::default();
     let mut rng = get_rng(

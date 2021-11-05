@@ -452,7 +452,9 @@ dependencies = [
  "bitflags",
  "borsh",
  "dummy_program",
+ "futures",
  "log",
+ "num-traits",
  "sol-did",
  "solana-program-test",
  "solana-sdk",
@@ -2482,7 +2484,7 @@ dependencies = [
 [[package]]
 name = "solana_generator"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
+source = "git+https://github.com/identity-com/solana_generator?rev=6136ff4e0f16186428d51e2832618e477f19b75c#6136ff4e0f16186428d51e2832618e477f19b75c"
 dependencies = [
  "array-init",
  "bincode",
@@ -2497,7 +2499,7 @@ dependencies = [
 [[package]]
 name = "solana_generator_derive"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
+source = "git+https://github.com/identity-com/solana_generator?rev=6136ff4e0f16186428d51e2832618e477f19b75c#6136ff4e0f16186428d51e2832618e477f19b75c"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro-error",
