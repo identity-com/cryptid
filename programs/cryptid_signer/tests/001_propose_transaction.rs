@@ -23,14 +23,19 @@ async fn verify(
         (0..program_values.gen_range(2, 5))
             .map(|_| program_values.gen_range(10, 100))
             .collect(),
-        &mut program_values.rng,
+        &mut program_values,
     );
+
+    let mut overrides = ProposeOverrides::default();
+    if let Some(size) = size_override {
+        overrides = overrides.size(size);
+    }
 
     let signers = propose_transaction(
         &on_chain_transaction,
         &mut program_values,
         transaction_seed.clone(),
-        size_override,
+        overrides,
     )
     .await;
 

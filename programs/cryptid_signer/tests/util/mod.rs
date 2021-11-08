@@ -1,23 +1,27 @@
 #![allow(dead_code)]
 
+use cryptid_signer::instruction::expand_transaction::{
+    AccountOperation, ExpandTransactionBuild, InstructionOperation, SeedOrAccount,
+};
 use cryptid_signer::instruction::{
     propose_transaction::ProposeTransactionBuild, CryptidInstruction, SigningKeyBuild,
 };
 use cryptid_signer::state::{
     AccountMeta, InstructionData, InstructionSize, TransactionAccount, TransactionAccountMeta,
+    TransactionState,
 };
 use cryptid_signer::{GenerativeCryptidSeeder, TransactionSeeder};
 use log::*;
 use num_traits::ToPrimitive;
 use sol_did::solana_program::clock::UnixTimestamp;
 use sol_did::solana_program::pubkey::Pubkey;
-use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta};
+use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_program_test::BanksClient;
 use solana_sdk::account::Account;
 use solana_sdk::hash::Hash;
 use solana_sdk::signature::{Keypair, Signature, Signer, SignerError};
 use solana_sdk::transaction::Transaction;
-use std::iter::once;
+use std::iter::{empty, once};
 use std::ops::Deref;
 use test_utils::rand::distributions::uniform::{SampleBorrow, SampleUniform};
 use test_utils::rand::distributions::{Distribution, Standard};
@@ -37,27 +41,36 @@ impl OnChainTransaction {
     pub fn random(
         accounts: u8,
         instructions: Vec<usize>,
-        rng: &mut (impl SeedableRng + CryptoRng + RngCore),
+        program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
     ) -> Self {
         let accounts = (0..accounts)
-            .map(|_| Keypair::generate(rng).pubkey())
+            .map(|_| program_values.gen_keypair().pubkey())
             .collect::<Vec<_>>();
-        let instructions = instructions
-            .into_iter()
-            .map(|data_size| InstructionData {
-                program_id: rng.gen_range(0, accounts.len()) as u8,
-                accounts: (0..rng.gen_range(1, 10))
-                    .map(|_| TransactionAccountMeta {
-                        key: rng.gen_range(0, accounts.len()) as u8,
-                        meta: AccountMeta::new(rng.gen(), rng.gen()),
-                    })
-                    .collect(),
-                data: (0..data_size).map(|_| rng.gen()).collect(),
-            })
-            .collect::<Vec<_>>();
-        Self {
+        let mut out = Self {
             accounts,
-            instructions,
+            instructions: vec![],
+        };
+        out.instructions = instructions
+            .into_iter()
+            .map(|data_size| out.random_instruction(data_size, program_values))
+            .collect::<Vec<_>>();
+        out
+    }
+
+    fn random_instruction(
+        &self,
+        data_size: usize,
+        program_values: &mut ProgramValues<impl RngCore>,
+    ) -> InstructionData {
+        InstructionData {
+            program_id: program_values.gen_range(0, self.accounts.len()) as u8,
+            accounts: (0..program_values.gen_range(1, 10))
+                .map(|_| TransactionAccountMeta {
+                    key: program_values.gen_range(0, self.accounts.len()) as u8,
+                    meta: AccountMeta::new(program_values.gen(), program_values.gen()),
+                })
+                .collect(),
+            data: (0..data_size).map(|_| program_values.gen()).collect(),
         }
     }
 
@@ -67,6 +80,116 @@ impl OnChainTransaction {
             InstructionSize::from_iter_to_iter(self.instructions.iter()),
             once(0),
         )
+    }
+
+    pub fn apply_instruction_operation(&mut self, operation: InstructionOperation) {
+        match operation {
+            InstructionOperation::Add(instruction) => {
+                self.instructions.push(instruction);
+            }
+            InstructionOperation::Remove(index) => {
+                self.instructions.remove(index as usize);
+            }
+            InstructionOperation::AddAccount { index, account } => {
+                self.instructions[index as usize].accounts.push(account);
+            }
+            InstructionOperation::AddAccounts { index, accounts } => {
+                self.instructions[index as usize].accounts.extend(accounts);
+            }
+            InstructionOperation::ClearAccounts(index) => {
+                self.instructions[index as usize].accounts.clear();
+            }
+            InstructionOperation::AddData { index, data } => {
+                self.instructions[index as usize].data.extend(data);
+            }
+            InstructionOperation::ClearData(index) => {
+                self.instructions[index as usize].data.clear();
+            }
+            InstructionOperation::Clear => self.instructions.clear(),
+        }
+    }
+
+    pub fn apply_account_operation(&mut self, operation: AccountOperation) {
+        match operation {
+            AccountOperation::Add(account) => self.accounts.push(account),
+            AccountOperation::Clear => self.accounts.clear(),
+            AccountOperation::AddMany(accounts) => self.accounts.extend(accounts),
+        }
+    }
+
+    pub fn random_instruction_operation(
+        &self,
+        program_values: &mut ProgramValues<impl RngCore>,
+    ) -> InstructionOperation {
+        if self.accounts.is_empty() {
+            InstructionOperation::Clear
+        } else if self.instructions.is_empty() {
+            let operation = program_values.gen_range(0, 1);
+            match operation {
+                0 => InstructionOperation::Add(
+                    self.random_instruction(program_values.gen_range(0, 10), program_values),
+                ),
+                1 => InstructionOperation::Clear,
+                _ => unreachable!(),
+            }
+        } else {
+            let operation = program_values.gen_range(0, 8);
+            match operation {
+                0 => InstructionOperation::Add(
+                    self.random_instruction(program_values.gen_range(0, 10), program_values),
+                ),
+                1 => InstructionOperation::Remove(
+                    program_values.gen_range(0, self.instructions.len() as u8),
+                ),
+                2 => InstructionOperation::AddAccount {
+                    index: program_values.gen_range(0, self.instructions.len() as u8),
+                    account: TransactionAccountMeta {
+                        key: program_values.gen_range(0, self.accounts.len() as u8),
+                        meta: AccountMeta::new(program_values.gen(), program_values.gen()),
+                    },
+                },
+                3 => InstructionOperation::AddAccounts {
+                    index: program_values.gen_range(0, self.instructions.len() as u8),
+                    accounts: (0..program_values.gen_range(0, 4))
+                        .map(|_| TransactionAccountMeta {
+                            key: program_values.gen_range(0, self.accounts.len() as u8),
+                            meta: AccountMeta::new(program_values.gen(), program_values.gen()),
+                        })
+                        .collect(),
+                },
+                4 => InstructionOperation::ClearAccounts(
+                    program_values.gen_range(0, self.instructions.len()) as u8,
+                ),
+                5 => InstructionOperation::AddData {
+                    index: program_values.gen_range(0, self.instructions.len() as u8),
+                    data: (0..program_values.gen_range(0, 10))
+                        .map(|_| program_values.gen())
+                        .collect(),
+                },
+                6 => InstructionOperation::ClearData(
+                    program_values.gen_range(0, self.instructions.len() as u8),
+                ),
+                7 => InstructionOperation::Clear,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn random_account_operation(
+        &self,
+        program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
+    ) -> AccountOperation {
+        let can_clear = self.instructions.is_empty();
+        match program_values.gen_range(0, 2 + can_clear as u8) {
+            0 => AccountOperation::Add(program_values.gen_keypair().pubkey()),
+            1 => AccountOperation::AddMany(
+                (0..program_values.gen_range(0, 4))
+                    .map(|_| program_values.gen_keypair().pubkey())
+                    .collect(),
+            ),
+            2 => AccountOperation::Clear,
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -127,6 +250,14 @@ impl OptionalKeypair {
             OptionalKeypair::Pubkey(pubkey) => *pubkey,
         }
     }
+
+    pub fn keypair(&self) -> Option<&ClonableKeypair> {
+        if let Self::Keypair(keypair) = self {
+            Some(keypair)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -142,9 +273,80 @@ pub struct ProgramValues<R> {
     pub did_pda: Pubkey,
     pub did_program: Pubkey,
 }
+impl<R> ProgramValues<R> {
+    pub async fn send_transaction<'a>(
+        &'a mut self,
+        instructions: &[SolanaInstruction],
+        signers: impl IntoIterator<Item = &'a Keypair>,
+        did_signs: bool,
+        cryptid_account_signs: bool,
+    ) {
+        let mut signers = signers
+            .into_iter()
+            .chain(once(&self.funder.0))
+            .collect::<Vec<_>>();
+        if did_signs {
+            signers.push(&self.did.0);
+        }
+        if cryptid_account_signs {
+            signers.push(
+                &self
+                    .cryptid_address
+                    .keypair()
+                    .expect("Cryptid is not keypair")
+                    .0,
+            )
+        }
+        let transaction = Transaction::new_signed_with_payer(
+            instructions,
+            Some(&self.funder.pubkey()),
+            &signers,
+            self.banks
+                .get_recent_blockhash()
+                .await
+                .expect("Could not get recent block hash"),
+        );
+        self.banks
+            .process_transaction_longer_timeout(transaction)
+            .await
+            .expect("Transaction failed");
+    }
+
+    pub async fn send_expand_transaction_instruction(
+        &mut self,
+        transaction_account: SeedOrAccount,
+        signing_key: SigningKeyBuild,
+        new_state: TransactionState,
+        account_operations: Vec<AccountOperation>,
+        instruction_operations: Vec<InstructionOperation>,
+    ) {
+        let build = ExpandTransactionBuild {
+            transaction_account,
+            cryptid_account: self.cryptid_address.pubkey(),
+            did: SolanaAccountMeta::new_readonly(self.did_pda, false),
+            did_program: self.did_program,
+            signing_key,
+            new_state,
+            account_operations,
+            instruction_operations,
+        };
+        self.send_transaction(
+            &[build_instruction!(
+                self.cryptid_program_id,
+                CryptidInstruction,
+                ExpandTransaction(build)
+            )
+            .expect("Could not build instruction")],
+            empty(),
+            true,
+            false,
+        )
+        .await;
+    }
+}
 impl<R> ProgramValues<R>
 where
-    R: SeedableRng + CryptoRng + RngCore,
+    R: RngCore,
 {
     pub fn gen<T>(&mut self) -> T
     where
@@ -180,6 +382,14 @@ where
             .get_account(key)
             .await
             .unwrap_or_else(|_| panic!("Error getting account `{}`", key))
+    }
+}
+impl<R> ProgramValues<R>
+where
+    R: SeedableRng + CryptoRng + RngCore,
+{
+    pub fn gen_keypair(&mut self) -> Keypair {
+        Keypair::generate(&mut self.rng)
     }
 }
 
@@ -231,14 +441,35 @@ pub async fn create_program_values(
     }
 }
 
+#[derive(Default, Clone)]
+pub struct ProposeOverrides {
+    size: Option<u16>,
+    ready_to_execute: Option<bool>,
+}
+impl ProposeOverrides {
+    pub const fn size(self, size: u16) -> Self {
+        Self {
+            size: Some(size),
+            ..self
+        }
+    }
+
+    pub const fn ready_to_execute(self, ready_to_execute: bool) -> Self {
+        Self {
+            ready_to_execute: Some(ready_to_execute),
+            ..self
+        }
+    }
+}
+
 pub async fn propose_transaction(
     on_chain_transaction: &OnChainTransaction,
     program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
     transaction_seed: String,
-    size_override: Option<u16>,
+    overrides: ProposeOverrides,
 ) -> Vec<(SigningKeyBuild, UnixTimestamp)> {
     let did_pda = sol_did::state::get_sol_address_with_seed(&program_values.did.pubkey()).0;
-    let account_size = size_override.unwrap_or_else(|| {
+    let account_size = overrides.size.unwrap_or_else(|| {
         on_chain_transaction
             .calculate_size()
             .to_u16()
@@ -276,7 +507,9 @@ pub async fn propose_transaction(
                 signers: signers.clone(),
                 accounts: on_chain_transaction.accounts.clone(),
                 instructions: on_chain_transaction.instructions.clone(),
-                ready_to_execute: program_values.rng.gen(),
+                ready_to_execute: overrides
+                    .ready_to_execute
+                    .unwrap_or_else(|| program_values.rng.gen()),
                 account_size,
                 account_seed: transaction_seed.clone(),
             })
