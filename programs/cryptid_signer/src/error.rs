@@ -1,9 +1,9 @@
 //! Error types for `cryptid_signer`
 
+use crate::instruction::SigningKeyData;
 use crate::state::TransactionState;
 use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::{Error, Pubkey};
-use crate::instruction::SigningKeyData;
 
 /// The main error type for `cryptid_signer`.
 /// Start index is `700`
@@ -58,7 +58,7 @@ pub enum CryptidSignerError {
     },
     /// Key is not a proposer for the transaction
     #[error_msg("Key `{:?}` is not a proposer for the transaction", key)]
-    KeyCannotChangeTransaction{
+    KeyCannotChangeTransaction {
         /// The key that tried to change the transaction
         key: SigningKeyData,
     },
