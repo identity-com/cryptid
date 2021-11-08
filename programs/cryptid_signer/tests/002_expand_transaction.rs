@@ -1,3 +1,5 @@
+#![cfg(feature = "test-bpf")]
+
 mod util;
 
 use borsh::BorshDeserialize;
@@ -5,7 +7,6 @@ use cryptid_signer::instruction::expand_transaction::SeedOrAccount;
 use cryptid_signer::instruction::SigningKeyBuild;
 use cryptid_signer::state::{TransactionAccount, TransactionState};
 use cryptid_signer::TransactionSeeder;
-use futures::future::join_all;
 use log::trace;
 use solana_generator::discriminant::Discriminant;
 use solana_generator::{Account, PDAGenerator, Pubkey, UnixTimestamp};
