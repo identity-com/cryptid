@@ -87,7 +87,7 @@ impl Instruction for ExpandTransaction {
     ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
         Ok((
             IntoIter::new([
-                SolanaAccountMeta::new_readonly(
+                SolanaAccountMeta::new(
                     match arg.transaction_account {
                         SeedOrAccount::Seed(seed) => {
                             TransactionSeeder {
@@ -120,6 +120,7 @@ impl Instruction for ExpandTransaction {
 #[derive(Debug, AccountArgument)]
 pub struct ExpandTransactionAccounts {
     /// The transaction account to expand
+    #[account_argument(writable)]
     pub transaction_account: ProgramAccount<TransactionAccount>,
     /// The cryptid account for the transaction
     pub cryptid_account: CryptidAccountAddress,
@@ -173,7 +174,7 @@ pub enum SeedOrAccount {
 }
 
 /// An operation on the accounts of a transaction
-#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Clone)]
 pub enum AccountOperation {
     /// Adds a given account to the end
     Add(Pubkey),
@@ -184,7 +185,7 @@ pub enum AccountOperation {
 }
 
 /// An operation on the instructions in a transaction
-#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Clone)]
 pub enum InstructionOperation {
     /// Adds an instruction
     Add(InstructionData),
@@ -221,6 +222,8 @@ pub enum InstructionOperation {
     },
     /// Clears the data of an instruction
     ClearData(u8),
+    /// Clears all instructions
+    Clear,
 }
 fn handle_instruction_operation(
     transaction: &mut TransactionAccount,
@@ -265,6 +268,7 @@ fn handle_instruction_operation(
         InstructionOperation::ClearData(index) => {
             transaction.get_instruction_mut(index)?.data.clear();
         }
+        InstructionOperation::Clear => transaction.transaction_instructions.clear(),
     }
     Ok(())
 }
