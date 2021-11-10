@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serialize, deserialize } from 'borsh';
-import { PublicKey } from '@solana/web3.js';
+import { serialize, deserialize, BinaryWriter, BinaryReader } from 'borsh';
 
 // Class wrapping a plain object
 export abstract class Assignable<Self> {
@@ -91,6 +90,19 @@ export function add_enum_to_schema<
   });
 }
 
+export type CustomSerializer = {
+  borshSerialize: (writer: BinaryWriter) => void;
+};
+export type CustomDeserializer<T> = {
+  borshDeserialize: (reader: BinaryReader) => T;
+};
+
+export function add_custom_to_schema<
+  T extends Assignable<T> & CustomSerializer
+>(cons: Cons<T> & CustomDeserializer<T>): void {
+  SCHEMA.set(cons, { kind: 'custom' });
+}
+
 const SCHEMA: Map<
   Cons<any>,
   | {
@@ -102,9 +114,44 @@ const SCHEMA: Map<
       field: 'enum';
       values: ([number] | [string, FieldType | ArrayedFieldType])[];
     }
+  | {
+      kind: 'custom';
+    }
 > = new Map();
 
-SCHEMA.set(PublicKey, {
-  kind: 'struct',
-  fields: [[32]],
-});
+export class AssignableBoolean extends Assignable<AssignableBoolean> {
+  value!: boolean;
+
+  constructor(props: { value: boolean }) {
+    super(props);
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.maybeResize();
+    writer.writeU8(this.value ? 1 : 0);
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableBoolean {
+    return new AssignableBoolean({ value: reader.readU8() != 0 });
+  }
+}
+
+export class AssignableI64 extends Assignable<AssignableI64> {
+  value!: bigint;
+
+  constructor(props: { value: bigint }) {
+    super(props);
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.maybeResize();
+    writer.buf.writeBigInt64LE(this.value, writer.length);
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableI64 {
+    const value = reader.buf.readBigInt64LE();
+    reader.offset += 8;
+    return new AssignableI64({ value });
+  }
+}
+
+add_custom_to_schema(AssignableBoolean);
+add_custom_to_schema(AssignableI64);
