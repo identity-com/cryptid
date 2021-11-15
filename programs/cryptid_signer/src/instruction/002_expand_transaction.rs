@@ -38,6 +38,14 @@ impl Instruction for ExpandTransaction {
             &accounts.did.key,
         )?;
 
+        if accounts.transaction_account.cryptid_account != accounts.cryptid_account.info().key {
+            return Err(GeneratorError::InvalidAccount {
+                account: accounts.cryptid_account.info().key,
+                expected: accounts.transaction_account.cryptid_account,
+            }
+            .into());
+        }
+
         if accounts.transaction_account.state != TransactionState::NotReady {
             return Err(CryptidSignerError::InvalidTransactionState {
                 expected: TransactionState::NotReady,
@@ -165,12 +173,28 @@ pub struct ExpandTransactionBuild {
 }
 
 /// Transaction account that can come from a seed or key
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SeedOrAccount {
     /// The seed for the transaction account
     Seed(String),
     /// The key of the transaction account
     Account(Pubkey),
+}
+impl SeedOrAccount {
+    /// Turns this into a public key
+    pub fn into_key(self, cryptid_account: &Pubkey, program_id: &Pubkey) -> Pubkey {
+        match self {
+            Self::Seed(seed) => {
+                TransactionSeeder {
+                    cryptid_account: *cryptid_account,
+                    seed,
+                }
+                .find_address(*program_id)
+                .0
+            }
+            Self::Account(key) => key,
+        }
+    }
 }
 
 /// An operation on the accounts of a transaction

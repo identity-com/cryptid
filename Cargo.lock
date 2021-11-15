@@ -2484,7 +2484,7 @@ dependencies = [
 [[package]]
 name = "solana_generator"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=6136ff4e0f16186428d51e2832618e477f19b75c#6136ff4e0f16186428d51e2832618e477f19b75c"
+source = "git+https://github.com/identity-com/solana_generator?rev=759e8c72a97e96c1fb7b2c42e625d1a3f69a105f#759e8c72a97e96c1fb7b2c42e625d1a3f69a105f"
 dependencies = [
  "array-init",
  "bincode",
@@ -2499,7 +2499,7 @@ dependencies = [
 [[package]]
 name = "solana_generator_derive"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=6136ff4e0f16186428d51e2832618e477f19b75c#6136ff4e0f16186428d51e2832618e477f19b75c"
+source = "git+https://github.com/identity-com/solana_generator?rev=759e8c72a97e96c1fb7b2c42e625d1a3f69a105f#759e8c72a97e96c1fb7b2c42e625d1a3f69a105f"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro-error",
