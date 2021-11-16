@@ -68,7 +68,16 @@ export async function create(
       signerExtras: signer[1].length,
       expireTime: BigInt(0),
     })),
-    accountSize ? accountSize : calculateAccountSize(),
+    accountSize
+      ? accountSize
+      : calculateAccountSize(
+          accountsArray.length,
+          instructions.map((instruction) => ({
+            accounts: instruction.accounts.length,
+            dataLength: instruction.data.length,
+          })),
+          signers.map((signer) => signer[1].length)
+        ),
     accountsArray,
     instructions,
     true,
@@ -84,7 +93,33 @@ export async function create(
   ];
 }
 
-function calculateAccountSize(): number {
-  //TODO
-  throw new Error('Not implemented');
+function calculateAccountSize(
+  numAccounts: number,
+  instructionSizes: { accounts: number; dataLength: number }[],
+  signersExtras: number[]
+): number {
+  return (
+    1 + // Discriminant
+    32 + //cryptid_account
+    4 +
+    32 * numAccounts + //accounts
+    4 +
+    instructionSizes
+      .map((size) => {
+        return (
+          1 + //program_id
+          4 +
+          2 * size.accounts + //accounts
+          4 +
+          size.dataLength
+        ); //data
+      })
+      .reduce((x, y) => x + y) +
+    4 +
+    signersExtras
+      .map((signerExtra) => 32 + 4 + 32 * signerExtra + 8)
+      .reduce((x, y) => x + y) + //signers
+    1 + //state
+    2
+  ); //settings_sequence
 }

@@ -200,9 +200,9 @@ pub enum AccountOperation {
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Clone)]
 pub enum InstructionOperation {
     /// Adds an instruction
-    Add(InstructionData),
-    /// Removes an instruction
-    Remove(u8),
+    Push(InstructionData),
+    /// Removes an instruction from the end
+    Pop,
     /// Adds an account to an instruction
     AddAccount {
         /// The index of the instruction
@@ -242,15 +242,16 @@ fn handle_instruction_operation(
     operation: InstructionOperation,
 ) -> GeneratorResult<()> {
     match operation {
-        InstructionOperation::Add(instruction) => {
+        InstructionOperation::Push(instruction) => {
             for account in &instruction.accounts {
                 transaction.check_account_index(account.key)?;
             }
             transaction.transaction_instructions.push(instruction);
         }
-        InstructionOperation::Remove(index) => {
-            transaction.check_instruction_index(index)?;
-            transaction.transaction_instructions.remove(index as usize);
+        InstructionOperation::Pop => {
+            if !transaction.transaction_instructions.is_empty() {
+                transaction.transaction_instructions.pop();
+            }
         }
         InstructionOperation::AddAccount { index, account } => {
             transaction.check_account_index(account.key)?;
