@@ -38,6 +38,14 @@ impl Instruction for ExpandTransaction {
             &accounts.did.key,
         )?;
 
+        if accounts.transaction_account.cryptid_account != accounts.cryptid_account.info().key {
+            return Err(GeneratorError::InvalidAccount {
+                account: accounts.cryptid_account.info().key,
+                expected: accounts.transaction_account.cryptid_account,
+            }
+            .into());
+        }
+
         if accounts.transaction_account.state != TransactionState::NotReady {
             return Err(CryptidSignerError::InvalidTransactionState {
                 expected: TransactionState::NotReady,
