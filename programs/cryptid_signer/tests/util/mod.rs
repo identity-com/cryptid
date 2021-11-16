@@ -8,7 +8,6 @@ use cryptid_signer::instruction::{
 };
 use cryptid_signer::state::{
     AccountMeta, InstructionData, InstructionSize, TransactionAccount, TransactionAccountMeta,
-    TransactionState,
 };
 use cryptid_signer::{GenerativeCryptidSeeder, TransactionSeeder};
 use log::*;
@@ -316,7 +315,7 @@ impl<R> ProgramValues<R> {
         &mut self,
         transaction_account: SeedOrAccount,
         signing_key: SigningKeyBuild,
-        new_state: TransactionState,
+        ready_to_execute: bool,
         account_operations: Vec<AccountOperation>,
         instruction_operations: Vec<InstructionOperation>,
     ) {
@@ -326,7 +325,7 @@ impl<R> ProgramValues<R> {
             did: SolanaAccountMeta::new_readonly(self.did_pda, false),
             did_program: self.did_program,
             signing_key,
-            new_state,
+            ready_to_execute,
             account_operations,
             instruction_operations,
         };

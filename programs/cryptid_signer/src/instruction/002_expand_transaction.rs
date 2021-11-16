@@ -84,7 +84,11 @@ impl Instruction for ExpandTransaction {
                 return Err(error);
             }
         }
-        accounts.transaction_account.state = data.transaction_state;
+        accounts.transaction_account.state = if data.ready_to_execute {
+            TransactionState::Ready
+        } else {
+            TransactionState::NotReady
+        };
 
         Ok(None)
     }
@@ -116,7 +120,7 @@ impl Instruction for ExpandTransaction {
             .chain(arg.signing_key.to_metas())
             .collect(),
             ExpandTransactionData {
-                transaction_state: arg.new_state,
+                ready_to_execute: arg.ready_to_execute,
                 account_operations: arg.account_operations,
                 instruction_operations: arg.instruction_operations,
             },
@@ -144,7 +148,7 @@ pub struct ExpandTransactionAccounts {
 #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct ExpandTransactionData {
     /// The new state of the transaction after changes
-    pub transaction_state: TransactionState,
+    pub ready_to_execute: bool,
     /// Operations to execute on the accounts
     pub account_operations: Vec<AccountOperation>,
     /// Operations to execute on the instructions
@@ -164,8 +168,8 @@ pub struct ExpandTransactionBuild {
     pub did_program: Pubkey,
     /// The key that's signing the change to the transaction
     pub signing_key: SigningKeyBuild,
-    /// The new state of the transaction after changes
-    pub new_state: TransactionState,
+    /// Whether the transaction is ready to execute after this
+    pub ready_to_execute: bool,
     /// Operations to execute on the accounts
     pub account_operations: Vec<AccountOperation>,
     /// Operations to execute on the instructions
