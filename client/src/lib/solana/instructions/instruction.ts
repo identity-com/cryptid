@@ -1,14 +1,18 @@
 import {
-  Enum,
-  Assignable,
   add_enum_to_schema,
   add_struct_to_schema,
+  Assignable,
   AssignableBoolean,
   AssignableI64,
+  Enum,
 } from '../solanaBorsh';
 import { InstructionData } from '../model/InstructionData';
 import { AssignablePublicKey } from '../model/AssignablePublicKey';
 import { PublicKey } from '@solana/web3.js';
+import { TransactionState } from '../model/TransactionState';
+import { AccountOperation } from '../model/AccountOperation';
+import { InstructionOperation } from '../model/InstructionOperation';
+import { ProposeTransactionSigners } from '../model/ProposeTransactionSigners';
 
 export class ProposeTransaction extends Assignable<ProposeTransaction> {
   signers!: ProposeTransactionSigners[];
@@ -30,11 +34,16 @@ export class ProposeTransaction extends Assignable<ProposeTransaction> {
   }
 }
 
-export class ProposeTransactionSigners extends Assignable<ProposeTransactionSigners> {
-  signerExtras!: number;
-  expireTime!: AssignableI64;
+export class ExpandTransaction extends Assignable<ExpandTransaction> {
+  transactionState!: TransactionState;
+  accountOperations!: AccountOperation[];
+  instructionOperations!: InstructionOperation[];
 
-  constructor(props: { signerExtras: number; expireTime: AssignableI64 }) {
+  constructor(props: {
+    transactionState: TransactionState;
+    accountOperations: AccountOperation[];
+    instructionOperations: InstructionOperation[];
+  }) {
     super(props);
   }
 }
@@ -61,15 +70,16 @@ const DEBUG_FLAG = 1 << 0;
 export class CryptidInstruction extends Enum<CryptidInstruction> {
   createCryptid?: number; // Placeholder
   proposeTransaction?: ProposeTransaction;
-  expandTransaction?: number;
+  expandTransaction?: ExpandTransaction;
   instruction3?: number; // Placeholder
   instruction4?: number; // Placeholder
   directExecute?: DirectExecute;
 
   constructor(
     props:
-      | { directExecute: DirectExecute }
       | { proposeTransaction: ProposeTransaction }
+      | { expandTransaction: ExpandTransaction }
+      | { directExecute: DirectExecute }
   ) {
     super(props);
   }
@@ -110,6 +120,26 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
   }
 
   /**
+   * Builds expand transaction data
+   * @param transactionState The new state of the transaction
+   * @param accountOperations The operations to execute on the accounts
+   * @param instructionOperations The operations to execute on the instructions
+   */
+  static expandTransaction(
+    transactionState: TransactionState,
+    accountOperations: AccountOperation[],
+    instructionOperations: InstructionOperation[]
+  ): CryptidInstruction {
+    return new CryptidInstruction({
+      expandTransaction: new ExpandTransaction({
+        accountOperations,
+        instructionOperations,
+        transactionState,
+      }),
+    });
+  }
+
+  /**
    * Builds direct execute instruction data
    * @param signers An array the same length as number of signers, each index being the number of extra accounts for that signer
    * @param instructions The instructions to execute, all accounts must be in the instruction
@@ -133,7 +163,7 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
 add_enum_to_schema(CryptidInstruction, {
   createCryptid: 'u8',
   proposeTransaction: ProposeTransaction,
-  expandTransaction: 'u8',
+  expandTransaction: ExpandTransaction,
   instruction3: 'u8',
   instruction4: 'u8',
   directExecute: DirectExecute,
@@ -145,9 +175,10 @@ add_struct_to_schema(ProposeTransaction, {
   instructions: [InstructionData],
   readyToExecute: AssignableBoolean,
 });
-add_struct_to_schema(ProposeTransactionSigners, {
-  signerExtras: 'u8',
-  expireTime: AssignableI64,
+add_struct_to_schema(ExpandTransaction, {
+  transactionState: TransactionState,
+  accountOperations: [AccountOperation],
+  instructionOperations: [InstructionOperation],
 });
 add_struct_to_schema(DirectExecute, {
   signers: ['u8'],

@@ -2,25 +2,24 @@ import {
   AccountMeta,
   PublicKey,
   SystemProgram,
-  Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { deriveDOASigner, deriveTransactionAccount } from '../util';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
-import { any } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 
 export async function create(
-  transaction: Transaction,
+  accounts: PublicKey[],
+  instructions: InstructionData[],
   didPDAKey: PublicKey,
   funder: 'cryptid' | PublicKey,
   cryptidAccount: PublicKey,
   accountSeed: string,
   signers: [Signer, AccountMeta[]][],
   accountSize?: number
-): Promise<TransactionInstruction[]> {
+): Promise<TransactionInstruction> {
   const transactionAccount = await deriveTransactionAccount(
     cryptidAccount,
     accountSeed
@@ -46,23 +45,6 @@ export async function create(
     ]),
   ];
 
-  const accountsArray: PublicKey[] = [];
-  for (const instruction of transaction.instructions) {
-    if (!any((key) => key.equals(instruction.programId), accountsArray)) {
-      accountsArray.push(instruction.programId);
-    }
-    for (const instructionKey of instruction.keys) {
-      if (!any((key) => key.equals(instructionKey.pubkey), accountsArray)) {
-        accountsArray.push(instructionKey.pubkey);
-      }
-    }
-  }
-
-  const instructions: InstructionData[] = transaction.instructions.map(
-    (instruction) =>
-      InstructionData.fromTransactionInstruction(instruction, accountsArray)
-  );
-
   const data: Buffer = CryptidInstruction.proposeTransaction(
     signers.map((signer) => ({
       signerExtras: signer[1].length,
@@ -71,26 +53,24 @@ export async function create(
     accountSize
       ? accountSize
       : calculateAccountSize(
-          accountsArray.length,
+          accounts.length,
           instructions.map((instruction) => ({
             accounts: instruction.accounts.length,
             dataLength: instruction.data.length,
           })),
           signers.map((signer) => signer[1].length)
         ),
-    accountsArray,
+    accounts,
     instructions,
     true,
     accountSeed
   ).encode();
 
-  return [
-    new TransactionInstruction({
-      keys,
-      programId: DOA_PROGRAM_ID,
-      data,
-    }),
-  ];
+  return new TransactionInstruction({
+    keys,
+    programId: DOA_PROGRAM_ID,
+    data,
+  });
 }
 
 function calculateAccountSize(

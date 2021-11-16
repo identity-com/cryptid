@@ -55,6 +55,21 @@ export abstract class Enum<Self> {
     return deserialize(SCHEMA, tCons, data);
   }
 }
+
+export class UnitValue extends Assignable<UnitValue> {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  constructor(props: {}) {
+    super(props);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  borshSerialize(_writer: BinaryWriter): void {}
+
+  static borshDeserialize(_reader: BinaryReader): UnitValue {
+    return new UnitValue({});
+  }
+}
+
 export type Cons<T> = new (...args: any[]) => T;
 export type FieldType =
   | 'u8'
@@ -98,7 +113,7 @@ export type CustomDeserializer<T> = {
 };
 
 export function add_custom_to_schema<
-  T extends Assignable<T> & CustomSerializer
+  T extends (Assignable<T> | Enum<T>) & CustomSerializer
 >(cons: Cons<T> & CustomDeserializer<T>): void {
   SCHEMA.set(cons, { kind: 'custom' });
 }
@@ -153,5 +168,6 @@ export class AssignableI64 extends Assignable<AssignableI64> {
   }
 }
 
+add_custom_to_schema(UnitValue);
 add_custom_to_schema(AssignableBoolean);
 add_custom_to_schema(AssignableI64);
