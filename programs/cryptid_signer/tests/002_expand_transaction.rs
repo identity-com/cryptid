@@ -69,7 +69,7 @@ async fn expand_transaction_test() {
             .send_expand_transaction_instruction(
                 SeedOrAccount::Account(transaction_address),
                 signers[0].0.clone(),
-                TransactionState::NotReady,
+                false,
                 account_operations,
                 instruction_operations,
             )
