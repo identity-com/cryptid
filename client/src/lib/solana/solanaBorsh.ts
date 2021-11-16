@@ -58,15 +58,15 @@ export abstract class Enum<Self> {
 
 export class UnitValue extends Assignable<UnitValue> {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  constructor(props: {}) {
-    super(props);
+  constructor(props?: {}) {
+    super(props ? props : {});
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   borshSerialize(_writer: BinaryWriter): void {}
 
   static borshDeserialize(_reader: BinaryReader): UnitValue {
-    return new UnitValue({});
+    return new UnitValue();
   }
 }
 

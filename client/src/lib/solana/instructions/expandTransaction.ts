@@ -37,8 +37,8 @@ export async function create(
 
   const data: Buffer = CryptidInstruction.expandTransaction(
     readyToExecute
-      ? new TransactionState({ ready: new UnitValue({}) })
-      : new TransactionState({ notReady: new UnitValue({}) }),
+      ? new TransactionState({ ready: new UnitValue() })
+      : new TransactionState({ notReady: new UnitValue() }),
     accountOperations,
     instructionOperations
   ).encode();

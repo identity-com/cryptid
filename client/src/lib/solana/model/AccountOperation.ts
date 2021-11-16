@@ -19,5 +19,5 @@ export class AccountOperation extends Enum<AccountOperation> {
 add_enum_to_schema(AccountOperation, {
   add: AssignablePublicKey,
   clear: UnitValue,
-  addMany: UnitValue,
+  addMany: [AssignablePublicKey],
 });

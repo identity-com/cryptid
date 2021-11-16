@@ -1,4 +1,8 @@
-import {add_struct_to_schema, Assignable, AssignableI64} from '../solanaBorsh';
+import {
+  add_struct_to_schema,
+  Assignable,
+  AssignableI64,
+} from '../solanaBorsh';
 
 export class ProposeTransactionSigners extends Assignable<ProposeTransactionSigners> {
   signerExtras!: number;
