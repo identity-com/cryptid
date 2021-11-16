@@ -15,7 +15,7 @@ import { NonEmptyArray } from '../types/lang';
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
 
-  constructor(readonly did: string, options: CryptidOptions) {
+  protected constructor(readonly did: string, options: CryptidOptions) {
     // combine default options and user-specified options
     // note - if nested options are added, this may need to be changed to a deep merge
     this.options = {
@@ -57,7 +57,7 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   /**
-   * Returns this cryptid object as a Signer, i.e. an obect with a sign function and a public key
+   * Returns this cryptid object as a Signer, i.e. an object with a sign function and a public key
    * that can be used when sending arbitrary transactions
    * @private
    */
@@ -72,9 +72,9 @@ export abstract class AbstractCryptid implements Cryptid {
 
   abstract get signer(): Signer;
 
-  protected async getPayerForInternalTransaction(): Promise<Signer> {
+  protected async getSignerForInternalTransaction(): Promise<Signer> {
     switch (this.options.rentPayer) {
-      // use Cryptid to sign and send the tx, so that any rent  is paid by the cryptid account
+      // use Cryptid to sign and send the tx, so that any rent is paid by the cryptid account
       case 'DID_PAYS':
         return this.asSigner();
       // use the signer key to sign and send the tx, so that any rent is paid by the signer key
@@ -89,85 +89,89 @@ export abstract class AbstractCryptid implements Cryptid {
     publicKey: PublicKey,
     alias: string
   ): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
-
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
     const transaction = await addKeyTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       publicKey,
       alias,
-      [signer]
+      authority
     );
-
     return this.send(transaction);
   }
 
   async removeKey(alias: string): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeKeyTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       alias,
-      [signer]
+      authority
     );
 
     return this.send(transaction);
   }
 
   async addService(service: ServiceEndpoint): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await addServiceTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       service,
-      [signer]
+      authority
     );
 
     return this.send(transaction);
   }
 
   async removeService(alias: string): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeServiceTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       alias,
-      [signer]
+      authority
     );
 
     return this.send(transaction);
   }
 
   async addController(controller: string): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await addControllerTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       controller,
-      [signer]
+      authority
     );
 
     return this.send(transaction);
   }
 
   async removeController(controller: string): Promise<TransactionSignature> {
-    const signer = await this.getPayerForInternalTransaction();
+    const signer = await this.getSignerForInternalTransaction();
+    const authority = await this.signer.publicKey;
 
     const transaction = await removeControllerTransaction(
       this.options.connection,
       this.did,
-      signer.publicKey,
+      signer,
       controller,
-      [signer]
+      authority
     );
 
     return this.send(transaction);

@@ -12,6 +12,8 @@ log = "0.4.14"
 rand = "0.7.3"
 rand_chacha = "0.2.2"
 array-init = "2.0.0"
+async-trait = "0.1.51"
+tarpc = "0.24.1"
 
 [features]
 default = []

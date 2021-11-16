@@ -1,14 +1,14 @@
 {
   "name": "@identity.com/cryptid-cli",
   "description": "Sign transactions and configure Cryptid DID Wallets",
-  "version": "0.0.0",
+  "version": "0.1.5",
   "author": "identity.com",
   "bin": {
     "cryptid": "./bin/run"
   },
   "bugs": "https://github.com/identity-com/cryptid/issues",
   "dependencies": {
-    "@identity.com/cryptid": "0.1.0",
+    "@identity.com/cryptid": "^0.1.1",
     "@identity.com/sol-did-client": "1.0.0-beta",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -96,9 +96,9 @@
     "skip-full": true,
     "check-coverage": true,
     "branches": 11,
-    "lines": 60,
+    "lines": 58,
     "functions": 21,
-    "statements": 59
+    "statements": 57
   },
   "types": "lib/index.d.ts"
 }

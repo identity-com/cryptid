@@ -92,6 +92,8 @@ export class Config {
     };
 
     fs.writeFileSync(this.configPath, yaml.stringify(configObject));
+
+    this.config = configObject;
   }
 
   alias(name: string, did: string): void {
@@ -113,6 +115,8 @@ export class Config {
     };
 
     fs.writeFileSync(this.configPath, yaml.stringify(configObject));
+
+    this.config = configObject;
   }
 
   show(): string {

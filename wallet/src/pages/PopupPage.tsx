@@ -3,24 +3,19 @@ import {useCryptid} from '../utils/Cryptid/cryptid';
 import {PublicKey, Transaction} from '@solana/web3.js';
 import bs58 from 'bs58';
 import {
-  Button,
   CardContent,
-  FormControlLabel,
   Typography,
   Card,
-  Switch,
-  SnackbarContent,
-  CardActions,
+  CardActions, Divider,
 } from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
-import {useLocalStorageState} from '../utils/utils';
-import WarningIcon from '@material-ui/icons/Warning';
 import SignTransactionFormContent from '../components/SignTransactionFormContent';
 import SignFormContent from '../components/SignFormContent';
 import {CryptidSummary} from "../components/Cryptid/CryptidSummary";
 import IdentitySelector from "../components/selectors/IdentitySelector";
 import {CheckCircleIcon, XCircleIcon} from "@heroicons/react/solid";
 import {CryptidButton} from "../components/balances/CryptidButton";
+import {useWalletContext} from '../utils/wallet';
 
 type ID = any;
 
@@ -37,6 +32,11 @@ type RequestMessage = {
 } | {
   method: 'sign',
   params: { data: any, display: string },
+} | {
+  method: 'signWithDIDKey',
+  params: { message: Uint8Array },
+} | {
+  method: 'getDID',
 })
 
 type ResponseMessage = {
@@ -51,6 +51,11 @@ type ResponseMessage = {
   result: { transaction: string },
 } | {
   result: { transactions: string[] },
+} | {
+  did: string,
+  keyName: string,
+} | {
+  signature: Uint8Array,
 }
 
 export default function PopupPage({opener}: { opener: Window }) {
@@ -75,6 +80,8 @@ export default function PopupPage({opener}: { opener: Window }) {
       opener.postMessage({jsonrpc: '2.0', ...message}, origin);
     }
   ), [opener, origin]);
+
+  const { wallet } = useWalletContext();
 
   useEffect(() => {
     if (hasConnectedAccount) {
@@ -104,7 +111,9 @@ export default function PopupPage({opener}: { opener: Window }) {
         if (
           e.data.method !== 'signTransaction' &&
           e.data.method !== 'signAllTransactions' &&
-          e.data.method !== 'sign'
+          e.data.method !== 'sign' &&
+          e.data.method !== 'getDID' &&
+          e.data.method !== 'signWithDIDKey'
         ) {
           postMessage({error: 'Unsupported method', id: e.data.id});
         }
@@ -121,7 +130,7 @@ export default function PopupPage({opener}: { opener: Window }) {
 
   const {payloads, messageDisplay}: {
     payloads: (Buffer | Uint8Array)[],
-    messageDisplay: 'tx' | 'utf8' | 'hex'
+    messageDisplay: 'tx' | 'utf8' | 'hex' | 'message'
   } = useMemo(() => {
     if (!request || request.method === 'connect') {
       return {payloads: [], messageDisplay: 'tx'};
@@ -148,8 +157,33 @@ export default function PopupPage({opener}: { opener: Window }) {
           payloads: [request.params.data],
           messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
         };
+      case 'getDID':
+        if (!selectedCryptidAccount){
+          postMessage({
+            error: 'No selected cryptid account',
+            id: request.id,
+          });
+        } else {
+          postMessage({
+            did: selectedCryptidAccount.did,
+            keyName: selectedCryptidAccount.baseAccount().activeSigningKeyAlias,
+          });
+        }
+        popRequest();
+        return { payloads: [], messageDisplay: 'tx' }
+      case 'signWithDIDKey':
+        if (wallet.signMessage !== undefined){
+          return { payloads: [request.params.message], messageDisplay: 'message' }
+        } else {
+          postMessage({
+            error: 'Wallet does not support signing messages',
+            id: request.id,
+          });
+          popRequest();
+          return { payloads: [], messageDisplay: 'tx' }
+        }
     }
-  }, [request]);
+  }, [request, postMessage, selectedCryptidAccount, wallet]);
 
   if (hasConnectedAccount && requests.length === 0) {
     focusParent();
@@ -182,8 +216,7 @@ export default function PopupPage({opener}: { opener: Window }) {
       focusParent();
     }
 
-    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove}
-                                  setAutoApprove={setAutoApprove}/>;
+    return <ApproveConnectionForm origin={origin} onApprove={connect} autoApprove={autoApprove}/>;
   }
 
   if (!request) {
@@ -191,7 +224,9 @@ export default function PopupPage({opener}: { opener: Window }) {
   }
   if (!(request.method === 'signTransaction' ||
     request.method === 'signAllTransactions' ||
-    request.method === 'sign')) {
+    request.method === 'sign' ||
+    request.method === 'getDID' ||
+    request.method === 'signWithDIDKey')) {
     throw new Error('Unknown method');
   }
   if (!selectedCryptidAccount) {
@@ -213,6 +248,18 @@ export default function PopupPage({opener}: { opener: Window }) {
       case 'signAllTransactions':
         opener.focus();
         await sendTransactions(payloads);
+        break;
+      case 'signWithDIDKey':
+        if (wallet.signMessage !== undefined){
+          postMessage({
+            signature: await wallet.signMessage(request.params.message),
+          })
+        } else {
+          postMessage({
+            error: 'Wallet does not support signing messages',
+            id: request.id,
+          })
+        }
         break;
       default:
         throw new Error('onApprove: Unexpected method: ' + request.method);
@@ -265,10 +312,17 @@ export default function PopupPage({opener}: { opener: Window }) {
       throw new Error('sendTransactions: no request');
     }
     popRequest();
-    postMessage({
-      error: 'Transaction cancelled',
-      id: request.id,
-    });
+    if (request.method === 'signWithDIDKey'){
+      postMessage({
+        error: 'Message signing cancelled',
+        id: request.id,
+      })
+    } else {
+      postMessage({
+        error: 'Transaction cancelled',
+        id: request.id,
+      });
+    }
   }
 
   return (
@@ -336,14 +390,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ApproveConnectionForm({
-                                 origin,
-                                 onApprove,
-                                 autoApprove,
-                                 setAutoApprove,
-                               }: { origin: string, onApprove: (boolean) => void, autoApprove: boolean, setAutoApprove: (boolean) => void }) {
+function ApproveConnectionForm({ origin, onApprove, autoApprove }: {
+  origin: string,
+  onApprove: (boolean) => void,
+  autoApprove: boolean,
+}) {
   const classes = useStyles();
-  let [dismissed, setDismissed] = useLocalStorageState('dismissedAutoApproveWarning', false);
   let {selectedCryptidAccount} = useCryptid();
   return (
     <>
@@ -387,7 +439,7 @@ function ApproveConnectionForm({
 type ApproveSignerFormProps = {
   origin: string,
   payloads: (Buffer | Uint8Array)[],
-  messageDisplay: 'tx' | 'utf8' | 'hex',
+  messageDisplay: 'tx' | 'utf8' | 'hex' | 'message',
   onApprove: () => void,
   onReject: () => void,
   autoApprove: boolean,
@@ -400,8 +452,6 @@ function ApproveSignatureForm({
                                 onReject,
                                 autoApprove,
                               }: ApproveSignerFormProps) {
-  const classes = useStyles();
-
   const isMultiTx = messageDisplay === 'tx' && payloads.length > 1;
   const mapTransactionToMessageBuffer = (tx) => Transaction.from(tx).serializeMessage();
 
@@ -423,6 +473,15 @@ function ApproveSignatureForm({
           buttonRef={buttonRef}
         />
       );
+    } else if (messageDisplay === 'message') {
+      return <CardContent>
+        <Typography variant="h6" gutterBottom>
+          {`${origin} wants to sign a message: `}
+        </Typography>
+        <Divider style={{ margin: 20 }} />
+        <Typography style={{ wordBreak: 'break-all' }}>{bs58.encode(payloads[0])}</Typography>
+        <Divider style={{ margin: 20 }} />
+      </CardContent>;
     } else {
       return <SignFormContent
         origin={origin}

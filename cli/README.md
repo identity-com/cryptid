@@ -19,7 +19,7 @@ $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
 $ cryptid (-v|--version|version)
-@identity.com/cryptid-cli/0.0.0 darwin-x64 node-v16.10.0
+@identity.com/cryptid-cli/0.1.5 darwin-x64 node-v16.0.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -28,6 +28,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`cryptid address`](#cryptid-address)
 * [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
 * [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
 * [`cryptid balance`](#cryptid-balance)
@@ -47,6 +48,22 @@ USAGE
 * [`cryptid token:transfer TO AMOUNT`](#cryptid-tokentransfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
+## `cryptid address`
+
+Show the cryptid account's address
+
+```
+USAGE
+  $ cryptid address
+
+OPTIONS
+  -c, --config=config  Path to config file
+  -h, --help           show CLI help
+  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+```
+
+_See code: [src/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/address.ts)_
+
 ## `cryptid airdrop [AMOUNT]`
 
 Airdrop funds into the cryptid account and owner key
@@ -61,7 +78,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/airdrop.ts)_
+_See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/airdrop.ts)_
 
 ## `cryptid alias [NAME] [DID]`
 
@@ -78,7 +95,7 @@ OPTIONS
   -u, --unset          unset an alias
 ```
 
-_See code: [src/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/alias.ts)_
+_See code: [src/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/alias.ts)_
 
 ## `cryptid balance`
 
@@ -94,7 +111,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/balance.ts)_
+_See code: [src/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/balance.ts)_
 
 ## `cryptid base`
 
@@ -108,7 +125,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/base.ts)_
+_See code: [src/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/base.ts)_
 
 ## `cryptid config [SUBCOMMAND] [KEY] [VALUE]`
 
@@ -124,7 +141,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/config.ts)_
+_See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/config.ts)_
 
 ## `cryptid controller:add [DID]`
 
@@ -140,7 +157,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/controller/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/add.ts)_
+_See code: [src/commands/controller/add.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/add.ts)_
 
 ## `cryptid controller:remove [DID]`
 
@@ -156,7 +173,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/controller/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/remove.ts)_
+_See code: [src/commands/controller/remove.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/remove.ts)_
 
 ## `cryptid controller:show [DID]`
 
@@ -172,7 +189,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/controller/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/controller/show.ts)_
+_See code: [src/commands/controller/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/show.ts)_
 
 ## `cryptid document`
 
@@ -188,7 +205,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/document.ts)_
+_See code: [src/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/document.ts)_
 
 ## `cryptid help [COMMAND]`
 
@@ -223,7 +240,7 @@ OPTIONS
   -z, --cluster=cluster  Cluster
 ```
 
-_See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/init.ts)_
 
 ## `cryptid key:add [KEY] [ALIAS]`
 
@@ -239,7 +256,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/key/add.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/add.ts)_
+_See code: [src/commands/key/add.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/add.ts)_
 
 ## `cryptid key:remove [ALIAS]`
 
@@ -255,7 +272,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/key/remove.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/remove.ts)_
+_See code: [src/commands/key/remove.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/remove.ts)_
 
 ## `cryptid key:show`
 
@@ -274,7 +291,7 @@ ALIASES
   $ cryptid
 ```
 
-_See code: [src/commands/key/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/key/show.ts)_
+_See code: [src/commands/key/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/show.ts)_
 
 ## `cryptid token:balance MINT`
 
@@ -293,7 +310,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/token/balance.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/balance.ts)_
+_See code: [src/commands/token/balance.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/balance.ts)_
 
 ## `cryptid token:show`
 
@@ -309,7 +326,7 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/token/show.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/show.ts)_
+_See code: [src/commands/token/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/show.ts)_
 
 ## `cryptid token:transfer TO AMOUNT`
 
@@ -331,7 +348,7 @@ OPTIONS
   -s, --as=as                   Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/token/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/token/transfer.ts)_
+_See code: [src/commands/token/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/transfer.ts)_
 
 ## `cryptid transfer TO AMOUNT`
 
@@ -351,5 +368,5 @@ OPTIONS
   -s, --as=as          Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.0.0/src/commands/transfer.ts)_
+_See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/transfer.ts)_
 <!-- commandsstop -->

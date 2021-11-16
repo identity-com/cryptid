@@ -4,9 +4,9 @@ import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { Cryptid } from '../../../src';
+import { Cryptid, Signer } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
-import { Connection, Keypair, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { did, makeKeypair, makeService } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
@@ -82,23 +82,26 @@ describe('SimpleCryptid', () => {
       expectation.verify();
     });
 
-    it('should pass the user key as the signer if SIGNER_PAYS is true', async () => {
+    it('should pass the user key as the payer if SIGNER_PAYS is true', async () => {
       const expectation = sandbox
         .mock(AddKey)
         .expects('addKey')
         .withArgs(
-          sandbox.match.any,
+          sandbox.match.instanceOf(Connection),
           did(keypair),
-          sandbox.match(
-            (signer) => signer.toString() === keypair.publicKey.toString()
+          sandbox.match((signer: Signer) =>
+            signer.publicKey.equals(keypair.publicKey)
+          ),
+          sandbox.match.instanceOf(PublicKey),
+          'alias',
+          sandbox.match((authority: PublicKey) =>
+            authority.equals(keypair.publicKey)
           )
         );
       expectation.resolves(new Transaction());
 
       cryptid = makeCryptid(keypair, { rentPayer: 'SIGNER_PAYS' });
-
       await cryptid.addKey(pubkey(), 'alias');
-
       expectation.verify();
     });
 
@@ -204,11 +207,11 @@ describe('SimpleCryptid', () => {
 
   context('controller', () => {
     it('should return a new controlledCryptid interface when called with as()', async () => {
-      const newController = 'did:sol:controller'
+      const newController = 'did:sol:controller';
       const updatedCrypid = await cryptid.as(newController);
-      expect(updatedCrypid.did).to.equal(newController)
+      expect(updatedCrypid.did).to.equal(newController);
       // existing interface still has previous did as controller.
-      expect(cryptid.did).to.equal(did(keypair))
+      expect(cryptid.did).to.equal(did(keypair));
     });
   });
 

@@ -5,7 +5,7 @@
  * - Generative Method from Wallet keys
  * -
  */
-import React, { FC, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
 import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
@@ -22,6 +22,7 @@ import {
 import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 import { useWalletContext } from "../wallet";
+import { DUMMY_PUBKEY } from "../config";
 
 interface CryptidAccountInitData {
   didPrefix: string,
@@ -142,10 +143,18 @@ export class CryptidAccount {
 
   get verificationMethods() {
     if (!this._document || !this._document.verificationMethod) {
-      return []
+      return [];
     }
 
-    return this._document.verificationMethod
+    return this._document.verificationMethod;
+  }
+
+  get capabilityInvocations() {
+    if (!this._document || !this._document.capabilityInvocation){
+      return [];
+    }
+
+    return this._document.capabilityInvocation;
   }
 
   get controllers() {
@@ -492,8 +501,9 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
 
-    const defaultSigner = { // TODO
-      publicKey: wallet.publicKey as PublicKey,
+    // This dummy signer will get updated later.
+    const defaultSigner: Signer = {
+      publicKey: DUMMY_PUBKEY,
       sign: (transaction: Transaction) => Promise.resolve(transaction)
     }
 

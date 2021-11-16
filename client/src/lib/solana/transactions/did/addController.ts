@@ -12,13 +12,13 @@ import { DIDDocument } from 'did-resolver';
 export const addController = async (
   connection: Connection,
   did: string,
-  payer: PublicKey,
+  signer: Signer,
   controller: string,
-  signers: Signer[]
+  authority: PublicKey
 ): Promise<Transaction> => {
   const document: Partial<DIDDocument> = {
     controller: [controller],
   };
 
-  return registerOrUpdate(did, document, connection, payer, signers);
+  return registerOrUpdate(did, document, connection, signer, authority);
 };

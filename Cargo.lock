@@ -2482,7 +2482,7 @@ dependencies = [
 [[package]]
 name = "solana_generator"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=998effcfe68b55e392821084992082a38b028012#998effcfe68b55e392821084992082a38b028012"
+source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
 dependencies = [
  "array-init",
  "bincode",
@@ -2497,7 +2497,7 @@ dependencies = [
 [[package]]
 name = "solana_generator_derive"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=998effcfe68b55e392821084992082a38b028012#998effcfe68b55e392821084992082a38b028012"
+source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro-error",
@@ -2682,11 +2682,13 @@ name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "array-init",
+ "async-trait",
  "log",
  "rand 0.7.3",
  "rand_chacha 0.2.2",
  "solana-program-test",
  "solana-sdk",
+ "tarpc",
 ]
 
 [[package]]

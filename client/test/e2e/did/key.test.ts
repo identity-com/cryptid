@@ -3,7 +3,11 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { airdrop, Balances } from '../../utils/solana';
 import { publicKeyToDid } from '../../../src/lib/solana/util';
 import chai from 'chai';
-import {expectDocumentNotToIncludeKey, expectDocumentToIncludeKey} from "../../utils/did";
+import {
+  expectDocumentNotToIncludeKey,
+  expectDocumentToIncludeKey,
+} from '../../utils/did';
+import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 const { expect } = chai;
 
@@ -145,7 +149,7 @@ describe('DID Key operations', function () {
     beforeEach(async () => {
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -171,12 +175,15 @@ describe('DID Key operations', function () {
     });
 
     context('with an anchored DID', () => {
-      let ledgerKey: PublicKey;
+      let ledgerKey: Keypair;
 
       beforeEach(async () => {
         // add a key to upgrade (anchor) the did
-        ledgerKey = Keypair.generate().publicKey;
-        await cryptid.addKey(ledgerKey, 'ledger');
+        ledgerKey = Keypair.generate();
+        await Promise.all([
+          cryptid.addKey(ledgerKey.publicKey, 'ledger'),
+          airdrop(connection, ledgerKey.publicKey),
+        ]);
 
         // re-record the before balances, now that everything is set up
         await balances.recordBefore();
@@ -188,15 +195,41 @@ describe('DID Key operations', function () {
         await balances.recordAfter();
 
         const document = await cryptid.document();
-        expectDocumentNotToIncludeKey(document, ledgerKey);
+        expectDocumentNotToIncludeKey(document, ledgerKey.publicKey);
         expectDocumentToIncludeKey(document, key.publicKey);
-        expect(document.verificationMethod).to.have.lengthOf(1)
-        expect(document.capabilityInvocation).to.have.lengthOf(1)
+        expect(document.verificationMethod).to.have.lengthOf(1);
+        expect(document.capabilityInvocation).to.have.lengthOf(1);
 
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
         expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+      });
+
+      it('should use the added key to remove the original key', async () => {
+        // create a cryptid object using the ledger key instead of the default one
+        cryptid = await build(did, ledgerKey, {
+          connection,
+          waitForConfirmation: true,
+        });
+
+        const defaultId = DecentralizedIdentifier.parse(cryptid.did);
+        defaultId.urlField = 'default';
+        const ledgerId = DecentralizedIdentifier.parse(cryptid.did);
+        ledgerId.urlField = 'ledger';
+
+        let document = await cryptid.document();
+        expect(document.capabilityInvocation).to.include(defaultId.toString());
+        expect(document.capabilityInvocation).to.include(ledgerId.toString());
+
+        await cryptid.removeKey('default');
+
+        document = await cryptid.document();
+        expect(document.capabilityInvocation).to.not.include(
+          defaultId.toString()
+        );
+        expect(document.capabilityInvocation).to.include(ledgerId.toString());
+        expect(document.capabilityInvocation).to.have.lengthOf(1);
       });
     });
   });

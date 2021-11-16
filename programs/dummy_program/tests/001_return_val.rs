@@ -10,7 +10,7 @@ use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::Transaction;
 use std::error::Error;
 use test_utils::rand::Rng;
-use test_utils::start_tests;
+use test_utils::{start_tests, ClientExpansion};
 
 #[tokio::test]
 async fn return_val_should_succeed() -> Result<(), Box<dyn Error>> {
@@ -43,7 +43,9 @@ async fn return_val_should_succeed() -> Result<(), Box<dyn Error>> {
         &[&funder, &return_account],
         banks.get_recent_blockhash().await?,
     );
-    banks.process_transaction(transaction).await?;
+    banks
+        .process_transaction_longer_timeout(transaction)
+        .await?;
 
     assert_eq!(banks.get_account(return_account.pubkey()).await?, None);
 
