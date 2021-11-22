@@ -7,7 +7,7 @@ use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 
 use crate::state::CryptidAccount;
-use crate::GenerativeCryptidSeeder;
+use crate::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 
 /// A cryptid account address, supporting generative (derived from inputs) or on-chain (data stored on-chain)
 #[derive(Debug)]
@@ -64,6 +64,25 @@ impl CryptidAccountAddress {
             Self::Generative(info) => {
                 Self::verify_seeds(info.key, *program_id, *did_program, *did)?;
                 Ok(())
+            }
+        }
+    }
+
+    /// Gets the seed set for the cryptid signer
+    pub fn get_signer(&self, program_id: &Pubkey) -> PDASeedSet<'_> {
+        match self {
+            CryptidAccountAddress::OnChain(account) => PDASeedSet::new(
+                CryptidSignerSeeder {
+                    cryptid_account: account.info.key,
+                },
+                account.signer_nonce,
+            ),
+            CryptidAccountAddress::Generative(account) => {
+                let seeder = CryptidSignerSeeder {
+                    cryptid_account: account.key,
+                };
+                let nonce = seeder.find_address(*program_id).1;
+                PDASeedSet::new(seeder, nonce)
             }
         }
     }

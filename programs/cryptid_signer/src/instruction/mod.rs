@@ -6,6 +6,9 @@ pub mod create_cryptid;
 /// Directly executes a transaction
 #[path = "./005_direct_execute.rs"]
 pub mod direct_execute;
+/// Executes a transaction
+#[path = "./003_execute_transaction.rs"]
+pub mod execute_transaction;
 /// Expands a proposed transaction
 #[path = "./002_expand_transaction.rs"]
 pub mod expand_transaction;
@@ -26,6 +29,7 @@ use std::iter::once;
 
 use create_cryptid::CreateCryptid;
 use direct_execute::DirectExecute;
+use execute_transaction::ExecuteTransaction;
 use expand_transaction::ExpandTransaction;
 use propose_transaction::ProposeTransaction;
 use test_instruction::TestInstruction;
@@ -46,6 +50,9 @@ pub enum CryptidInstruction {
     /// Expands a transaction
     #[instruction_list(instruction = ExpandTransaction, discriminant = 2)]
     ExpandTransaction,
+    /// Executes a transaction
+    #[instruction_list(instruction = ExecuteTransaction, discriminant = 3)]
+    ExecuteTransaction,
     /// Executes a transaction directly if all required keys sign
     #[instruction_list(instruction = DirectExecute, discriminant = 5)]
     DirectExecute,
