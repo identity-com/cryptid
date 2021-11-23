@@ -33,6 +33,7 @@ import SigningKeyData from '../../../../../src/lib/solana/model/SigningKeyData';
 import { TransactionState } from '../../../../../src/lib/solana/model/TransactionState';
 import { InstructionData } from '../../../../../src/lib/solana/model/InstructionData';
 import { TransactionAccountMeta } from '../../../../../src/lib/solana/model/TransactionAccountMeta';
+import Discriminant from '../../../../../src/lib/solana/accounts/Discriminant';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -128,12 +129,13 @@ describe('transactions/executeTransaction', function () {
     let transactionAccount: TransactionAccount;
     before(() => {
       transactionAccount = new TransactionAccount({
+        discriminant: new Discriminant({ value: 2 }),
         accounts,
         cryptidAccount: AssignablePublicKey.fromPublicKey(cryptidAccount),
         settingsSequence: 0,
         signers: [
           new TransactionAccountSigner({
-            expireTime: new AssignableI64({ value: BigInt(0) }),
+            expireTime: new AssignableI64(BigInt(0)),
             signerData: new SigningKeyData({
               key: AssignablePublicKey.fromPublicKey(payer.publicKey),
               extraKeys: [],

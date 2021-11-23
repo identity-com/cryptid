@@ -57,7 +57,8 @@ describe('transactions/proposeTransaction', function () {
       'cryptid',
       await deriveDefaultDOAFromKey(didPDAKey),
       seed,
-      [[normalizeSigner(payer), []]]
+      [[normalizeSigner(payer), []]],
+      randomInt(0, 2) === 1
     );
 
     console.log(instruction);

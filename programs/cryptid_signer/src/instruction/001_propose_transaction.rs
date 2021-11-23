@@ -150,7 +150,7 @@ impl Instruction for ProposeTransaction {
 #[account_argument(instruction_data = signers: Vec<u8>)]
 pub struct ProposeTransactionAccounts {
     /// The funder that will pay the rent
-    #[account_argument(signer, writable, owner = system_program_id())]
+    #[account_argument(writable, owner = system_program_id())]
     pub funder: AccountInfo,
     /// The account that will store the transaction information, can be init or zeroed
     pub transaction_account: InitAccount<TransactionAccount>,

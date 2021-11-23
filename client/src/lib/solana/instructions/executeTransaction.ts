@@ -28,7 +28,10 @@ export async function create(
   if (Array.isArray(executionMethod)) {
     executionAccounts = executionMethod;
   } else {
-    const account = await executionMethod.getAccountInfo(transactionAccount);
+    const [account, cryptidSigner] = await Promise.all([
+      executionMethod.getAccountInfo(transactionAccount),
+      deriveDOASigner(cryptidAccount).then((val) => val[0]),
+    ]);
     if (!account) {
       throw new Error(`Unknown transaction account for seed ${accountSeed}`);
     }
@@ -48,9 +51,15 @@ export async function create(
       .forEach((meta) => {
         const account = tempExecutionAccounts[meta.key];
         account.exists = true;
-        account.isSigner ||= meta.isSigner();
+        account.isSigner ||=
+          meta.isSigner() &&
+          !transaction.accounts[meta.key].toPublicKey().equals(cryptidSigner);
         account.isWritable ||= meta.isWritable();
       });
+    transaction.transactionInstructions.forEach(
+      (instruction) =>
+        (tempExecutionAccounts[instruction.program_id].exists = true)
+    );
 
     executionAccounts = tempExecutionAccounts
       .filter(({ exists }) => exists)

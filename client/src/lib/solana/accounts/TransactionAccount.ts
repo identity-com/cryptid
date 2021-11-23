@@ -7,8 +7,10 @@ import {
   AssignableI64,
 } from '../solanaBorsh';
 import { TransactionState } from '../model/TransactionState';
+import Discriminant from './Discriminant';
 
 export default class TransactionAccount extends Assignable<TransactionAccount> {
+  discriminant!: Discriminant;
   cryptidAccount!: AssignablePublicKey;
   accounts!: AssignablePublicKey[];
   transactionInstructions!: InstructionData[];
@@ -17,6 +19,7 @@ export default class TransactionAccount extends Assignable<TransactionAccount> {
   settingsSequence!: number;
 
   constructor(props: {
+    discriminant: Discriminant;
     cryptidAccount: AssignablePublicKey;
     accounts: AssignablePublicKey[];
     transactionInstructions: InstructionData[];
@@ -41,6 +44,7 @@ export class TransactionAccountSigner extends Assignable<TransactionAccountSigne
 }
 
 add_struct_to_schema(TransactionAccount, {
+  discriminant: Discriminant,
   cryptidAccount: AssignablePublicKey,
   accounts: [AssignablePublicKey],
   transactionInstructions: [InstructionData],

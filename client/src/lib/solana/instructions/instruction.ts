@@ -108,12 +108,12 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
         accountSize,
         accounts: accounts.map(AssignablePublicKey.fromPublicKey),
         instructions,
-        readyToExecute: new AssignableBoolean({ value: readyToExecute }),
+        readyToExecute: new AssignableBoolean(readyToExecute),
         signers: signers.map(
           (signer) =>
             new ProposeTransactionSigners({
               ...signer,
-              expireTime: new AssignableI64({ value: signer.expireTime }),
+              expireTime: new AssignableI64(signer.expireTime),
             })
         ),
       }),
@@ -185,6 +185,7 @@ add_struct_to_schema(ProposeTransaction, {
   accounts: [AssignablePublicKey],
   instructions: [InstructionData],
   readyToExecute: AssignableBoolean,
+  accountSeed: 'string',
 });
 add_struct_to_schema(ExpandTransaction, {
   transactionState: TransactionState,
