@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serialize, deserialize, BinaryWriter, BinaryReader } from 'borsh';
 
 // Class wrapping a plain object
@@ -62,14 +61,16 @@ export class UnitValue extends Assignable<UnitValue> {
     super(props ? props : {});
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
   borshSerialize(_writer: BinaryWriter): void {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static borshDeserialize(_reader: BinaryReader): UnitValue {
     return new UnitValue();
   }
 }
 
+// eslint-disable-next-line
 export type Cons<T> = new (...args: any[]) => T;
 export type FieldType =
   | 'u8'
@@ -81,6 +82,7 @@ export type FieldType =
   | 'u512'
   | 'buffer'
   | 'string'
+  // eslint-disable-next-line
   | Cons<any>;
 export type ArrayedFieldType = [FieldType] | [number];
 
@@ -105,12 +107,12 @@ export function add_enum_to_schema<
   });
 }
 
-export type CustomSerializer = {
-  borshSerialize: (writer: BinaryWriter) => void;
-};
-export type CustomDeserializer<T> = {
-  borshDeserialize: (reader: BinaryReader) => T;
-};
+export interface CustomSerializer {
+  borshSerialize(writer: BinaryWriter): void;
+}
+export interface CustomDeserializer<T> {
+  borshDeserialize(reader: BinaryReader): T;
+}
 
 export function add_custom_to_schema<
   T extends (Assignable<T> | Enum<T>) & CustomSerializer
@@ -119,6 +121,7 @@ export function add_custom_to_schema<
 }
 
 const SCHEMA: Map<
+  // eslint-disable-next-line
   Cons<any>,
   | {
       kind: 'struct';
@@ -141,12 +144,101 @@ export class AssignableBoolean extends Assignable<AssignableBoolean> {
     super(props);
   }
 
+  static fromBoolean(value: boolean): AssignableBoolean {
+    return new AssignableBoolean({ value });
+  }
+
+  toBoolean(): boolean {
+    return this.value;
+  }
+
   borshSerialize(writer: BinaryWriter): void {
     writer.maybeResize();
     writer.writeU8(this.value ? 1 : 0);
   }
   static borshDeserialize(reader: BinaryReader): AssignableBoolean {
     return new AssignableBoolean({ value: reader.readU8() != 0 });
+  }
+}
+
+export class AssignableI8 extends Assignable<AssignableI8> {
+  value!: number;
+
+  constructor(props: { value: number }) {
+    super(props);
+  }
+
+  static fromNumber(value: number): AssignableI8 {
+    return new AssignableI8({ value });
+  }
+
+  toNumber(): number {
+    return this.value;
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.maybeResize();
+    writer.buf.writeInt8(this.value, writer.length);
+    writer.length += 1;
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableI8 {
+    const value = reader.buf.readInt8(reader.offset);
+    reader.offset += 1;
+    return new AssignableI8({ value });
+  }
+}
+
+export class AssignableI16 extends Assignable<AssignableI8> {
+  value!: number;
+
+  constructor(props: { value: number }) {
+    super(props);
+  }
+
+  static fromNumber(value: number): AssignableI16 {
+    return new AssignableI16({ value });
+  }
+
+  toNumber(): number {
+    return this.value;
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.maybeResize();
+    writer.buf.writeInt16LE(this.value, writer.length);
+    writer.length += 2;
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableI16 {
+    const value = reader.buf.readInt16LE(reader.offset);
+    reader.offset += 2;
+    return new AssignableI16({ value });
+  }
+}
+
+export class AssignableI32 extends Assignable<AssignableI8> {
+  value!: number;
+
+  constructor(props: { value: number }) {
+    super(props);
+  }
+
+  static fromNumber(value: number): AssignableI32 {
+    return new AssignableI32({ value });
+  }
+
+  toNumber(): number {
+    return this.value;
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.maybeResize();
+    writer.buf.writeInt32LE(this.value, writer.length);
+    writer.length += 4;
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableI32 {
+    const value = reader.buf.readInt32LE(reader.offset);
+    reader.offset += 4;
+    return new AssignableI32({ value });
   }
 }
 
@@ -157,12 +249,21 @@ export class AssignableI64 extends Assignable<AssignableI64> {
     super(props);
   }
 
+  static fromBigint(value: bigint): AssignableI64 {
+    return new AssignableI64({ value });
+  }
+
+  toBigint(): bigint {
+    return this.value;
+  }
+
   borshSerialize(writer: BinaryWriter): void {
     writer.maybeResize();
     writer.buf.writeBigInt64LE(this.value, writer.length);
+    writer.length += 8;
   }
   static borshDeserialize(reader: BinaryReader): AssignableI64 {
-    const value = reader.buf.readBigInt64LE();
+    const value = reader.buf.readBigInt64LE(reader.offset);
     reader.offset += 8;
     return new AssignableI64({ value });
   }

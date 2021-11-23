@@ -71,7 +71,7 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
   createCryptid?: number; // Placeholder
   proposeTransaction?: ProposeTransaction;
   expandTransaction?: ExpandTransaction;
-  instruction3?: number; // Placeholder
+  executeTransaction?: number;
   instruction4?: number; // Placeholder
   directExecute?: DirectExecute;
 
@@ -79,6 +79,7 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
     props:
       | { proposeTransaction: ProposeTransaction }
       | { expandTransaction: ExpandTransaction }
+      | { executeTransaction: number }
       | { directExecute: DirectExecute }
   ) {
     super(props);
@@ -140,6 +141,16 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
   }
 
   /**
+   * Builds execute transaction data
+   * @param signingKeyExtras The number of extra accounts for the signing key
+   */
+  static executeTransaction(signingKeyExtras: number): CryptidInstruction {
+    return new CryptidInstruction({
+      executeTransaction: signingKeyExtras,
+    });
+  }
+
+  /**
    * Builds direct execute instruction data
    * @param signers An array the same length as number of signers, each index being the number of extra accounts for that signer
    * @param instructions The instructions to execute, all accounts must be in the instruction
@@ -161,11 +172,11 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
 }
 
 add_enum_to_schema(CryptidInstruction, {
-  createCryptid: 'u8',
+  createCryptid: 'u8', // Placeholder
   proposeTransaction: ProposeTransaction,
   expandTransaction: ExpandTransaction,
-  instruction3: 'u8',
-  instruction4: 'u8',
+  executeTransaction: 'u8',
+  instruction4: 'u8', // Placeholder
   directExecute: DirectExecute,
 });
 add_struct_to_schema(ProposeTransaction, {

@@ -19,7 +19,7 @@ export async function create(
   cryptidAccount: PublicKey,
   accountSeed: string,
   readyToExecute: boolean,
-  signers: [Signer, AccountMeta[]]
+  signer: [Signer, AccountMeta[]]
 ): Promise<TransactionInstruction> {
   const transactionAccount = await deriveTransactionAccount(
     cryptidAccount,
@@ -31,8 +31,8 @@ export async function create(
     { pubkey: cryptidAccount, isWritable: false, isSigner: false },
     { pubkey: didPDAKey, isWritable: false, isSigner: false },
     { pubkey: SOL_DID_PROGRAM_ID, isWritable: false, isSigner: false },
-    { pubkey: signers[0].publicKey, isWritable: false, isSigner: true },
-    ...signers[1],
+    { pubkey: signer[0].publicKey, isWritable: false, isSigner: true },
+    ...signer[1],
   ];
 
   const data: Buffer = CryptidInstruction.expandTransaction(

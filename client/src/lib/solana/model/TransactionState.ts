@@ -13,6 +13,18 @@ export class TransactionState extends Enum<TransactionState> {
   ) {
     super(props);
   }
+
+  static notReady(): TransactionState {
+    return new TransactionState({ notReady: new UnitValue() });
+  }
+
+  static ready(): TransactionState {
+    return new TransactionState({ ready: new UnitValue() });
+  }
+
+  static executed(): TransactionState {
+    return new TransactionState({ executed: new UnitValue() });
+  }
 }
 
 add_enum_to_schema(TransactionState, {

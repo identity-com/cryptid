@@ -10,6 +10,14 @@ export class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
     super(props);
   }
 
+  isSigner(): boolean {
+    return (this.meta & IS_SIGNER) > 0;
+  }
+
+  isWritable(): boolean {
+    return (this.meta & IS_WRITABLE) > 0;
+  }
+
   static random(props?: {
     accountsNum?: number;
     isSigner?: boolean;
