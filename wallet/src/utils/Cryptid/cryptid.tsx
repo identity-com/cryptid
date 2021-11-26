@@ -22,6 +22,7 @@ import {
 import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
 import { ServiceEndpoint } from "did-resolver/src/resolver";
 import { useWalletContext } from "../wallet";
+import { DUMMY_PUBKEY } from "../config";
 
 interface CryptidAccountInitData {
   didPrefix: string,
@@ -142,10 +143,18 @@ export class CryptidAccount {
 
   get verificationMethods() {
     if (!this._document || !this._document.verificationMethod) {
-      return []
+      return [];
     }
 
-    return this._document.verificationMethod
+    return this._document.verificationMethod;
+  }
+
+  get capabilityInvocations() {
+    if (!this._document || !this._document.capabilityInvocation){
+      return [];
+    }
+
+    return this._document.capabilityInvocation;
   }
 
   get controllers() {
@@ -492,8 +501,9 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const loadCryptidAccounts = useCallback(async () => {
 
-    const defaultSigner: Signer = { // TODO
-      publicKey: wallet.publicKey as PublicKey,
+    // This dummy signer will get updated later.
+    const defaultSigner: Signer = {
+      publicKey: DUMMY_PUBKEY,
       sign: (transaction: Transaction) => Promise.resolve(transaction)
     }
 
