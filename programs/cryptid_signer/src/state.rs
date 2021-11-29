@@ -58,12 +58,12 @@ impl CryptidAccount {
 }
 
 /// A helper struct for calculating [`InstructionData`] size
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct InstructionSize {
     /// The number of accounts in the instruction
-    pub accounts: usize,
+    pub accounts: u8,
     /// The size of the instruction data
-    pub data_len: usize,
+    pub data_len: u16,
 }
 impl InstructionSize {
     /// Creates a size iterator from an iterator of data refs
@@ -71,8 +71,8 @@ impl InstructionSize {
         iter: impl Iterator<Item = &'a InstructionData> + 'a,
     ) -> impl Iterator<Item = InstructionSize> + 'a {
         iter.map(|instruction| Self {
-            accounts: instruction.accounts.len(),
-            data_len: instruction.data.len(),
+            accounts: instruction.accounts.len() as u8,
+            data_len: instruction.data.len() as u16,
         })
     }
 }
@@ -195,8 +195,8 @@ impl InstructionData {
     /// Calculates the on-chain size of a [`InstructionData`]
     pub const fn calculate_size(size: InstructionSize) -> usize {
         1 //program_id
-        + 4 + TransactionAccountMeta::calculate_size() * size.accounts //accounts
-        + 4 + size.data_len //data
+        + 4 + TransactionAccountMeta::calculate_size() * size.accounts as usize //accounts
+        + 4 + size.data_len as usize //data
     }
 
     /// Creates an [`InstructionData`] from a given [`SolanaInstruction`]

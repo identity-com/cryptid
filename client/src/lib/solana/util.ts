@@ -12,6 +12,7 @@ import {
 
 export const DOA_SEED = 'cryptid_doa';
 export const DOA_SIGNER_SEED = 'cryptid_signer';
+export const TRANSACTION_SEED = 'cryptid_transaction';
 
 export const publicKeyToDid = (
   publicKey: PublicKey,
@@ -50,6 +51,21 @@ export const didToPDA = (did: string) =>
 export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
   const didKey = await didToPDA(did);
   return deriveDefaultDOAFromKey(didKey);
+};
+
+export const deriveTransactionAccount = async (
+  cryptidAccount: PublicKey,
+  seed: string
+): Promise<PublicKey> => {
+  const [key] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(TRANSACTION_SEED, 'utf-8'),
+      cryptidAccount.toBuffer(),
+      Buffer.from(seed, 'utf-8'),
+    ],
+    DOA_PROGRAM_ID
+  );
+  return key;
 };
 
 export const deriveDOASigner = async (

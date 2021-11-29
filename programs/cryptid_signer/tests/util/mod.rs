@@ -8,7 +8,6 @@ use cryptid_signer::instruction::{
 };
 use cryptid_signer::state::{
     AccountMeta, InstructionData, InstructionSize, TransactionAccount, TransactionAccountMeta,
-    TransactionState,
 };
 use cryptid_signer::{GenerativeCryptidSeeder, TransactionSeeder};
 use log::*;
@@ -41,7 +40,7 @@ impl OnChainTransaction {
     pub fn random(
         accounts: u8,
         instructions: Vec<usize>,
-        program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
+        program_values: &mut ProgramValues<impl CryptoRng + RngCore>,
     ) -> Self {
         let accounts = (0..accounts)
             .map(|_| program_values.gen_keypair().pubkey())
@@ -84,11 +83,11 @@ impl OnChainTransaction {
 
     pub fn apply_instruction_operation(&mut self, operation: InstructionOperation) {
         match operation {
-            InstructionOperation::Add(instruction) => {
+            InstructionOperation::Push(instruction) => {
                 self.instructions.push(instruction);
             }
-            InstructionOperation::Remove(index) => {
-                self.instructions.remove(index as usize);
+            InstructionOperation::Pop => {
+                self.instructions.pop();
             }
             InstructionOperation::AddAccount { index, account } => {
                 self.instructions[index as usize].accounts.push(account);
@@ -126,7 +125,7 @@ impl OnChainTransaction {
         } else if self.instructions.is_empty() {
             let operation = program_values.gen_range(0, 1);
             match operation {
-                0 => InstructionOperation::Add(
+                0 => InstructionOperation::Push(
                     self.random_instruction(program_values.gen_range(0, 10), program_values),
                 ),
                 1 => InstructionOperation::Clear,
@@ -135,12 +134,10 @@ impl OnChainTransaction {
         } else {
             let operation = program_values.gen_range(0, 8);
             match operation {
-                0 => InstructionOperation::Add(
+                0 => InstructionOperation::Push(
                     self.random_instruction(program_values.gen_range(0, 10), program_values),
                 ),
-                1 => InstructionOperation::Remove(
-                    program_values.gen_range(0, self.instructions.len() as u8),
-                ),
+                1 => InstructionOperation::Pop,
                 2 => InstructionOperation::AddAccount {
                     index: program_values.gen_range(0, self.instructions.len() as u8),
                     account: TransactionAccountMeta {
@@ -177,7 +174,7 @@ impl OnChainTransaction {
 
     pub fn random_account_operation(
         &self,
-        program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
+        program_values: &mut ProgramValues<impl CryptoRng + RngCore>,
     ) -> AccountOperation {
         let can_clear = self.instructions.is_empty();
         match program_values.gen_range(0, 2 + can_clear as u8) {
@@ -316,7 +313,7 @@ impl<R> ProgramValues<R> {
         &mut self,
         transaction_account: SeedOrAccount,
         signing_key: SigningKeyBuild,
-        new_state: TransactionState,
+        ready_to_execute: bool,
         account_operations: Vec<AccountOperation>,
         instruction_operations: Vec<InstructionOperation>,
     ) {
@@ -326,7 +323,7 @@ impl<R> ProgramValues<R> {
             did: SolanaAccountMeta::new_readonly(self.did_pda, false),
             did_program: self.did_program,
             signing_key,
-            new_state,
+            ready_to_execute,
             account_operations,
             instruction_operations,
         };
@@ -386,7 +383,7 @@ where
 }
 impl<R> ProgramValues<R>
 where
-    R: SeedableRng + CryptoRng + RngCore,
+    R: CryptoRng + RngCore,
 {
     pub fn gen_keypair(&mut self) -> Keypair {
         Keypair::generate(&mut self.rng)
@@ -464,7 +461,7 @@ impl ProposeOverrides {
 
 pub async fn propose_transaction(
     on_chain_transaction: &OnChainTransaction,
-    program_values: &mut ProgramValues<impl SeedableRng + CryptoRng + RngCore>,
+    program_values: &mut ProgramValues<impl CryptoRng + RngCore>,
     transaction_seed: String,
     overrides: ProposeOverrides,
 ) -> Vec<(SigningKeyBuild, UnixTimestamp)> {
