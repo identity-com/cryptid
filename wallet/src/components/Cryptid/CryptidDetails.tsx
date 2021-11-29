@@ -10,6 +10,8 @@ import AddControllerModal from "../modals/AddControllerModal";
 import AddKeyOrCryptidAccountModal from "./AddKeyOrCryptidAccountModal";
 import KeyList, { KeyListItem } from "./KeyList";
 import ControllerList, { ControllerListItem } from "./ControllerList";
+import {any} from 'ramda';
+import {VerificationMethod} from 'did-resolver';
 
 interface CryptidDetailsInterface {
   cryptidAccount: CryptidAccount
@@ -77,16 +79,37 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
     onSuccess: () => onSuccessUpdate()
   });
 
-  const getKeyListItems = useCallback((): KeyListItem[] => {
-    return cryptidAccount.verificationMethods.filter(vm => !!vm.publicKeyBase58).map(vm => ({
-      alias: vm.id.replace(cryptidAccount.did + '#', ''),
+  const vmToKey = useCallback((vm: VerificationMethod, capabilityInvocation: boolean | ((alias: string) => boolean)) => {
+    const alias = vm.id.replace(cryptidAccount.did + '#', '');
+    return {
+      alias,
       base58Key: vm.publicKeyBase58 as string,
       isActive: wallet.publicKey?.toBase58() === vm.publicKeyBase58,
+      capabilityInvocation: typeof capabilityInvocation === 'boolean' ? capabilityInvocation : capabilityInvocation(alias),
       airdropCB: requestAirDrop,
       selectCB: selectKeyCB,
       removeCB: (key, alias) => removeKeyCallback(alias)
-    }))
-  }, [cryptidAccount.verificationMethods, cryptidAccount.did, wallet.publicKey])
+    };
+  }, [cryptidAccount.did, wallet.publicKey])
+
+  const getKeyListItems = useCallback((): KeyListItem[] => {
+    const capabilityInvocations = cryptidAccount.capabilityInvocations;
+    const capabilityInvocationStrings = capabilityInvocations
+      .filter((ci: string | VerificationMethod): ci is string => typeof ci === 'string')
+      .map((string) => string.replace(cryptidAccount.did + '#', ''));
+
+    return cryptidAccount.verificationMethods
+      .filter(vm => !!vm.publicKeyBase58)
+      .map(vm => vmToKey(vm, (alias) => any(
+        (invocation) => invocation === alias,
+          capabilityInvocationStrings
+        ))
+      )
+      .concat(capabilityInvocations
+        .filter((ci: string | VerificationMethod): ci is VerificationMethod => typeof ci !== 'string')
+        .map((vm) => vmToKey(vm, true))
+      );
+  }, [cryptidAccount.verificationMethods, cryptidAccount.did, cryptidAccount.capabilityInvocations, vmToKey])
 
   const getControllerListItems = useCallback((): ControllerListItem[] => {
     return cryptidAccount.controllers.map(c => ({
