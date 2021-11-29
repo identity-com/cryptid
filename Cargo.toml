@@ -4,3 +4,7 @@ members = [
     "programs/cryptid_signer",
     "programs/test_utils",
 ]
+
+[profile.release]
+lto = true
+codegen-units = 1

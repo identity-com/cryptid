@@ -11,7 +11,7 @@ import {
 } from '@identity.com/sol-did-client';
 import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DIDDocument } from 'did-resolver';
-import {didToPublicKey} from "../util";
+import { didToPublicKey } from '../util';
 
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash

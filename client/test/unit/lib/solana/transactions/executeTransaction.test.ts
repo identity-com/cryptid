@@ -26,14 +26,15 @@ import {
   SOL_DID_PROGRAM_ID,
 } from '../../../../../src/lib/constants';
 import TransactionAccount from '../../../../../src/lib/solana/accounts/TransactionAccount';
-import { AssignablePublicKey } from '../../../../../src/lib/solana/model/AssignablePublicKey';
+import AssignablePublicKey from '../../../../../src/lib/solana/model/AssignablePublicKey';
 import { TransactionAccountSigner } from '../../../../../src/lib/solana/accounts/TransactionAccount';
 import { AssignableI64 } from '../../../../../src/lib/solana/solanaBorsh';
 import SigningKeyData from '../../../../../src/lib/solana/model/SigningKeyData';
-import { TransactionState } from '../../../../../src/lib/solana/model/TransactionState';
-import { InstructionData } from '../../../../../src/lib/solana/model/InstructionData';
-import { TransactionAccountMeta } from '../../../../../src/lib/solana/model/TransactionAccountMeta';
+import TransactionState from '../../../../../src/lib/solana/model/TransactionState';
+import InstructionData from '../../../../../src/lib/solana/model/InstructionData';
 import Discriminant from '../../../../../src/lib/solana/accounts/Discriminant';
+import { randomTransactionAccountMeta } from '../model/TransactionAccountMeta.test';
+import { AssignableBuffer } from '../../../../../src/lib/solana/solanaBorsh';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -147,9 +148,9 @@ describe('transactions/executeTransaction', function () {
           () =>
             new InstructionData({
               accounts: range(0, randomInt(0, 10)).map(() =>
-                TransactionAccountMeta.random({ accountsNum: accounts.length })
+                randomTransactionAccountMeta({ accountsNum: accounts.length })
               ),
-              data: Buffer.from(
+              data: AssignableBuffer.from(
                 range(0, randomInt(10, 100)).map(() => randomInt(0, 256))
               ),
               program_id: randomInt(0, accounts.length),

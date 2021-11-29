@@ -4,7 +4,7 @@ import {
   AssignableI64,
 } from '../solanaBorsh';
 
-export class ProposeTransactionSigners extends Assignable<ProposeTransactionSigners> {
+export default class ProposeTransactionSigners extends Assignable<ProposeTransactionSigners> {
   signerExtras!: number;
   expireTime!: AssignableI64;
 

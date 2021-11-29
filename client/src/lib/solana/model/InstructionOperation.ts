@@ -2,13 +2,14 @@ import {
   add_enum_to_schema,
   add_struct_to_schema,
   Assignable,
+  AssignableBuffer,
   Enum,
   UnitValue,
 } from '../solanaBorsh';
-import { InstructionData } from './InstructionData';
-import { TransactionAccountMeta } from './TransactionAccountMeta';
+import InstructionData from './InstructionData';
+import TransactionAccountMeta from './TransactionAccountMeta';
 
-export class InstructionOperation extends Enum<InstructionOperation> {
+export default class InstructionOperation extends Enum<InstructionOperation> {
   push?: InstructionData;
   pop?: UnitValue;
   addAccount?: AddAccount;
@@ -36,26 +37,18 @@ export class InstructionOperation extends Enum<InstructionOperation> {
 export class AddAccount extends Assignable<AddAccount> {
   index!: number;
   account!: TransactionAccountMeta;
-
-  constructor(props: { index: number; account: TransactionAccountMeta }) {
-    super(props);
-  }
 }
 
 export class AddAccounts extends Assignable<AddAccounts> {
   index!: number;
-  account!: TransactionAccountMeta[];
-
-  constructor(props: { index: number; account: TransactionAccountMeta[] }) {
-    super(props);
-  }
+  accounts!: TransactionAccountMeta[];
 }
 
 export class AddData extends Assignable<AddData> {
   index!: number;
-  data!: Buffer;
+  data!: AssignableBuffer;
 
-  constructor(props: { index: number; data: Buffer }) {
+  constructor(props: { index: number; data: AssignableBuffer }) {
     super(props);
   }
 }
@@ -76,9 +69,9 @@ add_struct_to_schema(AddAccount, {
 });
 add_struct_to_schema(AddAccounts, {
   index: 'u8',
-  account: [TransactionAccountMeta],
+  accounts: [TransactionAccountMeta],
 });
 add_struct_to_schema(AddData, {
   index: 'u8',
-  data: 'buffer',
+  data: AssignableBuffer,
 });

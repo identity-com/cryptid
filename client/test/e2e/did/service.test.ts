@@ -3,23 +3,23 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { airdrop, Balances } from '../../utils/solana';
 import { publicKeyToDid } from '../../../src/lib/solana/util';
 import chai from 'chai';
-import {ServiceEndpoint} from 'did-resolver';
+import { ServiceEndpoint } from 'did-resolver';
 import {
   expectDocumentNotToIncludeService,
   expectDocumentToIncludeKey,
-  expectDocumentToIncludeService
-} from "../../utils/did";
+  expectDocumentToIncludeService,
+} from '../../utils/did';
 
 const { expect } = chai;
 
 const TRANSACTION_FEE = 5000;
 
-const alias = 'dummy'
-const dummyService = (did: string):ServiceEndpoint => ({
+const alias = 'dummy';
+const dummyService = (did: string): ServiceEndpoint => ({
   id: `${did}#${alias}`,
   type: alias,
   serviceEndpoint: alias,
-  description: alias
+  description: alias,
 });
 
 describe('DID Service operations', function () {
@@ -57,7 +57,7 @@ describe('DID Service operations', function () {
     beforeEach(async () => {
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -116,7 +116,7 @@ describe('DID Service operations', function () {
 
       balances = await new Balances(connection).register(
         doaSigner,
-        key.publicKey,
+        key.publicKey
       );
     });
 
@@ -136,7 +136,7 @@ describe('DID Service operations', function () {
 
     it('should keep any other added content', async () => {
       const key2 = Keypair.generate().publicKey;
-      await cryptid.addKey(key2, 'key2')
+      await cryptid.addKey(key2, 'key2');
 
       await cryptid.removeService(alias);
 

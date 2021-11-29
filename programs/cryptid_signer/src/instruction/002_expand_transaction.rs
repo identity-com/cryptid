@@ -27,17 +27,20 @@ impl Instruction for ExpandTransaction {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
+        // Verify the key is valid for the did
         verify_keys(
             &accounts.did_program,
             &accounts.did,
             once(&accounts.signing_key),
         )?;
+        // Verify the cryptid account values match the incoming
         accounts.cryptid_account.verify_cryptid_account(
             &program_id,
             &accounts.did_program.key,
             &accounts.did.key,
         )?;
 
+        // Verify transaction is from incoming cryptid account
         if accounts.transaction_account.cryptid_account != accounts.cryptid_account.info().key {
             return Err(GeneratorError::InvalidAccount {
                 account: accounts.cryptid_account.info().key,
@@ -46,6 +49,7 @@ impl Instruction for ExpandTransaction {
             .into());
         }
 
+        // State must be not ready
         if accounts.transaction_account.state != TransactionState::NotReady {
             return Err(CryptidSignerError::InvalidTransactionState {
                 expected: TransactionState::NotReady,
@@ -54,6 +58,7 @@ impl Instruction for ExpandTransaction {
             .into());
         }
 
+        // Check that incoming key was creator of the original transaction
         let signing_key_data = accounts.signing_key.to_key_data();
         if !accounts
             .transaction_account
@@ -67,6 +72,7 @@ impl Instruction for ExpandTransaction {
             .into());
         }
 
+        // Handle account operations
         for (index, account_operation) in data.account_operations.into_iter().enumerate() {
             if let Err(error) =
                 handle_account_operation(&mut accounts.transaction_account, account_operation)
@@ -75,6 +81,7 @@ impl Instruction for ExpandTransaction {
                 return Err(error);
             }
         }
+        // Handle instruction operations
         for (index, instruction_operation) in data.instruction_operations.into_iter().enumerate() {
             if let Err(error) = handle_instruction_operation(
                 &mut accounts.transaction_account,
@@ -84,6 +91,7 @@ impl Instruction for ExpandTransaction {
                 return Err(error);
             }
         }
+        // Set the new state
         accounts.transaction_account.state = if data.ready_to_execute {
             TransactionState::Ready
         } else {
@@ -253,6 +261,7 @@ pub enum InstructionOperation {
     /// Clears all instructions
     Clear,
 }
+/// Applies the given [`InstructionOperation`] to the transaction
 fn handle_instruction_operation(
     transaction: &mut TransactionAccount,
     operation: InstructionOperation,
@@ -302,6 +311,7 @@ fn handle_instruction_operation(
     Ok(())
 }
 
+/// Applies the given [`AccountOperation`] to the transaction
 fn handle_account_operation(
     transaction: &mut TransactionAccount,
     operation: AccountOperation,

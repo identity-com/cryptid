@@ -1,7 +1,7 @@
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
 import { PublicKey } from '@solana/web3.js';
 
-export class DoaData extends Assignable<DoaData> {
+export default class DoaData extends Assignable<DoaData> {
   did!: PublicKey;
   did_program!: PublicKey;
   signer_nonce!: number;

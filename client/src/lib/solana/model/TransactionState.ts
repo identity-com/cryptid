@@ -1,6 +1,6 @@
 import { add_enum_to_schema, Enum, UnitValue } from '../solanaBorsh';
 
-export class TransactionState extends Enum<TransactionState> {
+export default class TransactionState extends Enum<TransactionState> {
   notReady?: UnitValue;
   ready?: UnitValue;
   executed?: UnitValue;

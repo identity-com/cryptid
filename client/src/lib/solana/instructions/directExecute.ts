@@ -11,7 +11,7 @@ import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { find, propEq } from 'ramda';
-import { InstructionData } from '../model/InstructionData';
+import InstructionData from '../model/InstructionData';
 
 export const create = async (
   unsignedTransaction: Transaction,

@@ -8,7 +8,7 @@ import { deriveDOASigner, deriveTransactionAccount } from '../util';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
-import { InstructionData } from '../model/InstructionData';
+import InstructionData from '../model/InstructionData';
 
 export async function create(
   accounts: PublicKey[],
@@ -59,7 +59,7 @@ export async function create(
           accounts.length,
           instructions.map((instruction) => ({
             accounts: instruction.accounts.length,
-            dataLength: instruction.data.length,
+            dataLength: instruction.data.buffer.length,
           })),
           signers.map((signer) => signer[1].length)
         ),

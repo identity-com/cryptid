@@ -10,9 +10,10 @@ import { stubGetBlockhash } from '../../../../utils/lang';
 import { create } from '../../../../../src/lib/solana/instructions/proposeTransaction';
 import { randomInt } from 'crypto';
 import { range } from 'ramda';
-import { InstructionData } from '../../../../../src/lib/solana/model/InstructionData';
-import { TransactionAccountMeta } from '../../../../../src/lib/solana/model/TransactionAccountMeta';
+import InstructionData from '../../../../../src/lib/solana/model/InstructionData';
+import TransactionAccountMeta from '../../../../../src/lib/solana/model/TransactionAccountMeta';
 import { normalizeSigner } from '../../../../../src/lib/util';
+import { AssignableBuffer } from '../../../../../src/lib/solana/solanaBorsh';
 
 const sandbox = sinon.createSandbox();
 
@@ -43,7 +44,7 @@ describe('transactions/proposeTransaction', function () {
               randomInt(0, 2) === 1
             )
           ),
-          data: new Uint8Array(
+          data: AssignableBuffer.from(
             range(0, randomInt(2, 1000)).map(() => randomInt(0, 256))
           ),
         })
