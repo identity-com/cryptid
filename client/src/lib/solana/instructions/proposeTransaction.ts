@@ -18,7 +18,10 @@ export async function create(
   cryptidAccount: PublicKey,
   accountSeed: string,
   signers: [Signer, AccountMeta[]][],
-  accountSize?: number
+  readyToExecute: boolean,
+  opts?: {
+    accountSize?: number;
+  }
 ): Promise<TransactionInstruction> {
   const transactionAccount = await deriveTransactionAccount(
     cryptidAccount,
@@ -34,7 +37,7 @@ export async function create(
       isSigner: funder !== 'cryptid',
       isWritable: true,
     },
-    { pubkey: transactionAccount, isSigner: false, isWritable: false },
+    { pubkey: transactionAccount, isSigner: false, isWritable: true },
     { pubkey: cryptidAccount, isSigner: false, isWritable: false },
     { pubkey: didPDAKey, isSigner: false, isWritable: false },
     { pubkey: SOL_DID_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -50,8 +53,8 @@ export async function create(
       signerExtras: signer[1].length,
       expireTime: BigInt(0),
     })),
-    accountSize
-      ? accountSize
+    opts && opts.accountSize
+      ? opts.accountSize
       : calculateAccountSize(
           accounts.length,
           instructions.map((instruction) => ({
@@ -62,7 +65,7 @@ export async function create(
         ),
     accounts,
     instructions,
-    true,
+    readyToExecute,
     accountSeed
   ).encode();
 
