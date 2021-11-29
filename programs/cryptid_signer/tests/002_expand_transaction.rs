@@ -17,7 +17,7 @@ use util::*;
 async fn expand_transaction_test() {
     let mut program_values = create_program_values(true).await;
     let seed = program_values.gen_string(1, 3);
-    trace!(target: LOG_TARGET, "Transaction seed: {}", seed);
+    trace!(target: LOG_TARGET, "Transaction seed: `{}`", seed);
 
     let mut on_chain_transaction =
         OnChainTransaction::random(program_values.gen_range(2, 10), vec![], &mut program_values);
