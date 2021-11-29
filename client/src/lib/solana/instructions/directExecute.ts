@@ -37,7 +37,10 @@ export const create = async (
     signers[0][0].publicKey
   );
 
-  const convertOrPassthroughInstructions = ([instructions, shouldUseDirectExecute]: [TransactionInstruction[], boolean]) => {
+  const convertOrPassthroughInstructions = ([
+    instructions,
+    shouldUseDirectExecute,
+  ]: [TransactionInstruction[], boolean]) => {
     if (!shouldUseDirectExecute) return instructions;
 
     if (instructions.length === 0) {

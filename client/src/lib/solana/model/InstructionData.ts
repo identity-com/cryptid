@@ -17,9 +17,9 @@ export class InstructionData extends Assignable<InstructionData> {
 
   static fromTransactionInstruction(
     instruction: TransactionInstruction,
-    account_array: PublicKey[]
+    accountArray: PublicKey[]
   ): InstructionData {
-    const keyIndex = account_array.findIndex((value) =>
+    const keyIndex = accountArray.findIndex((value) =>
       value.equals(instruction.programId)
     );
     if (keyIndex < 0) {
@@ -28,7 +28,7 @@ export class InstructionData extends Assignable<InstructionData> {
     return new InstructionData({
       program_id: keyIndex,
       accounts: instruction.keys.map((meta) =>
-        TransactionAccountMeta.fromAccountMeta(meta, account_array)
+        TransactionAccountMeta.fromAccountMeta(meta, accountArray)
       ),
       data: instruction.data,
     });
