@@ -32,13 +32,21 @@ export abstract class Assignable<Self> extends BorshBase {
   }
 }
 
+type OnlyOne<Union extends keyof Self, Self> = {
+  [P in Union]: Required<Record<P, Self[P]>> & {
+    [K in Exclude<Union, P>]?: never;
+  };
+}[Union];
+
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
 export abstract class Enum<Self> extends BorshBase {
-  enum: keyof this;
+  _enum: keyof this;
 
   //TODO: Find a way to do the one property check with types
-  protected constructor(props: { [P in keyof Self]?: Self[P] }) {
+  protected constructor(
+    props: OnlyOne<Exclude<NonFunctionPropertyNames<Self>, '_enum'>, Self>
+  ) {
     super();
     let key: keyof this | undefined;
     for (const prop of Object.keys(props) as Array<keyof this>) {
@@ -57,7 +65,7 @@ export abstract class Enum<Self> extends BorshBase {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore this is okay as long as Self == this
     this[key] = props[key];
-    this.enum = key;
+    this._enum = key;
   }
 }
 
@@ -104,7 +112,7 @@ export function add_struct_to_schema<
 export function add_enum_to_schema<T extends Enum<T> & Record<string, any>>(
   cons: Cons<T>,
   values: {
-    [P in Exclude<NonFunctionPropertyNames<T>, 'enum'>]:
+    [P in Exclude<NonFunctionPropertyNames<T>, '_enum'>]:
       | FieldType
       | ArrayedFieldType;
   }
