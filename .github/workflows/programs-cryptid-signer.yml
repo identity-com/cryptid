@@ -133,7 +133,6 @@ jobs:
 
   program-dev-deploy:
     name: Deploy dev cryptid on-chain program, built on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
-    if: github.ref == 'refs/heads/develop' && github.event == 'push'
     needs: [program-lint, program-unit-test, program-integration-test]
 
     runs-on: ${{ matrix.os }}
@@ -179,8 +178,11 @@ jobs:
           command: build-bpf
 
       - name: Deploy dev program
+        with:
+          env:
+            SOLANA_PROGRAM_ID: tcrjc6mfci8bQLmXPfrVw9fJm9Y5tr268tByjSQmSe9
         run: |
           echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" > ~/.config/solana/id.json
           solana config set --url devnet
-          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" | solana program deploy target/deploy/cryptid_signer.so --program-id ${{ secrets.SOLANA_DEV_PROGRAM_ID }} --upgrade-authority -
+          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" | solana program deploy target/deploy/cryptid_signer.so --program-id $SOLANA_PROGRAM_ID --upgrade-authority -
           solana program show ${{ secrets.SOLANA_DEV_PROGRAM_ID }}
