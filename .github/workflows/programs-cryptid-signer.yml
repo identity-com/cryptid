@@ -77,7 +77,6 @@ jobs:
         with:
           command: test
 
-
   program-integration-test:
     name: Integration test the cryptid on-chain program on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
 
@@ -131,10 +130,10 @@ jobs:
           RUST_LOG: solana_rbpf::vm=debug,solana_runtime::message_processor=debug,solana_runtime::system_instruction_processor=trace,solana_program_test=info,cryptid_signer=trace
           RUST_BACKTRACE: 1
 
-
   program-dev-deploy:
     name: Deploy dev cryptid on-chain program, built on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
     if: github.ref == 'refs/heads/develop' && github.event == 'push'
+    needs: [program-lint, program-unit-test, program-integration-test]
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -178,7 +177,7 @@ jobs:
         with:
           command: build-bpf
 
-      - name: Run integration tests
+      - name: Deploy dev program
         run: |
           echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" > ~/.config/solana/id.json
           solana config set --url devnet
