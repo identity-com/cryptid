@@ -2,12 +2,12 @@ name: Programs-Cryptid-Signer
 on:
   push:
     branches:
-      - master
+      - develop
     paths:
       - 'programs-cryptid-signer'
   pull_request:
     branches:
-      - master
+      - develop
 jobs:
   program-lint:
     name: Format and lint the cryptid on-chain program on Rust ${{ matrix.rust }} and ${{ matrix.os }}
@@ -134,3 +134,56 @@ jobs:
         env:
           RUST_LOG: solana_rbpf::vm=debug,solana_runtime::message_processor=debug,solana_runtime::system_instruction_processor=trace,solana_program_test=info,cryptid_signer=trace
           RUST_BACKTRACE: 1
+
+  program-dev-deploy:
+    name: Deploy dev cryptid on-chain program, built on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: ['1.55']
+        solana: ['v1.7.12']
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Rust ${{ matrix.rust }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache build dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ./target
+          key: cargo-build-${{ hashFiles('Cargo.lock') }}
+
+      - name: Cache Solana version
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache
+          key: solana-${{ matrix.solana }}
+
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/${{ matrix.solana }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Build programs
+        uses: actions-rs/cargo@v1
+        with:
+          command: build-bpf
+
+      - name: Run integration tests
+        run: |
+          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" > ~/.config/solana/id.json
+          export PATH=~/.local/share/solana/install/active_release/bin:$PATH
+          solana config set --url devnet
+          solana program show ${{ secrets.SOLANA_DEV_PROGRAM_ID }}
+          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" | solana program deploy target/deploy/cryptid_signer.so --program-id ${{ secrets.SOLANA_DEV_PROGRAM_ID }} --upgrade-authority -
