@@ -10,8 +10,7 @@ elif [ ${STAGE} == "preprod" ]; then
   BUCKET=explorer-preprod.identity.com
 elif [ ${STAGE} == "dev" ]; then
   DISTRIBUTION=???
-  BUCKET=explorer-dev.identity.com
+  BUCKET=cryptid-dev.identity.com
 fi
 
 npx deploy-aws-s3-cloudfront --non-interactive --react --bucket ${BUCKET} --destination ${STAGE} --distribution ${DISTRIBUTION}
-
