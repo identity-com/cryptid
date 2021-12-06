@@ -9,7 +9,7 @@ elif [ ${STAGE} == "preprod" ]; then
   DISTRIBUTION=???
   BUCKET=explorer-preprod.identity.com
 elif [ ${STAGE} == "dev" ]; then
-  DISTRIBUTION=???
+  DISTRIBUTION=E1SU4WO39BJJ5E
   BUCKET=cryptid-dev.identity.com
 fi
 
