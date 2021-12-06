@@ -1,8 +1,6 @@
 name: Programs-Cryptid-Signer
 on:
   push:
-    paths:
-      - 'programs-cryptid-signer'
   pull_request:
 jobs:
   program-lint:
@@ -133,10 +131,10 @@ jobs:
 
   program-dev-deploy:
     name: Deploy dev cryptid on-chain program, built on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
-    if: github.ref == 'refs/heads/develop' && github.event == 'push'
     needs: [program-lint, program-unit-test, program-integration-test]
     env:
       SOLANA_PROGRAM_ID: tcrjc6mfci8bQLmXPfrVw9fJm9Y5tr268tByjSQmSe9
+      SOLANA_AUTHORITY: ${{ secrets.SOLANA_DEV_AUTHORITY }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -181,7 +179,7 @@ jobs:
 
       - name: Deploy dev program
         run: |
-          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" > ~/.config/solana/id.json
+          echo "$SOLANA_AUTHORITY" > ~/.config/solana/id.json
           solana config set --url devnet
-          echo "${{ secrets.SOLANA_DEV_AUTHORITY }}" | solana program deploy target/deploy/cryptid_signer.so --program-id $SOLANA_PROGRAM_ID --upgrade-authority -
+          echo "$SOLANA_AUTHORITY" | solana program deploy target/deploy/cryptid_signer.so --program-id $SOLANA_PROGRAM_ID --upgrade-authority -
           solana program show $SOLANA_PROGRAM_ID
