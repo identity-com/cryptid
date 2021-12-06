@@ -184,5 +184,5 @@ jobs:
         run: |
           echo "$SOLANA_AUTHORITY" > ~/.config/solana/id.json
           solana config set --url devnet
-          echo "$SOLANA_AUTHORITY" | solana program deploy target/deploy/cryptid_signer.so --program-id $SOLANA_PROGRAM_ID --upgrade-authority -
+          solana program deploy target/deploy/cryptid_signer.so --program-id $SOLANA_PROGRAM_ID
           solana program show $SOLANA_PROGRAM_ID
