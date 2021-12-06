@@ -77,7 +77,6 @@ pub struct DirectExecuteAccounts {
     pub instruction_accounts: Rest<AccountInfo>,
 }
 ```
-
 #### Data
 ```rust
 /// The instruction data for [`DirectExecute`]
