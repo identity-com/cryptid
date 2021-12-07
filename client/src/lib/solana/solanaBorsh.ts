@@ -5,6 +5,36 @@ import {
   deserializeUnchecked,
 } from 'borsh';
 
+export type Bounds<T> = {
+  min: T;
+  max: T;
+};
+
+export const I8_BOUNDS: Bounds<number> = {
+  min: -128,
+  max: 127,
+};
+export const U8_BOUNDS: Bounds<number> = {
+  min: 0,
+  max: 255,
+};
+export const I16_BOUNDS: Bounds<number> = {
+  min: -32768,
+  max: 32767,
+};
+export const U16_BOUNDS: Bounds<number> = {
+  min: 0,
+  max: 65535,
+};
+export const I32_BOUNDS: Bounds<number> = {
+  min: -2147483648,
+  max: 2147483647,
+};
+export const U32_BOUNDS: Bounds<number> = {
+  min: 0,
+  max: 4294967295,
+};
+
 type NonFunctionPropertyNames<T> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   [K in keyof T]: T[K] extends Function ? never : K;
@@ -32,13 +62,21 @@ export abstract class Assignable<Self> extends BorshBase {
   }
 }
 
+type OnlyOne<Union extends keyof Self, Self> = {
+  [P in Union]: Required<Record<P, Self[P]>> & {
+    [K in Exclude<Union, P>]?: never;
+  };
+}[Union];
+
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
 export abstract class Enum<Self> extends BorshBase {
-  enum: keyof this;
+  _enum: keyof this;
 
   //TODO: Find a way to do the one property check with types
-  protected constructor(props: { [P in keyof Self]?: Self[P] }) {
+  protected constructor(
+    props: OnlyOne<Exclude<NonFunctionPropertyNames<Self>, '_enum'>, Self>
+  ) {
     super();
     let key: keyof this | undefined;
     for (const prop of Object.keys(props) as Array<keyof this>) {
@@ -57,7 +95,7 @@ export abstract class Enum<Self> extends BorshBase {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore this is okay as long as Self == this
     this[key] = props[key];
-    this.enum = key;
+    this._enum = key;
   }
 }
 
@@ -81,11 +119,10 @@ export type FieldType =
   | 'u128'
   | 'u256'
   | 'u512'
-  | 'buffer'
   | 'string'
   // eslint-disable-next-line
   | Cons<any>;
-export type ArrayedFieldType = [FieldType] | [number] | [FieldType, number];
+export type ArrayedFieldType = [FieldType] | [FieldType, number];
 
 export function add_struct_to_schema<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,14 +141,14 @@ export function add_struct_to_schema<
 export function add_enum_to_schema<T extends Enum<T> & Record<string, any>>(
   cons: Cons<T>,
   values: {
-    [P in Exclude<NonFunctionPropertyNames<T>, 'enum'>]:
+    [P in Exclude<NonFunctionPropertyNames<T>, '_enum'>]:
       | FieldType
       | ArrayedFieldType;
   }
 ): void {
   SCHEMA.set(cons, {
     kind: 'enum',
-    field: 'enum',
+    field: '_enum',
     values: Object.entries(values),
   });
 }
@@ -129,7 +166,7 @@ export function add_custom_to_schema<T extends CustomSerializer & BorshBase>(
   SCHEMA.set(cons, { kind: 'custom' });
 }
 
-const SCHEMA: Map<
+export const SCHEMA: Map<
   // eslint-disable-next-line
   Cons<any>,
   | {
@@ -138,7 +175,7 @@ const SCHEMA: Map<
     }
   | {
       kind: 'enum';
-      field: 'enum';
+      field: '_enum';
       values: ([number] | [string, FieldType | ArrayedFieldType])[];
     }
   | {
@@ -256,7 +293,7 @@ export class AssignableI32 extends BorshBase {
 }
 
 export class AssignableI64 extends BorshBase {
-  value!: bigint;
+  value: bigint;
 
   constructor(value: bigint) {
     super();
@@ -283,9 +320,42 @@ export class AssignableI64 extends BorshBase {
   }
 }
 
+export class AssignableBuffer extends BorshBase {
+  buffer: Buffer;
+
+  constructor(buffer: Buffer) {
+    super();
+    this.buffer = buffer;
+  }
+
+  toBuffer(): Buffer {
+    return this.buffer;
+  }
+
+  static from(from: Uint8Array | ReadonlyArray<number>): AssignableBuffer {
+    return new AssignableBuffer(Buffer.from(from));
+  }
+
+  borshSerialize(writer: BinaryWriter): void {
+    writer.writeU32(this.buffer.length);
+    writer.buf = Buffer.concat([
+      Buffer.from(writer.buf.subarray(0, writer.length)),
+      this.buffer,
+    ]);
+    writer.length += this.buffer.length;
+  }
+  static borshDeserialize(reader: BinaryReader): AssignableBuffer {
+    const length = reader.readU32();
+    const buffer = reader.buf.subarray(reader.offset, reader.offset + length);
+    reader.offset += length;
+    return new AssignableBuffer(buffer);
+  }
+}
+
 add_custom_to_schema(UnitValue);
 add_custom_to_schema(AssignableBoolean);
 add_custom_to_schema(AssignableI8);
 add_custom_to_schema(AssignableI16);
 add_custom_to_schema(AssignableI32);
 add_custom_to_schema(AssignableI64);
+add_custom_to_schema(AssignableBuffer);

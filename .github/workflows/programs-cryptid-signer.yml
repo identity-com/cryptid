@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         rust: ['1.55']
-        solana: ['v1.7.12']
+        solana: ['stable']
         os: [ubuntu-latest]
 
     steps:

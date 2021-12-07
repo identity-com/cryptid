@@ -1,7 +1,7 @@
 import { add_enum_to_schema, Enum, UnitValue } from '../solanaBorsh';
-import { AssignablePublicKey } from './AssignablePublicKey';
+import AssignablePublicKey from './AssignablePublicKey';
 
-export class AccountOperation extends Enum<AccountOperation> {
+export default class AccountOperation extends Enum<AccountOperation> {
   add?: AssignablePublicKey;
   clear?: UnitValue;
   addMany?: AssignablePublicKey[];

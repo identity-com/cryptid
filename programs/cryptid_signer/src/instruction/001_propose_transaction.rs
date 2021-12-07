@@ -27,19 +27,29 @@ impl Instruction for ProposeTransaction {
         data: Self::Data,
         accounts: &mut Self::Accounts,
     ) -> GeneratorResult<Option<SystemProgram>> {
+        // Verify keys are valid for the did
+        verify_keys(
+            &accounts.did_program,
+            &accounts.did,
+            accounts.signer_keys.iter(),
+        )?;
+
         let transaction_seeder = TransactionSeeder {
             cryptid_account: accounts.cryptid_account.info().key,
             seed: data.account_seed,
         };
+        // Verify transaction account is from given seed
         let transaction_nonce = transaction_seeder
             .verify_address_find_nonce(program_id, accounts.transaction_account.info.key)?;
 
+        // Verify the incoming values are the same as the cryptid account
         accounts.cryptid_account.verify_cryptid_account(
             &program_id,
             &accounts.did_program.key,
             &accounts.did.key,
         )?;
 
+        // Extract relevant values from cryptid account
         let (settings_sequence, signer_key, signer_seed_set) = match &accounts.cryptid_account {
             CryptidAccountAddress::OnChain(account) => {
                 let seeder = CryptidSignerSeeder {
@@ -65,16 +75,20 @@ impl Instruction for ProposeTransaction {
             }
         };
 
+        // Maps to signing key and expire time
+        let signers = accounts
+            .signer_keys
+            .iter()
+            .zip(data.signers)
+            .map(|(signer, expiry_time)| (signer.to_key_data(), expiry_time.1))
+            .collect();
+
+        // Assign the transaction account data
         *accounts.transaction_account.deref_mut() = TransactionAccount {
             cryptid_account: accounts.cryptid_account.info().key,
             accounts: data.accounts,
             transaction_instructions: data.instructions,
-            signers: accounts
-                .signer_keys
-                .iter()
-                .zip(data.signers.iter().map(|(_, expiry_time)| *expiry_time))
-                .map(|(signer, expiry_time)| (signer.to_key_data(), expiry_time))
-                .collect(),
+            signers,
             state: if data.ready_to_execute {
                 TransactionState::Ready
             } else {
@@ -82,6 +96,8 @@ impl Instruction for ProposeTransaction {
             },
             settings_sequence,
         };
+
+        // Verify the instruction account indexes are valid
         for instruction in &accounts.transaction_account.transaction_instructions {
             for account in &instruction.accounts {
                 accounts
@@ -90,19 +106,15 @@ impl Instruction for ProposeTransaction {
             }
         }
 
+        // Set the funder for the new account
         accounts.transaction_account.funder = Some(accounts.funder.clone());
         if accounts.funder.key == signer_key {
             accounts.transaction_account.funder_seeds = Some(signer_seed_set)
         }
+        // Set the seeds for the new account
         accounts.transaction_account.account_seeds =
             Some(PDASeedSet::new(transaction_seeder, transaction_nonce));
         accounts.transaction_account.init_size = InitSize::SetSize(data.account_size as u64);
-
-        verify_keys(
-            &accounts.did_program,
-            &accounts.did,
-            accounts.signer_keys.iter(),
-        )?;
 
         Ok(Some(accounts.system_program.clone()))
     }

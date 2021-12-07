@@ -140,7 +140,7 @@ describe('DID Controller operations', function () {
 
       const document = await cryptid.document();
       expectDocumentNotToIncludeController(document, controller);
-      expect(document.verificationMethod).to.have.lengthOf(1) // default key
+      expect(document.verificationMethod).to.have.lengthOf(1); // default key
 
       // cryptid account paid nothing
       expect(balances.for(doaSigner)).to.equal(0);
@@ -158,18 +158,17 @@ describe('DID Controller operations', function () {
       expectDocumentToIncludeKey(document, key2);
 
       // TODO this is a bug in sol-did. The default key is being duplicated
-      expect(document.verificationMethod).to.have.lengthOf(2) // default and key2
+      expect(document.verificationMethod).to.have.lengthOf(2); // default and key2
     });
   });
 
   context('removeController with existing key', () => {
-    const key_A = Keypair.generate().publicKey
-    const controller_A =
-      'did:sol:localnet:' + key_A.toBase58()
+    const key_A = Keypair.generate().publicKey;
+    const controller_A = 'did:sol:localnet:' + key_A.toBase58();
 
     beforeEach(async () => {
       // add a controller to upgrade (anchor) the did
-      await cryptid.addKey(key_A, 'keyA')
+      await cryptid.addKey(key_A, 'keyA');
       await cryptid.addController(controller_A);
     });
 
@@ -179,7 +178,7 @@ describe('DID Controller operations', function () {
       const document = await cryptid.document();
 
       expectDocumentNotToIncludeController(document, controller_A);
-      expect(document.verificationMethod).to.have.lengthOf(2) // default key + keyA
+      expect(document.verificationMethod).to.have.lengthOf(2); // default key + keyA
 
       // add controller again
       await cryptid.addController(controller_A);

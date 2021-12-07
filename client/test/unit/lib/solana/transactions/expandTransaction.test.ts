@@ -8,20 +8,14 @@ import {
 } from '../../../../../src/lib/solana/util';
 import { stubGetBlockhash } from '../../../../utils/lang';
 import { create } from '../../../../../src/lib/solana/instructions/expandTransaction';
-import { range } from 'ramda';
-import { randomInt } from 'crypto';
-import { AccountOperation } from '../../../../../src/lib/solana/model/AccountOperation';
-import { AssignablePublicKey } from '../../../../../src/lib/solana/model/AssignablePublicKey';
-import { UnitValue } from '../../../../../src/lib/solana/solanaBorsh';
+import AccountOperation from '../../../../../src/lib/solana/model/AccountOperation';
 import { normalizeSigner } from '../../../../../src/lib/util';
-import {
-  AddAccount,
-  AddAccounts,
-  AddData,
-  InstructionOperation,
-} from '../../../../../src/lib/solana/model/InstructionOperation';
-import { InstructionData } from '../../../../../src/lib/solana/model/InstructionData';
-import { TransactionAccountMeta } from '../../../../../src/lib/solana/model/TransactionAccountMeta';
+import InstructionOperation from '../../../../../src/lib/solana/model/InstructionOperation';
+import { expect } from 'chai';
+import { CryptidInstruction } from '../../../../../src/lib/solana/instructions/instruction';
+import { randomAccountOperation } from '../model/AccountOperation.test';
+import { randomInstructionOperation } from '../model/InstructionOperation.test';
+import { randomArray } from '../util.test';
 
 const sandbox = sinon.createSandbox();
 
@@ -29,120 +23,92 @@ describe('transactions/expandTransaction', function () {
   const payer = Keypair.generate();
   const did = publicKeyToDid(payer.publicKey);
   let didPDAKey: PublicKey;
+  let cryptidAccount: PublicKey;
+  const seed = Math.floor(Math.random() * 100000).toString();
 
   beforeEach(() => stubGetBlockhash(sandbox));
   afterEach(sandbox.restore);
 
   before(async () => {
     didPDAKey = await didToPDA(did);
+    cryptidAccount = await deriveDefaultDOAFromKey(didPDAKey);
   });
 
-  it('should create an expand instruction', async () => {
-    const accountOperations = range(0, randomInt(2, 10)).map(() => {
-      switch (randomInt(0, 3)) {
-        case 0:
-          return new AccountOperation({
-            add: AssignablePublicKey.fromPublicKey(
-              Keypair.generate().publicKey
-            ),
-          });
-        case 1:
-          return new AccountOperation({
-            clear: new UnitValue(),
-          });
-        case 2:
-          return new AccountOperation({
-            addMany: range(0, randomInt(2, 10)).map(() =>
-              AssignablePublicKey.fromPublicKey(Keypair.generate().publicKey)
-            ),
-          });
-        default:
-          throw new Error('Out of bounds');
+  context('with account and instruction operations', () => {
+    const accountOperations: AccountOperation[] = randomArray(
+      randomAccountOperation,
+      2,
+      10
+    );
+
+    const instructionOperations: InstructionOperation[] = randomArray(
+      randomInstructionOperation,
+      2,
+      10
+    );
+
+    it('should create an expand instruction not ready', async () => {
+      const instruction = await create(
+        accountOperations,
+        instructionOperations,
+        didPDAKey,
+        cryptidAccount,
+        seed,
+        false,
+        [normalizeSigner(payer), []]
+      );
+
+      expect(instruction.keys.map((key) => key.pubkey.toBase58()))
+        .contains(cryptidAccount.toBase58())
+        .and.contains(didPDAKey.toBase58())
+        .and.contains(payer.publicKey.toBase58());
+
+      const data = CryptidInstruction.decode(
+        instruction.data,
+        CryptidInstruction
+      );
+      if (data.expandTransaction) {
+        const expand = data.expandTransaction;
+        expect(expand.accountOperations).to.deep.equal(accountOperations);
+        expect(expand.instructionOperations).to.deep.equal(
+          instructionOperations
+        );
+        expect(expand.readyToExecute.value).to.equal(false);
+      } else {
+        throw new Error('Instruction was not expand');
       }
     });
 
-    const instructionOperations: InstructionOperation[] = range(
-      0,
-      randomInt(2, 10)
-    ).map(() => {
-      switch (randomInt(0, 8)) {
-        case 0:
-          return new InstructionOperation({
-            push: new InstructionData({
-              accounts: range(0, randomInt(2, 10)).map(() =>
-                TransactionAccountMeta.random()
-              ),
-              data: new Uint8Array(randomInt(1, 1000)),
-              program_id: randomInt(0, 10),
-            }),
-          });
-        case 1:
-          return new InstructionOperation({
-            pop: new UnitValue(),
-          });
-        case 2:
-          return new InstructionOperation({
-            addAccount: new AddAccount({
-              index: randomInt(0, 10),
-              account: TransactionAccountMeta.random(),
-            }),
-          });
-        case 3:
-          return new InstructionOperation({
-            addAccounts: new AddAccounts({
-              index: randomInt(0, 10),
-              account: range(0, randomInt(2, 10)).map(() =>
-                TransactionAccountMeta.random()
-              ),
-            }),
-          });
-        case 4:
-          return new InstructionOperation({
-            clearAccounts: randomInt(0, 10),
-          });
-        case 5:
-          return new InstructionOperation({
-            addData: new AddData({
-              index: randomInt(0, 10),
-              data: new Buffer(randomInt(1, 1000)),
-            }),
-          });
-        case 6:
-          return new InstructionOperation({
-            clearData: randomInt(0, 10),
-          });
-        case 7:
-          return new InstructionOperation({
-            clear: new UnitValue(),
-          });
-        default:
-          throw new Error('Out of bounds');
+    it('should create an expand instruction ready', async () => {
+      const instruction = await create(
+        accountOperations,
+        instructionOperations,
+        didPDAKey,
+        cryptidAccount,
+        seed,
+        true,
+        [normalizeSigner(payer), []]
+      );
+
+      expect(instruction.keys.map((key) => key.pubkey.toBase58()))
+        .contains(cryptidAccount.toBase58())
+        .and.contains(didPDAKey.toBase58())
+        .and.contains(payer.publicKey.toBase58());
+
+      const data = CryptidInstruction.decode(
+        instruction.data,
+        CryptidInstruction
+      );
+      if (data.expandTransaction) {
+        const expand = data.expandTransaction;
+        expect(expand.accountOperations).to.deep.equal(accountOperations);
+        expect(expand.instructionOperations).to.deep.equal(
+          instructionOperations
+        );
+        expect(expand.readyToExecute.value).to.equal(true);
+      } else {
+        throw new Error('Instruction was not expand');
       }
     });
-
-    const seed = Math.floor(Math.random() * 100000).toString();
-    const instruction1 = await create(
-      accountOperations,
-      instructionOperations,
-      didPDAKey,
-      await deriveDefaultDOAFromKey(didPDAKey),
-      seed,
-      false,
-      [normalizeSigner(payer), []]
-    );
-
-    console.log(instruction1);
-
-    const instruction2 = await create(
-      accountOperations,
-      instructionOperations,
-      didPDAKey,
-      await deriveDefaultDOAFromKey(didPDAKey),
-      seed,
-      true,
-      [normalizeSigner(payer), []]
-    );
-
-    console.log(instruction2);
   });
 });

@@ -4,3 +4,8 @@ members = [
     "programs/cryptid_signer",
     "programs/test_utils",
 ]
+
+##TODO: This causes the entire program to break, need to figure out why
+#[profile.release]
+#lto = true
+#codegen-units = 1

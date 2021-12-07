@@ -1,5 +1,5 @@
-import { AccountOperation } from '../model/AccountOperation';
-import { InstructionOperation } from '../model/InstructionOperation';
+import AccountOperation from '../model/AccountOperation';
+import InstructionOperation from '../model/InstructionOperation';
 import {
   AccountMeta,
   PublicKey,
@@ -9,8 +9,7 @@ import { Signer } from '../../../types/crypto';
 import { deriveTransactionAccount } from '../util';
 import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { CryptidInstruction } from './instruction';
-import { TransactionState } from '../model/TransactionState';
-import { UnitValue } from '../solanaBorsh';
+import { AssignableBoolean } from '../solanaBorsh';
 
 export async function create(
   accountOperations: AccountOperation[],
@@ -36,9 +35,7 @@ export async function create(
   ];
 
   const data: Buffer = CryptidInstruction.expandTransaction(
-    readyToExecute
-      ? new TransactionState({ ready: new UnitValue() })
-      : new TransactionState({ notReady: new UnitValue() }),
+    AssignableBoolean.fromBoolean(readyToExecute),
     accountOperations,
     instructionOperations
   ).encode();

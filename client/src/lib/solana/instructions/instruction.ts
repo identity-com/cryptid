@@ -6,13 +6,12 @@ import {
   AssignableI64,
   Enum,
 } from '../solanaBorsh';
-import { InstructionData } from '../model/InstructionData';
-import { AssignablePublicKey } from '../model/AssignablePublicKey';
+import InstructionData from '../model/InstructionData';
+import AssignablePublicKey from '../model/AssignablePublicKey';
 import { PublicKey } from '@solana/web3.js';
-import { TransactionState } from '../model/TransactionState';
-import { AccountOperation } from '../model/AccountOperation';
-import { InstructionOperation } from '../model/InstructionOperation';
-import { ProposeTransactionSigners } from '../model/ProposeTransactionSigners';
+import AccountOperation from '../model/AccountOperation';
+import InstructionOperation from '../model/InstructionOperation';
+import ProposeTransactionSigners from '../model/ProposeTransactionSigners';
 
 export class ProposeTransaction extends Assignable<ProposeTransaction> {
   signers!: ProposeTransactionSigners[];
@@ -35,12 +34,12 @@ export class ProposeTransaction extends Assignable<ProposeTransaction> {
 }
 
 export class ExpandTransaction extends Assignable<ExpandTransaction> {
-  transactionState!: TransactionState;
+  readyToExecute!: AssignableBoolean;
   accountOperations!: AccountOperation[];
   instructionOperations!: InstructionOperation[];
 
   constructor(props: {
-    transactionState: TransactionState;
+    readyToExecute: AssignableBoolean;
     accountOperations: AccountOperation[];
     instructionOperations: InstructionOperation[];
   }) {
@@ -122,12 +121,12 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
 
   /**
    * Builds expand transaction data
-   * @param transactionState The new state of the transaction
+   * @param readyToExecute True if the transaction is ready to execute after
    * @param accountOperations The operations to execute on the accounts
    * @param instructionOperations The operations to execute on the instructions
    */
   static expandTransaction(
-    transactionState: TransactionState,
+    readyToExecute: AssignableBoolean,
     accountOperations: AccountOperation[],
     instructionOperations: InstructionOperation[]
   ): CryptidInstruction {
@@ -135,7 +134,7 @@ export class CryptidInstruction extends Enum<CryptidInstruction> {
       expandTransaction: new ExpandTransaction({
         accountOperations,
         instructionOperations,
-        transactionState,
+        readyToExecute,
       }),
     });
   }
@@ -188,7 +187,7 @@ add_struct_to_schema(ProposeTransaction, {
   accountSeed: 'string',
 });
 add_struct_to_schema(ExpandTransaction, {
-  transactionState: TransactionState,
+  readyToExecute: AssignableBoolean,
   accountOperations: [AccountOperation],
   instructionOperations: [InstructionOperation],
 });

@@ -2,7 +2,7 @@ import { bytesToBase58 } from '../../util';
 import { PublicKey } from '@solana/web3.js';
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
 
-export class AssignablePublicKey extends Assignable<AssignablePublicKey> {
+export default class AssignablePublicKey extends Assignable<AssignablePublicKey> {
   // The public key bytes
   public bytes!: number[];
 
@@ -32,5 +32,5 @@ export class AssignablePublicKey extends Assignable<AssignablePublicKey> {
 }
 
 add_struct_to_schema(AssignablePublicKey, {
-  bytes: [32],
+  bytes: ['u8', 32],
 });

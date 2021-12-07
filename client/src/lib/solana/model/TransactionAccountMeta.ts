@@ -1,8 +1,7 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
-import { randomInt } from 'crypto';
 
-export class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
+export default class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
   key!: number;
   meta!: number;
 
@@ -16,18 +15,6 @@ export class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
 
   isWritable(): boolean {
     return (this.meta & IS_WRITABLE) > 0;
-  }
-
-  static random(props?: {
-    accountsNum?: number;
-    isSigner?: boolean;
-    isWritable?: boolean;
-  }): TransactionAccountMeta {
-    return TransactionAccountMeta.fromIndexAndMeta(
-      randomInt(0, props && props.accountsNum ? props.accountsNum : 10),
-      props && props.isSigner ? props.isSigner : randomInt(0, 2) === 1,
-      props && props.isWritable ? props.isWritable : randomInt(0, 2) === 1
-    );
   }
 
   static fromIndexAndMeta(

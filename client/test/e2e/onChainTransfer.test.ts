@@ -16,13 +16,14 @@ import { airdrop, createTransaction } from '../utils/solana';
 import { create as createPropose } from '../../src/lib/solana/instructions/proposeTransaction';
 import { create as createExpand } from '../../src/lib/solana/instructions/expandTransaction';
 import { create as createExecute } from '../../src/lib/solana/instructions/executeTransaction';
-import { InstructionData } from '../../src/lib/solana/model/InstructionData';
-import { TransactionAccountMeta } from '../../src/lib/solana/model/TransactionAccountMeta';
+import InstructionData from '../../src/lib/solana/model/InstructionData';
+import TransactionAccountMeta from '../../src/lib/solana/model/TransactionAccountMeta';
 import { normalizeSigner } from '../../src/lib/util';
 import { expect } from 'chai';
-import { AccountOperation } from '../../src/lib/solana/model/AccountOperation';
-import { AssignablePublicKey } from '../../src/lib/solana/model/AssignablePublicKey';
-import { InstructionOperation } from '../../src/lib/solana/model/InstructionOperation';
+import AccountOperation from '../../src/lib/solana/model/AccountOperation';
+import AssignablePublicKey from '../../src/lib/solana/model/AssignablePublicKey';
+import InstructionOperation from '../../src/lib/solana/model/InstructionOperation';
+import { AssignableBuffer } from '../../src/lib/solana/solanaBorsh';
 
 describe('on-chain transfer', function () {
   this.timeout(20_000);
@@ -81,7 +82,7 @@ describe('on-chain transfer', function () {
             TransactionAccountMeta.fromIndexAndMeta(1, true, true),
             TransactionAccountMeta.fromIndexAndMeta(2, false, true),
           ],
-          data: transferData,
+          data: new AssignableBuffer(transferData),
         }),
       ],
       didPDAKey,
@@ -117,7 +118,7 @@ describe('on-chain transfer', function () {
               TransactionAccountMeta.fromIndexAndMeta(1, true, true),
               TransactionAccountMeta.fromIndexAndMeta(3, false, true),
             ],
-            data: transferData,
+            data: new AssignableBuffer(transferData),
           }),
         }),
       ],

@@ -1,19 +1,15 @@
-import { TransactionAccountMeta } from './TransactionAccountMeta';
-import { add_struct_to_schema, Assignable } from '../solanaBorsh';
+import TransactionAccountMeta from './TransactionAccountMeta';
+import {
+  add_struct_to_schema,
+  Assignable,
+  AssignableBuffer,
+} from '../solanaBorsh';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-export class InstructionData extends Assignable<InstructionData> {
+export default class InstructionData extends Assignable<InstructionData> {
   program_id!: number;
   accounts!: TransactionAccountMeta[];
-  data!: Uint8Array;
-
-  constructor(props: {
-    program_id: number;
-    accounts: TransactionAccountMeta[];
-    data: Uint8Array;
-  }) {
-    super(props);
-  }
+  data!: AssignableBuffer;
 
   static fromTransactionInstruction(
     instruction: TransactionInstruction,
@@ -30,7 +26,7 @@ export class InstructionData extends Assignable<InstructionData> {
       accounts: instruction.keys.map((meta) =>
         TransactionAccountMeta.fromAccountMeta(meta, accountArray)
       ),
-      data: instruction.data,
+      data: new AssignableBuffer(instruction.data),
     });
   }
 }
@@ -38,5 +34,5 @@ export class InstructionData extends Assignable<InstructionData> {
 add_struct_to_schema(InstructionData, {
   program_id: 'u8',
   accounts: [TransactionAccountMeta],
-  data: ['u8'],
+  data: AssignableBuffer,
 });
