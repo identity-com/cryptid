@@ -2,7 +2,7 @@ name: Programs-Cryptid-Signer
 on:
   push:
     paths:
-      - 'programs-cryptid-signer'
+      - 'programs/cryptid_signer/**'
   pull_request:
 jobs:
   program-lint:
