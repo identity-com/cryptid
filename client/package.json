@@ -21,7 +21,7 @@
     "analyze": "size-limit --why",
     "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
     "test-e2e-pattern": "mocha test/e2e",
-    "start-validator": "solana-test-validator --bpf-program CFE6uDuLK7Hd9HVQqWkXU3nTmdZUm5KCEtFcEfbSTZLy ../target/deploy/cryptid_signer.so --bpf-program idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM ../programs/cryptid_signer/tests/fixtures/sol_did_1.0.0.so --reset"
+    "start-validator": "solana-test-validator --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ../target/deploy/cryptid_signer.so --bpf-program idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM ../programs/cryptid_signer/tests/fixtures/sol_did_1.0.0.so --reset"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
