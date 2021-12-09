@@ -133,7 +133,7 @@ jobs:
 
   program-dev-deploy:
     name: Deploy dev cryptid on-chain program, built on Solana ${{ matrix.solana }}, Rust ${{ matrix.rust }}, and ${{ matrix.os }}
-    if: github.ref == 'refs/heads/develop' && github.event == 'push'
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     needs: [program-lint, program-unit-test, program-integration-test]
     env:
       SOLANA_PROGRAM_ID: tcrjc6mfci8bQLmXPfrVw9fJm9Y5tr268tByjSQmSe9
