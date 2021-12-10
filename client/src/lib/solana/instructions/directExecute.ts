@@ -9,7 +9,7 @@ import {
 import { Signer } from '../../../types/crypto';
 import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 
@@ -111,7 +111,7 @@ function convertToDirectExecute(
 
   return new TransactionInstruction({
     keys,
-    programId: DOA_PROGRAM_ID,
+    programId: CRYPTID_PROGRAM_ID,
     data,
   });
 }
