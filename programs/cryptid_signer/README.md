@@ -32,15 +32,15 @@ pub struct CryptidAccount {
     pub settings_sequence: u16,
 }
 ```
-The cryptid account stores the did and program that it signs for. 
-It also stores the nonce of the cryptid address, the number of keys needed for signing and a tracker for settings changes.
+The Cryptid account stores the did and program that it signs for. 
+It also stores the nonce of the Cryptid address, the number of keys needed for signing and a tracker for settings changes.
 A single did and program combo can have any number of Cryptid Accounts, but only a single Generative Cryptid Account.
 A Generative Cryptid Account's address is derived from the did and did program combo.
 
 Generative Cryptid Accounts have default values for fields other than the `did` and `did_program` that derived them: 
 - `signer_nonce`: The largest valid nonce
 - `key_threshold`: `1`
-- `settings_sequence`: A value that is exclusive to generative cryptid accounts
+- `settings_sequence`: A value that is exclusive to generative Cryptid accounts
 
 Instructions that accept an On-Chain Cryptid Account generally accept a Generative Cryptid Account as well.
 
