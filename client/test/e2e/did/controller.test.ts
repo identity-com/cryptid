@@ -185,4 +185,37 @@ describe('DID Controller operations', function () {
       await cryptid.addController(controller_A);
     });
   });
+
+  it('update DID Document as controller', async () => {
+    // setup controlled
+    const controlledKey = Keypair.generate();
+    const controlledDid =
+      'did:sol:localnet:' + controlledKey.publicKey.toBase58();
+    const controlledCryptid = await build(controlledDid, controlledKey, {
+      connection,
+      waitForConfirmation: true,
+    });
+
+    // setup controller
+    const controllerKey = Keypair.generate();
+    const controllerDid =
+      'did:sol:localnet:' + controllerKey.publicKey.toBase58();
+    const controllerCryptid = await build(controllerDid, controllerKey, {
+      connection,
+      waitForConfirmation: true,
+    });
+
+    // money money money
+    await airdrop(connection, controlledKey.publicKey);
+    await airdrop(connection, controllerKey.publicKey);
+    await airdrop(connection, await controlledCryptid.address());
+    await airdrop(connection, await controllerCryptid.address());
+
+    // Add controller to controlled
+    await controlledCryptid.addController(controllerDid);
+
+    // shows the lack of control
+    const inControlCryptid = controllerCryptid.as(controlledDid);
+    await inControlCryptid.addKey(Keypair.generate().publicKey, 'allyourbase');
+  });
 });
