@@ -33,22 +33,24 @@ export const create = async (
     throw new Error('Not enough signers for directExecute');
   }
 
-  const instructionList: TransactionInstruction[] = [];
+  // check each instruction, wrapping as needed
+  return unsignedTransaction.instructions.reduce(
+    (list: TransactionInstruction[], instruction) => {
+      list.push(
+        ...convertInstruction(
+          instruction,
+          didPDAKey,
+          signers,
+          cryptidAccount,
+          cryptidSignerKey,
+          debug
+        )
+      );
 
-  // check each instruction and add to the list, wrapping as needed
-  unsignedTransaction.instructions.forEach((instruction) => {
-    addTransaction(
-      instruction,
-      instructionList,
-      didPDAKey,
-      signers,
-      cryptidAccount,
-      cryptidSignerKey,
-      debug
-    );
-  });
-
-  return instructionList;
+      return list;
+    },
+    []
+  );
 };
 
 function convertToDirectExecute(
@@ -107,9 +109,13 @@ function convertToDirectExecute(
   });
 }
 
-function addTransaction(
+/**
+ * Checks the instruction, converting it to direct execute if needed.
+ *
+ * This method can return one or more instructions as a result.
+ */
+function convertInstruction(
   instruction: TransactionInstruction,
-  instructionList: TransactionInstruction[],
   didPDAKey: PublicKey,
   signers: [Signer, AccountMeta[]][],
   cryptidAccount: PublicKey,
@@ -118,6 +124,8 @@ function addTransaction(
 ) {
   const firstSigner = signers[0][0].publicKey;
   const MAX_PROGRAM_SIZE = 10240;
+
+  // Must handle case where trying to allocate account with greater than 10240 bytes of space
   if (instruction.programId.equals(SystemProgram.programId)) {
     const type = SystemInstruction.decodeInstructionType(instruction);
     if (type === 'Create' || type === 'CreateWithSeed') {
@@ -126,6 +134,7 @@ function addTransaction(
           ? SystemInstruction.decodeCreateAccount(instruction)
           : SystemInstruction.decodeCreateWithSeed(instruction);
 
+      // If large enough space required do allocation outside direct execute
       if (create.space > MAX_PROGRAM_SIZE) {
         // If funder is our signer we transfer to the signing key and then use those funds for the creation
         if (create.fromPubkey.equals(cryptidSignerKey)) {
@@ -135,7 +144,18 @@ function addTransaction(
             toPubkey: firstSigner,
           });
 
-          instructionList.push(
+          const createInstruction =
+            type === 'Create'
+              ? SystemProgram.createAccount({
+                ...(create as CreateAccountParams),
+                fromPubkey: firstSigner,
+              })
+              : SystemProgram.createAccountWithSeed({
+                ...(create as CreateAccountWithSeedParams),
+                fromPubkey: firstSigner,
+              });
+
+          return [
             convertToDirectExecute(
               [transferInstruction],
               didPDAKey,
@@ -143,27 +163,12 @@ function addTransaction(
               cryptidAccount,
               cryptidSignerKey,
               debug
-            )
-          );
-
-          const createInstruction =
-            type === 'Create'
-              ? SystemProgram.createAccount({
-                  ...(create as CreateAccountParams),
-                  fromPubkey: firstSigner,
-                })
-              : SystemProgram.createAccountWithSeed({
-                  ...(create as CreateAccountWithSeedParams),
-                  fromPubkey: firstSigner,
-                });
-
-          instructionList.push(createInstruction);
-
-          return;
+            ),
+            createInstruction,
+          ];
         } else {
-          instructionList.push(instruction);
-
-          return;
+          // If not our key run it outside the direct execute
+          return [instruction];
         }
       }
     } else if (type === 'Allocate' || type === 'AllocateWithSeed') {
@@ -177,14 +182,12 @@ function addTransaction(
         allocate.space > MAX_PROGRAM_SIZE &&
         !allocate.accountPubkey.equals(cryptidSignerKey)
       ) {
-        instructionList.push(instruction);
-
-        return;
+        return [instruction];
       }
     }
   }
 
-  instructionList.push(
+  return [
     convertToDirectExecute(
       [instruction],
       didPDAKey,
@@ -192,8 +195,8 @@ function addTransaction(
       cryptidAccount,
       cryptidSignerKey,
       debug
-    )
-  );
+    ),
+  ];
 }
 
 const addMetaUnique = (
