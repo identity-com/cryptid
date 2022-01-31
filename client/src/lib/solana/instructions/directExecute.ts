@@ -147,13 +147,13 @@ function convertInstruction(
           const createInstruction =
             type === 'Create'
               ? SystemProgram.createAccount({
-                ...(create as CreateAccountParams),
-                fromPubkey: firstSigner,
-              })
+                  ...(create as CreateAccountParams),
+                  fromPubkey: firstSigner,
+                })
               : SystemProgram.createAccountWithSeed({
-                ...(create as CreateAccountWithSeedParams),
-                fromPubkey: firstSigner,
-              });
+                  ...(create as CreateAccountWithSeedParams),
+                  fromPubkey: firstSigner,
+                });
 
           return [
             convertToDirectExecute(
@@ -172,12 +172,12 @@ function convertInstruction(
         }
       }
     } else if (type === 'Allocate' || type === 'AllocateWithSeed') {
-      // Allocate doesn't transfer funds so just run it outside unless it's small enough or our signer is involved
       const allocate =
         type === 'Allocate'
           ? SystemInstruction.decodeAllocate(instruction)
           : SystemInstruction.decodeAllocateWithSeed(instruction);
 
+      // Allocate doesn't transfer funds so just run it outside unless it's small enough or our signer is involved
       if (
         allocate.space > MAX_PROGRAM_SIZE &&
         !allocate.accountPubkey.equals(cryptidSignerKey)
