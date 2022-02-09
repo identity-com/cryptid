@@ -26,7 +26,7 @@ const sandbox = sinon.createSandbox();
 
 const stubResolveDID = stubResolve(sandbox);
 
-describe('transactions/did/addKey', () => {
+describe.skip('transactions/did/addKey', () => {
   const key = Keypair.generate();
   const newKey = Keypair.generate();
   const did = publicKeyToDid(key.publicKey);

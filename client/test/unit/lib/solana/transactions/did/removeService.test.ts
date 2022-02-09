@@ -49,7 +49,7 @@ const stubResolveDID = async (
   return document;
 };
 
-describe('transactions/did/removeService', () => {
+describe.skip('transactions/did/removeService', () => {
   let document: DIDDocument;
 
   beforeEach(() => stubConnection(sandbox));

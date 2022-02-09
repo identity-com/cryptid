@@ -52,7 +52,7 @@ const stubResolveDID = async (
   return document;
 };
 
-describe('transactions/did/removeKey', () => {
+describe.skip('transactions/did/removeKey', () => {
   const key = Keypair.generate();
   const did = publicKeyToDid(key.publicKey);
 

@@ -28,7 +28,7 @@ const sandbox = sinon.createSandbox();
 
 const stubResolveDID = stubResolve(sandbox);
 
-describe('transactions/did/addService', () => {
+describe.skip('transactions/did/addService', () => {
   const key = Keypair.generate();
   const did = publicKeyToDid(key.publicKey);
   const service: ServiceEndpoint = {
