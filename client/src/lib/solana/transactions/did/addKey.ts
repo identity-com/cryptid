@@ -1,33 +1,9 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { makeVerificationMethod } from '../../../did';
-import { resolve } from '@identity.com/sol-did-client';
+import { createAddKeyInstruction } from '@identity.com/sol-did-client';
 import { Signer } from '../../../../types/crypto';
-import { isDefault, registerOrUpdate } from './util';
-import { DIDDocument, VerificationMethod } from 'did-resolver';
-
-const updatedCapabilityInvocation = (
-  existingDocument: DIDDocument,
-  newVerificationMethod: VerificationMethod
-) => {
-  if (!existingDocument.capabilityInvocation) {
-    return [newVerificationMethod.id];
-  }
-
-  if (existingDocument.capabilityInvocation.length === 1) {
-    if (isDefault(existingDocument.capabilityInvocation[0])) {
-      // this is added by default when capabilityInvocation is empty on chain
-      // when adding a new one, include it to avoid overwriting
-      return [
-        ...existingDocument.capabilityInvocation,
-        newVerificationMethod.id,
-      ];
-    }
-  }
-
-  // no need to add existing capabilityInvocations as we are using merge behaviour "append"
-
-  return [newVerificationMethod.id];
-};
+import { createTransaction } from '../util';
+import { filterNotNil } from '../../../util';
+import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
 
 /**
  * Creates a transaction that adds a key to a DID.
@@ -43,17 +19,22 @@ export const addKey = async (
   alias: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  // resolve the existing document so that any existing capability invocation keys can be included in the registered version
-  // if this is missed, registering with a new key removes the old key, which we don't want in this case.
-  const existingDocument = await resolve(did, { connection });
-  const verificationMethod = makeVerificationMethod(did, newKey, alias);
-  const document = {
-    verificationMethod: [verificationMethod],
-    capabilityInvocation: updatedCapabilityInvocation(
-      existingDocument,
-      verificationMethod
-    ),
-  };
+  const instruction = await createAddKeyInstruction({
+    authority,
+    did,
+    key: newKey,
+    fragment: alias,
+    connection,
+    payer: signer.publicKey,
+    size: DEFAULT_DID_DOCUMENT_SIZE,
+  });
 
-  return registerOrUpdate(did, document, connection, signer, authority);
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return await createTransaction(
+    recentBlockhash,
+    filterNotNil([instruction]),
+    signer.publicKey,
+    [signer]
+  );
 };

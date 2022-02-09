@@ -1,20 +1,9 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { registerOrUpdate, sanitizeDefaultKeys } from './util';
-import { DIDDocument } from 'did-resolver';
-import { resolve } from '@identity.com/sol-did-client';
+import { createRemoveControllerInstruction } from '@identity.com/sol-did-client';
 import { filterNotNil } from '../../../util';
-import { flatten, pick, without } from 'ramda';
-
-const hasController = (document: DIDDocument, controller: string): boolean => {
-  if (!document.controller) return false;
-
-  if (Array.isArray(document.controller)) {
-    return document.controller.includes(controller);
-  }
-
-  return document.controller === controller;
-};
+import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
+import { createTransaction } from '../util';
 
 /**
  * Creates a transaction that removes a controller to a DID.
@@ -29,42 +18,21 @@ export const removeController = async (
   controller: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did, { connection });
-
-  if (!hasController(existingDocument, controller))
-    throw new Error(`Controller ${controller} not found on ${did}`);
-
-  // remove the controller from the list
-  const newControllers = without(
-    [controller],
-    filterNotNil(flatten([existingDocument.controller]))
-  );
-
-  const document: Partial<DIDDocument> = {
-    ...pick(
-      [
-        'verificationMethod',
-        'authentication',
-        'assertionMethod',
-        'keyAgreement',
-        'capabilityInvocation',
-        'capabilityDelegation',
-        'service',
-      ],
-      existingDocument
-    ),
-    // remove the controller property if empty. note this works only with mergeBehaviour "Overwrite"
-    controller: newControllers.length ? newControllers : undefined,
-  };
-
-  sanitizeDefaultKeys(document);
-
-  return registerOrUpdate(
-    did,
-    document,
-    connection,
-    signer,
+  const instruction = await createRemoveControllerInstruction({
     authority,
-    'Overwrite'
+    did,
+    connection,
+    controller,
+    payer: signer.publicKey,
+    size: DEFAULT_DID_DOCUMENT_SIZE,
+  });
+
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return await createTransaction(
+    recentBlockhash,
+    filterNotNil([instruction]),
+    signer.publicKey,
+    [signer]
   );
 };
