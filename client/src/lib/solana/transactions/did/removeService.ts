@@ -19,7 +19,7 @@ export const removeService = async (
     authority,
     did,
     connection,
-    alias,
+    fragment: alias,
     payer: signer.publicKey,
     size: DEFAULT_DID_DOCUMENT_SIZE,
   });
