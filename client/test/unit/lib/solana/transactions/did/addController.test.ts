@@ -12,8 +12,6 @@ import { normalizeSigner } from '../../../../../../src/lib/util';
 import * as SolDid from '@identity.com/sol-did-client';
 import { stubResolveDID as stubResolve } from '../../../../../utils/did';
 import { SOL_DID_PROGRAM_ID } from '../../../../../../src/lib/constants';
-// import * as DIDUtil from '../../../../../../src/lib/solana/transactions/did/util';
-
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -32,7 +30,7 @@ describe('transactions/did/addController', () => {
 
   afterEach(sandbox.restore);
 
-  it.skip('should create an update instruction if the DID is registered', async () => {
+  it('should create an update instruction if the DID is registered', async () => {
     await stubResolveDID(did, key, true);
     const dummyUpdateInstruction = new TransactionInstruction({
       keys: [],
@@ -53,25 +51,4 @@ describe('transactions/did/addController', () => {
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyUpdateInstruction);
   });
-
-  // it('should add the controller', async () => {
-  //   await stubResolveDID(did, key, false);
-  //
-  //   const expectedDocument = sinon.match({ controller: [controller] });
-  //
-  //   const expectation = sandbox
-  //     .mock(DIDUtil)
-  //     .expects('createAddControllerInstruction')
-  //     .withArgs(did, expectedDocument);
-  //
-  //   await addController(
-  //     connection(),
-  //     did,
-  //     normalizeSigner(key),
-  //     controller,
-  //     key.publicKey
-  //   );
-  //
-  //   expectation.verify();
-  // });
 });
