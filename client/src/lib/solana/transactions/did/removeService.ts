@@ -1,14 +1,9 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { hasAlias, registerOrUpdate, sanitizeDefaultKeys } from './util';
-import { DIDDocument, ServiceEndpoint } from 'did-resolver';
-import { resolve } from '@identity.com/sol-did-client';
-import { pick, without } from 'ramda';
-
-const findServiceWithAlias = (
-  document: DIDDocument,
-  alias: string
-): ServiceEndpoint | undefined => document.service?.find(hasAlias(alias));
+import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
+import { createTransaction } from '../util';
+import { filterNotNil } from '../../../util';
+import { createRemoveServiceInstruction } from '@identity.com/sol-did-client';
 
 /**
  * Creates a transaction that removes a service from a DID.
@@ -20,43 +15,21 @@ export const removeService = async (
   alias: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const existingDocument = await resolve(did, { connection });
-  const serviceToRemove = findServiceWithAlias(existingDocument, alias);
-
-  if (!serviceToRemove) throw new Error(`Service ${alias} not found on ${did}`);
-
-  // get the new list of services without the one being removed.
-  // the cast is safe here as if the service array did not exist, it would fail above
-  const newServices = without(
-    [serviceToRemove],
-    existingDocument.service as ServiceEndpoint[]
-  );
-
-  const document: Partial<DIDDocument> = {
-    ...pick(
-      [
-        'verificationMethod',
-        'authentication',
-        'assertionMethod',
-        'keyAgreement',
-        'capabilityInvocation',
-        'capabilityDelegation',
-        'controller',
-      ],
-      existingDocument
-    ),
-    // remove the service property if empty. note this works only with mergeBehaviour "Overwrite"
-    service: newServices.length ? newServices : undefined,
-  };
-
-  sanitizeDefaultKeys(document);
-
-  return registerOrUpdate(
-    did,
-    document,
-    connection,
-    signer,
+  const instruction = await createRemoveServiceInstruction({
     authority,
-    'Overwrite'
+    did,
+    connection,
+    fragment: alias,
+    payer: signer.publicKey,
+    size: DEFAULT_DID_DOCUMENT_SIZE,
+  });
+
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return await createTransaction(
+    recentBlockhash,
+    filterNotNil([instruction]),
+    signer.publicKey,
+    [signer]
   );
 };
