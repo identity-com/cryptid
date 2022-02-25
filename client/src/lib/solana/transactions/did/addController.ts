@@ -1,7 +1,9 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { registerOrUpdate } from './util';
-import { DIDDocument } from 'did-resolver';
+import { createAddControllerInstruction } from '@identity.com/sol-did-client';
+import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
+import { createTransaction } from '../util';
+import { filterNotNil } from '../../../util';
 
 /**
  * Creates a transaction that adds a controller to a DID.
@@ -16,9 +18,21 @@ export const addController = async (
   controller: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const document: Partial<DIDDocument> = {
-    controller: [controller],
-  };
+  const instruction = await createAddControllerInstruction({
+    authority,
+    did,
+    connection,
+    controller,
+    payer: signer.publicKey,
+    size: DEFAULT_DID_DOCUMENT_SIZE,
+  });
 
-  return registerOrUpdate(did, document, connection, signer, authority);
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return await createTransaction(
+    recentBlockhash,
+    filterNotNil([instruction]),
+    signer.publicKey,
+    [signer]
+  );
 };

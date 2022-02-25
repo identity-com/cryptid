@@ -183,7 +183,7 @@ describe('SimpleCryptid', () => {
 
       const address = await cryptid.address();
       expect(address.toBase58()).to.equal(
-        'DA2m96dgMW9vC6BMFTCo8HvMPibq1SB8iYY7z7veedG4'
+        '4Uk7SRqmZH2avVaTE63FjVrJPS7whve3muPEgDv9FMCy'
       );
     });
   });

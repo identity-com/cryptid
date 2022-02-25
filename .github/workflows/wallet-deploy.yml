@@ -43,5 +43,11 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy
-        # set CI=false to ignore lint warnings inherited from sollet.io (until fixed)
-        run: CI=false STAGE=prod yarn workspace @identity.com/cryptid-wallet deploy
+
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            STAGE=dev
+          fi
+
+          # set CI=false to ignore lint warnings inherited from sollet.io (until fixed)
+          CI=false STAGE=${STAGE:-prod} yarn workspace @identity.com/cryptid-wallet deploy
