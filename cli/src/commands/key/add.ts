@@ -17,7 +17,7 @@ export default class AddKey extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(AddKey);
+    const { args } = await this.parse(AddKey);
 
     await this.cryptid.addKey(args.key, args.alias);
     this.log("Added");

@@ -1,11 +1,11 @@
-import { flags } from "@oclif/command";
+import { Flags } from "@oclif/core";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import * as Flags from "../../lib/flags";
+import * as flags from "../../lib/flags";
 import Base from "../base";
 import { resolveRecipient } from "../../service/cryptid";
 
@@ -25,14 +25,15 @@ export default class TokenTransfer extends Base {
   static description = "Send SPL-Tokens to a recipient";
 
   static flags = {
-    ...Flags.common,
-    mint: flags.build<PublicKey>({
+    ...flags.common,
+    mint: Flags.build<PublicKey>({
       char: "m",
       description: "The SPL-Token mint(base58)",
       required: true,
-      parse: (address: string): PublicKey => new PublicKey(address),
+      parse: async (address: string): Promise<PublicKey> =>
+        new PublicKey(address),
     })(),
-    allowUnfundedRecipient: flags.boolean({
+    allowUnfundedRecipient: Flags.boolean({
       char: "f",
       description: "Create a token account for the recipient if needed",
       default: false,
@@ -53,7 +54,7 @@ export default class TokenTransfer extends Base {
   ];
 
   async run(): Promise<void> {
-    const { args, flags } = this.parse(TokenTransfer);
+    const { args, flags } = await this.parse(TokenTransfer);
 
     const cryptidAddress = await this.cryptid.address();
 

@@ -18,7 +18,7 @@ export default class Alias extends Base {
   static args = [{ name: "name" }, { name: "did" }];
 
   async run(): Promise<void> {
-    const { args, flags } = this.parse(Alias);
+    const { args, flags } = await this.parse(Alias);
 
     if (!flags.unset && args.name && args.did) {
       this.cryptidConfig.alias(args.name, args.did);

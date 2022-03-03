@@ -17,7 +17,7 @@ export default class TokenBalance extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(TokenBalance);
+    const { args } = await this.parse(TokenBalance);
 
     const accounts = await getTokenAccounts(this.cryptid, this.cryptidConfig);
 
