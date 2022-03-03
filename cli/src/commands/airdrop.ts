@@ -10,7 +10,8 @@ export default class Airdrop extends Base {
     {
       name: "amount",
       default: DEFAULT_AIRDROP_LAMPORTS,
-      parse: (amountStr: string): number => parseInt(amountStr, 10),
+      parse: async (amountStr: string): Promise<number> =>
+        parseInt(amountStr, 10),
     },
   ];
 

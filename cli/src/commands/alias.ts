@@ -1,5 +1,5 @@
-import { flags } from "@oclif/command";
-import * as Flags from "../lib/flags";
+import { Flags } from "@oclif/core";
+import * as flags from "../lib/flags";
 import { mapObjIndexed } from "ramda";
 import Base from "./base";
 
@@ -7,8 +7,8 @@ export default class Alias extends Base {
   static description = "Associate a DID with an alias";
 
   static flags = {
-    ...Flags.common,
-    unset: flags.boolean({
+    ...flags.common,
+    unset: Flags.boolean({
       char: "u",
       description: "unset an alias",
       default: false,

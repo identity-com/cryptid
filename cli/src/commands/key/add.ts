@@ -9,7 +9,8 @@ export default class AddKey extends Base {
     {
       name: "key",
       required: false,
-      parse: (address: string): PublicKey => new PublicKey(address),
+      parse: async (address: string): Promise<PublicKey> =>
+        new PublicKey(address),
     },
     { name: "alias" },
   ];

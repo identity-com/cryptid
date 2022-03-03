@@ -10,7 +10,8 @@ export default class TokenBalance extends Base {
       name: "mint",
       description: "The SPL-Token mint(base58)",
       required: true,
-      parse: (address: string): PublicKey => new PublicKey(address),
+      parse: async (address: string): Promise<PublicKey> =>
+        new PublicKey(address),
     },
   ];
 
