@@ -18,8 +18,8 @@ Sign transactions and configure Cryptid DID Wallets
 $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
-$ cryptid (-v|--version|version)
-@identity.com/cryptid-cli/0.1.5 darwin-x64 node-v16.0.0
+$ cryptid (--version|-v)
+@identity.com/cryptid-cli/0.1.5 darwin-arm64 node-v16.14.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -28,201 +28,35 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid address`](#cryptid-address)
-* [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
-* [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
-* [`cryptid balance`](#cryptid-balance)
-* [`cryptid base`](#cryptid-base)
-* [`cryptid config [SUBCOMMAND] [KEY] [VALUE]`](#cryptid-config-subcommand-key-value)
-* [`cryptid controller:add [DID]`](#cryptid-controlleradd-did)
-* [`cryptid controller:remove [DID]`](#cryptid-controllerremove-did)
-* [`cryptid controller:show [DID]`](#cryptid-controllershow-did)
-* [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init`](#cryptid-init)
-* [`cryptid key:add [KEY] [ALIAS]`](#cryptid-keyadd-key-alias)
-* [`cryptid key:remove [ALIAS]`](#cryptid-keyremove-alias)
-* [`cryptid key:show`](#cryptid-keyshow)
-* [`cryptid token:balance MINT`](#cryptid-tokenbalance-mint)
-* [`cryptid token:show`](#cryptid-tokenshow)
-* [`cryptid token:transfer TO AMOUNT`](#cryptid-tokentransfer-to-amount)
-* [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
-
-## `cryptid address`
-
-Show the cryptid account's address
-
-```
-USAGE
-  $ cryptid address
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/address.ts)_
-
-## `cryptid airdrop [AMOUNT]`
-
-Airdrop funds into the cryptid account and owner key
-
-```
-USAGE
-  $ cryptid airdrop [AMOUNT]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/airdrop.ts)_
-
-## `cryptid alias [NAME] [DID]`
-
-Associate a DID with an alias
-
-```
-USAGE
-  $ cryptid alias [NAME] [DID]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-  -u, --unset          unset an alias
-```
-
-_See code: [src/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/alias.ts)_
-
-## `cryptid balance`
-
-Show the cryptid account SOL balance
-
-```
-USAGE
-  $ cryptid balance
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/balance.ts)_
-
-## `cryptid base`
-
-```
-USAGE
-  $ cryptid base
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/base.ts)_
-
-## `cryptid config [SUBCOMMAND] [KEY] [VALUE]`
-
-Manage Cryptid configuration
-
-```
-USAGE
-  $ cryptid config [SUBCOMMAND] [KEY] [VALUE]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/config.ts)_
-
-## `cryptid controller:add [DID]`
-
-Add a controller to a cryptid account
-
-```
-USAGE
-  $ cryptid controller add [DID]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/controller/add.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/add.ts)_
-
-## `cryptid controller:remove [DID]`
-
-Remove a controller from a cryptid account
-
-```
-USAGE
-  $ cryptid controller remove [DID]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/controller/remove.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/remove.ts)_
-
-## `cryptid controller:show [DID]`
-
-Show the controllers of a cryptid account
-
-```
-USAGE
-  $ cryptid controller show [DID]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/controller/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/controller/show.ts)_
-
-## `cryptid document`
-
-Show the cryptid account's DID Document
-
-```
-USAGE
-  $ cryptid document
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/document.ts)_
+* [`cryptid plugins`](#cryptid-plugins)
+* [`cryptid plugins:inspect PLUGIN...`](#cryptid-pluginsinspect-plugin)
+* [`cryptid plugins:install PLUGIN...`](#cryptid-pluginsinstall-plugin)
+* [`cryptid plugins:link PLUGIN`](#cryptid-pluginslink-plugin)
+* [`cryptid plugins:uninstall PLUGIN...`](#cryptid-pluginsuninstall-plugin)
+* [`cryptid plugins update`](#cryptid-plugins-update)
+* [`cryptid version`](#cryptid-version)
 
 ## `cryptid help [COMMAND]`
 
-display help for cryptid
+Display help for cryptid.
 
 ```
 USAGE
-  $ cryptid help [COMMAND]
+  $ cryptid help [COMMAND] [-n]
 
 ARGUMENTS
-  COMMAND  command to show help for
+  COMMAND  Command to show help for.
 
-OPTIONS
-  --all  see all commands in CLI
+FLAGS
+  -n, --nested-commands  Include all nested commands in the output.
+
+DESCRIPTION
+  Display help for cryptid.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.11/src/commands/help.ts)_
 
 ## `cryptid init`
 
@@ -230,143 +64,173 @@ Initialise the cryptid library
 
 ```
 USAGE
-  $ cryptid init
+  $ cryptid init [-h] [-o] [-p <value>] [-k <value>] [-z <value>]
 
-OPTIONS
-  -h, --help             show CLI help
-  -k, --key=key          Path to a solana keypair
+FLAGS
+  -h, --help             Show CLI help.
+  -k, --key=<value>      Path to a solana keypair
   -o, --overwrite        Overwrite existing configuration
-  -p, --path=path        Configuration path
-  -z, --cluster=cluster  Cluster
+  -p, --path=<value>     Configuration path
+  -z, --cluster=<value>  Cluster
+
+DESCRIPTION
+  Initialise the cryptid library
 ```
 
 _See code: [src/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/init.ts)_
 
-## `cryptid key:add [KEY] [ALIAS]`
+## `cryptid plugins`
 
-Add a cryptid key
-
-```
-USAGE
-  $ cryptid key add [KEY] [ALIAS]
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/key/add.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/add.ts)_
-
-## `cryptid key:remove [ALIAS]`
-
-Remove a cryptid key
+List installed plugins.
 
 ```
 USAGE
-  $ cryptid key remove [ALIAS]
+  $ cryptid plugins [--core]
 
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+FLAGS
+  --core  Show core plugins.
+
+DESCRIPTION
+  List installed plugins.
+
+EXAMPLES
+  $ cryptid plugins
 ```
 
-_See code: [src/commands/key/remove.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/remove.ts)_
+_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v2.1.0/src/commands/plugins/index.ts)_
 
-## `cryptid key:show`
+## `cryptid plugins:inspect PLUGIN...`
 
-List keys attached to the cryptid account
+Displays installation properties of a plugin.
 
 ```
 USAGE
-  $ cryptid key show
+  $ cryptid plugins:inspect PLUGIN...
 
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+ARGUMENTS
+  PLUGIN  [default: .] Plugin to inspect.
+
+FLAGS
+  -h, --help     Show CLI help.
+  -v, --verbose
+
+DESCRIPTION
+  Displays installation properties of a plugin.
+
+EXAMPLES
+  $ cryptid plugins:inspect myplugin
+```
+
+## `cryptid plugins:install PLUGIN...`
+
+Installs a plugin into the CLI.
+
+```
+USAGE
+  $ cryptid plugins:install PLUGIN...
+
+ARGUMENTS
+  PLUGIN  Plugin to install.
+
+FLAGS
+  -f, --force    Run yarn install with force flag.
+  -h, --help     Show CLI help.
+  -v, --verbose
+
+DESCRIPTION
+  Installs a plugin into the CLI.
+
+  Can be installed from npm or a git url.
+
+  Installation of a user-installed plugin will override a core plugin.
+
+  e.g. If you have a core plugin that has a 'hello' command, installing a user-installed plugin with a 'hello' command
+  will override the core plugin implementation. This is useful if a user needs to update core plugin functionality in
+  the CLI without the need to patch and update the whole CLI.
 
 ALIASES
-  $ cryptid
+  $ cryptid plugins add
+
+EXAMPLES
+  $ cryptid plugins:install myplugin 
+
+  $ cryptid plugins:install https://github.com/someuser/someplugin
+
+  $ cryptid plugins:install someuser/someplugin
 ```
 
-_See code: [src/commands/key/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/key/show.ts)_
+## `cryptid plugins:link PLUGIN`
 
-## `cryptid token:balance MINT`
-
-show an SPL Token balance
+Links a plugin into the CLI for development.
 
 ```
 USAGE
-  $ cryptid token balance MINT
+  $ cryptid plugins:link PLUGIN
 
 ARGUMENTS
-  MINT  The SPL-Token mint(base58)
+  PATH  [default: .] path to plugin
 
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+FLAGS
+  -h, --help     Show CLI help.
+  -v, --verbose
+
+DESCRIPTION
+  Links a plugin into the CLI for development.
+
+  Installation of a linked plugin will override a user-installed or core plugin.
+
+  e.g. If you have a user-installed or core plugin that has a 'hello' command, installing a linked plugin with a 'hello'
+  command will override the user-installed or core plugin implementation. This is useful for development work.
+
+EXAMPLES
+  $ cryptid plugins:link myplugin
 ```
 
-_See code: [src/commands/token/balance.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/balance.ts)_
+## `cryptid plugins:uninstall PLUGIN...`
 
-## `cryptid token:show`
-
-show all SPL Token balances
-
-```
-USAGE
-  $ cryptid token show
-
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
-```
-
-_See code: [src/commands/token/show.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/show.ts)_
-
-## `cryptid token:transfer TO AMOUNT`
-
-Send SPL-Tokens to a recipient
+Removes a plugin from the CLI.
 
 ```
 USAGE
-  $ cryptid token transfer TO AMOUNT
+  $ cryptid plugins:uninstall PLUGIN...
 
 ARGUMENTS
-  TO      Recipient alias, did or public key (base58)
-  AMOUNT  The amount in lamports to transfer
+  PLUGIN  plugin to uninstall
 
-OPTIONS
-  -c, --config=config           Path to config file
-  -f, --allowUnfundedRecipient  Create a token account for the recipient if needed
-  -h, --help                    show CLI help
-  -m, --mint=mint               (required) The SPL-Token mint(base58)
-  -s, --as=as                   Execute transactions as a controlled identity (alias or did)
+FLAGS
+  -h, --help     Show CLI help.
+  -v, --verbose
+
+DESCRIPTION
+  Removes a plugin from the CLI.
+
+ALIASES
+  $ cryptid plugins unlink
+  $ cryptid plugins remove
 ```
 
-_See code: [src/commands/token/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/token/transfer.ts)_
+## `cryptid plugins update`
 
-## `cryptid transfer TO AMOUNT`
-
-Send SOL to a recipient
+Update installed plugins.
 
 ```
 USAGE
-  $ cryptid transfer TO AMOUNT
+  $ cryptid plugins update [-h] [-v]
 
-ARGUMENTS
-  TO      Recipient alias, did or public key (base58)
-  AMOUNT  The amount in lamports to transfer
+FLAGS
+  -h, --help     Show CLI help.
+  -v, --verbose
 
-OPTIONS
-  -c, --config=config  Path to config file
-  -h, --help           show CLI help
-  -s, --as=as          Execute transactions as a controlled identity (alias or did)
+DESCRIPTION
+  Update installed plugins.
 ```
 
-_See code: [src/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.1.5/src/commands/transfer.ts)_
+## `cryptid version`
+
+```
+USAGE
+  $ cryptid version
+```
+
+_See code: [@oclif/plugin-version](https://github.com/oclif/plugin-version/blob/v1.0.4/src/commands/version.ts)_
 <!-- commandsstop -->

@@ -12,6 +12,7 @@
     "@identity.com/sol-did-client": "^2.0.0",
     "@oclif/core": "^1.5.0",
     "@oclif/plugin-help": "^5.1.11",
+    "@oclif/plugin-plugins": "^2.0.1",
     "@oclif/plugin-version": "^1",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.27.0",
@@ -22,7 +23,6 @@
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
-    "@oclif/dev-cli": "^1.26.0",
     "@oclif/test": "^1.2.8",
     "@types/chai": "^4.2.22",
     "@types/chai-as-promised": "^7.1.4",
@@ -39,11 +39,13 @@
     "eslint-config-oclif-typescript": "^0.2.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "globby": "^10",
+    "globby": "^11",
     "mocha": "^9.1.2",
     "nyc": "^15.1.0",
+    "oclif": "2.5.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
+    "shx": "^0.3.4",
     "sinon": "^11.1.2",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.20",
@@ -71,7 +73,8 @@
     "bin": "cryptid",
     "plugins": [
       "@oclif/plugin-version",
-      "@oclif/plugin-help"
+      "@oclif/plugin-help", 
+      "@oclif/plugin-plugins"
     ],
     "additionalHelpFlags": [
       "-h"
@@ -82,11 +85,12 @@
   },
   "repository": "identity-com/cryptid",
   "scripts": {
-    "postpack": "rm -f oclif.manifest.json",
+    "build": "shx rm -rf lib && tsc -b",
+    "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "prepack": "yarn build && oclif manifest && oclif readme",
     "test": "nyc mocha",
-    "version": "oclif-dev readme && git add README.md",
+    "version": "oclif readme && git add README.md",
     "lint": "eslint . --ext .ts --max-warnings 0",
     "cryptid": "./bin/run"
   },
