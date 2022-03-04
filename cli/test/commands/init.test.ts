@@ -2,7 +2,7 @@ import { expect, test } from "@oclif/test";
 import * as fs from "fs";
 
 // not recoognising the correct config path
-describe.skip("init", () => {
+describe("init", () => {
   const configPath = "./tmp.yaml";
   test
     .stdout()
