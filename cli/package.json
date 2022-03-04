@@ -11,7 +11,7 @@
     "@identity.com/cryptid": "^0.1.1",
     "@identity.com/sol-did-client": "^2.0.0",
     "@oclif/core": "^1.5.0",
-    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-help": "^5.1.11",
     "@oclif/plugin-version": "^1",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.27.0",
