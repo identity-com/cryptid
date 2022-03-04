@@ -85,7 +85,7 @@
   },
   "repository": "identity-com/cryptid",
   "scripts": {
-    "build": "shx rm -rf lib && tsc -b",
+    "build": "tsc -b",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "yarn build && oclif manifest && oclif readme",
@@ -100,7 +100,7 @@
     "cache": false,
     "exclude": [
       "lib/",
-      "test/"
+      "src/"
     ],
     "all": true,
     "skip-full": true,
