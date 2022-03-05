@@ -16,7 +16,6 @@ use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::Transaction;
 use solana_sdk::transport;
-use std::array::IntoIter;
 use std::collections::HashMap;
 use std::io;
 use std::time::Duration;
@@ -36,7 +35,7 @@ pub async fn start_tests<const N: usize>(
 
     let (banks, funder, genesis_hash) = test.start().await;
     trace!(target: log_target, "funder: {}", funder.pubkey());
-    let mut programs_iter = IntoIter::new(programs);
+    let mut programs_iter = programs.into_iter();
 
     (
         banks,

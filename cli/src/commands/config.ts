@@ -19,7 +19,7 @@ export default class Config extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(Config);
+    const { args } = await this.parse(Config);
 
     const address = await this.cryptid.address();
 

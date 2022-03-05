@@ -19,7 +19,6 @@ use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::{Transaction, TransactionError};
 use solana_sdk::transport::TransportError;
-use std::array::IntoIter;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::iter::once;
@@ -95,14 +94,13 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
     let instructions = [dummy_instruction1, dummy_instruction2, dummy_instruction3];
     let instruction_accounts = instructions
         .iter()
-        .map(|instruction| {
+        .flat_map(|instruction| {
             instruction
                 .accounts
                 .iter()
                 .map(|account| account.pubkey)
                 .chain(once(instruction.program_id))
         })
-        .flatten()
         .collect::<HashSet<_>>()
         .into_iter()
         .collect::<Vec<_>>();
@@ -112,7 +110,8 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         .map(|(index, account)| (*account, index as u8))
         .collect::<HashMap<_, _>>();
 
-    let instruction_data = IntoIter::new(instructions)
+    let instruction_data = instructions
+        .into_iter()
         .map(|instruction| InstructionData::from_instruction(instruction, &instruction_map))
         .collect::<Vec<_>>();
 
@@ -202,14 +201,13 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
     let instructions = [dummy_instruction1];
     let instruction_accounts = instructions
         .iter()
-        .map(|instruction| {
+        .flat_map(|instruction| {
             instruction
                 .accounts
                 .iter()
                 .map(|account| account.pubkey)
                 .chain(once(instruction.program_id))
         })
-        .flatten()
         .collect::<HashSet<_>>()
         .into_iter()
         .collect::<Vec<_>>();
@@ -219,7 +217,8 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
         .map(|(index, account)| (*account, index as u8))
         .collect::<HashMap<_, _>>();
 
-    let instruction_data = IntoIter::new(instructions)
+    let instruction_data = instructions
+        .into_iter()
         .map(|instruction| InstructionData::from_instruction(instruction, &instruction_map))
         .collect::<Vec<_>>();
     let direct_execute_data = DirectExecuteBuild {

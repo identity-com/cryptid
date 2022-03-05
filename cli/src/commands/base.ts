@@ -1,4 +1,4 @@
-import { Command } from "@oclif/command";
+import { Command } from "@oclif/core";
 import * as Flags from "../lib/flags";
 import { Config } from "../service/config";
 import { build, resolveDIDOrAlias } from "../service/cryptid";
@@ -31,7 +31,7 @@ export default abstract class Base extends Command {
     // workaround for using static flags and args in base oclif command classes
     // note, each subclass must define its own args and flags to avoid inconsistencies
     // https://github.com/oclif/oclif/issues/225#issuecomment-806318444
-    const { flags } = this.parse(this.ctor as typeof Base);
+    const { flags } = await this.parse(this.ctor as typeof Base);
 
     this._config = new Config(flags.config);
     this._cryptid = build(

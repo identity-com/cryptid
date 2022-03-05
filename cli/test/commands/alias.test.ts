@@ -1,7 +1,7 @@
 import { expect, test } from "@oclif/test";
 
 // not outputting anything for some reason
-describe.skip("alias", () => {
+describe("alias", () => {
   test
     .stdout()
     .command(["alias", "Alice", "did:sol:alice"])
