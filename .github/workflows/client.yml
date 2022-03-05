@@ -49,8 +49,8 @@ jobs:
       matrix:
         node: ['16.x']
         os: [ubuntu-latest]
-        solana: ['v1.7.12']
-        rust: ['1.55']
+        solana: ['v1.9.2']
+        rust: ['1.59']
 
     steps:
       - name: Checkout repo

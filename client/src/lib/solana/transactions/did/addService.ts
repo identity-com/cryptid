@@ -1,7 +1,10 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { registerOrUpdate } from './util';
-import { DIDDocument, ServiceEndpoint } from 'did-resolver';
+import { ServiceEndpoint } from 'did-resolver';
+import { createAddServiceInstruction } from '@identity.com/sol-did-client';
+import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
+import { createTransaction } from '../util';
+import { filterNotNil } from '../../../util';
 
 /**
  * Creates a transaction that adds a service to a DID.
@@ -16,9 +19,21 @@ export const addService = async (
   service: ServiceEndpoint,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const document: Partial<DIDDocument> = {
-    service: [service],
-  };
+  const instruction = await createAddServiceInstruction({
+    authority,
+    did,
+    connection,
+    service,
+    payer: signer.publicKey,
+    size: DEFAULT_DID_DOCUMENT_SIZE,
+  });
 
-  return registerOrUpdate(did, document, connection, signer, authority);
+  const recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+  return await createTransaction(
+    recentBlockhash,
+    filterNotNil([instruction]),
+    signer.publicKey,
+    [signer]
+  );
 };

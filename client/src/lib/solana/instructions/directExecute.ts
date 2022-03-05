@@ -1,5 +1,7 @@
 import {
   AccountMeta,
+  CreateAccountParams,
+  CreateAccountWithSeedParams,
   PublicKey,
   SystemInstruction,
   SystemProgram,
@@ -9,7 +11,7 @@ import {
 import { Signer } from '../../../types/crypto';
 import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
 import { CryptidInstruction } from './instruction';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { find, propEq } from 'ramda';
 import { InstructionData } from '../model/InstructionData';
 
@@ -31,33 +33,24 @@ export const create = async (
     throw new Error('Not enough signers for directExecute');
   }
 
-  const instructionsLists = convertInstructions(
-    unsignedTransaction.instructions,
-    cryptidSignerKey,
-    signers[0][0].publicKey
+  // check each instruction, wrapping as needed
+  return unsignedTransaction.instructions.reduce(
+    (list: TransactionInstruction[], instruction) => {
+      list.push(
+        ...convertInstruction(
+          instruction,
+          didPDAKey,
+          signers,
+          cryptidAccount,
+          cryptidSignerKey,
+          debug
+        )
+      );
+
+      return list;
+    },
+    []
   );
-
-  const convertOrPassthroughInstructions = ([instructions, shouldUseDirectExecute]: [TransactionInstruction[], boolean]) => {
-    if (!shouldUseDirectExecute) return instructions;
-
-    if (instructions.length === 0) {
-      // `convertToDirectExecute` will build an instruction if given an empty array, this catches that case and prevents excess instructions
-      return [];
-    }
-
-    // otherwise the transactions should be converted
-    const directExecuteInstruction = convertToDirectExecute(
-      instructions,
-      didPDAKey,
-      signers,
-      cryptidAccount,
-      cryptidSignerKey,
-      debug
-    );
-    return [directExecuteInstruction];
-  };
-
-  return instructionsLists.flatMap(convertOrPassthroughInstructions);
 };
 
 function convertToDirectExecute(
@@ -111,144 +104,99 @@ function convertToDirectExecute(
 
   return new TransactionInstruction({
     keys,
-    programId: DOA_PROGRAM_ID,
+    programId: CRYPTID_PROGRAM_ID,
     data,
   });
 }
 
 /**
- * Returns an array of arrays of transaction instructions with a boolean telling if they should be run as a direct execute
- * @param instructions The instructions to convert.
- * @param signerKey The cryptid signer key
- * @param firstSigner The first signer in the list of signers
+ * Checks the instruction, converting it to direct execute if needed.
+ *
+ * This method can return one or more instructions as a result.
  */
-// TODO: Make this actually look for instruction dependencies rather than just assuming creates and allocates all go before others, some may rely on instructions that are not create/allocate
-function convertInstructions(
-  instructions: TransactionInstruction[],
-  signerKey: PublicKey,
-  firstSigner: PublicKey
-): [TransactionInstruction[], boolean][] {
-  const out: ReturnType<typeof convertInstructions> = [
-    [[], true],
-    [[], false],
-    [[], true],
-  ];
-  const beforeInstructions = out[0][0];
-  const middleInstructions = out[1][0];
-  const afterInstructions = out[2][0];
-
-  for (const instruction of instructions) {
-    const convert = convertInstruction(instruction, signerKey, firstSigner);
-    beforeInstructions.push(...convert.before);
-    middleInstructions.push(...convert.middle);
-    afterInstructions.push(...convert.after);
-  }
-
-  return out;
-}
-
-// Returns before, middle, after wh
 function convertInstruction(
   instruction: TransactionInstruction,
-  signerKey: PublicKey,
-  firstSigner: PublicKey
-): {
-  before: TransactionInstruction[];
-  middle: TransactionInstruction[];
-  after: TransactionInstruction[];
-} {
+  didPDAKey: PublicKey,
+  signers: [Signer, AccountMeta[]][],
+  cryptidAccount: PublicKey,
+  cryptidSignerKey: PublicKey,
+  debug: boolean
+) {
+  const firstSigner = signers[0][0].publicKey;
+  const MAX_PROGRAM_SIZE = 10240;
+
   // Must handle case where trying to allocate account with greater than 10240 bytes of space
   if (instruction.programId.equals(SystemProgram.programId)) {
     const type = SystemInstruction.decodeInstructionType(instruction);
-    if (type === 'Create') {
-      const create = SystemInstruction.decodeCreateAccount(instruction);
-      if (create.space > 10240) {
-        // If large enough space required do allocation outside direct execute
-        if (create.fromPubkey.equals(signerKey)) {
-          // If funder is our signer we transfer to the signing key and then use those funds for the creation
-          return {
-            before: [
-              SystemProgram.transfer({
-                fromPubkey: signerKey,
-                lamports: create.lamports,
-                toPubkey: firstSigner,
-              }),
-            ],
-            middle: [
-              SystemProgram.createAccount({
-                ...create,
-                fromPubkey: firstSigner,
-              }),
-            ],
-            after: [],
-          };
-        } else {
-          // If not our key run it outside the direct execute
-          return {
-            before: [],
-            middle: [instruction],
-            after: [],
-          };
-        }
-      }
-    } else if (type === 'CreateWithSeed') {
+    if (type === 'Create' || type === 'CreateWithSeed') {
+      const create =
+        type === 'Create'
+          ? SystemInstruction.decodeCreateAccount(instruction)
+          : SystemInstruction.decodeCreateWithSeed(instruction);
+
       // If large enough space required do allocation outside direct execute
-      const create = SystemInstruction.decodeCreateWithSeed(instruction);
-      if (create.space > 10240) {
-        if (create.fromPubkey.equals(signerKey)) {
-          // If funder is our signer we transfer to the signing key and then use those funds for the creation
-          return {
-            before: [
-              SystemProgram.transfer({
-                fromPubkey: signerKey,
-                lamports: create.lamports,
-                toPubkey: firstSigner,
-              }),
-            ],
-            middle: [
-              SystemProgram.createAccountWithSeed({
-                ...create,
-                fromPubkey: firstSigner,
-              }),
-            ],
-            after: [],
-          };
+      if (create.space > MAX_PROGRAM_SIZE) {
+        // If funder is our signer we transfer to the signing key and then use those funds for the creation
+        if (create.fromPubkey.equals(cryptidSignerKey)) {
+          const transferInstruction = SystemProgram.transfer({
+            fromPubkey: cryptidSignerKey,
+            lamports: create.lamports,
+            toPubkey: firstSigner,
+          });
+
+          const createInstruction =
+            type === 'Create'
+              ? SystemProgram.createAccount({
+                  ...(create as CreateAccountParams),
+                  fromPubkey: firstSigner,
+                })
+              : SystemProgram.createAccountWithSeed({
+                  ...(create as CreateAccountWithSeedParams),
+                  fromPubkey: firstSigner,
+                });
+
+          return [
+            convertToDirectExecute(
+              [transferInstruction],
+              didPDAKey,
+              signers,
+              cryptidAccount,
+              cryptidSignerKey,
+              debug
+            ),
+            createInstruction,
+          ];
         } else {
           // If not our key run it outside the direct execute
-          return {
-            before: [],
-            middle: [instruction],
-            after: [],
-          };
+          return [instruction];
         }
       }
     } else if (type === 'Allocate' || type === 'AllocateWithSeed') {
+      const allocate =
+        type === 'Allocate'
+          ? SystemInstruction.decodeAllocate(instruction)
+          : SystemInstruction.decodeAllocateWithSeed(instruction);
+
       // Allocate doesn't transfer funds so just run it outside unless it's small enough or our signer is involved
-      let allocateSize: number;
-      let allocateAccount: PublicKey;
-      if (type === 'Allocate') {
-        const allocate = SystemInstruction.decodeAllocate(instruction);
-        allocateSize = allocate.space;
-        allocateAccount = allocate.accountPubkey;
-      } else {
-        const allocate = SystemInstruction.decodeAllocateWithSeed(instruction);
-        allocateSize = allocate.space;
-        allocateAccount = allocate.accountPubkey;
-      }
-      if (allocateSize > 10240 && !allocateAccount.equals(signerKey)) {
-        return {
-          before: [],
-          middle: [instruction],
-          after: [],
-        };
+      if (
+        allocate.space > MAX_PROGRAM_SIZE &&
+        !allocate.accountPubkey.equals(cryptidSignerKey)
+      ) {
+        return [instruction];
       }
     }
   }
-  return {
-    before: [],
-    middle: [],
-    after: [instruction],
-  };
+
+  return [
+    convertToDirectExecute(
+      [instruction],
+      didPDAKey,
+      signers,
+      cryptidAccount,
+      cryptidSignerKey,
+      debug
+    ),
+  ];
 }
 
 const addMetaUnique = (

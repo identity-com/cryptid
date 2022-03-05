@@ -9,7 +9,7 @@ export default class RemoveKey extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(RemoveKey);
+    const { args } = await this.parse(RemoveKey);
 
     await this.cryptid.removeKey(args.alias);
     this.log("Removed");

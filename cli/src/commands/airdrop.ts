@@ -10,14 +10,15 @@ export default class Airdrop extends Base {
     {
       name: "amount",
       default: DEFAULT_AIRDROP_LAMPORTS,
-      parse: (amountStr: string): number => parseInt(amountStr, 10),
+      parse: async (amountStr: string): Promise<number> =>
+        parseInt(amountStr, 10),
     },
   ];
 
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(Airdrop);
+    const { args } = await this.parse(Airdrop);
 
     await airdrop(this.cryptid, this.cryptidConfig, args.amount, this.log);
   }

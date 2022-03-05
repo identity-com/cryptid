@@ -1,27 +1,27 @@
 import { PublicKey } from "@solana/web3.js";
-import { flags } from "@oclif/command";
+import { Flags } from "@oclif/core";
 
-export const config = flags.string({
+export const config = Flags.string({
   char: "c",
   description: "Path to config file",
   default: process.env.CRYPTID_CONFIG,
 });
 
-export const key = flags.build<PublicKey>({
+export const key = Flags.build<PublicKey>({
   char: "k",
   description: "Key (base58)",
-  parse: (address: string) => new PublicKey(address),
+  parse: async (address: string) => new PublicKey(address),
 })();
 
-export const alias = flags.string({ char: "a", description: "Key alias" });
+export const alias = Flags.string({ char: "a", description: "Key alias" });
 
-export const as = flags.string({
+export const as = Flags.string({
   char: "s",
   description: "Execute transactions as a controlled identity (alias or did)",
 });
 
 export const common = {
-  help: flags.help({ char: "h" }),
+  help: Flags.help({ char: "h" }),
   config,
   as,
 };

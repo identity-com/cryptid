@@ -8,7 +8,7 @@ export default class AddController extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(AddController);
+    const { args } = await this.parse(AddController);
 
     await this.cryptid.addController(args.did);
     this.log("Added");
