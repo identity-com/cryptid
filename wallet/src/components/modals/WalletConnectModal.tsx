@@ -47,7 +47,7 @@ export default function WalletConnectModal() {
               </div>
 
               <div className="sm:col-span-6">
-                <div className="mb-44 flex justify-center">
+                <div className="mb-8 flex justify-center" style={{overflow: 'hidden'}}>
                   <WalletMultiButton/>
                 </div>
               </div>

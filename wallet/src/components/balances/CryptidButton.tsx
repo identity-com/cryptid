@@ -14,6 +14,7 @@ type TokenButtonProps = {
 export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick, additionalClasses = '', disabled }) => {
   return (<Tooltip title={label} arrow>
       <button
+        style={{margin: '5px 3px 5px 3px'}}
         disabled={!!disabled}
         type="button"
         className={classNames(

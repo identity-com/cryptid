@@ -12,13 +12,12 @@ import {
   CogIcon,
   // MenuIcon,
   // XIcon,
-} from "@heroicons/react/outline";
-import {Menu, Disclosure, Transition} from "@headlessui/react";
-import { pages } from "../utils/config";
+} from '@heroicons/react/outline';
+import { Menu, Disclosure, Transition } from '@headlessui/react';
+import { pages } from '../utils/config';
 import IdentitySelector from './selectors/IdentitySelector';
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
-
 
 const NetworkSelector = () => {
   const { endpoint, setEndpoint } = useConnectionConfig();
@@ -37,10 +36,9 @@ const NetworkSelector = () => {
       {/*/>*/}
       <Menu as="div" className="ml-3 relative">
         <div>
-          <Menu.Button
-            className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
+          <Menu.Button className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
             <span className="sr-only">Select Network</span>
-            <CogIcon className="h-6 w-6" aria-hidden="true"/>
+            <CogIcon className="h-6 w-6" aria-hidden="true" />
           </Menu.Button>
         </div>
         <Transition
@@ -52,8 +50,7 @@ const NetworkSelector = () => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items
-            className="z-30 origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <Menu.Items className="z-30 origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
             {getClusters().map((cluster) => (
               <Menu.Item key={cluster.apiUrl}>
                 {({ active }) => (
@@ -62,7 +59,7 @@ const NetworkSelector = () => {
                     className={classNames(
                       cluster.apiUrl === endpoint ? 'bg-gray-200' : '',
                       active ? 'bg-gray-100' : '',
-                      'block px-2 py-2 text-sm text-gray-700'
+                      'block px-2 py-2 text-sm text-gray-700',
                     )}
                     onClick={() => {
                       setAnchorEl(null);
@@ -71,7 +68,7 @@ const NetworkSelector = () => {
                   >
                     {cluster.name === 'mainnet-beta-backup'
                       ? 'Mainnet Beta Backup'
-                      : (cluster.name || cluster.apiUrl)}
+                      : cluster.name || cluster.apiUrl}
                   </a>
                 )}
               </Menu.Item>
@@ -93,21 +90,22 @@ const NetworkSelector = () => {
       </Menu>
     </div>
   );
-}
+};
 
 function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
-  const { page, setPage } = usePage()
+  const { page, setPage } = usePage();
 
-  if (isSignerWindow){
-
+  if (isSignerWindow) {
   } else {
-
   }
   return (
-    <Disclosure as="nav" className="bg-white bg-opacity-50 border-b border-gray-200">
+    <Disclosure
+      as="nav"
+      className="bg-white bg-opacity-50 border-b border-gray-200"
+    >
       {({ open }) => (
         <>
-          <div className="md:py-10 w-screen max-w-screen md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
+          <div className="md:py-3 w-screen max-w-screen md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
             <div className="flex justify-between h-32 items-center">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
@@ -122,29 +120,32 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                     alt="Cryptid"
                   />
                 </div>
-                {!isSignerWindow && <div className="ml-6 flex sm:space-x-8">
-                      {pages.map((item) => (
-                        <a
-                          href='#'
-                          key={item}
-                          onClick={() => setPage(item)}
-                          className={classNames(
-                            item === page
-                              ? 'border-red-800 text-gray-900'
-                              : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                            'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
-                          )}
-                          aria-current={item === page ? 'page' : undefined}
-                        >
-                          {item}
-                        </a>
-                      ))}
-                    </div>}
+                {!isSignerWindow && (
+                  <div className="ml-6 flex sm:space-x-8">
+                    {pages.map((item) => (
+                      <a
+                        style={{margin: 'auto', marginRight: 10, height: '50%'}}
+                        href="#"
+                        key={item}
+                        onClick={() => setPage(item)}
+                        className={classNames(
+                          item === page
+                            ? 'border-red-800 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium',
+                        )}
+                        aria-current={item === page ? 'page' : undefined}
+                      >
+                        {item}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="ml-6 gap-4 sm:flex items-center">
-                {! isSignerWindow && <NetworkSelector/>}
-                <IdentitySelector isSignerWindow={isSignerWindow}/>
+                {!isSignerWindow && <NetworkSelector />}
+                <IdentitySelector isSignerWindow={isSignerWindow} />
               </div>
               {/*<div className="-mr-2 flex items-center sm:hidden">*/}
               {/*  /!* Mobile menu button *!/*/}
@@ -158,20 +159,25 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
               {/*    )}*/}
               {/*  </Disclosure.Button>*/}
               {/*</div>*/}
-
             </div>
           </div>
         </>
       )}
     </Disclosure>
-  )
+  );
 }
 
-export default function NavigationFrame({ children, isSignerWindow }: { children: JSX.Element | JSX.Element[], isSignerWindow: boolean }) {
+export default function NavigationFrame({
+  children,
+  isSignerWindow,
+}: {
+  children: JSX.Element | JSX.Element[];
+  isSignerWindow: boolean;
+}) {
   return (
     <div className="min-h-screen">
-      <NavigationPanel isSignerWindow={isSignerWindow}/>
+      <NavigationPanel isSignerWindow={isSignerWindow} />
       {children}
     </div>
-  )
+  );
 }
