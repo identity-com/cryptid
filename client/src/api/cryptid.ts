@@ -32,10 +32,20 @@ export interface Cryptid {
 
   /**
    * Signs a transaction from the DID. Returns a meta-transaction
-   * that wraps the transaction into a call to the DOA program
+   * that wraps the transaction into a call to the cryptid program
    * @param transaction The transaction to sign
    */
-  sign(transaction: Transaction): Promise<Transaction[]>;
+  sign(transaction: Transaction): Promise<Transaction>;
+
+  /**
+   * Signs a set of setup transactions followed by an execute transaction
+   * that should be sent to the dapp
+   * @param transaction The transaction to sign
+   */
+  signLarge(transaction: Transaction): Promise<{
+    setupTransactions: Transaction[];
+    executeTransaction: Transaction;
+  }>;
 
   /**
    * Adds a key to your the Crytid account

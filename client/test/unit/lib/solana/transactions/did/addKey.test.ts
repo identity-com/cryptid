@@ -5,11 +5,7 @@ import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { addKey } from '../../../../../../src/lib/solana/transactions/did/addKey';
-import {
-  connection,
-  pubkey,
-  stubConnection,
-} from '../../../../../utils/solana';
+import { connection, stubConnection } from '../../../../../utils/solana';
 import { Keypair, TransactionInstruction } from '@solana/web3.js';
 import { publicKeyToDid } from '../../../../../../src/lib/solana/util';
 import { normalizeSigner } from '../../../../../../src/lib/util';
@@ -42,7 +38,7 @@ describe('transactions/did/addKey', () => {
       programId: SOL_DID_PROGRAM_ID,
     });
     sandbox
-      .stub(SolDid, 'createUpdateInstruction')
+      .stub(SolDid, 'createAddKeyInstruction')
       .resolves(dummyUpdateInstruction);
 
     const transaction = await addKey(
@@ -56,28 +52,5 @@ describe('transactions/did/addKey', () => {
 
     expect(transaction.instructions).to.have.length(1);
     expect(transaction.instructions[0]).to.equal(dummyUpdateInstruction);
-  });
-
-  it('should create a register instruction if the DID is not yet registered', async () => {
-    await stubResolveDID(did, key, false);
-    const dummyRegisterInstruction = new TransactionInstruction({
-      keys: [],
-      programId: SOL_DID_PROGRAM_ID,
-    });
-    sandbox
-      .stub(SolDid, 'createRegisterInstruction')
-      .resolves([dummyRegisterInstruction, pubkey()]);
-
-    const transaction = await addKey(
-      connection(),
-      did,
-      normalizeSigner(key),
-      newKey.publicKey,
-      'newKey',
-      key.publicKey
-    );
-
-    expect(transaction.instructions).to.have.length(1);
-    expect(transaction.instructions[0]).to.equal(dummyRegisterInstruction);
   });
 });

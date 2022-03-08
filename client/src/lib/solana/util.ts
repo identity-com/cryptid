@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import {
   DEFAULT_CLUSTER,
-  DOA_PROGRAM_ID,
+  CRYPTID_PROGRAM_ID,
   SOL_DID_PROGRAM_ID,
 } from '../constants';
 import { ExtendedCluster } from '../../types/solana';
@@ -37,7 +37,7 @@ export const deriveDefaultDOAFromKey = async (
       SOL_DID_PROGRAM_ID.toBuffer(),
       didPDAKey.toBuffer(),
     ],
-    DOA_PROGRAM_ID
+    CRYPTID_PROGRAM_ID
   );
   return publicKeyNonce[0];
 };
@@ -73,6 +73,6 @@ export const deriveDOASigner = async (
 ): Promise<[PublicKey, number]> => {
   return await PublicKey.findProgramAddress(
     [Buffer.from(DOA_SIGNER_SEED, 'utf8'), doa.toBuffer()],
-    DOA_PROGRAM_ID
+    CRYPTID_PROGRAM_ID
   );
 };

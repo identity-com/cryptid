@@ -13,7 +13,10 @@ import {
 } from '@solana/web3.js';
 import { recentBlockhash } from '../../../../utils/solana';
 import { publicKeyToDid } from '../../../../../src/lib/solana/util';
-import { normalizeSigner } from '../../../../../src/lib/util';
+import {
+  didToDefaultDOASigner,
+  normalizeSigner,
+} from '../../../../../src/lib/util';
 import { stubGetBlockhash } from '../../../../utils/lang';
 import { create } from '../../../../../src/lib/solana/instructions/directExecute';
 
@@ -125,5 +128,65 @@ describe('transactions/directExecute', () => {
     expect(direct_execute.keys.map((key) => key.pubkey.toBase58()))
       .to.contain(instruction.keys[0].pubkey.toBase58())
       .and.to.contain(instruction.keys[1].pubkey.toBase58());
+  });
+
+  it('should sign the directExecute transaction for create', async () => {
+    const didPDAKey = await didToDefaultDOASigner(did);
+
+    const txToWrap = new Transaction({
+      recentBlockhash: await recentBlockhash(),
+    })
+      .add(
+        // Simple Transfer instruction
+        SystemProgram.transfer({
+          fromPubkey: payer.publicKey,
+          lamports: 0,
+          toPubkey: payer.publicKey,
+        })
+      )
+      .add(
+        // Large create account instruction
+        SystemProgram.createAccount({
+          programId: Keypair.generate().publicKey,
+          space: 10241,
+          lamports: 1024,
+          fromPubkey: didPDAKey,
+          newAccountPubkey: payer.publicKey,
+        })
+      )
+      .add(
+        // Small create account instruction
+        SystemProgram.createAccount({
+          programId: Keypair.generate().publicKey,
+          space: 1024,
+          lamports: 1024,
+          fromPubkey: payer.publicKey,
+          newAccountPubkey: payer.publicKey,
+        })
+      )
+      .add(
+        // Large allocate
+        SystemProgram.allocate({
+          accountPubkey: payer.publicKey,
+          space: 10241,
+        })
+      )
+      .add(
+        // Small allocate
+        SystemProgram.allocate({
+          accountPubkey: payer.publicKey,
+          space: 1024,
+        })
+      );
+    const directExecuteTransaction = await directExecute(
+      txToWrap,
+      did,
+      payer.publicKey,
+      [normalizeSigner(payer)]
+    );
+
+    expect(txToWrap.instructions.length).to.equal(5);
+    // expect one extra instruction for the transfer before large create
+    expect(directExecuteTransaction.instructions.length).to.equal(6);
   });
 });

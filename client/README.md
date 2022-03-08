@@ -16,7 +16,7 @@ This example shows creating a new keypair, and a Cryptid instance.
 
 ```javascript
 import {Connection, Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction} from '@solana/web3.js';
-import { build, util } from '@identity/cryptid';
+import { build, util } from '@identity.com/cryptid';
 
 const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 

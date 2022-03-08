@@ -55,12 +55,12 @@
     "web3": "^1.2.11"
   },
   "scripts": {
-    "predeploy": "SKIP_PREFLIGHT_CHECK=true yarn build",
+    "predeploy": "yarn build",
     "deploy": "STAGE=${STAGE:-dev} etc/deploy/deploy-site.sh",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.js\" \"extension/src/*.js\" --write",
     "start": "craco start",
-    "build": "craco build",
+    "build": "SKIP_PREFLIGHT_CHECK=true craco build",
     "build:extension": "yarn build && cp -a ./build/. ./extension/build/ && yarn build:extension-scripts",
     "build:extension-scripts": "cp -a ./extension/src/. ./extension/build/.",
     "test": "craco test",
