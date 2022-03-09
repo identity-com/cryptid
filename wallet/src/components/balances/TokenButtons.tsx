@@ -80,24 +80,12 @@ export default function TokenButtons() {
         open={showAddTokenDialog}
         onClose={() => setShowAddTokenDialog(false)}
       />
-      <SpendingLimitDialog
-        open={showSpendingLimitDialog}
-        onClose={() => setShowSpendingLimitDialog(false)}
-      />
       <CryptidButton
         label="Add Token"
         Icon={PlusCircleIcon}
         additionalClasses="rounded-l-md"
         onClick={() => {
           setShowAddTokenDialog(true);
-        }}
-      />
-      <CryptidButton
-        label="Configure Spending Limits"
-        Icon={CurrencyDollarIcon}
-        additionalClasses="rounded-l-md"
-        onClick={() => {
-          setShowSpendingLimitDialog(true);
         }}
       />
       {isProdNetwork || (

@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from '@solana/web3.js';
 
 export const showTokenInfoDialog = !!localStorage.getItem(
   'showTokenInfoDialog',
@@ -6,7 +6,9 @@ export const showTokenInfoDialog = !!localStorage.getItem(
 
 export const showSwapAddress = true;
 
-export const DUMMY_PUBKEY = new PublicKey('Dmz4PkdgN19umuWArY3wAKaVzVuHPMjwZy9SKhVaBTk7')
+export const DUMMY_PUBKEY = new PublicKey(
+  'Dmz4PkdgN19umuWArY3wAKaVzVuHPMjwZy9SKhVaBTk7',
+);
 
 export const pages = <const>[
   'Tokens',
@@ -15,5 +17,6 @@ export const pages = <const>[
   // 'Swap',
   // 'Connections',
   'Identity',
-]
-export type Page = typeof pages[number]
+  'Middleware',
+];
+export type Page = typeof pages[number];

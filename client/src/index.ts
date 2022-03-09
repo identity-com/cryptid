@@ -1,4 +1,5 @@
 import { Builder } from './api/builder';
+export { createSpendingLimit } from './api/spendingLimit';
 import { publicKeyToDid } from './lib/solana/util';
 import { didToDefaultDOASigner } from './lib/util';
 export { ExtendedCluster } from './types/solana';

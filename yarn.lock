@@ -12874,11 +12874,6 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-material-duration-picker@^1.4.4:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/material-duration-picker/-/material-duration-picker-1.4.4.tgz#2dfd2a46cdd34d4e47e997955adfcc6fbcde8c6f"
-  integrity sha512-je0cTbt18ra8cQyJlBgdoB4QekJElZ46HSkgLU2qaeHUW1gbfT86LAkGBBnI3sNVeZKhiPbHjvdXyaP1V0yrjw==
-
 material-ui-popup-state@^1.8.3:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/material-ui-popup-state/-/material-ui-popup-state-1.9.3.tgz#133ee02be8adf936e738d6b5f3dc89726af39bce"

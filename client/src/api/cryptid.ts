@@ -80,6 +80,18 @@ export interface Cryptid {
   document(): Promise<DIDDocument>;
 
   /**
+   * Adds middleware to the Cryptid account
+   * @param publicKey of middleware to add
+   */
+  // addMiddleware(publicKey: PublicKey): Promise<TransactionSignature>;
+
+  /**
+   * Removes middleware from the Cryptid account
+   * @param publicKey of middleware to remove
+   */
+  // removeMiddleware(publicKey: PublicKey): Promise<TransactionSignature>;
+
+  /**
    * Gets the Cryptid address for the account
    */
   address(): Promise<PublicKey>;
