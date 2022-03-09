@@ -42,16 +42,24 @@ export const createTransferTransaction = async (
   connection: Connection,
   sender: PublicKey,
   recipient: PublicKey,
-  lamportsToTransfer: number
+  lamportsToTransfer: number,
+  nrInstructions = 1
 ): Promise<Transaction> => {
   const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
-  return new Transaction({ recentBlockhash, feePayer: sender }).add(
-    SystemProgram.transfer({
-      fromPubkey: sender,
-      toPubkey: recipient,
-      lamports: lamportsToTransfer,
-    })
-  );
+
+  const transferInstructions = SystemProgram.transfer({
+    fromPubkey: sender,
+    toPubkey: recipient,
+    lamports: lamportsToTransfer,
+  });
+
+  const tx = new Transaction({ recentBlockhash, feePayer: sender });
+  while (nrInstructions > 0) {
+    tx.add(transferInstructions);
+    nrInstructions--;
+  }
+
+  return tx;
 };
 
 export const createTransaction = async (

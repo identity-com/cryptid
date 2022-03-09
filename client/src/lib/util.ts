@@ -1,4 +1,4 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
 import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
@@ -41,3 +41,7 @@ export const filterNotNil = <T>(entries: (T | null | undefined)[]): T[] =>
   entries.filter(complement(isNil)) as T[];
 
 export const headNonEmpty = <T>(t: NonEmptyArray<T>): T => t[0];
+
+export const checkTxSize = (tx: Transaction): void => {
+  tx.serialize({ verifySignatures: false }); // check for size, do not check fo signers
+};

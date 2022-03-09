@@ -63,7 +63,7 @@ export const deriveTransactionAccount = async (
       cryptidAccount.toBuffer(),
       Buffer.from(seed, 'utf-8'),
     ],
-    DOA_PROGRAM_ID
+    CRYPTID_PROGRAM_ID
   );
   return key;
 };

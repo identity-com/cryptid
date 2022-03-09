@@ -12,6 +12,8 @@ import {
 import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = 20_000;
@@ -65,7 +67,7 @@ describe('transfers', function () {
         lamportsToTransfer
       );
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
@@ -97,7 +99,7 @@ describe('transfers', function () {
         instruction2,
       ]);
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
@@ -138,13 +140,29 @@ describe('transfers', function () {
 
       await balances.recordBefore(); // reset balances to exclude rent costs for adding device2
 
-      const [cryptidTx] = await cryptidForDevice2.sign(tx);
+      const cryptidTx = await cryptidForDevice2.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
+    });
+
+    it('should fail on a large Transaction', async () => {
+      const cryptid = build(did, key, { connection });
+
+      const tx = await createTransferTransaction(
+        connection,
+        cryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        100
+      );
+
+      await expect(cryptid.sign(tx)).to.be.rejectedWith(
+        /Transaction is too large/
+      );
     });
   });
   context('a controller cryptid', () => {
@@ -193,7 +211,7 @@ describe('transfers', function () {
         lamportsToTransfer
       );
 
-      const [cryptidTx] = await controllerCryptid.sign(tx); // sign with the controller
+      const cryptidTx = await controllerCryptid.sign(tx); // sign with the controller
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();

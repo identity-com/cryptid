@@ -9,8 +9,7 @@ import { addController as addControllerTransaction } from '../lib/solana/transac
 import { removeController as removeControllerTransaction } from '../lib/solana/transactions/did/removeController';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
-import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
-import { NonEmptyArray } from '../types/lang';
+import { didToDefaultDOASigner } from '../lib/util';
 
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
@@ -36,7 +35,7 @@ export abstract class AbstractCryptid implements Cryptid {
     return didToDefaultDOASigner(this.did);
   }
 
-  abstract sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>>;
+  abstract sign(transaction: Transaction): Promise<Transaction>;
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
@@ -65,8 +64,7 @@ export abstract class AbstractCryptid implements Cryptid {
     const publicKey = await this.address();
     return {
       publicKey,
-      sign: (transaction: Transaction) =>
-        this.sign(transaction).then(headNonEmpty),
+      sign: (transaction: Transaction) => this.sign(transaction),
     };
   }
 

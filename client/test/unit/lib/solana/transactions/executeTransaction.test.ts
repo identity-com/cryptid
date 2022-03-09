@@ -22,7 +22,7 @@ import { normalizeSigner } from '../../../../../src/lib/util';
 import { range } from 'ramda';
 import { randomInt } from 'crypto';
 import {
-  DOA_PROGRAM_ID,
+  CRYPTID_PROGRAM_ID,
   SOL_DID_PROGRAM_ID,
 } from '../../../../../src/lib/constants';
 import TransactionAccount from '../../../../../src/lib/solana/accounts/TransactionAccount';
@@ -163,7 +163,7 @@ describe('transactions/executeTransaction', function () {
         data: transactionAccount.encode(),
         executable: false,
         lamports: LAMPORTS_PER_SOL,
-        owner: DOA_PROGRAM_ID,
+        owner: CRYPTID_PROGRAM_ID,
       });
     });
     it('should create an execute transaction instruction with connection accounts', async function () {

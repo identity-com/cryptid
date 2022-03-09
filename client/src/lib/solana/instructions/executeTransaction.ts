@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { deriveDOASigner, deriveTransactionAccount } from '../util';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
 import TransactionAccount from '../accounts/TransactionAccount';
@@ -94,7 +94,7 @@ export async function create(
 
   return new TransactionInstruction({
     keys,
-    programId: DOA_PROGRAM_ID,
+    programId: CRYPTID_PROGRAM_ID,
     data,
   });
 }
