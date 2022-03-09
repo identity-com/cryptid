@@ -4,7 +4,6 @@
 use solana_generator::*;
 
 use crate::instruction::CryptidInstruction;
-use std::array::IntoIter;
 
 #[macro_use]
 mod macros;
@@ -32,10 +31,7 @@ pub struct CryptidSignerSeeder {
 }
 impl PDASeeder for CryptidSignerSeeder {
     fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
-        Box::new(IntoIter::new([
-            &CRYPTID_SIGNER_SEED as &dyn PDASeed,
-            &self.cryptid_account,
-        ]))
+        Box::new([&CRYPTID_SIGNER_SEED as &dyn PDASeed, &self.cryptid_account].into_iter())
     }
 }
 
@@ -49,11 +45,14 @@ pub struct GenerativeCryptidSeeder {
 }
 impl PDASeeder for GenerativeCryptidSeeder {
     fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
-        Box::new(IntoIter::new([
-            &GENERATIVE_CRYPTID_SEED as &dyn PDASeed,
-            &self.did_program,
-            &self.did,
-        ]))
+        Box::new(
+            [
+                &GENERATIVE_CRYPTID_SEED as &dyn PDASeed,
+                &self.did_program,
+                &self.did,
+            ]
+            .into_iter(),
+        )
     }
 }
 

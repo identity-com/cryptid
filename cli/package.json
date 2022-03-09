@@ -1,7 +1,7 @@
 {
   "name": "@identity.com/cryptid-cli",
   "description": "Sign transactions and configure Cryptid DID Wallets",
-  "version": "0.1.5",
+  "version": "0.1.8",
   "author": "identity.com",
   "bin": {
     "cryptid": "./bin/run"
@@ -10,12 +10,12 @@
   "dependencies": {
     "@identity.com/cryptid": "^0.1.1",
     "@identity.com/sol-did-client": "^2.0.0",
-    "@oclif/command": "^1",
-    "@oclif/config": "^1",
-    "@oclif/plugin-help": "^3",
+    "@oclif/core": "^1.5.0",
+    "@oclif/plugin-help": "^5.1.11",
+    "@oclif/plugin-plugins": "^2.0.1",
+    "@oclif/plugin-version": "^1",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.27.0",
-    "@tiagonapoli/oclif-plugin-spaced-commands": "^1.0.1",
     "did-resolver": "^3.1.0",
     "ramda": "^0.27.1",
     "tslib": "^1",
@@ -23,8 +23,7 @@
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
-    "@oclif/dev-cli": "^1.26.0",
-    "@oclif/test": "^1.2.8",
+    "@oclif/test": "^2.1.0",
     "@types/chai": "^4.2.22",
     "@types/chai-as-promised": "^7.1.4",
     "@types/mocha": "^9.0.0",
@@ -40,11 +39,13 @@
     "eslint-config-oclif-typescript": "^0.2.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "globby": "^10",
+    "globby": "^11",
     "mocha": "^9.1.2",
     "nyc": "^15.1.0",
+    "oclif": "2.5.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
+    "shx": "^0.3.4",
     "sinon": "^11.1.2",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.20",
@@ -67,20 +68,29 @@
   "license": "MIT",
   "main": "lib/index.js",
   "oclif": {
+    "topicSeparator": " ",
     "commands": "./lib/commands",
     "bin": "cryptid",
     "plugins": [
+      "@oclif/plugin-version",
       "@oclif/plugin-help",
-      "@tiagonapoli/oclif-plugin-spaced-commands"
+      "@oclif/plugin-plugins"
+    ],
+    "additionalHelpFlags": [
+      "-h"
+    ],
+    "additionalVersionFlags": [
+      "-v"
     ]
   },
   "repository": "identity-com/cryptid",
   "scripts": {
-    "postpack": "rm -f oclif.manifest.json",
+    "build": "tsc -b",
+    "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "prepack": "yarn build && oclif manifest && oclif readme",
     "test": "nyc mocha",
-    "version": "oclif-dev readme && git add README.md",
+    "version": "oclif readme && git add README.md",
     "lint": "eslint . --ext .ts --max-warnings 0",
     "cryptid": "./bin/run"
   },
@@ -90,7 +100,7 @@
     "cache": false,
     "exclude": [
       "lib/",
-      "test/"
+      "src/"
     ],
     "all": true,
     "skip-full": true,

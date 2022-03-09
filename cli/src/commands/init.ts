@@ -1,4 +1,4 @@
-import { Command, flags } from "@oclif/command";
+import { Command, Flags } from "@oclif/core";
 import { Config as ConfigService } from "../service/config";
 import { ExtendedCluster } from "@identity.com/cryptid";
 
@@ -6,24 +6,24 @@ export default class Init extends Command {
   static description = "Initialise the cryptid library";
 
   static flags = {
-    help: flags.help({ char: "h" }),
-    overwrite: flags.boolean({
+    help: Flags.help({ char: "h" }),
+    overwrite: Flags.boolean({
       char: "o",
       description: "Overwrite existing configuration",
       default: false,
     }),
-    path: flags.string({
+    path: Flags.string({
       char: "p",
       description: "Configuration path",
       required: false,
       default: process.env.CRYPTID_CONFIG,
     }),
-    key: flags.string({
+    key: Flags.string({
       char: "k",
       description: "Path to a solana keypair",
       required: false,
     }),
-    cluster: flags.string({
+    cluster: Flags.string({
       char: "z",
       description: "Cluster",
       required: false,
@@ -33,7 +33,7 @@ export default class Init extends Command {
   static args = [];
 
   async run(): Promise<void> {
-    const { flags } = this.parse(Init);
+    const { flags } = await this.parse(Init);
 
     console.log(flags);
 

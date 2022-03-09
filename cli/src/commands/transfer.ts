@@ -20,7 +20,7 @@ export default class Transfer extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(Transfer);
+    const { args } = await this.parse(Transfer);
 
     const to = await resolveRecipient(args.to, this.cryptidConfig);
 

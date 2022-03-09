@@ -8,7 +8,7 @@ export default class RemoveController extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(RemoveController);
+    const { args } = await this.parse(RemoveController);
 
     await this.cryptid.removeController(args.did);
     this.log("Removed");
