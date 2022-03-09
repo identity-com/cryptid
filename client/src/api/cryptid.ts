@@ -34,6 +34,7 @@ export interface Cryptid {
    * Signs a transaction from the DID. Returns a meta-transaction
    * that wraps the transaction into a call to the cryptid program
    * @param transaction The transaction to sign
+   * @throws RangeError if the transaction size is too large
    */
   sign(transaction: Transaction): Promise<Transaction>;
 
@@ -42,10 +43,10 @@ export interface Cryptid {
    * that should be sent to the dapp
    * @param transaction The transaction to sign
    */
-  signLarge(transaction: Transaction): Promise<{
-    setupTransactions: Transaction[];
-    executeTransaction: Transaction;
-  }>;
+  // signLarge(transaction: Transaction): Promise<{
+  //   setupTransactions: Transaction[];
+  //   executeTransaction: Transaction;
+  // }>;
 
   /**
    * Adds a key to your the Crytid account

@@ -10,9 +10,10 @@
     "strict": true,
     "target": "es2017",
     "types": ["mocha", "node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "composite": true
   },
   "include": [
     "src/**/*"
-  ]
+  ],
 }

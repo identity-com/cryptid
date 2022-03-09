@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
 import { deriveTransactionAccount } from '../util';
-import { DOA_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
+import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { CryptidInstruction } from './instruction';
 import { AssignableBoolean } from '../solanaBorsh';
 
@@ -42,7 +42,7 @@ export async function create(
 
   return new TransactionInstruction({
     keys,
-    programId: DOA_PROGRAM_ID,
+    programId: CRYPTID_PROGRAM_ID,
     data,
   });
 }

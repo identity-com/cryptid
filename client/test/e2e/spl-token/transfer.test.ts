@@ -113,7 +113,7 @@ describe('SPL-Token transfers', function () {
         createATAInstruction,
       ]);
 
-      const [cryptidTx] = await cryptid.sign(transaction);
+      const cryptidTx = await cryptid.sign(transaction);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
     });
 
@@ -134,7 +134,7 @@ describe('SPL-Token transfers', function () {
         await token.getAccountInfo(cryptidTokenATA)
       ).amount.toNumber();
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -169,7 +169,7 @@ describe('SPL-Token transfers', function () {
         createATAInstruction,
       ]);
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       const createdAccount = await connection.getAccountInfo(recipientATA);
@@ -223,12 +223,12 @@ describe('SPL-Token transfers', function () {
 
       // send the txes
       console.log('Creating ATA');
-      const [cryptidTx1] = await cryptid.sign(tx1);
+      const cryptidTx1 = await cryptid.sign(tx1);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx1);
 
       console.log('ATA created');
 
-      const [cryptidTx2] = await cryptid.sign(tx2);
+      const cryptidTx2 = await cryptid.sign(tx2);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx2);
 
       console.log('Transfer complete');
@@ -284,7 +284,7 @@ describe('SPL-Token transfers', function () {
         await token.getAccountInfo(cryptidTokenATA)
       ).amount.toNumber();
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

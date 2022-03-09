@@ -9,7 +9,8 @@ export default class AddKey extends Base {
     {
       name: "key",
       required: false,
-      parse: (address: string): PublicKey => new PublicKey(address),
+      parse: async (address: string): Promise<PublicKey> =>
+        new PublicKey(address),
     },
     { name: "alias" },
   ];
@@ -17,7 +18,7 @@ export default class AddKey extends Base {
   static flags = Base.flags;
 
   async run(): Promise<void> {
-    const { args } = this.parse(AddKey);
+    const { args } = await this.parse(AddKey);
 
     await this.cryptid.addKey(args.key, args.alias);
     this.log("Added");

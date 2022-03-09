@@ -152,7 +152,7 @@ impl Instruction for ProposeTransaction {
             SolanaAccountMeta::new_readonly(arg.did_program, false),
             SolanaAccountMeta::new_readonly(system_program_id(), false),
         ];
-        accounts.extend(arg.signers.iter().map(|(key, _)| key.to_metas()).flatten());
+        accounts.extend(arg.signers.iter().flat_map(|(key, _)| key.to_metas()));
         Ok((accounts, data))
     }
 }

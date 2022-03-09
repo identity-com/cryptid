@@ -196,12 +196,7 @@ impl Instruction for DirectExecute {
             arg.did,
             SolanaAccountMeta::new_readonly(arg.did_program, false),
         ];
-        accounts.extend(
-            arg.signing_keys
-                .iter()
-                .map(SigningKeyBuild::to_metas)
-                .flatten(),
-        );
+        accounts.extend(arg.signing_keys.iter().flat_map(SigningKeyBuild::to_metas));
         accounts.extend(instruction_accounts);
         Ok((accounts, data))
     }
