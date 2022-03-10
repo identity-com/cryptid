@@ -1,5 +1,5 @@
 import bs58 from 'bs58';
-import { Connection, Message, StakeInstruction, StakeProgram, SystemInstruction, SystemProgram } from '@solana/web3.js';
+import {Connection, Message, StakeInstruction, StakeProgram, SystemInstruction, SystemProgram} from '@solana/web3.js';
 import {
   decodeInstruction,
   Market,
@@ -11,10 +11,11 @@ import {
   NEW_ORDER_V3_OPEN_ORDERS_INDEX,
   NEW_ORDER_V3_OWNER_INDEX,
 } from '@project-serum/serum';
-import { decodeTokenInstruction } from '@project-serum/token';
-import { PublicKey } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from './tokens/instructions';
-import { StrictWalletInterface } from "./wallet";
+import {decodeTokenInstruction} from '@project-serum/token';
+import {PublicKey} from '@solana/web3.js';
+import {TOKEN_PROGRAM_ID} from './tokens/instructions';
+import {StrictWalletInterface} from "./wallet";
+import {JsonSerializedTransaction, deserializeTransaction} from "@identity.com/wallet-adapter-cryptid";
 
 type DecodedInstructionView = {
   programId: PublicKey,
@@ -43,11 +44,14 @@ const MARKET_PROGRAM_ID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBg
 
 export const getProgram = (instruction) => {
   if (!instruction?.programId) return 'Unknown Program';
-  
+
   switch (instruction.programId.toBase58()) {
-    case MARKET_PROGRAM_ID.toBase58(): return 'Serum'
-    case TOKEN_PROGRAM_ID.toBase58(): return 'Token Program'
-    case SystemProgram.programId.toBase58(): return 'System Program'
+    case MARKET_PROGRAM_ID.toBase58():
+      return 'Serum'
+    case TOKEN_PROGRAM_ID.toBase58():
+      return 'Token Program'
+    case SystemProgram.programId.toBase58():
+      return 'System Program'
   }
 }
 
@@ -57,7 +61,10 @@ const cacheDuration = 15 * 1000;
 
 export const decodeMessage = async (connection: Connection, wallet: StrictWalletInterface, message: Buffer) => {
   // get message object
-  const transactionMessage = Message.from(message);
+  const transactionMessage = message instanceof Buffer
+    ? Message.from(message)
+    : deserializeTransaction(message).compileMessage();
+
   if (!transactionMessage?.instructions || !transactionMessage?.accountKeys) {
     return;
   }
@@ -92,7 +99,7 @@ const toInstruction = async (
   instruction,
   transactionMessage: Message,
   index: number,
-):Promise<DecodedInstructionView|undefined> => {
+): Promise<DecodedInstructionView | undefined> => {
   if (
     instruction?.data == null ||
     !instruction?.accounts ||
@@ -120,20 +127,20 @@ const toInstruction = async (
     } else if (programId.equals(StakeProgram.programId)) {
       console.log('[' + index + '] Handled as stake instruction');
       return handleStakeInstruction(publicKey, instruction, accountKeys);
-    // } else if (programId.equals(TOKEN_PROGRAM_ID)) {
-    //   console.log('[' + index + '] Handled as token instruction');
-    //   return handleTokenInstruction(publicKey, instruction, accountKeys);
-    // } else if (programId.equals(MARKET_PROGRAM_ID)) {
-    //   console.log('[' + index + '] Handled as dex instruction');
-    //   let decodedInstruction = decodeInstruction(decoded);
-    //   const details = handleDexInstruction(
-    //     connection,
-    //     instruction,
-    //     accountKeys,
-    //     decodedInstruction,
-    //   );
-    //   console.log(details);
-    //   return details;
+      // } else if (programId.equals(TOKEN_PROGRAM_ID)) {
+      //   console.log('[' + index + '] Handled as token instruction');
+      //   return handleTokenInstruction(publicKey, instruction, accountKeys);
+      // } else if (programId.equals(MARKET_PROGRAM_ID)) {
+      //   console.log('[' + index + '] Handled as dex instruction');
+      //   let decodedInstruction = decodeInstruction(decoded);
+      //   const details = handleDexInstruction(
+      //     connection,
+      //     instruction,
+      //     accountKeys,
+      //     decodedInstruction,
+      //   );
+      //   console.log(details);
+      //   return details;
     } else if (programId.equals(RAYDIUM_STAKE_PROGRAM_ID)) {
       console.log('[' + index + '] Handled as raydium stake instruction');
       // @ts-ignore
@@ -154,6 +161,7 @@ const toInstruction = async (
         accountKeys,
         decodedInstruction,
       );
+      // } else if (programId.equals(CRYPTID_PROGRAM_ID)) {
     } else if (programId.equals(MANGO_PROGRAM_ID) || programId.equals(MANGO_PROGRAM_ID_V2)) {
       console.log('[' + index + '] Handled as mango markets instruction');
       // @ts-ignore
@@ -165,6 +173,8 @@ const toInstruction = async (
         decodedInstruction,
       );
     } else {
+      console.log('[' + index + '] Handled as UNKNOWN instruction');
+
       return {
         type: 'Unknown',
         accountMetas: instruction.accounts.map((index) => ({
@@ -189,7 +199,7 @@ const handleMangoInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-):Promise<DecodedInstructionView | undefined> => {
+): Promise<DecodedInstructionView | undefined> => {
   // TODO
   return {
     type: 'mango',
@@ -203,7 +213,7 @@ const handleRayStakeInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-):Promise<DecodedInstructionView | undefined> => {
+): Promise<DecodedInstructionView | undefined> => {
   // TODO
   return {
     type: 'raydium',
@@ -217,7 +227,7 @@ const handleRayLpInstruction = async (
   instruction,
   accountKeys,
   decodedInstruction,
-):Promise<DecodedInstructionView | undefined>  => {
+): Promise<DecodedInstructionView | undefined> => {
   // TODO
   return {
     type: 'raydium',
@@ -246,12 +256,12 @@ const handleDexInstruction = (
   instruction,
   accountKeys,
   decodedInstruction,
-):DecodedInstructionView|undefined => {
+): DecodedInstructionView | undefined => {
   if (!decodedInstruction || Object.keys(decodedInstruction).length > 1) {
     return;
   }
 
-  const { accounts, programIdIndex } = instruction;
+  const {accounts, programIdIndex} = instruction;
 
   // get data
   const type = Object.keys(decodedInstruction)[0];
@@ -261,14 +271,14 @@ const handleDexInstruction = (
     if (!settleFundsData) {
       return;
     } else {
-      data = { ...data, ...settleFundsData };
+      data = {...data, ...settleFundsData};
     }
   } else if (type === 'newOrder') {
     const newOrderData = getNewOrderData(accounts, accountKeys);
-    data = { ...data, ...newOrderData };
+    data = {...data, ...newOrderData};
   } else if (type === 'newOrderV3') {
     const newOrderData = getNewOrderV3Data(accounts, accountKeys);
-    data = { ...data, ...newOrderData };
+    data = {...data, ...newOrderData};
   }
   return {
     type,
@@ -277,8 +287,8 @@ const handleDexInstruction = (
   };
 };
 
-const handleSystemInstruction = (publicKey, instruction, accountKeys):DecodedInstructionView|undefined => {
-  const { programIdIndex, accounts, data } = instruction;
+const handleSystemInstruction = (publicKey, instruction, accountKeys): DecodedInstructionView | undefined => {
+  const {programIdIndex, accounts, data} = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
   }
@@ -347,8 +357,8 @@ const handleSystemInstruction = (publicKey, instruction, accountKeys):DecodedIns
   };
 };
 
-const handleStakeInstruction = (publicKey, instruction, accountKeys):DecodedInstructionView|undefined => {
-  const { programIdIndex, accounts, data } = instruction;
+const handleStakeInstruction = (publicKey, instruction, accountKeys): DecodedInstructionView | undefined => {
+  const {programIdIndex, accounts, data} = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
   }
@@ -383,8 +393,7 @@ const handleStakeInstruction = (publicKey, instruction, accountKeys):DecodedInst
       const lockup = decoded.lockup;
       if (lockup && lockup.unixTimestamp === 0 && lockup.epoch === 0 && lockup.custodian.equals(PublicKey.default)) {
         decoded.lockup = 'Inactive';
-      }
-      else {
+      } else {
         decoded.lockup = `unixTimestamp: ${lockup.unixTimestamp}, custodian: ${lockup.epoch}, custodian: ${lockup.custodian.toBase58()}`;
       }
       // flatten authorized to allow address render
@@ -420,8 +429,8 @@ const handleTokenInstruction = (
   publicKey: PublicKey,
   instruction,
   accountKeys,
-):DecodedInstructionView|undefined => {
-  const { programIdIndex, accounts, data } = instruction;
+): DecodedInstructionView | undefined => {
+  const {programIdIndex, accounts, data} = instruction;
   if (!programIdIndex || !accounts || !data) {
     return;
   }
@@ -455,7 +464,7 @@ const getNewOrderData = (accounts, accountKeys) => {
     accountKeys,
     NEW_ORDER_OWNER_INDEX,
   );
-  return { openOrdersPubkey, ownerPubkey };
+  return {openOrdersPubkey, ownerPubkey};
 };
 
 const getNewOrderV3Data = (accounts, accountKeys) => {
@@ -469,7 +478,7 @@ const getNewOrderV3Data = (accounts, accountKeys) => {
     accountKeys,
     NEW_ORDER_V3_OWNER_INDEX,
   );
-  return { openOrdersPubkey, ownerPubkey };
+  return {openOrdersPubkey, ownerPubkey};
 };
 
 const getSettleFundsData = (accounts, accountKeys) => {
@@ -489,7 +498,7 @@ const getSettleFundsData = (accounts, accountKeys) => {
     return;
   }
 
-  return { basePubkey, quotePubkey };
+  return {basePubkey, quotePubkey};
 };
 
 const getAccountByIndex = (accounts, accountKeys, accountIndex) => {

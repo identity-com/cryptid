@@ -13,6 +13,7 @@ import {TokenRegistryProvider} from './utils/tokens/names';
 import {SnackbarProvider} from 'notistack';
 import {MetaWalletProvider} from './utils/Cryptid/MetaWalletProvider';
 import IdentityPage from './pages/IdentityPage';
+import ProposedPage from './pages/ProposedPage';
 import {createMuiTheme, ThemeProvider} from '@material-ui/core';
 import {red} from "@material-ui/core/colors";
 
@@ -39,6 +40,8 @@ const PageContents: React.FC = () => {
       //   return <>TODO no page</>;
       case 'Identity':
         return <IdentityPage/>;
+      case 'Proposed':
+        return <ProposedPage/>;
     }
   }
 

@@ -117,12 +117,12 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
 }
 
 export default function SignTransactionFormContent({
-  origin,
-  messages,
-  onApprove,
-  autoApprove,
-  buttonRef,
-}) {
+                                                     origin,
+                                                     messages,
+                                                     onApprove,
+                                                     autoApprove,
+                                                     buttonRef,
+                                                   }) {
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
   const { selectedCryptidAccount } = useCryptid();
@@ -135,7 +135,7 @@ export default function SignTransactionFormContent({
 
   const [expandedTransaction, setExpandedTransaction] = useState(0);
   const [expandedInstruction, setExpandedInstruction] = useState();
-  
+
   const isMultiTx = messages.length > 1;
 
   const wallet = {
@@ -186,12 +186,12 @@ export default function SignTransactionFormContent({
 
   const onOpenAddress = (address) => {
     address &&
-      window.open(
-        'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
-        '_blank',
-      );
+    window.open(
+      'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
+      '_blank',
+    );
   };
-  
+
   const getContent = (instruction, props) => {
     switch (instruction?.type) {
       case 'cancelOrder':
@@ -265,19 +265,19 @@ export default function SignTransactionFormContent({
         );
     }
   };
-  
+
   const txListItem = (instructions, txIdx) => {
     const ixs = instructions.map((instruction, i) => (
-        getContent(instruction, {
-          index: i,
-          expanded: expandedInstruction === i,
-          setExpanded: (expand) => {
-            expand ?  
-              setExpandedInstruction(i) : // expand this instruction
-              (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
-          },
-          program: getProgram(instruction)
-        })
+      getContent(instruction, {
+        index: i,
+        expanded: expandedInstruction === i,
+        setExpanded: (expand) => {
+          expand ?
+            setExpandedInstruction(i) : // expand this instruction
+            (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
+        },
+        program: getProgram(instruction)
+      })
     ));
 
     if (!isMultiTx) {
@@ -317,7 +317,9 @@ export default function SignTransactionFormContent({
           </div>
           {messages.map((message, idx) => (
             <Typography key={idx} style={{ wordBreak: 'break-all' }}>
-              {bs58.encode(message)}
+              HERE
+              JSON.stringify(message, null, 2);
+              {/*{bs58.encode(message)}*/}
             </Typography>
           ))}
         </>

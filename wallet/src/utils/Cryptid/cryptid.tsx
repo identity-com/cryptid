@@ -7,7 +7,7 @@
  */
 import React, { FC, useCallback, useContext, useEffect, useState } from "react";
 import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
+import {AccountInfo, Connection, PublicKey, Transaction, TransactionSignature} from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
 import { refreshCache, useAsyncData } from "../fetch-loop";
@@ -112,7 +112,7 @@ export class CryptidAccount {
       parent: this,
     })
   }
-  
+
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
     this.cryptid.sign(transaction)
 
@@ -180,7 +180,7 @@ export class CryptidAccount {
     //   connection: this.connection,
     // })
   }
-  
+
   get activeSigningKey():PublicKey {
     return this.baseAccount()._signer.publicKey
   }
@@ -188,10 +188,10 @@ export class CryptidAccount {
   get isSelected() {
     return this._isSelected(this)
   }
-  
+
   signerBalance():Promise<number | undefined> {
     const key = this.activeSigningKey;
-    
+
     if (!key) return Promise.resolve(undefined);
     return this._connection.getBalance(key);
   }
@@ -220,6 +220,7 @@ export class CryptidAccount {
   removeController = async (did: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.removeController(did))
 
+  listPendingTx = async(): Promise<PublicKey[]> => this.cryptid.listPendingTx();
   // Sollet Interface Wallet Functionality.
   transferToken = async (
     source,
@@ -258,7 +259,6 @@ export class CryptidAccount {
   };
 
   transferSol = async (destination, amount) => {
-
     // The Tokens Interfaces expect a wallet with
     // interface Wallet {
     //   publicKey: PublicKey
@@ -290,7 +290,7 @@ export class CryptidAccount {
         parsed: parseTokenAccountData(accountInfo.data),
       };
     }).sort((account1, account2) =>
-        account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
+      account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
     );
   }
 
@@ -326,18 +326,18 @@ export class CryptidAccount {
 
 export function useCryptidAccountPublicKeys(cryptid: CryptidAccount | undefined): [PublicKey[], boolean] {
   let [tokenAccountInfo, loaded] = useAsyncData(
-      cryptid ? cryptid.getTokenAccountInfo : async () => [],
-      cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
+    cryptid ? cryptid.getTokenAccountInfo : async () => [],
+    cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
   );
   let publicKeys = [
-      ...(cryptid && cryptid.address ? [cryptid.address] : []),
-      ...(tokenAccountInfo ? tokenAccountInfo.map(({ publicKey }) => publicKey) : []),
+    ...(cryptid && cryptid.address ? [cryptid.address] : []),
+    ...(tokenAccountInfo ? tokenAccountInfo.map(({ publicKey }) => publicKey) : []),
   ]
   publicKeys = useRefEqual(
-      publicKeys,
-      (oldKeys, newKeys) =>
-          oldKeys.length === newKeys.length
-          && oldKeys.every((key, i) => key.equals(newKeys[i]))
+    publicKeys,
+    (oldKeys, newKeys) =>
+      oldKeys.length === newKeys.length
+      && oldKeys.every((key, i) => key.equals(newKeys[i]))
   );
   return [publicKeys, loaded]
 }
@@ -472,7 +472,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
     validatePublicKey(base58);
-    
+
     if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({
@@ -492,7 +492,7 @@ export const CryptidProvider:FC = ({ children }) => {
   }, [cryptidExtAccounts, setCryptidExtAccounts])
 
   const getDidPrefix = useCallback(() => {
-    // sol dids on mainnet have no cluster prefix 
+    // sol dids on mainnet have no cluster prefix
     const clusterPrefix = cluster === 'mainnet-beta' ? '' : `:${cluster}`;
     return `did:sol${clusterPrefix}`;
   },[cluster])
@@ -578,10 +578,10 @@ export const CryptidProvider:FC = ({ children }) => {
 
       // TODO: this might need to wait for the wallet-adapter to be ready
       if (pubKey && hasWallet(pubKey)) {
-          console.log('Changing to Wallet: '+ vm.publicKeyBase58)
-          connectWallet(pubKey)
-          break
-        }
+        console.log('Changing to Wallet: '+ vm.publicKeyBase58)
+        connectWallet(pubKey)
+        break
+      }
     }
 
   }, [selectedCryptidAccount, wallet.publicKey, hasWallet, connectWallet])
