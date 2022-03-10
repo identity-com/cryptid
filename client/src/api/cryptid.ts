@@ -4,8 +4,8 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { DIDDocument, ServiceEndpoint } from 'did-resolver';
-import { Signer } from '../types/crypto';
+import {DIDDocument, ServiceEndpoint} from 'did-resolver';
+import {Signer} from '../types/crypto';
 
 export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {
@@ -37,6 +37,13 @@ export interface Cryptid {
    * @throws RangeError if the transaction size is too large
    */
   sign(transaction: Transaction): Promise<Transaction>;
+
+  /**
+   * List pending large transactions that were previously not executed
+   */
+  listPendingTx(): Promise<PublicKey[]>;
+
+
 
   /**
    * Signs a set of setup transactions followed by an execute transaction
