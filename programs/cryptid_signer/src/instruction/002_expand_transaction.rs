@@ -6,7 +6,6 @@ use crate::TransactionSeeder;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use sol_did::solana_program::pubkey::Pubkey;
 use solana_generator::*;
-use std::array::IntoIter;
 use std::iter::once;
 
 /// Expands an already proposed instruction
@@ -106,7 +105,7 @@ impl Instruction for ExpandTransaction {
         arg: Self::BuildArg,
     ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
         Ok((
-            IntoIter::new([
+            [
                 SolanaAccountMeta::new(
                     match arg.transaction_account {
                         SeedOrAccount::Seed(seed) => {
@@ -124,7 +123,8 @@ impl Instruction for ExpandTransaction {
                 SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
                 arg.did,
                 SolanaAccountMeta::new_readonly(arg.did_program, false),
-            ])
+            ]
+            .into_iter()
             .chain(arg.signing_key.to_metas())
             .collect(),
             ExpandTransactionData {
