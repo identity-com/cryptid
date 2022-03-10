@@ -1,25 +1,22 @@
-import { AssignablePublicKey } from '../../../../../src/lib/solana/model/AssignablePublicKey';
-import { Keypair, PublicKey } from '@solana/web3.js';
-import chai from 'chai';
+import { range } from 'ramda';
+import { expect } from 'chai';
+import AssignablePublicKey from '../../../../../src/lib/solana/model/AssignablePublicKey';
+import { randomU8 } from '../util.test';
 
-const { expect } = chai;
-
-describe('model/AssignablePublicKey', () => {
-  let key: PublicKey;
-
-  before(() => {
-    key = Keypair.generate().publicKey;
+export function randomAssignablePublicKey(): AssignablePublicKey {
+  return new AssignablePublicKey({
+    bytes: range(0, 32).map(() => randomU8()),
   });
+}
 
-  it('creates and validates an AssignablePublicKey using static parse', () => {
-    const apk = AssignablePublicKey.parse(key.toBase58());
+describe('AssignablePublicKey serde', function () {
+  it('should serde a AssignablePublicKey', function () {
+    range(0, 100).map(() => {
+      const before = randomAssignablePublicKey();
+      const data = before.encode();
+      const after = AssignablePublicKey.decode(data, AssignablePublicKey);
 
-    expect(apk.toPublicKey().toBase58()).to.equal(key.toBase58());
-  });
-
-  it('creates and validates an AssignablePublicKey using fromPublicKey', () => {
-    const apk = AssignablePublicKey.fromPublicKey(key);
-
-    expect(apk.toPublicKey().toBase58()).to.equal(key.toBase58());
+      expect(after).to.deep.equal(before);
+    });
   });
 });

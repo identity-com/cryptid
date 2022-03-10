@@ -2,7 +2,7 @@ import { range } from 'ramda';
 import { expect } from 'chai';
 import AccountOperation from '../../../../../src/lib/solana/model/AccountOperation';
 import { randomInt } from 'crypto';
-import { randomAssignablePublicKey } from './AssignablePublickey.test';
+import { randomAssignablePublicKey } from './AssignablePublicKey.test';
 import { UnitValue } from '../../../../../src/lib/solana/solanaBorsh';
 
 export function randomAccountOperation(): AccountOperation {

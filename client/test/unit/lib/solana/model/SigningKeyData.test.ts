@@ -2,7 +2,7 @@ import { randomInt } from 'crypto';
 import { range } from 'ramda';
 import { expect } from 'chai';
 import SigningKeyData from '../../../../../src/lib/solana/model/SigningKeyData';
-import { randomAssignablePublicKey } from './AssignablePublickey.test';
+import { randomAssignablePublicKey } from './AssignablePublicKey.test';
 
 export function randomSigningKeyData(): SigningKeyData {
   return new SigningKeyData({

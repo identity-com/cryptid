@@ -7,7 +7,7 @@ import TransactionAccount, {
 import { randomDiscriminant } from './Discriminant.test';
 import { U16_BOUNDS } from '../../../../../src/lib/solana/solanaBorsh';
 import { randomTransactionState } from '../model/TransactionState.test';
-import { randomAssignablePublicKey } from '../model/AssignablePublickey.test';
+import { randomAssignablePublicKey } from '../model/AssignablePublicKey.test';
 import { randomSigningKeyData } from '../model/SigningKeyData.test';
 import { randomInstructionData } from '../model/InstructionData.test';
 import { randomArray, randomAssignableI64 } from '../util.test';
