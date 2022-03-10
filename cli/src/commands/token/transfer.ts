@@ -117,7 +117,7 @@ export default class TokenTransfer extends Base {
       feePayer: cryptidAddress,
     }).add(...instructions);
 
-    const [signedTx] = await this.cryptid.sign(tx);
+    const signedTx = await this.cryptid.sign(tx);
     console.log(
       signedTx.signatures.map((s) => ({
         publicKey: s.publicKey.toString(),

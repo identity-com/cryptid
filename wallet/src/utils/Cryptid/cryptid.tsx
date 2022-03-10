@@ -114,7 +114,7 @@ export class CryptidAccount {
   }
   
   signTransaction = (transaction: Transaction):Promise<Transaction> =>
-    this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
+    this.cryptid.sign(transaction)
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()
