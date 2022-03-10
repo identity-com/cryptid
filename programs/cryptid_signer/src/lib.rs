@@ -66,10 +66,13 @@ pub struct TransactionSeeder {
 }
 impl PDASeeder for TransactionSeeder {
     fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
-        Box::new(IntoIter::new([
-            &TRANSACTION_SEED as &dyn PDASeed,
-            &self.cryptid_account,
-            &self.seed,
-        ]))
+        Box::new(
+            [
+                &TRANSACTION_SEED as &dyn PDASeed,
+                &self.cryptid_account,
+                &self.seed,
+            ]
+            .into_iter(),
+        )
     }
 }
