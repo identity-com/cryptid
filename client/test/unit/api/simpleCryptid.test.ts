@@ -10,6 +10,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { did, makeKeypair, makeService } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
+import * as Util from '../../../src/lib/util';
 import * as AddKey from '../../../src/lib/solana/transactions/did/addKey';
 import * as RemoveKey from '../../../src/lib/solana/transactions/did/removeKey';
 import * as AddService from '../../../src/lib/solana/transactions/did/addService';
@@ -51,11 +52,13 @@ describe('SimpleCryptid', () => {
     it('should delegate to directExecute', async () => {
       const dummyTx = new Transaction();
 
-      const expectation = sandbox.mock(DirectExecute).expects('directExecute');
+      const expectDirectExecute = sandbox.mock(DirectExecute).expects('directExecute');
+      const expectCheckTxSize = sandbox.mock(Util).expects('checkTxSize');
 
       await cryptid.sign(dummyTx);
 
-      expectation.verify();
+      expectDirectExecute.verify();
+      expectCheckTxSize.verify();
     });
   });
 

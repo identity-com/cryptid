@@ -12,6 +12,7 @@ import { normalizeSigner } from '../../../src/lib/util';
 import { CryptidOptions } from '../../../src/api/cryptid';
 import { didToPDA } from '../../../src/lib/solana/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
+import * as Util from "../../../src/lib/util";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -79,11 +80,13 @@ describe('SimpleCryptid', () => {
     it('should delegate to directExecute', async () => {
       const dummyTx = new Transaction();
 
-      const expectation = sandbox.mock(DirectExecute).expects('directExecute');
+      const expectDirectExecute = sandbox.mock(DirectExecute).expects('directExecute');
+      const expectCheckTxSize = sandbox.mock(Util).expects('checkTxSize');
 
       await controlledCryptid.sign(dummyTx);
 
-      expectation.verify();
+      expectDirectExecute.verify();
+      expectCheckTxSize.verify();
     });
   });
 
