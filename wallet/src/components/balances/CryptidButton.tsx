@@ -6,13 +6,15 @@ const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
 type TokenButtonProps = {
   label: string,
+  tooltip?: string,
   Icon: (props: React.ComponentProps<'svg'>) => JSX.Element
   additionalClasses?: string,
   onClick: () => void,
   disabled?: boolean,
 }
-export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick, additionalClasses = '', disabled }) => {
-  return (<Tooltip title={label} arrow>
+export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick, additionalClasses = '', disabled, tooltip }) => {
+  return (<Tooltip title={tooltip || label} arrow>
+      <span>
       <button
         disabled={!!disabled}
         type="button"
@@ -29,5 +31,6 @@ export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick,
         <span className="hidden sm:inline pr-2">{label}</span>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </button>
+      </span>
     </Tooltip>
   )};
