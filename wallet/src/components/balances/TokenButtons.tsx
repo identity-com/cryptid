@@ -27,7 +27,6 @@ import { useUpdateTokenName } from '../../utils/tokens/names';
 import { useCallAsync, useSendTransaction } from '../../utils/notifications';
 import { useState } from 'react';
 import AddTokenDialog from '../AddTokenDialog';
-import SpendingLimitDialog from '../SpendingLimitDialog';
 
 export default function TokenButtons() {
   const isProdNetwork = useIsProdNetwork();
