@@ -1581,6 +1581,11 @@
     did-resolver "^3.0.1"
     ramda "^0.27.1"
 
+"@identity.com/wallet-adapter-cryptid@^0.7.0":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@identity.com/wallet-adapter-cryptid/-/wallet-adapter-cryptid-0.7.1.tgz#da3b0c46041f0af9b0ff9c151593e412c3a2b77c"
+  integrity sha512-PGT2XHP71pPfJjQl8nmWPl1u1lfY8qVzzZ/uFKCZUcF5IoQJaJ6DDTZOg0aGLt9koK68RhjoX9peVVpFdp4mVw==
+
 "@isaacs/string-locale-compare@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@isaacs/string-locale-compare/-/string-locale-compare-1.1.0.tgz#291c227e93fd407a96ecd59879a35809120e432b"
