@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 
 import { Keypair, PublicKey } from '@solana/web3.js';
 import {
-  deriveDefaultDOAFromKey,
+  deriveDefaultCryptidAccountFromKey,
   didToPDA,
   publicKeyToDid,
 } from '../../../../../src/lib/solana/util';
@@ -20,7 +20,7 @@ import AssignablePublicKey from '../../../../../src/lib/solana/model/AssignableP
 
 const sandbox = sinon.createSandbox();
 
-describe('transactions/proposeTransaction', function () {
+describe('instruction/proposeTransaction', function () {
   const payer = Keypair.generate();
   const did = publicKeyToDid(payer.publicKey);
   let didPDAKey: PublicKey;
@@ -31,7 +31,7 @@ describe('transactions/proposeTransaction', function () {
 
   before(async () => {
     didPDAKey = await didToPDA(did);
-    cryptidAccount = await deriveDefaultDOAFromKey(didPDAKey);
+    cryptidAccount = await deriveDefaultCryptidAccountFromKey(didPDAKey);
   });
 
   it('should create a propose transaction instruction', async () => {
@@ -51,10 +51,10 @@ describe('transactions/proposeTransaction', function () {
       instructions,
       didPDAKey,
       'cryptid',
-      cryptidAccount,
       seed,
       [[normalizeSigner(payer), []]],
-      readyToExecute
+      readyToExecute,
+      cryptidAccount
     );
 
     expect(instruction.keys.map((meta) => meta.pubkey.toBase58()))

@@ -11,7 +11,8 @@ import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner } from '../lib/util';
 import { CRYPTID_PROGRAM_ID } from '../lib/constants';
-import { deriveDefaultDOA } from '../lib/solana/util';
+import { deriveDefaultCryptidAccount } from '../lib/solana/util';
+import { NonEmptyArray } from "../types/lang";
 
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
@@ -38,6 +39,10 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   abstract sign(transaction: Transaction): Promise<Transaction>;
+  abstract signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }>;
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
@@ -184,7 +189,7 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async listPendingTx(): Promise<PublicKey[]> {
-    const address = await deriveDefaultDOA(this.did);
+    const address = await deriveDefaultCryptidAccount(this.did);
 
     return this.options.connection
       .getProgramAccounts(CRYPTID_PROGRAM_ID, {

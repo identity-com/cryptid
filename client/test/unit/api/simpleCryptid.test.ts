@@ -177,7 +177,7 @@ describe('SimpleCryptid', () => {
   });
 
   context('address', () => {
-    it('should return the default doa signer address', async () => {
+    it('should return the default cryptid signer address', async () => {
       // creating with a controlled key so we can control the output
       const secret =
         '2Ki6LaRSuUPdGfEC89pdC7w5RB5gY3FmXUQWkVywqhYxvQEy4fTajNcTvY5ciQVvVMqE4nTbRCehNynwN2dBYRPa';

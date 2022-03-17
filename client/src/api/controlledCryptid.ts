@@ -5,6 +5,7 @@ import { AbstractCryptid } from './abstractCryptid';
 import { didToPDA } from '../lib/solana/util';
 import { Signer } from '../types/crypto';
 import { checkTxSize } from '../lib/util';
+import { NonEmptyArray } from "../types/lang";
 
 export class ControlledCryptid extends AbstractCryptid {
   /**
@@ -59,6 +60,18 @@ export class ControlledCryptid extends AbstractCryptid {
         throw e; // another (unhandled) error was thrown
       }
     }
+  }
+
+  async signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }> {
+    // TODO: implement
+
+    return {
+      setupTransactions: [ transaction],
+      executeTransaction: transaction,
+    };
   }
 
   updateSigner(signer: Signer): void {

@@ -4,7 +4,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { deriveDOASigner, deriveTransactionAccount } from '../util';
+import { deriveDefaultCryptidAccountFromKey, deriveCryptidAccountSigner, deriveTransactionAccount } from '../util';
 import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
@@ -15,14 +15,16 @@ export async function create(
   instructions: InstructionData[],
   didPDAKey: PublicKey,
   funder: 'cryptid' | PublicKey,
-  cryptidAccount: PublicKey,
   accountSeed: string,
   signers: [Signer, AccountMeta[]][],
   readyToExecute: boolean,
+  cryptidAccount?: PublicKey,
   opts?: {
     accountSize?: number;
   }
 ): Promise<TransactionInstruction> {
+  cryptidAccount = cryptidAccount || (await deriveDefaultCryptidAccountFromKey(didPDAKey));
+
   const transactionAccount = await deriveTransactionAccount(
     cryptidAccount,
     accountSeed
@@ -32,7 +34,7 @@ export async function create(
     {
       pubkey:
         funder === 'cryptid'
-          ? await deriveDOASigner(cryptidAccount).then(([key]) => key)
+          ? await deriveCryptidAccountSigner(cryptidAccount).then(([key]) => key)
           : funder,
       isSigner: funder !== 'cryptid',
       isWritable: true,

@@ -25,10 +25,10 @@ export const publicKeyToDid = (
 
 /**
  * Given a key representing either a DID or a DID's PDA
- * derive the default DOA
+ * derive the default CryptidAccount
  * @param didPDAKey the key to the didPDA
  */
-export const deriveDefaultDOAFromKey = async (
+export const deriveDefaultCryptidAccountFromKey = async (
   didPDAKey: PublicKey
 ): Promise<PublicKey> => {
   const publicKeyNonce = await PublicKey.findProgramAddress(
@@ -48,9 +48,9 @@ export const didToPublicKey = (did: string): PublicKey =>
 export const didToPDA = (did: string) =>
   DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
 
-export const deriveDefaultDOA = async (did: string): Promise<PublicKey> => {
+export const deriveDefaultCryptidAccount = async (did: string): Promise<PublicKey> => {
   const didKey = await didToPDA(did);
-  return deriveDefaultDOAFromKey(didKey);
+  return deriveDefaultCryptidAccountFromKey(didKey);
 };
 
 export const deriveTransactionAccount = async (
@@ -68,11 +68,11 @@ export const deriveTransactionAccount = async (
   return key;
 };
 
-export const deriveDOASigner = async (
-  doa: PublicKey
+export const deriveCryptidAccountSigner = async (
+  cryptidAccount: PublicKey
 ): Promise<[PublicKey, number]> => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from(DOA_SIGNER_SEED, 'utf8'), doa.toBuffer()],
+    [Buffer.from(DOA_SIGNER_SEED, 'utf8'), cryptidAccount.toBuffer()],
     CRYPTID_PROGRAM_ID
   );
 };

@@ -14,8 +14,8 @@ import { didToPDA, publicKeyToDid } from '../../../../../src/lib/solana/util';
 import { stubGetBlockhash } from '../../../../utils/lang';
 import { create } from '../../../../../src/lib/solana/instructions/executeTransaction';
 import {
-  deriveDefaultDOAFromKey,
-  deriveDOASigner,
+  deriveDefaultCryptidAccountFromKey,
+  deriveCryptidAccountSigner,
   deriveTransactionAccount,
 } from '../../../../../src/lib/solana/util';
 import { normalizeSigner } from '../../../../../src/lib/util';
@@ -49,7 +49,7 @@ type ByteKeyMeta = {
   isWritable: boolean;
 };
 
-describe('transactions/executeTransaction', function () {
+describe('instruction/executeTransaction', function () {
   const payer = Keypair.generate();
   const did = publicKeyToDid(payer.publicKey);
   let didPDAKey: PublicKey;
@@ -61,8 +61,8 @@ describe('transactions/executeTransaction', function () {
 
   before(async () => {
     didPDAKey = await didToPDA(did);
-    cryptidAccount = await deriveDefaultDOAFromKey(didPDAKey);
-    crpytidSigner = await deriveDOASigner(cryptidAccount).then((val) => val[0]);
+    cryptidAccount = await deriveDefaultCryptidAccountFromKey(didPDAKey);
+    crpytidSigner = await deriveCryptidAccountSigner(cryptidAccount).then((val) => val[0]);
   });
 
   it('should create an execute transaction instruction with set accounts', async function () {

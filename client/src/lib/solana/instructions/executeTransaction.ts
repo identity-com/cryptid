@@ -4,7 +4,7 @@ import {
   PublicKey,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { deriveDOASigner, deriveTransactionAccount } from '../util';
+import { deriveCryptidAccountSigner, deriveTransactionAccount } from '../util';
 import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
@@ -30,7 +30,7 @@ export async function create(
   } else {
     const [account, cryptidSigner] = await Promise.all([
       executionMethod.getAccountInfo(transactionAccount),
-      deriveDOASigner(cryptidAccount).then((val) => val[0]),
+      deriveCryptidAccountSigner(cryptidAccount).then((val) => val[0]),
     ]);
     if (!account) {
       throw new Error(`Unknown transaction account for seed ${accountSeed}`);
@@ -81,7 +81,7 @@ export async function create(
       pubkey:
         fundsTo && fundsTo !== 'cryptid'
           ? fundsTo
-          : await deriveDOASigner(cryptidAccount).then((value) => value[0]),
+          : await deriveCryptidAccountSigner(cryptidAccount).then((value) => value[0]),
       isWritable: true,
       isSigner: false,
     },

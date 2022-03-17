@@ -5,6 +5,7 @@ import { directExecute } from '../lib/solana/transactions/directExecute';
 import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
 import { checkTxSize } from '../lib/util';
+import { NonEmptyArray } from "../types/lang";
 
 export class SimpleCryptid extends AbstractCryptid {
   constructor(did: string, private _signer: Signer, options: CryptidOptions) {
@@ -38,6 +39,18 @@ export class SimpleCryptid extends AbstractCryptid {
         throw e; // another (unhandled) error was thrown
       }
     }
+  }
+
+  async signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }> {
+    // TODO: implement
+
+    return {
+      setupTransactions: [ transaction ],
+      executeTransaction: transaction,
+    };
   }
 
   updateSigner(signer: Signer): void {

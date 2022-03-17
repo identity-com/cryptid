@@ -6,6 +6,7 @@ import {
 } from '@solana/web3.js';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { Signer } from '../types/crypto';
+import { NonEmptyArray } from "../types/lang";
 
 export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {
@@ -48,10 +49,10 @@ export interface Cryptid {
    * that should be sent to the dapp
    * @param transaction The transaction to sign
    */
-  // signLarge(transaction: Transaction): Promise<{
-  //   setupTransactions: Transaction[];
-  //   executeTransaction: Transaction;
-  // }>;
+  signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }>;
 
   /**
    * Adds a key to your the Crytid account

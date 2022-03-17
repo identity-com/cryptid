@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 
 import { Keypair, PublicKey } from '@solana/web3.js';
 import {
-  deriveDefaultDOAFromKey,
+  deriveDefaultCryptidAccountFromKey,
   didToPDA,
   publicKeyToDid,
 } from '../../../../../src/lib/solana/util';
@@ -19,7 +19,7 @@ import { randomArray } from '../util.test';
 
 const sandbox = sinon.createSandbox();
 
-describe('transactions/expandTransaction', function () {
+describe('instruction/expandTransaction', function () {
   const payer = Keypair.generate();
   const did = publicKeyToDid(payer.publicKey);
   let didPDAKey: PublicKey;
@@ -31,7 +31,7 @@ describe('transactions/expandTransaction', function () {
 
   before(async () => {
     didPDAKey = await didToPDA(did);
-    cryptidAccount = await deriveDefaultDOAFromKey(didPDAKey);
+    cryptidAccount = await deriveDefaultCryptidAccountFromKey(didPDAKey);
   });
 
   context('with account and instruction operations', () => {

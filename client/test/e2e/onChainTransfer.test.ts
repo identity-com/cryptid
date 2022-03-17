@@ -7,8 +7,8 @@ import {
   SystemProgram,
 } from '@solana/web3.js';
 import {
-  deriveDefaultDOA,
-  deriveDOASigner,
+  deriveDefaultCryptidAccount,
+  deriveCryptidAccountSigner,
   didToPDA,
   publicKeyToDid,
 } from '../../src/lib/solana/util';
@@ -42,8 +42,8 @@ describe('on-chain transfer', function () {
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
 
-    cryptidAccount = await deriveDefaultDOA(did);
-    cryptidSigner = await deriveDOASigner(cryptidAccount).then((val) => val[0]);
+    cryptidAccount = await deriveDefaultCryptidAccount(did);
+    cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then((val) => val[0]);
 
     [didPDAKey] = await Promise.all([
       didToPDA(did),

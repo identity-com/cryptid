@@ -1,4 +1,5 @@
 import {
+  AccountMeta,
   Connection,
   PublicKey,
   Transaction,
@@ -12,6 +13,7 @@ import {
 import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DIDDocument } from 'did-resolver';
 import { didToPublicKey } from '../util';
+import { SignerArg } from "./directExecute";
 
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
@@ -94,3 +96,31 @@ export const registerInstructionIfNeeded = async (
   );
   return instruction;
 };
+
+/**
+ * Normalizes a `PublicKey | AccountMeta` to an `AccountMeta` where permissions are lowest if it's a `PublicKey`
+ * @param key The key or meta to normalize
+ */
+const normalizeExtra = (key: PublicKey | AccountMeta): AccountMeta => {
+  if (key instanceof PublicKey) {
+    return {
+      pubkey: key,
+      isSigner: false,
+      isWritable: false,
+    };
+  } else {
+    return key;
+  }
+};
+
+
+export const normalizeSigner = (signers: SignerArg[]) : [Signer, AccountMeta[]][] => signers.map((signer) => {
+  if (Array.isArray(signer)) {
+    return [signer[0], signer[1].map(normalizeExtra)];
+  } else {
+    return [signer, []];
+  }
+});
+
+
+
