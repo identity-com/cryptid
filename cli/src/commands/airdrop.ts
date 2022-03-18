@@ -20,6 +20,11 @@ export default class Airdrop extends Base {
   async run(): Promise<void> {
     const { args } = await this.parse(Airdrop);
 
-    await airdrop(this.cryptid, this.cryptidConfig, args.amount, this.log.bind(this));
+    await airdrop(
+      this.cryptid,
+      this.cryptidConfig,
+      args.amount,
+      this.log.bind(this)
+    );
   }
 }
