@@ -87,10 +87,10 @@ describe('on-chain transfer', function () {
       ],
       didPDAKey,
       'cryptid',
-      cryptidAccount,
       transactionSeed,
       [[normalizeSigner(key), []]],
       false,
+      cryptidAccount,
       { accountSize: 10000 }
     );
     const proposeTransaction = await createTransaction(
