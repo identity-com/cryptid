@@ -221,7 +221,7 @@ function TokenListItem({ tokenInfo, onSubmit, disabled, existingAccount }) {
   const [open, setOpen] = useState(false);
   const urlSuffix = useSolanaExplorerUrlSuffix();
   const alreadyExists = !!existingAccount;
-  
+
   return (
     <React.Fragment>
       <div style={{ display: 'flex' }} key={tokenInfo.name}>
@@ -263,7 +263,7 @@ function TokenListItem({ tokenInfo, onSubmit, disabled, existingAccount }) {
             })
           }
         >
-          {alreadyExists ? 
+          {alreadyExists ?
             <CheckCircleIcon className="h-6 w-6"/> :
               <PlusCircleIcon className="h-6 w-6 text-green-500"/>
           }

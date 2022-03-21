@@ -92,6 +92,7 @@ export default function AddMnemonicModal({show, onOK, onClose}: AddMnemonicModal
                 </label>
                 <div className="mt-1">
                 <textarea
+                  data-testid='SEED_WORDS'
                   id="about"
                   name="about"
                   rows={3}
@@ -149,6 +150,7 @@ export default function AddMnemonicModal({show, onOK, onClose}: AddMnemonicModal
                       <div className="mt-1">
                 <textarea
                     id="about"
+                    data-testid='CONFIRMED_WORDS'
                     name="about"
                     rows={3}
                     className="px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"

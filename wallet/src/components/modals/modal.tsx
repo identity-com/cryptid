@@ -45,7 +45,7 @@ export const Modal:React.FC<ModalProps> = (
     console.log("onClose suppressClose: ", suppressClose);
     suppressClose || onClose();
   }, []);
-  
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef}
@@ -96,6 +96,7 @@ export const Modal:React.FC<ModalProps> = (
                     "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm"
                   )}
                   onClick={onOK}
+                  data-testid='MODAL_ADD_BUTTON'
                 >
                   {okText}
                 </button>}

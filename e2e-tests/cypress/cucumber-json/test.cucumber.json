@@ -1,0 +1,52 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "Connect a Cryptid Wallet",
+    "line": 1,
+    "id": "connect-a-cryptid-wallet",
+    "tags": [],
+    "uri": "test.feature",
+    "elements": [
+      {
+        "id": "connect-a-cryptid-wallet;connect-a-cryptid-wallet",
+        "keyword": "Scenario",
+        "line": 3,
+        "name": "Connect a cryptid wallet",
+        "tags": [],
+        "type": "scenario",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 4,
+            "name": "I open to cryptid home page",
+            "result": {
+              "status": "passed",
+              "duration": 3505000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 5,
+            "name": "I type wallet Alias name",
+            "result": {
+              "status": "passed",
+              "duration": 862000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 6,
+            "name": "I create new key",
+            "result": {
+              "status": "passed",
+              "duration": 4636000000
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
