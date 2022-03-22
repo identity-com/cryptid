@@ -5,7 +5,7 @@ import { directExecute } from '../lib/solana/transactions/directExecute';
 import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
 import { checkTxSize } from '../lib/util';
-import { NonEmptyArray } from "../types/lang";
+import { NonEmptyArray } from '../types/lang';
 
 export class SimpleCryptid extends AbstractCryptid {
   constructor(did: string, private _signer: Signer, options: CryptidOptions) {
@@ -48,7 +48,7 @@ export class SimpleCryptid extends AbstractCryptid {
     // TODO: implement
 
     return {
-      setupTransactions: [ transaction ],
+      setupTransactions: [transaction],
       executeTransaction: transaction,
     };
   }

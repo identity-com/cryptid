@@ -6,7 +6,7 @@ import {
 } from '@solana/web3.js';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { Signer } from '../types/crypto';
-import { NonEmptyArray } from "../types/lang";
+import { NonEmptyArray } from '../types/lang';
 
 export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {

@@ -1,5 +1,6 @@
 import {
-  Connection, FeeCalculator,
+  Connection,
+  FeeCalculator,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -40,7 +41,6 @@ describe('on-chain transfer', function () {
   let feeCalculator: FeeCalculator;
   let balances: Balances;
 
-
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
@@ -48,7 +48,9 @@ describe('on-chain transfer', function () {
     recipient = Keypair.generate().publicKey;
 
     cryptidAccount = await deriveDefaultCryptidAccount(did);
-    cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then(([val]) => val);
+    cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then(
+      ([val]) => val
+    );
 
     feeCalculator = (await connection.getRecentBlockhash()).feeCalculator;
 
@@ -81,7 +83,6 @@ describe('on-chain transfer', function () {
       recipient
     );
 
-
     const propose = await createPropose(
       [SystemProgram.programId, cryptidSigner, key.publicKey],
       [
@@ -102,7 +103,9 @@ describe('on-chain transfer', function () {
       cryptidAccount,
       { accountSize: ACCOUNT_SIZE }
     );
-    const rent = await connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE)
+    const rent = await connection.getMinimumBalanceForRentExemption(
+      ACCOUNT_SIZE
+    );
 
     const proposeTransaction = await createTransaction(
       connection,
@@ -110,13 +113,15 @@ describe('on-chain transfer', function () {
       [propose]
     );
 
-    await balances.recordBefore()
+    await balances.recordBefore();
 
     await sendAndConfirmTransaction(connection, proposeTransaction, [key]);
 
-    await balances.recordAfter()
+    await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature);
+    expect(balances.for(key.publicKey)).to.equal(
+      -feeCalculator.lamportsPerSignature
+    );
     expect(balances.for(cryptidSigner)).to.equal(-rent);
     expect(balances.for(recipient)).to.equal(0);
 
@@ -153,7 +158,9 @@ describe('on-chain transfer', function () {
     await sendAndConfirmTransaction(connection, expandTransaction, [key]);
     await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature);
+    expect(balances.for(key.publicKey)).to.equal(
+      -feeCalculator.lamportsPerSignature
+    );
     expect(balances.for(cryptidSigner)).to.equal(0);
     expect(balances.for(recipient)).to.equal(0);
 
@@ -174,7 +181,9 @@ describe('on-chain transfer', function () {
     await sendAndConfirmTransaction(connection, executeTransaction, [key]);
     await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature + LAMPORTS_PER_SOL);
+    expect(balances.for(key.publicKey)).to.equal(
+      -feeCalculator.lamportsPerSignature + LAMPORTS_PER_SOL
+    );
     expect(balances.for(cryptidSigner)).to.equal(-2 * LAMPORTS_PER_SOL + rent); // calculate rent
     expect(balances.for(recipient)).to.equal(LAMPORTS_PER_SOL);
   });

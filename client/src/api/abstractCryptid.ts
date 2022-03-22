@@ -12,7 +12,7 @@ import { resolve } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner } from '../lib/util';
 import { CRYPTID_PROGRAM_ID } from '../lib/constants';
 import { deriveDefaultCryptidAccount } from '../lib/solana/util';
-import { NonEmptyArray } from "../types/lang";
+import { NonEmptyArray } from '../types/lang';
 
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;

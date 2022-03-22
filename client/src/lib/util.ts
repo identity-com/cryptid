@@ -1,7 +1,10 @@
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
-import { deriveDefaultCryptidAccount, deriveCryptidAccountSigner } from './solana/util';
+import {
+  deriveDefaultCryptidAccount,
+  deriveCryptidAccountSigner,
+} from './solana/util';
 import { complement, isNil } from 'ramda';
 import { NonEmptyArray } from '../types/lang';
 
@@ -33,7 +36,9 @@ export const didToDefaultDOASigner = async (
   did: string
 ): Promise<PublicKey> => {
   const cryptidAccount = await deriveDefaultCryptidAccount(did);
-  const [cryptidAccountSigner] = await deriveCryptidAccountSigner(cryptidAccount);
+  const [cryptidAccountSigner] = await deriveCryptidAccountSigner(
+    cryptidAccount
+  );
   return cryptidAccountSigner;
 };
 

@@ -5,7 +5,7 @@ import { AbstractCryptid } from './abstractCryptid';
 import { didToPDA } from '../lib/solana/util';
 import { Signer } from '../types/crypto';
 import { checkTxSize } from '../lib/util';
-import { NonEmptyArray } from "../types/lang";
+import { NonEmptyArray } from '../types/lang';
 
 export class ControlledCryptid extends AbstractCryptid {
   /**
@@ -69,7 +69,7 @@ export class ControlledCryptid extends AbstractCryptid {
     // TODO: implement
 
     return {
-      setupTransactions: [ transaction],
+      setupTransactions: [transaction],
       executeTransaction: transaction,
     };
   }
