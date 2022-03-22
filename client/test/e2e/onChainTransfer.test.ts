@@ -1,5 +1,5 @@
 import {
-  Connection,
+  Connection, FeeCalculator,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -12,7 +12,7 @@ import {
   didToPDA,
   publicKeyToDid,
 } from '../../src/lib/solana/util';
-import { airdrop, createTransaction } from '../utils/solana';
+import { airdrop, Balances, createTransaction } from '../utils/solana';
 import { create as createPropose } from '../../src/lib/solana/instructions/proposeTransaction';
 import { create as createExpand } from '../../src/lib/solana/instructions/expandTransaction';
 import { create as createExecute } from '../../src/lib/solana/instructions/executeTransaction';
@@ -25,6 +25,8 @@ import AssignablePublicKey from '../../src/lib/solana/model/AssignablePublicKey'
 import InstructionOperation from '../../src/lib/solana/model/InstructionOperation';
 import { AssignableBuffer } from '../../src/lib/solana/solanaBorsh';
 
+const ACCOUNT_SIZE = 10000;
+
 describe('on-chain transfer', function () {
   this.timeout(20_000);
 
@@ -35,15 +37,20 @@ describe('on-chain transfer', function () {
   let cryptidAccount: PublicKey;
   let cryptidSigner: PublicKey;
   let recipient: PublicKey;
+  let feeCalculator: FeeCalculator;
+  let balances: Balances;
 
-  before(async function () {
+
+  before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
 
     cryptidAccount = await deriveDefaultCryptidAccount(did);
-    cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then((val) => val[0]);
+    cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then(([val]) => val);
+
+    feeCalculator = (await connection.getRecentBlockhash()).feeCalculator;
 
     [didPDAKey] = await Promise.all([
       didToPDA(did),
@@ -59,20 +66,22 @@ describe('on-chain transfer', function () {
     console.log('SystemProgram: ', SystemProgram.programId.toBase58());
   });
 
-  it('should transfer from cryptid to signer and random address', async function () {
+  it('should transfer from cryptid to signer and random address', async () => {
     const transactionSeed = 'transaction';
 
     const transferData = SystemProgram.transfer({
       fromPubkey: PublicKey.default,
-      lamports: LAMPORTS_PER_SOL,
+      lamports: LAMPORTS_PER_SOL, // 1 SOL
       toPubkey: PublicKey.default,
     }).data;
 
-    const startLamports = await LamportsList.fromConnection(connection, {
-      key: key.publicKey,
-      recipient,
-      cryptidSigner,
-    });
+    balances = await new Balances(connection).register(
+      cryptidSigner, // controlled cryptid
+      key.publicKey, // controller signer
+      recipient
+    );
+
+
     const propose = await createPropose(
       [SystemProgram.programId, cryptidSigner, key.publicKey],
       [
@@ -91,18 +100,25 @@ describe('on-chain transfer', function () {
       [[normalizeSigner(key), []]],
       false,
       cryptidAccount,
-      { accountSize: 10000 }
+      { accountSize: ACCOUNT_SIZE }
     );
+    const rent = await connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE)
+
     const proposeTransaction = await createTransaction(
       connection,
       key.publicKey,
       [propose]
     );
+
+    await balances.recordBefore()
+
     await sendAndConfirmTransaction(connection, proposeTransaction, [key]);
-    const proposeLamports = await startLamports.checkChanges(connection, {
-      key: -5000,
-      recipient: 0,
-    });
+
+    await balances.recordAfter()
+
+    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature);
+    expect(balances.for(cryptidSigner)).to.equal(-rent);
+    expect(balances.for(recipient)).to.equal(0);
 
     const expand = await createExpand(
       [
@@ -133,12 +149,13 @@ describe('on-chain transfer', function () {
       key.publicKey,
       [expand]
     );
+    await balances.recordBefore();
     await sendAndConfirmTransaction(connection, expandTransaction, [key]);
-    const expandLamports = await proposeLamports.checkChanges(connection, {
-      key: -5000,
-      cryptidSigner: 0,
-      recipient: 0,
-    });
+    await balances.recordAfter();
+
+    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature);
+    expect(balances.for(cryptidSigner)).to.equal(0);
+    expect(balances.for(recipient)).to.equal(0);
 
     const execute = await createExecute(
       didPDAKey,
@@ -153,85 +170,12 @@ describe('on-chain transfer', function () {
       key.publicKey,
       [execute]
     );
+    await balances.recordBefore();
     await sendAndConfirmTransaction(connection, executeTransaction, [key]);
-    await Promise.all([
-      expandLamports.checkChanges(connection, {
-        key: -5000 + LAMPORTS_PER_SOL,
-        recipient: LAMPORTS_PER_SOL,
-      }),
-      startLamports.checkChanges(connection, {
-        cryptidSigner: 0,
-      }),
-    ]);
+    await balances.recordAfter();
+
+    expect(balances.for(key.publicKey)).to.equal(-feeCalculator.lamportsPerSignature + LAMPORTS_PER_SOL);
+    expect(balances.for(cryptidSigner)).to.equal(-2 * LAMPORTS_PER_SOL + rent); // calculate rent
+    expect(balances.for(recipient)).to.equal(LAMPORTS_PER_SOL);
   });
 });
-
-type Values<T extends string, U> = {
-  [P in T]: U;
-};
-class LamportsList<T extends string> {
-  keysList: Values<T, PublicKey>;
-  values: Values<T, number>;
-
-  private constructor(
-    keysList: Values<T, PublicKey>,
-    values: Values<T, number>
-  ) {
-    this.keysList = keysList;
-    this.values = values;
-  }
-
-  async checkChanges(
-    connection: Connection,
-    changes?: Partial<Values<T, number>>
-  ): Promise<LamportsList<T>> {
-    const newList = await LamportsList.fromConnection(
-      connection,
-      this.keysList
-    );
-    if (changes) {
-      for (const key of Object.keys(this.values)) {
-        const keyCast = key as keyof Values<T, any>;
-        if (changes[keyCast]) {
-          expect(
-            (this.values[keyCast] as number) + (changes[keyCast] as number),
-            `Key ${key}`
-          ).to.equal(newList.values[keyCast]);
-        }
-      }
-    }
-    return newList;
-  }
-
-  static async fromConnection<T extends string>(
-    connection: Connection,
-    keys: Values<T, PublicKey>
-  ): Promise<LamportsList<T>> {
-    const keyArray: T[] = Object.keys(keys) as T[];
-    const startingValues = {} as Values<T, number>;
-    keyArray.forEach((key) => {
-      startingValues[key] = 0; // Start them all at 0
-    });
-    const out = new LamportsList(keys, startingValues);
-    await Promise.all(
-      keyArray.map((key) =>
-        getLamports(connection, keys[key]).then(
-          (lamports) => (out.values[key] = lamports)
-        )
-      )
-    );
-    return out;
-  }
-}
-
-async function getLamports(
-  connection: Connection,
-  key: PublicKey
-): Promise<number> {
-  return connection.getAccountInfo(key).then((account) => {
-    if (!account) {
-      return 0;
-    }
-    return account.lamports;
-  });
-}
