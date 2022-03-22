@@ -12,8 +12,6 @@ import {
 
 const { expect } = chai;
 
-const TRANSACTION_FEE = 5000;
-
 const alias = 'dummy';
 const dummyService = (did: string): ServiceEndpoint => ({
   id: `${did}#${alias}`,
@@ -32,9 +30,11 @@ describe('DID Service operations', function () {
   let did: string;
   let doaSigner: PublicKey;
   let cryptid: Cryptid;
+  let feePerSignature: number;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
+    feePerSignature = (await connection.getRecentBlockhash()).feeCalculator.lamportsPerSignature;
   });
 
   beforeEach(async () => {
@@ -104,7 +104,7 @@ describe('DID Service operations', function () {
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
-        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+        expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
       });
     });
   });
@@ -131,7 +131,7 @@ describe('DID Service operations', function () {
       // cryptid account paid nothing
       expect(balances.for(doaSigner)).to.equal(0);
       // signer paid fee
-      expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
     });
 
     it('should keep any other added content', async () => {

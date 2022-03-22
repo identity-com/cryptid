@@ -18,8 +18,6 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = 20_000;
 
-const FEE = 5_000;
-
 describe('transfers', function () {
   this.timeout(20_000);
   let connection: Connection;
@@ -31,9 +29,13 @@ describe('transfers', function () {
 
   let cryptid: Cryptid;
   let balances: Balances;
+  let feePerSignature: number;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
+    feePerSignature = (await connection.getRecentBlockhash()).feeCalculator
+      .lamportsPerSignature;
+
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
@@ -74,7 +76,7 @@ describe('transfers', function () {
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -106,7 +108,7 @@ describe('transfers', function () {
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-(lamportsToTransfer * 2)); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -221,7 +223,7 @@ describe('transfers', function () {
         -lamportsToTransfer
       ); // the amount transferred
       expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // the controller's signer key pays the fee
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // the controller's signer key pays the fee
     });
   });
 });
