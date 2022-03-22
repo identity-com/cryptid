@@ -23,7 +23,9 @@ import { normalizeSigner } from '../../src/lib/util';
 import { expect } from 'chai';
 import AccountOperation from '../../src/lib/solana/model/AccountOperation';
 import AssignablePublicKey from '../../src/lib/solana/model/AssignablePublicKey';
-import InstructionOperation from '../../src/lib/solana/model/InstructionOperation';
+import InstructionOperation, {
+  AddData,
+} from '../../src/lib/solana/model/InstructionOperation';
 import { AssignableBuffer } from '../../src/lib/solana/solanaBorsh';
 
 const ACCOUNT_SIZE = 10000;
@@ -139,6 +141,38 @@ describe('on-chain transfer', function () {
               TransactionAccountMeta.fromIndexAndMeta(1, true, true),
               TransactionAccountMeta.fromIndexAndMeta(3, false, true),
             ],
+            data: AssignableBuffer.from([]),
+          }),
+        }),
+      ],
+      didPDAKey,
+      cryptidAccount,
+      transactionSeed,
+      false,
+      [normalizeSigner(key), []]
+    );
+    const expandTransaction = await createTransaction(
+      connection,
+      key.publicKey,
+      [expand]
+    );
+    await balances.recordBefore();
+    await sendAndConfirmTransaction(connection, expandTransaction, [key]);
+    await balances.recordAfter();
+
+    expect(balances.for(key.publicKey)).to.equal(
+      -feeCalculator.lamportsPerSignature
+    );
+    expect(balances.for(cryptidSigner)).to.equal(0);
+    expect(balances.for(recipient)).to.equal(0);
+
+    // expand with data
+    const expandData = await createExpand(
+      [],
+      [
+        new InstructionOperation({
+          addData: new AddData({
+            index: 1,
             data: new AssignableBuffer(transferData),
           }),
         }),
@@ -149,13 +183,15 @@ describe('on-chain transfer', function () {
       true,
       [normalizeSigner(key), []]
     );
-    const expandTransaction = await createTransaction(
+
+    const expandDataTransaction = await createTransaction(
       connection,
       key.publicKey,
-      [expand]
+      [expandData]
     );
+
     await balances.recordBefore();
-    await sendAndConfirmTransaction(connection, expandTransaction, [key]);
+    await sendAndConfirmTransaction(connection, expandDataTransaction, [key]);
     await balances.recordAfter();
 
     expect(balances.for(key.publicKey)).to.equal(
