@@ -5,7 +5,8 @@ import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
-  PublicKey, sendAndConfirmTransaction,
+  PublicKey,
+  sendAndConfirmTransaction,
 } from '@solana/web3.js';
 import {
   airdrop,
@@ -73,7 +74,9 @@ describe('transfers', function () {
       await sendAndConfirmTransaction(connection, tx, [key]);
       await balances.recordAfter();
 
-      expect(balances.for(key.publicKey)).to.equal(-(60 * lamportsToTransfer + FEE)); // fees only
+      expect(balances.for(key.publicKey)).to.equal(
+        -(60 * lamportsToTransfer + FEE)
+      ); // fees only
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
