@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
-import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram } from '@solana/web3.js';
 import {
   airdrop,
   Balances,
@@ -217,7 +217,7 @@ describe('transfers', function () {
       controllerCryptid = cryptid.as(controlledDID);
 
       // airdrop funds to the controlled DID cryptid account
-      await airdrop(connection, controlledCryptidAddress);
+      await airdrop(connection, controlledCryptidAddress, 5 * LAMPORTS_PER_SOL);
       // airdrop funds to the controlled DID signer key (for fees)
       await airdrop(connection, controlledDIDKey.publicKey, 10_000);
 
@@ -252,6 +252,36 @@ describe('transfers', function () {
       ); // the amount transferred
       expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
       expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // the controller's signer key pays the fee
+    });
+
+    it('should sign a large transaction for a controlled DID with a controller key', async () => {
+      // create a transfer from the controlled DID
+      const nrInstructions = 22;
+
+      const tx = await createTransferTransaction(
+        connection,
+        controlledCryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        nrInstructions
+      );
+
+      const {setupTransactions, executeTransaction} =
+        await controllerCryptid.signLarge(tx); // sign with the controller
+
+      for (const tx of setupTransactions) {
+        await sendAndConfirmCryptidTransaction(connection, tx);
+      }
+
+      await sendAndConfirmCryptidTransaction(connection, executeTransaction);
+
+      await balances.recordAfter();
+
+      expect(balances.for(controlledCryptidAddress)).to.equal(
+        -lamportsToTransfer * nrInstructions
+      ); // the amount transferred
+      expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature * (setupTransactions.length + 1)); // the controller's signer key pays the fee
     });
   });
 });

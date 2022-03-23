@@ -36,7 +36,6 @@ export const largeExecute = async (
   payer: PublicKey,
   signers: SignerArg[],
   cryptidAccount?: PublicKey,
-  debug = false
 ): Promise<{
   setupTransactions: NonEmptyArray<Transaction>;
   executeTransaction: Transaction;
@@ -45,11 +44,6 @@ export const largeExecute = async (
   const parsedDID = DecentralizedIdentifier.parse(did);
   const didPDAKey = await parsedDID.pdaSolanaPubkey();
 
-  if (debug) {
-    console.log(`DID PDA Key: ${didPDAKey}`);
-  }
-
-  // TODO: This heuristic does not consider accounts running over TX_SIZE
   // collect all accounts
   const mappedAccountMetas = collectAccountMetas(unsignedTransaction.instructions);
   const mappedAccounts = mappedAccountMetas.map(meta => meta.pubkey);
@@ -57,9 +51,6 @@ export const largeExecute = async (
     mappedAccounts,
     unsignedTransaction.instructions
   );
-  console.log("Number of accounts:", mappedAccounts.length);
-  console.log("Number of instructions:", mappedInstructions.length);
-
 
   // initial out-of-bound value.
   let nrOfOverflowInstructions = -1;
@@ -91,17 +82,14 @@ export const largeExecute = async (
       );
     } catch (e) {
       // catches Range errors during signing
-      continue; // if code is added below
+      // continue to next iteration
     }
-    // console.log("nrOfOverflowInstructions", nrOfOverflowInstructions);
   }
   // After the loop, proposeTransaction is valid
   const setupTransactions: NonEmptyArray<Transaction> = [ proposeTransaction as Transaction ];
 
-  // EXPAND (X-Times) // Add Data
+  // (Possible) Expand transaction
   let mappedOverheadInstructions = mappedInstructions.slice(mappedInstructions.length - nrOfOverflowInstructions);
-  // console.log("mappedOverheadInstructions: ", mappedOverheadInstructions.length);
-  // Build expand transaction (if needed)
 
   // We assume that overhead instructions will always fit in one single expand
   if (nrOfOverflowInstructions > 0) {
@@ -127,7 +115,7 @@ export const largeExecute = async (
     setupTransactions.push(expandTransaction)
   }
 
-  // EXECUTE.
+  // Build execute Transaction.
   const execute = await createExecute(
     didPDAKey,
     TRANSACTION_SEED,
@@ -143,7 +131,6 @@ export const largeExecute = async (
     payer,
     signersNormalized.map(([signer]) => signer)
   );
-
 
   return {
     setupTransactions,

@@ -46,16 +46,12 @@ export class SimpleCryptid extends AbstractCryptid {
     setupTransactions: NonEmptyArray<Transaction>;
     executeTransaction: Transaction;
   }> {
-    const wrappedTxs = await largeExecute(
+    return await largeExecute(
       transaction,
       this.did,
       this.signer.publicKey,
       [[this.signer, []]],
-      undefined,
-      true
     );
-
-    return wrappedTxs;
   }
 
   updateSigner(signer: Signer): void {
