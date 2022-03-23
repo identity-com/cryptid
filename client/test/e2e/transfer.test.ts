@@ -1,7 +1,13 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+} from '@solana/web3.js';
 import {
   airdrop,
   Balances,
@@ -266,7 +272,7 @@ describe('transfers', function () {
         nrInstructions
       );
 
-      const {setupTransactions, executeTransaction} =
+      const { setupTransactions, executeTransaction } =
         await controllerCryptid.signLarge(tx); // sign with the controller
 
       for (const tx of setupTransactions) {
@@ -281,7 +287,9 @@ describe('transfers', function () {
         -lamportsToTransfer * nrInstructions
       ); // the amount transferred
       expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
-      expect(balances.for(key.publicKey)).to.equal(-feePerSignature * (setupTransactions.length + 1)); // the controller's signer key pays the fee
+      expect(balances.for(key.publicKey)).to.equal(
+        -feePerSignature * (setupTransactions.length + 1)
+      ); // the controller's signer key pays the fee
     });
   });
 });

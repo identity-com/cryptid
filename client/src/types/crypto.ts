@@ -5,4 +5,3 @@ export type Signer = {
   publicKey: PublicKey;
   sign: SignCallback;
 };
-

@@ -6,7 +6,7 @@ import { didToPDA } from '../lib/solana/util';
 import { Signer } from '../types/crypto';
 import { checkTxSize } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
-import { largeExecute } from "../lib/solana/transactions/largeExecute";
+import { largeExecute } from '../lib/solana/transactions/largeExecute';
 
 export class ControlledCryptid extends AbstractCryptid {
   /**
@@ -68,12 +68,9 @@ export class ControlledCryptid extends AbstractCryptid {
     executeTransaction: Transaction;
   }> {
     const additionalSigners = await this.additionalKeys();
-    return await largeExecute(
-      transaction,
-      this.did,
-      this.signer.publicKey,
-      [[this.signer, additionalSigners]],
-    );
+    return await largeExecute(transaction, this.did, this.signer.publicKey, [
+      [this.signer, additionalSigners],
+    ]);
   }
 
   updateSigner(signer: Signer): void {
