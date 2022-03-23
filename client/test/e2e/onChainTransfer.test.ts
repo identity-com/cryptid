@@ -146,10 +146,10 @@ describe('on-chain transfer', function () {
         }),
       ],
       didPDAKey,
-      cryptidAccount,
       transactionSeed,
       false,
-      [normalizeSigner(key), []]
+      [normalizeSigner(key), []],
+      cryptidAccount
     );
     const expandTransaction = await createTransaction(
       connection,
@@ -178,10 +178,10 @@ describe('on-chain transfer', function () {
         }),
       ],
       didPDAKey,
-      cryptidAccount,
       transactionSeed,
       true,
-      [normalizeSigner(key), []]
+      [normalizeSigner(key), []], // TODO: Brett why is this not array? (as with propose). e.g. signers
+      cryptidAccount
     );
 
     const expandDataTransaction = await createTransaction(
@@ -202,10 +202,10 @@ describe('on-chain transfer', function () {
 
     const execute = await createExecute(
       didPDAKey,
-      cryptidAccount,
       transactionSeed,
-      [normalizeSigner(key), []],
+      [normalizeSigner(key), []], // TODO: Brett why is this not array? (as with propose). e.g. signers
       connection,
+      cryptidAccount,
       'cryptid'
     );
     const executeTransaction = await createTransaction(

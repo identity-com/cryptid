@@ -48,5 +48,19 @@ export const filterNotNil = <T>(entries: (T | null | undefined)[]): T[] =>
 export const headNonEmpty = <T>(t: NonEmptyArray<T>): T => t[0];
 
 export const checkTxSize = (tx: Transaction): void => {
-  tx.serialize({ verifySignatures: false }); // check for size, do not check fo signers
+  tx.serialize({ verifySignatures: false, requireAllSignatures: false }); // check for size, do not check fo signers
+};
+
+export const isTxValid = (tx: Transaction | undefined): boolean => {
+  if (!tx) {
+    return false;
+  }
+
+  try {
+    tx.serialize({ verifySignatures: false, requireAllSignatures: false }); // check for size, do not check fo signers
+  } catch (e) {
+    // console.log(e)
+    return false;
+  }
+  return true;
 };

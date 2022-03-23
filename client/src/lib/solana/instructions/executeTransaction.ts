@@ -4,22 +4,25 @@ import {
   PublicKey,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { deriveCryptidAccountSigner, deriveTransactionAccount } from '../util';
+import { deriveCryptidAccountSigner, deriveDefaultCryptidAccountFromKey, deriveTransactionAccount } from '../util';
 import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { Signer } from '../../../types/crypto';
 import { CryptidInstruction } from './instruction';
-import TransactionAccount from '../accounts/TransactionAccount';
+import { getExecutionAccounts } from "../transactions/util";
 
 export async function create(
   didPDAKey: PublicKey,
-  cryptidAccount: PublicKey,
   accountSeed: string,
   signer: [Signer, AccountMeta[]],
   executionMethod: Connection | AccountMeta[],
-  fundsTo?: 'cryptid' | PublicKey
+  cryptidAccountData?: PublicKey,
+  fundsTo?: 'cryptid' | PublicKey,
 ): Promise<TransactionInstruction> {
+  cryptidAccountData = cryptidAccountData || (await deriveDefaultCryptidAccountFromKey(didPDAKey));
+  const cryptidAccountSigner = await deriveCryptidAccountSigner(cryptidAccountData).then((value) => value[0])
+
   const transactionAccount = await deriveTransactionAccount(
-    cryptidAccount,
+    cryptidAccountData,
     accountSeed
   );
 
@@ -28,51 +31,25 @@ export async function create(
   if (Array.isArray(executionMethod)) {
     executionAccounts = executionMethod;
   } else {
-    const [account, cryptidSigner] = await Promise.all([
-      executionMethod.getAccountInfo(transactionAccount),
-      deriveCryptidAccountSigner(cryptidAccount).then((val) => val[0]),
-    ]);
-    if (!account) {
-      throw new Error(`Unknown transaction account for seed ${accountSeed}`);
-    }
-    const transaction = TransactionAccount.decode(
-      account.data,
-      TransactionAccount
+    executionAccounts = await getExecutionAccounts(
+      executionMethod,
+      cryptidAccountData,
+      transactionAccount,
+      accountSeed
     );
-    const tempExecutionAccounts = transaction.accounts.map((key) => ({
-      pubkey: key.toPublicKey(),
-      isWritable: false,
-      isSigner: false,
-      exists: false,
-    }));
+  }
 
-    transaction.transactionInstructions
-      .flatMap((instruction) => instruction.accounts)
-      .forEach((meta) => {
-        const account = tempExecutionAccounts[meta.key];
-        account.exists = true;
-        account.isSigner ||=
-          meta.isSigner() &&
-          !transaction.accounts[meta.key].toPublicKey().equals(cryptidSigner);
-        account.isWritable ||= meta.isWritable();
-      });
-    transaction.transactionInstructions.forEach(
-      (instruction) =>
-        (tempExecutionAccounts[instruction.program_id].exists = true)
-    );
-
-    executionAccounts = tempExecutionAccounts
-      .filter(({ exists }) => exists)
-      .map((meta) => {
-        const account: AccountMeta & { exists?: boolean } = meta;
-        delete account.exists;
-        return account;
-      });
+  // make sure CryptidSigner is not marked as isSigner
+  const cryptidAccountSignerIdx = executionAccounts.findIndex(
+    (account) => account.pubkey.equals(cryptidAccountSigner)
+  );
+  if (cryptidAccountSignerIdx !== -1) {
+    executionAccounts[cryptidAccountSignerIdx].isSigner = false;
   }
 
   const keys: AccountMeta[] = [
     { pubkey: transactionAccount, isWritable: true, isSigner: false },
-    { pubkey: cryptidAccount, isWritable: false, isSigner: false },
+    { pubkey: cryptidAccountData, isWritable: false, isSigner: false },
     { pubkey: didPDAKey, isWritable: false, isSigner: false },
     { pubkey: SOL_DID_PROGRAM_ID, isWritable: false, isSigner: false },
     { pubkey: signer[0].publicKey, isWritable: false, isSigner: true },
@@ -81,7 +58,7 @@ export async function create(
       pubkey:
         fundsTo && fundsTo !== 'cryptid'
           ? fundsTo
-          : await deriveCryptidAccountSigner(cryptidAccount).then((value) => value[0]),
+          : cryptidAccountSigner,
       isWritable: true,
       isSigner: false,
     },

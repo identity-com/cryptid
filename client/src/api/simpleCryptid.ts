@@ -6,6 +6,7 @@ import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
 import { checkTxSize } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
+import { largeExecute } from '../lib/solana/transactions/largeExecute';
 
 export class SimpleCryptid extends AbstractCryptid {
   constructor(did: string, private _signer: Signer, options: CryptidOptions) {
@@ -45,12 +46,16 @@ export class SimpleCryptid extends AbstractCryptid {
     setupTransactions: NonEmptyArray<Transaction>;
     executeTransaction: Transaction;
   }> {
-    // TODO: implement
+    const wrappedTxs = await largeExecute(
+      transaction,
+      this.did,
+      this.signer.publicKey,
+      [[this.signer, []]],
+      undefined,
+      true
+    );
 
-    return {
-      setupTransactions: [transaction],
-      executeTransaction: transaction,
-    };
+    return wrappedTxs;
   }
 
   updateSigner(signer: Signer): void {

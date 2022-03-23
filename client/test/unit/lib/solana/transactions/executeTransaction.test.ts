@@ -80,10 +80,10 @@ describe('instruction/executeTransaction', function () {
 
     const instruction = await create(
       didPDAKey,
-      cryptidAccount,
       seed,
       [normalizeSigner(payer), []],
-      accounts
+      accounts,
+      cryptidAccount,
     );
 
     expect(instruction.keys.length).to.equal(6 + accounts.length);
@@ -181,10 +181,10 @@ describe('instruction/executeTransaction', function () {
 
       const instruction = await create(
         didPDAKey,
-        cryptidAccount,
         seed,
         [normalizeSigner(payer), []],
-        new Connection('https://invalid.url')
+        new Connection('https://invalid.url'),
+        cryptidAccount,
       );
 
       expect(instruction.keys.length).to.be.greaterThanOrEqual(6);

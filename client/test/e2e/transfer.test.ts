@@ -151,19 +151,47 @@ describe('transfers', function () {
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
     });
 
-    it('should fail on a large Transaction', async () => {
+    it('should fail on a large Transaction (that normally succeed)', async () => {
       const cryptid = build(did, key, { connection });
+
+      const sender = Keypair.generate();
+
+      const tx_signed = await createTransferTransaction(
+        connection,
+        sender.publicKey,
+        recipient,
+        lamportsToTransfer,
+        60
+      );
+      tx_signed.partialSign(sender);
+      // make sure that signature does not increase the serialization size.
+      expect(() => tx_signed.serialize()).to.not.throw();
 
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
         recipient,
         lamportsToTransfer,
-        100
+        20 // this is pretty small compared to 60.
       );
 
+      const tx_over = await createTransferTransaction(
+        connection,
+        cryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        61
+      );
+
+      // make sure the original transaction is not too big
+      expect(() => tx.serialize({ verifySignatures: false })).to.not.throw();
+      expect(() => tx_over.serialize({ verifySignatures: false })).to.throw(
+        'Transaction too large'
+      );
+
+      // expect the transaction
       await expect(cryptid.sign(tx)).to.be.rejectedWith(
-        /Transaction is too large/
+        /Transaction too large/
       );
     });
   });

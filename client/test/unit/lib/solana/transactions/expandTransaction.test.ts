@@ -52,10 +52,10 @@ describe('instruction/expandTransaction', function () {
         accountOperations,
         instructionOperations,
         didPDAKey,
-        cryptidAccount,
         seed,
         false,
-        [normalizeSigner(payer), []]
+        [normalizeSigner(payer), []],
+        cryptidAccount,
       );
 
       expect(instruction.keys.map((key) => key.pubkey.toBase58()))
@@ -84,10 +84,10 @@ describe('instruction/expandTransaction', function () {
         accountOperations,
         instructionOperations,
         didPDAKey,
-        cryptidAccount,
         seed,
         true,
-        [normalizeSigner(payer), []]
+        [normalizeSigner(payer), []],
+        cryptidAccount,
       );
 
       expect(instruction.keys.map((key) => key.pubkey.toBase58()))

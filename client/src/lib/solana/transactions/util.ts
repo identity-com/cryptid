@@ -12,8 +12,13 @@ import {
 } from '@identity.com/sol-did-client';
 import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DIDDocument } from 'did-resolver';
-import { didToPublicKey } from '../util';
+import { deriveCryptidAccountSigner, didToPublicKey } from '../util';
 import { SignerArg } from "./directExecute";
+import * as R from "ramda";
+import TransactionAccount from "../accounts/TransactionAccount";
+import InstructionData from "../model/InstructionData";
+import TransactionAccountMeta from "../model/TransactionAccountMeta";
+import { AssignableBuffer } from "../solanaBorsh";
 
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
@@ -121,6 +126,91 @@ export const normalizeSigner = (signers: SignerArg[]) : [Signer, AccountMeta[]][
     return [signer, []];
   }
 });
+
+/**
+ * Extract all "accounts" (programId and accounts) from a list of TransactionInstructions.
+ * @param instructions The list of instructions ot extract accounts from
+ */
+export const collectAccounts = R.pipe(
+  R.reduce((accu, instruction: TransactionInstruction) => {
+    return [...accu, instruction.programId, ...instruction.keys.map((key) => key.pubkey)];
+  }, [] as PublicKey[]),
+  R.uniq
+)
+
+export const collectAccountMetas = R.pipe(
+  R.reduce((accounts, instruction: TransactionInstruction) => {
+    // Handle programId
+    const prev = accounts.get(instruction.programId.toBase58());
+    accounts.set(instruction.programId.toBase58(), {
+      pubkey: instruction.programId,
+      isSigner: !!prev?.isSigner,
+      isWritable: !!prev?.isWritable,
+    });
+
+    // Handle keys
+    instruction.keys.forEach((key) => {
+      const prev = accounts.get(key.pubkey.toBase58());
+      accounts.set(key.pubkey.toBase58(), {
+        pubkey: key.pubkey,
+        isSigner: prev?.isSigner || key.isSigner,
+        isWritable: prev?.isWritable || key.isWritable,
+      });
+    });
+
+    return accounts;
+  }, new Map<string, AccountMeta>()),
+  map => Array.from(map.values()),
+)
+
+export const findAccountIndex = (key: PublicKey, list: PublicKey[]) => R.findIndex(R.equals(key))(list);
+
+export const mapTransactionInstructionsToAccountArray = (accounts: PublicKey[], instructions: TransactionInstruction[]) => R.map(
+  (instruction: TransactionInstruction) => new InstructionData({
+    program_id: findAccountIndex(instruction.programId, accounts),
+    accounts: instruction.keys.map(native =>
+      TransactionAccountMeta.fromIndexAndMeta(
+        findAccountIndex(native.pubkey, accounts),
+        native.isSigner,
+        native.isWritable
+      )
+    ),
+    data: new AssignableBuffer(instruction.data)
+}))(instructions);
+
+export const getExecutionAccounts = async (
+  connection: Connection,
+  cryptidAccount: PublicKey,
+  transactionAccount: PublicKey,
+  accountSeed: string): Promise<AccountMeta[]> => {
+  const [account] = await Promise.all([
+    connection.getAccountInfo(transactionAccount),
+    deriveCryptidAccountSigner(cryptidAccount).then(([val]) => val),
+  ]);
+  if (!account) {
+    throw new Error(`Unknown transaction account for seed ${accountSeed}`);
+  }
+  const transaction = TransactionAccount.decode(
+    account.data,
+    TransactionAccount
+  );
+
+  const accountMetas = transaction.accounts.map((key) => ({
+    pubkey: key.toPublicKey(),
+    isWritable: false,
+    isSigner: false,
+  }));
+
+  transaction.transactionInstructions
+    .flatMap((instruction) => instruction.accounts)
+    .forEach((meta) => {
+      const account = accountMetas[meta.key];
+      account.isSigner ||= meta.isSigner();
+      account.isWritable ||= meta.isWritable();
+    });
+
+  return accountMetas as AccountMeta[];
+}
 
 
 

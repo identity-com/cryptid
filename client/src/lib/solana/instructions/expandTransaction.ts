@@ -6,7 +6,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
-import { deriveTransactionAccount } from '../util';
+import { deriveDefaultCryptidAccountFromKey, deriveTransactionAccount } from '../util';
 import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { CryptidInstruction } from './instruction';
 import { AssignableBoolean } from '../solanaBorsh';
@@ -15,11 +15,14 @@ export async function create(
   accountOperations: AccountOperation[],
   instructionOperations: InstructionOperation[],
   didPDAKey: PublicKey,
-  cryptidAccount: PublicKey,
   accountSeed: string,
   readyToExecute: boolean,
-  signer: [Signer, AccountMeta[]]
+  signer: [Signer, AccountMeta[]],
+  cryptidAccount?: PublicKey,
 ): Promise<TransactionInstruction> {
+  cryptidAccount = cryptidAccount || (await deriveDefaultCryptidAccountFromKey(didPDAKey));
+
+
   const transactionAccount = await deriveTransactionAccount(
     cryptidAccount,
     accountSeed
