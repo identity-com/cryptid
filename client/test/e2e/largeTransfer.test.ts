@@ -5,7 +5,7 @@ import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
-  PublicKey,
+  PublicKey, sendAndConfirmTransaction,
 } from '@solana/web3.js';
 import {
   airdrop,
@@ -48,7 +48,7 @@ describe('transfers', function () {
 
     await Promise.all([
       airdrop(connection, cryptidAddress, 5 * LAMPORTS_PER_SOL), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+      airdrop(connection, key.publicKey, 5 * LAMPORTS_PER_SOL), // to cover fees only
     ]);
   });
 
@@ -59,6 +59,22 @@ describe('transfers', function () {
         key.publicKey,
         recipient
       );
+    });
+
+    it('should be able to execute 60 transfer instructions without cryptid', async () => {
+      const tx = await createTransferTransaction(
+        connection,
+        key.publicKey,
+        recipient,
+        lamportsToTransfer,
+        60
+      );
+
+      await sendAndConfirmTransaction(connection, tx, [key]);
+      await balances.recordAfter();
+
+      expect(balances.for(key.publicKey)).to.equal(-(60 * lamportsToTransfer + FEE)); // fees only
+      expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
     it.skip('should be able to setup and execute a large tx', async () => {
