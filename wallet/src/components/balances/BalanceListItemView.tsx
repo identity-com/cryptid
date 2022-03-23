@@ -69,8 +69,9 @@ export function BalanceListItemView({
         // swapInfo={swapInfo}
         isAssociatedToken={isAssociatedToken}
       />
-      <div className="flex items-center pl-4 py-4 sm:pl-6">
+      <div className="flex items-center pl-4 py-4 sm:pl-6" data-testid="listedWallet">
         <TokenIcon
+          data-testid='tokenIcon'
           mint={mint}
           tokenName={tokenName}
           url={tokenLogoUri}
@@ -92,8 +93,8 @@ export function BalanceListItemView({
           </div>
         </div>
         <div className='inline-flex shadow-sm rounded-md'>
-          <CryptidButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
-          <CryptidButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+          <CryptidButton label="Receive" data-testid='receiveButton' Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+          <CryptidButton label="Send" data-testid='sendButton' Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
         </div>
       </div>
     </li>

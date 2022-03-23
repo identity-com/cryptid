@@ -16,7 +16,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
   const title = label || addressString
   const urlSuffix = useSolanaExplorerUrlSuffix();
   const { enqueueSnackbar } = useSnackbar();
-  
+
   const baseRef = `https://explorer.identity.com/address/${addressString.replace(/did:.*:/, '')}`;
 
   const copyLink = () => {
@@ -35,6 +35,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
         target="_blank"
         rel="noopener"
         className={classNames("pl-3", className)}
+        data-testid="linkToIdentityExplorer"
       >
         {title}
       </Link>
@@ -50,7 +51,7 @@ export const CopyableAddress:React.FC<Props> = ({address: address, label, qrCode
         }}>
         <QRCode value={addressString} size={256} includeMargin />
       </Modal>
-      <ClipboardIcon className="pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={copyLink}/>
+      <ClipboardIcon className="pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" data-testid="clipboardIcon" aria-hidden="true" onClick={copyLink}/>
       {qrCode && <QrcodeIcon className="pl-1 mt-0.5 h-5 md:h-6 cursor-pointer text-gray-300 hover:text-gray-500" aria-hidden="true" onClick={() => setShowQrcode(true)}/>}
     </div>);
 }

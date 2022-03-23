@@ -35,16 +35,16 @@ const SignerBalanceControl:React.FC<{
   const notFundedTooltip = useMemo(() =>
       'Signer is not funded.' + (isProdNetwork ? '' : ' Click to airdrop')
     , [isProdNetwork])
-  
+
   return (
     <div className='pt-1'>
       {
       balance > MIN_BALANCE ?
         <Tooltip arrow title={'Signer is funded with ' + toSol(balance) + ' SOL '}><div>
           <CheckCircleIcon className="text-green-500 w-5 h-5"/>
-        </div></Tooltip>: 
+        </div></Tooltip>:
         <Tooltip arrow title={notFundedTooltip}><div>
-          <ExclamationCircleIcon className={classNames(
+          <ExclamationCircleIcon data-testid="exclamationCircleIcon" className={classNames(
             "text-yellow-500 w-5 h-5",
             isProdNetwork ? '' : 'cursor-pointer'
           )} onClick={() => isProdNetwork || requestAirdrop(signer)}/>
@@ -58,15 +58,15 @@ export const CryptidSummary = ({ cryptidAccount } : CryptidDetailsInterface) => 
   // hack to trigger refresh of the balance - not sure what the best react way to do this is
   const [refresh, setRefresh] = useState(0)
   const [signerBalance, setSignerBalance] = useState<number | undefined>();
-  
+
   const triggerRefresh = useCallback(() => setRefresh(refresh + 1), [refresh, setRefresh])
 
   useEffect(() => {
     cryptidAccount.signerBalance().then(setSignerBalance);
   }, [setSignerBalance, cryptidAccount.activeSigningKey, refresh])
-  
+
   return (<div className="flex items-center px-2 py-4 sm:px-6">
-      <div className="min-w-0 flex-auto px-2 inline-flex">
+      <div className="min-w-0 flex-auto px-2 inline-flex" data-testid="walletName">
         <UserIcon className="w-8"/>
         <div className="pt-1 text-lg md:text-xl">
           { cryptidAccount.alias }

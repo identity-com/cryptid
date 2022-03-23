@@ -24,10 +24,11 @@ export const CryptidButton: React.FC<TokenButtonProps> = ({label, Icon, onClick,
           "focus:z-10 focus:outline-none focus:ring-1 focus:ring-red-800 focus:border-red-800",
           additionalClasses,
         )}
+        data-testid="tokenButton"
         onClick={onClick}
       >
         <span className="hidden sm:inline pr-2">{label}</span>
-        <Icon className="h-5 w-5" aria-hidden="true" />
+        <Icon className="h-5 w-5" data-testid="buttonIcon" aria-hidden="true" />
       </button>
     </Tooltip>
   )};
