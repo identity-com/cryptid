@@ -104,26 +104,28 @@ export const largeExecute = async (
   // Build expand transaction (if needed)
 
   // We assume that overhead instructions will always fit in one single expand
-  const expandInstruction = await createExpand(
-    [],
-    mappedOverheadInstructions.map(instruction => new InstructionOperation({
-      push: instruction
-    })),
-    didPDAKey,
-    TRANSACTION_SEED,
-    true,
-    signersNormalized[0], // TODO: Brett why is this not array? (as with propose). e.g. signers
-    cryptidAccount
-  );
+  if (nrOfOverflowInstructions > 0) {
+    const expandInstruction = await createExpand(
+      [],
+      mappedOverheadInstructions.map(instruction => new InstructionOperation({
+        push: instruction
+      })),
+      didPDAKey,
+      TRANSACTION_SEED,
+      true,
+      signersNormalized[0], // TODO: Brett why is this not array? (as with propose). e.g. signers
+      cryptidAccount
+    );
 
-  const expandTransaction = await createTransaction(
-    unsignedTransaction.recentBlockhash,
-    [expandInstruction],
-    payer,
-    signersNormalized.map(([signer]) => signer)
-  );
+    const expandTransaction = await createTransaction(
+      unsignedTransaction.recentBlockhash,
+      [expandInstruction],
+      payer,
+      signersNormalized.map(([signer]) => signer)
+    );
 
-  setupTransactions.push(expandTransaction)
+    setupTransactions.push(expandTransaction)
+  }
 
   // EXECUTE.
   const execute = await createExecute(

@@ -80,19 +80,20 @@ describe('transfers', function () {
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it.skip('should be able to setup and execute a large tx', async () => {
+    it('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);
 
       const cryptid = build(did, key, { connection });
 
+      const nrInstructions = 23;
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
         recipient,
         lamportsToTransfer,
-        60
+        nrInstructions
       );
 
       const { setupTransactions, executeTransaction } = await cryptid.signLarge(
@@ -110,11 +111,14 @@ describe('transfers', function () {
       await balances.recordAfter();
 
       // assert balances are correct
-      // expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer * 101); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-FEE * 101); // fees only
-
-      // skip for now as it is consistently returning 2,439 lamports too few
-      // expect(balances.for(recipient).to.equal(lamportsToTransfer);
+      expect(balances.for(cryptidAddress)).to.equal(
+        -nrInstructions * lamportsToTransfer
+      ); // the amount transferred
+      expect(balances.for(key.publicKey)).to.equal(
+        -FEE * (setupTransactions.length + 1)
+      ); // fees only
+      // expect(balances.for(recipient)).to.equal(nrInstructions * lamportsToTransfer); // the amount received
+      // TODO: Why does this fail with "AssertionError: expected 457561 to equal 460000" Where do the lamports go?
     });
   });
 });
