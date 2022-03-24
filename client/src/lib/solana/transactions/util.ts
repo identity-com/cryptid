@@ -205,8 +205,8 @@ export const getExecutionAccounts = async (
     .flatMap((instruction) => instruction.accounts)
     .forEach((meta) => {
       const account = accountMetas[meta.key];
-      account.isSigner ||= meta.isSigner();
-      account.isWritable ||= meta.isWritable();
+      account.isSigner = account.isSigner || meta.isSigner();
+      account.isWritable = account.isSigner || meta.isWritable();
     });
 
   return accountMetas as AccountMeta[];
