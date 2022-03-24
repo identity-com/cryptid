@@ -15,7 +15,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "nyc mocha test/unit",
-    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "lint": "eslint src/*.ts src/**/*.ts test/**/*.ts",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
