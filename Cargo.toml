@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "programs/dummy_program",
+#    "programs/dummy_program",
     "programs/cryptid_signer",
     "programs/test_utils",
 ]

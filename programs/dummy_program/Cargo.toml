@@ -1,7 +1,7 @@
 [package]
 name = "dummy_program"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,7 +9,7 @@ edition = "2018"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-solana_generator = { git = "https://github.com/identity-com/solana_generator", rev = "759e8c72a97e96c1fb7b2c42e625d1a3f69a105f" }
+cruiser = { version = "0.1.1", path = "../../../cruiser" }
 borsh = "0.9.1"
 
 [dev-dependencies]

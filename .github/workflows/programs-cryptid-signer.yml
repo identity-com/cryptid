@@ -24,6 +24,12 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
 
+      - name: Add make
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: --force cargo-make
+
       - name: Run fmt
         uses: actions-rs/cargo@v1
         with:

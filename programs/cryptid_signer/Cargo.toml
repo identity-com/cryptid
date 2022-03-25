@@ -1,7 +1,7 @@
 [package]
 name = "cryptid_signer"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,24 +9,30 @@ edition = "2018"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-solana_generator = { git = "https://github.com/identity-com/solana_generator", rev = "759e8c72a97e96c1fb7b2c42e625d1a3f69a105f" }
+cruiser = { version = "0.1.1", path = "../../../cruiser" }
 borsh = "0.9.1"
 bitflags = "1.3.2"
 sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b227cec59795ae6bf23ef987f7ce3a6ea6b6108c", features = ["no-entrypoint"] }
 num-traits = "0.2.14"
+solana-client = { version = "1.9.13", optional = true }
+solana-sdk = { version = "1.9.13", optional = true }
+futures = { version = "0.3.21", optional = true }
+tokio = { version = "1.11.0", optional = true }
 
 [dev-dependencies]
-solana-sdk = "1.7.12"
-solana-program-test = "1.7.12"
-tokio = "1.11.0"
+solana-program-test = "1.9.13"
 log = "0.4.14"
-test_utils = { path = "../test_utils" }
 dummy_program = { path = "../dummy_program", features = ["no-entrypoint"] }
 num-derive = "0.3.3"
-futures = "0.3.17"
 strum = { version = "0.22.0", features = ["derive"] }
+serde_json = "1.0.79"
+# Old to match solana-sdk
+rand = "0.7.3"
+rand_chacha = "0.2.2"
 
 [features]
 default = []
 no-entrypoint = []
 test-bpf = []
+client = ["solana-client", "solana-sdk", "futures", "tokio"]
+processor = []

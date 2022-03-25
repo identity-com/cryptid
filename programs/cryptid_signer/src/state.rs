@@ -1,16 +1,30 @@
 //! The types that are stored in accounts for `cryptid_signer`
 
-use crate::error::CryptidSignerError;
-use crate::instruction::SigningKeyData;
+use crate::instruction::{ExtraKeys, SigningKeyData};
 use bitflags::bitflags;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_generator::*;
+use cruiser::account_list::AccountList;
+use cruiser::error::Error;
+use cruiser::on_chain_size::{OnChainSize, OnChainStaticSize};
+use cruiser::{
+    msg, CruiserResult, GenericError, Pubkey, SolanaAccountMeta, SolanaInstruction, UnixTimestamp,
+};
 use std::collections::HashMap;
 
+/// The list of accounts used by the cryptid program
+#[derive(Debug, AccountList)]
+pub enum CryptidAccountList {
+    /// [`CryptidAccount`]
+    CryptidAccount(CryptidAccount),
+    /// [`TransactionAccount`]
+    TransactionAccount(TransactionAccount),
+}
+
 /// The data for an on-chain Cryptid Account
-#[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
-#[account(discriminant = [1])]
+#[derive(Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct CryptidAccount {
+    /// Version of the account
+    pub version: u8,
     /// The DID for this
     pub did: Pubkey,
     /// The program for the DID
@@ -21,12 +35,12 @@ pub struct CryptidAccount {
     pub key_threshold: u8,
     /// A tracker to invalidate transactions when settings change
     pub settings_sequence: u16,
-    // TODO: Implement when permissions added
-    // pub sign_permissions: ?,
-    // pub execute_permissions: ?,
-    // pub remove_permissions: ?,
+    /// Middlewares for this account
+    pub middlewares: Vec<Pubkey>,
 }
 impl CryptidAccount {
+    /// Current valid version
+    pub const CURRENT_VERSION: u8 = 0;
     /// The value for [`CryptidAccount::key_threshold`] on a generative cryptid account
     pub const GENERATIVE_CRYPTID_KEY_THRESHOLD: u8 = 1;
 
@@ -37,23 +51,28 @@ impl CryptidAccount {
     /// The [`CryptidAccount::settings_sequence`] start value
     pub const SETTINGS_SEQUENCE_START: u16 = 2;
 
-    /// Verifies that this Cryptid Account comes from the DID and DID Program
-    pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> GeneratorResult<()> {
-        if did != self.did {
-            Err(CryptidSignerError::WrongDID {
-                expected: self.did,
-                received: did,
-            }
-            .into())
-        } else if did_program != self.did_program {
-            Err(CryptidSignerError::WrongDIDProgram {
-                expected: self.did_program,
-                received: did_program,
-            }
-            .into())
-        } else {
-            Ok(())
+    /// Creates a new on-chain version of self
+    pub fn new_on_chain() -> Self {
+        Self {
+            version: Self::CURRENT_VERSION,
+            did: Default::default(),
+            did_program: Default::default(),
+            signer_nonce: Default::default(),
+            key_threshold: Self::GENERATIVE_CRYPTID_KEY_THRESHOLD,
+            settings_sequence: Self::SETTINGS_SEQUENCE_START,
+            middlewares: vec![],
         }
+    }
+}
+/// Max number of middlewares
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct MiddlewareCount(pub usize);
+impl OnChainSize<MiddlewareCount> for CryptidAccount {
+    fn on_chain_max_size(arg: MiddlewareCount) -> usize {
+        Pubkey::on_chain_static_size() * 2
+            + u8::on_chain_static_size() * 2
+            + u16::on_chain_static_size()
+            + Vec::<Pubkey>::on_chain_max_size(arg.0)
     }
 }
 
@@ -63,7 +82,7 @@ pub struct InstructionSize {
     /// The number of accounts in the instruction
     pub accounts: u8,
     /// The size of the instruction data
-    pub data_len: u16,
+    pub data_len: u32,
 }
 impl InstructionSize {
     /// Creates a size iterator from an iterator of data refs
@@ -72,90 +91,95 @@ impl InstructionSize {
     ) -> impl Iterator<Item = InstructionSize> + 'a {
         iter.map(|instruction| Self {
             accounts: instruction.accounts.len() as u8,
-            data_len: instruction.data.len() as u16,
+            data_len: instruction.data.len() as u32,
         })
+    }
+}
+impl OnChainSize<()> for InstructionSize {
+    fn on_chain_max_size(_arg: ()) -> usize {
+        u8::on_chain_static_size() + u16::on_chain_static_size()
     }
 }
 
 /// The data to store about a proposed transaction
-#[derive(Debug, Default, Account, BorshSerialize, BorshDeserialize, BorshSchema)]
-#[account(discriminant = [2])]
+#[derive(Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct TransactionAccount {
     /// The cryptid account for the transaction
     pub cryptid_account: Pubkey,
+    /// The state of the transaction
+    pub state: TransactionState,
+    /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
+    pub settings_sequence: u16,
     /// The accounts `transaction_instructions` references
     pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
     pub signers: Vec<(SigningKeyData, UnixTimestamp)>,
-    /// The state of the transaction
-    pub state: TransactionState,
-    /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
-    pub settings_sequence: u16,
 }
 impl TransactionAccount {
-    /// Calculates the on-chain size of a [`TransactionAccount`]
-    pub fn calculate_size(
-        num_accounts: usize,
-        instruction_sizes: impl Iterator<Item = InstructionSize>,
-        signer_extras: impl Iterator<Item = usize>,
-    ) -> usize {
-        <Self as Account>::DISCRIMINANT.discriminant_serialized_length().unwrap()
-        + 32 //cryptid_account
-        + 4 + 32 * num_accounts //accounts
-        + 4 + instruction_sizes.into_iter().map(InstructionData::calculate_size).sum::<usize>() //transaction_instructions
-        + 4 + signer_extras
-            .into_iter()
-            .map(SigningKeyData::calculate_size)
-            .map(|size|size + 8) //Expiry time
-            .sum::<usize>() //signers
-        + TransactionState::calculate_size() //state
-        + 2 //settings_sequence
-    }
-
-    fn instruction_index_error(&self, index: u8) -> Box<dyn Error> {
+    fn instruction_index_error(&self, index: u8) -> impl Error {
         msg!("Instruction index out of range!");
-        GeneratorError::IndexOutOfRange {
+        GenericError::IndexOutOfRange {
             index: index.to_string(),
             possible_range: format!("0..{}", self.transaction_instructions.len()),
         }
-        .into()
     }
-    fn account_index_error(&self, index: u8) -> Box<dyn Error> {
+    fn account_index_error(&self, index: u8) -> impl Error {
         msg!("Account index out of range!");
-        GeneratorError::IndexOutOfRange {
+        GenericError::IndexOutOfRange {
             index: index.to_string(),
             possible_range: format!("0..{}", self.accounts.len()),
         }
-        .into()
     }
 
     /// Gets an instruction or errors if no instruction at index
-    pub fn get_instruction_mut(&mut self, index: u8) -> GeneratorResult<&mut InstructionData> {
+    pub fn get_instruction_mut(&mut self, index: u8) -> CruiserResult<&mut InstructionData> {
         if index as usize >= self.transaction_instructions.len() {
-            Err(self.instruction_index_error(index))
+            Err(self.instruction_index_error(index).into())
         } else {
             Ok(&mut self.transaction_instructions[index as usize])
         }
     }
 
     /// Checks if a given index is valid for the instructions list
-    pub fn check_instruction_index(&self, index: u8) -> GeneratorResult<()> {
+    pub fn check_instruction_index(&self, index: u8) -> CruiserResult<()> {
         if index as usize >= self.transaction_instructions.len() {
-            Err(self.instruction_index_error(index))
+            Err(self.instruction_index_error(index).into())
         } else {
             Ok(())
         }
     }
 
     /// Checks of a given index is valid for the accounts list
-    pub fn check_account_index(&self, index: u8) -> GeneratorResult<()> {
+    pub fn check_account_index(&self, index: u8) -> CruiserResult<()> {
         if index as usize >= self.accounts.len() {
-            Err(self.account_index_error(index))
+            Err(self.account_index_error(index).into())
         } else {
             Ok(())
         }
+    }
+}
+struct TransactionAccountSize<I1, I2> {
+    accounts: usize,
+    instructions: I1,
+    signers: I2,
+}
+impl<I1, I2> OnChainSize<TransactionAccountSize<I1, I2>> for TransactionAccount
+where
+    I1: IntoIterator<Item = InstructionSize>,
+    I2: IntoIterator<Item = ExtraKeys>,
+{
+    fn on_chain_max_size(arg: TransactionAccountSize<I1, I2>) -> usize {
+        Pubkey::on_chain_static_size()
+            + TransactionState::on_chain_static_size()
+            + u16::on_chain_static_size()
+            + Vec::<Pubkey>::on_chain_max_size(arg.accounts)
+            + Vec::<InstructionData>::on_chain_max_size((arg.instructions,))
+            + Vec::<(SigningKeyData, UnixTimestamp)>::on_chain_max_size((arg
+                .signers
+                .into_iter()
+                .map(|val| (val, ())),))
     }
 }
 
@@ -169,10 +193,9 @@ pub enum TransactionState {
     /// Transaction account has executed
     Executed,
 }
-impl TransactionState {
-    /// Calculates the on-chain size of a [`TransactionState`]
-    pub const fn calculate_size() -> usize {
-        1 //enum
+impl OnChainSize<()> for TransactionState {
+    fn on_chain_max_size(_arg: ()) -> usize {
+        1
     }
 }
 impl Default for TransactionState {
@@ -192,13 +215,6 @@ pub struct InstructionData {
     pub data: Vec<u8>,
 }
 impl InstructionData {
-    /// Calculates the on-chain size of a [`InstructionData`]
-    pub const fn calculate_size(size: InstructionSize) -> usize {
-        1 //program_id
-        + 4 + TransactionAccountMeta::calculate_size() * size.accounts as usize //accounts
-        + 4 + size.data_len as usize //data
-    }
-
     /// Creates an [`InstructionData`] from a given [`SolanaInstruction`]
     pub fn from_instruction(
         instruction: SolanaInstruction,
@@ -221,9 +237,9 @@ impl InstructionData {
     }
 
     /// Turns `self` into a [`SolanaInstruction`]
-    pub fn into_instruction(self, accounts: &[Pubkey]) -> SolanaInstruction {
+    pub fn into_instruction(self, accounts: &[&Pubkey]) -> SolanaInstruction {
         SolanaInstruction {
-            program_id: accounts[self.program_id as usize],
+            program_id: *accounts[self.program_id as usize],
             accounts: self
                 .accounts
                 .into_iter()
@@ -231,6 +247,13 @@ impl InstructionData {
                 .collect(),
             data: self.data,
         }
+    }
+}
+impl OnChainSize<InstructionSize> for InstructionData {
+    fn on_chain_max_size(arg: InstructionSize) -> usize {
+        u8::on_chain_static_size()
+            + Vec::<TransactionAccountMeta>::on_chain_max_size(arg.accounts as usize)
+            + Vec::<u8>::on_chain_max_size(arg.data_len as usize)
     }
 }
 
@@ -243,12 +266,6 @@ pub struct TransactionAccountMeta {
     pub meta: AccountMeta,
 }
 impl TransactionAccountMeta {
-    /// Calculates the on-chain size of a [`TransactionAccountMeta`]
-    pub const fn calculate_size() -> usize {
-        1 //key
-        + AccountMeta::calculate_size() //meta
-    }
-
     /// Creates a [`TransactionAccountMeta`] from a given [`SolanaAccountMeta`]
     pub fn from_solana_account_meta(
         meta: SolanaAccountMeta,
@@ -263,12 +280,17 @@ impl TransactionAccountMeta {
     }
 
     /// Turns `self` into a [`SolanaAccountMeta`]
-    pub fn into_solana_account_meta(self, accounts: &[Pubkey]) -> SolanaAccountMeta {
+    pub fn into_solana_account_meta(self, accounts: &[&Pubkey]) -> SolanaAccountMeta {
         SolanaAccountMeta {
-            pubkey: accounts[self.key as usize],
+            pubkey: *accounts[self.key as usize],
             is_signer: self.meta.contains(AccountMeta::IS_SIGNER),
             is_writable: self.meta.contains(AccountMeta::IS_WRITABLE),
         }
+    }
+}
+impl OnChainSize<()> for TransactionAccountMeta {
+    fn on_chain_max_size(_arg: ()) -> usize {
+        u8::on_chain_static_size() + AccountMeta::on_chain_static_size()
     }
 }
 
@@ -283,11 +305,6 @@ bitflags! {
     }
 }
 impl AccountMeta {
-    /// Calculates the on-chain size of a [`AccountMeta`]
-    pub const fn calculate_size() -> usize {
-        1 //u8 size
-    }
-
     /// Creates a new [`AccountMeta`] from the given arguments
     pub fn new(is_signer: bool, is_writable: bool) -> Self {
         Self::from_bits(
@@ -295,6 +312,11 @@ impl AccountMeta {
                 | ((is_writable as u8) * Self::IS_WRITABLE.bits),
         )
         .unwrap()
+    }
+}
+impl OnChainSize<()> for AccountMeta {
+    fn on_chain_max_size(_arg: ()) -> usize {
+        1
     }
 }
 
@@ -313,14 +335,14 @@ mod test {
 
     #[test]
     fn calculate_size() {
-        let size = TransactionAccount::calculate_size(
-            1,
-            once(InstructionSize {
+        let size = TransactionAccount::on_chain_max_size(TransactionAccountSize {
+            accounts: 1,
+            instructions: once(InstructionSize {
                 accounts: 1,
                 data_len: 1,
             }),
-            once(1),
-        );
+            signers: once(ExtraKeys(1)),
+        });
         println!("Size: {}", size);
 
         let account = TransactionAccount {
@@ -344,10 +366,7 @@ mod test {
             state: Default::default(),
             settings_sequence: 0,
         };
-        let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len()
-            + TransactionAccount::DISCRIMINANT
-                .discriminant_serialized_length()
-                .unwrap();
+        let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len();
         println!("SerSize: {}", ser_size);
         assert_eq!(size, ser_size);
     }

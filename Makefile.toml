@@ -1,0 +1,100 @@
+[env]
+DUMMY_PROGRAM_ID = "dumvjiVYrKNvWWzoDtbrqCBjCw2ENbrxXYU86ws5xRc"
+SCREEN_ID = "__cryptid_local_tester"
+
+[env.development]
+CRYPTID_PROGRAM_ID = "crygz2L7tvqyZJ6vDRQR47UvZdL1E4KdFrfs9NbsBZd"
+
+[env.production]
+CRYPTID_PROGRAM_ID = "crymbMQ15Ex5xzmA2znH184VAVtT7opLQen2NYTAKbp"
+
+[tasks.fmt]
+workspace = false
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--", "--emit=files"]
+
+[tasks.build_cryptid_signer]
+workspace = false
+script = "cargo build-bpf --manifest-path $CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY/programs/cryptid_signer/Cargo.toml --features processor"
+
+[tasks.build_dummy_program]
+workspace = false
+script = "cargo build-bpf --manifest-path $CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY/programs/dummy_program/Cargo.toml"
+
+[tasks.build_programs]
+workspace = false
+dependencies = [
+    "build_cryptid_signer",
+    "build_dummy_program",
+]
+
+[tasks.local_validator_run]
+workspace = false
+dependencies = [
+    "build_programs"
+]
+script = '''bash -c '
+if [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8899/health)" == "200" ]]
+then
+    echo "Local validator already started";
+else
+    echo "Starting local validator...";
+    screen -dmS $SCREEN_ID solana-test-validator -r \
+        --bpf-program $CRYPTID_PROGRAM_ID "$CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY/target/deploy/cryptid_signer.so" \
+        --bpf-program $DUMMY_PROGRAM_ID "$CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY/target/deploy/dummy_program.so" \
+        --url d \
+        --clone idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM --clone BammKBzANHqK7gNxThgSgJHrwbPusYbmDi5PC8eo9B6C \
+        --faucet-sol 10000000000 \
+        ;
+fi
+' '''
+[tasks.local_validator]
+workspace = false
+dependencies = [
+    "local_validator_run",
+]
+run_task = "wait_for_local"
+
+[tasks.wait_for_local]
+workspace = false
+script = '''bash -c '
+while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8899/health)" != "200" ]];
+do
+    echo "Waiting for local...";
+    sleep 0.5;
+done;
+echo "Validator started"
+' '''
+
+[tasks.kill_local_validator]
+workspace = false
+script = ''' bash -c '
+if [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8899/health)" == "200" ]]
+then
+    kill $(ps | grep solana-test-validator | grep -v grep | cut -d" " -f1);
+    echo "Killed local";
+else
+    echo "No local to kill";
+fi
+' '''
+
+[tasks.test_cryptid_local]
+workspace = false
+script = 'cargo test --manifest-path "$CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY/programs/cryptid_signer/Cargo.toml" -p cryptid_signer --features processor,client'
+
+[tasks.test_local]
+workspace = false
+dependencies = [
+    "kill_local_validator",
+    "local_validator",
+    "test_cryptid_local",
+]
+run_task = "kill_local_validator"
+
+[tasks.test_local_no_kill]
+workspace = false
+dependencies = [
+    "local_validator",
+    "test_cryptid_local",
+]

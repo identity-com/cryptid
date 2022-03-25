@@ -2,13 +2,13 @@
 
 use crate::instruction::SigningKeyData;
 use crate::state::TransactionState;
-use solana_generator::solana_program::program_error::ProgramError;
-use solana_generator::{Error, Pubkey};
+use cruiser::error::Error;
+use cruiser::solana_program::program_error::ProgramError;
+use cruiser::Pubkey;
 
 /// The main error type for `cryptid_signer`.
-/// Start index is `700`
+/// Start index is `1_000_000`
 #[derive(Debug, Error)]
-#[error(start = 700)]
 pub enum CryptidSignerError {
     /// Not enough signers were passed
     #[error_msg("Not enough signers, expected `{}`, received `{}", expected, received)]
@@ -46,7 +46,7 @@ pub enum CryptidSignerError {
     #[error_msg("Unsupported DID Program `{}`", program)]
     UnsupportedDIDProgram {
         /// The unsupported program
-        program: Pubkey,
+        program: &'static Pubkey,
     },
     /// Invalid transaction state
     #[error_msg("Invalid transaction state `{:?}`, expected: `{:?}`", found, expected)]
