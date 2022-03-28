@@ -1,17 +1,17 @@
 [
   {
     "keyword": "Feature",
-    "name": "Connect a Cryptid Wallet",
+    "name": "Create sender and recipient cryptid accounts and do transfers between accounts",
     "line": 1,
-    "id": "connect-a-cryptid-wallet",
+    "id": "create-sender-and-recipient-cryptid-accounts-and-do-transfers-between-accounts",
     "tags": [],
     "uri": "test.feature",
     "elements": [
       {
-        "id": "connect-a-cryptid-wallet;connect-a-cryptid-wallet",
+        "id": "create-sender-and-recipient-cryptid-accounts-and-do-transfers-between-accounts;create-recipient-account",
         "keyword": "Scenario",
         "line": 3,
-        "name": "Connect a cryptid wallet",
+        "name": "Create recipient account",
         "tags": [],
         "type": "scenario",
         "steps": [
@@ -22,27 +22,137 @@
             "name": "I open to cryptid home page",
             "result": {
               "status": "passed",
-              "duration": 3505000000
+              "duration": 4612000000
             }
           },
           {
             "arguments": [],
             "keyword": "When ",
             "line": 5,
-            "name": "I type wallet Alias name",
+            "name": "I type wallet Alias name of 'recipient'",
             "result": {
               "status": "passed",
-              "duration": 862000000
+              "duration": 510000000
             }
           },
           {
             "arguments": [],
             "keyword": "When ",
             "line": 6,
-            "name": "I create new key",
+            "name": "I create recipient new key",
             "result": {
               "status": "passed",
-              "duration": 4636000000
+              "duration": 1073000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 7,
+            "name": "Wallet is created",
+            "result": {
+              "status": "passed",
+              "duration": 1768000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 8,
+            "name": "Wallet cryptid address is copied",
+            "result": {
+              "status": "passed",
+              "duration": 316000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 9,
+            "name": "Wallet did address is copied",
+            "result": {
+              "status": "passed",
+              "duration": 150000000
+            }
+          }
+        ]
+      },
+      {
+        "id": "create-sender-and-recipient-cryptid-accounts-and-do-transfers-between-accounts;airdrop-1-solana-to-wallet",
+        "keyword": "Scenario",
+        "line": 11,
+        "name": "Airdrop 1 solana to wallet",
+        "tags": [],
+        "type": "scenario",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 12,
+            "name": "Wallet is created",
+            "result": {
+              "status": "passed",
+              "duration": 175000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 13,
+            "name": "I select localnet",
+            "result": {
+              "status": "passed",
+              "duration": 271000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 14,
+            "name": "I airdrop solana to cryptid wallet address",
+            "result": {
+              "status": "passed",
+              "duration": 1312000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 15,
+            "name": "I airdrop solana to did address",
+            "result": {
+              "status": "passed",
+              "duration": 6138000000
+            }
+          }
+        ]
+      },
+      {
+        "id": "create-sender-and-recipient-cryptid-accounts-and-do-transfers-between-accounts;add-additional-cryptid-account",
+        "keyword": "Scenario",
+        "line": 21,
+        "name": "Add additional cryptid account",
+        "tags": [],
+        "type": "scenario",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 22,
+            "name": "I import account with alias of 'recipient2'",
+            "result": {
+              "status": "passed",
+              "duration": 1242000000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 23,
+            "name": "I open to cryptid home page",
+            "result": {
+              "status": "passed",
+              "duration": 1137000000
             }
           }
         ]

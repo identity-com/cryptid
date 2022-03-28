@@ -91,7 +91,7 @@ export function BalanceListItemDetails({
   const isSolAddress = publicKey.equals(owner);
   const additionalInfo = isExtensionWidth ? undefined : (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }} data-testid="mitch8723">
         <div>
           {!isSolAddress && isAssociatedToken === false && (
             <div style={{ display: 'flex' }}>

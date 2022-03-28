@@ -79,7 +79,7 @@ export const Modal:React.FC<ModalProps> = (
           >
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg pr-6">
               <div className="mb-5 mx-auto flex-shrink-0 inline-flex items-center justify-center h-12 rounded-full sm:mx-0 sm:h-10">
-                <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true" />
+                <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true" data-testid="mitch4" />
                 <Dialog.Title as="h3" className="text-lg pl-5 mt-1 leading-6 font-medium text-gray-900">
                   {title}
                 </Dialog.Title>

@@ -60,8 +60,8 @@ export default function SendDialog({ open, onClose, publicKey, balanceInfo }) {
   const [enabled, setEnabled] = useState(false);
 
   return (
-    <Modal 
-      show={open} 
+    <Modal
+      show={open}
       okEnabled={enabled}
       callbacks={{onOK: () => onSubmitRef.current && onSubmitRef.current(), onClose}}
       title={`Send ${tokenName ?? abbreviateAddress(mint)} ${tokenSymbol ? ` (${tokenSymbol})` : null}`}>
@@ -168,7 +168,7 @@ function SendSplDialog({ onClose, publicKey, balanceInfo, onSubmitRef, setEnable
       : sending || !validAmount;
     setEnabled(!disabled);
   }, [shouldShowOverride, destinationAddress, validAmount, sending, overrideDestinationCheck])
- 
+
 
   async function onSubmit() {
     if (!selectedCryptidAccount) return;
@@ -207,6 +207,7 @@ function useForm(
   const fields = (
     <>
       <TextField
+        data-testid="recipientAddress"
         label="Recipient Address"
         fullWidth
         variant="outlined"
@@ -222,6 +223,7 @@ function useForm(
         error={!passAddressValidation && passAddressValidation !== undefined}
       />
       <TextField
+        data-testid="amount"
         label="Amount"
         fullWidth
         variant="outlined"

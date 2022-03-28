@@ -8,15 +8,6 @@
     "runMode": 1,
     "openMode": 0
   },
-  "reporter": "cypress-testrail-accumulative-reporter",
-  "reporterOptions": {
-    "domain": "civic.testrail.io/",
-    "username": "TESTRAIL_USERNAME",
-    "password": "TESTRAIL_API_KEY",
-    "projectId": 7,
-    "suiteId": 8,
-    "runName": "Local Branch Testing"
-  },
   "stepDefinitions": "cypress/support/step_definitions/",
   "chromeWebSecurity": false,
   "env": {

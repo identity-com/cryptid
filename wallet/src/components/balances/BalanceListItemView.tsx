@@ -78,7 +78,7 @@ export function BalanceListItemView({
           size={30}
         />
         <div className="min-w-0 w-1.5 md:max-w-max flex-1 flex pl-4 md:pr-4 md:gap-4">
-          <div className='text-sm md:text-lg flex-1'>
+          <div className='text-sm md:text-lg flex-1' data-testid="solBalance">
             {balanceFormat.format(amount / Math.pow(10, decimals))} {tokenSymbol}{
             usdValue &&
             <p className="text-sm text-gray-900">

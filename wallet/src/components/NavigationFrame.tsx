@@ -38,7 +38,7 @@ const NetworkSelector = () => {
       <Menu as="div" className="ml-3 relative">
         <div>
           <Menu.Button
-            className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800">
+            className="max-w-xs bg-white text-gray-400 flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-800" data-testid="settingsIcon">
             <span className="sr-only">Select Network</span>
             <CogIcon className="h-6 w-6" aria-hidden="true"/>
           </Menu.Button>
@@ -134,6 +134,7 @@ function NavigationPanel({ isSignerWindow }: { isSignerWindow: boolean }) {
                               : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
                             'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'
                           )}
+                          data-testid="navigationTab"
                           aria-current={item === page ? 'page' : undefined}
                         >
                           {item}

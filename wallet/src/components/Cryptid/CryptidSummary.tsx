@@ -41,7 +41,7 @@ const SignerBalanceControl:React.FC<{
       {
       balance > MIN_BALANCE ?
         <Tooltip arrow title={'Signer is funded with ' + toSol(balance) + ' SOL '}><div>
-          <CheckCircleIcon className="text-green-500 w-5 h-5"/>
+          <CheckCircleIcon className="text-green-500 w-5 h-5" data-testid="greenCheckbox"/>
         </div></Tooltip>:
         <Tooltip arrow title={notFundedTooltip}><div>
           <ExclamationCircleIcon data-testid="exclamationCircleIcon" className={classNames(
