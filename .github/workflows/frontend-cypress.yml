@@ -1,6 +1,4 @@
 name: Frontend-Cypress
-on:
-  push:
 jobs:
   deploy:
     name: Cypress test for cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
