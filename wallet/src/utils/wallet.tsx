@@ -269,7 +269,7 @@ export function useRequestAirdrop(refreshCallback?: () => void) {
       callAsync(
         (async () => {
           try {
-            await connection.requestAirdrop(address, LAMPORTS_PER_SOL * 5);
+            await connection.requestAirdrop(address, LAMPORTS_PER_SOL * 2);
           } catch (e) {
             if (e instanceof Error && e.message.startsWith("429 Too Many Requests:")){
               console.log("Too many requests, trying again after 10000ms");
