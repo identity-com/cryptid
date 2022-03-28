@@ -96,7 +96,7 @@ start-cryptid:
   test:
       - name: Run cypress tests
         uses: cypress-io/github-action@v2
-          run: yarn cypress run
+        run: yarn cypress run
           working-directory: ./e2e
 
       env:

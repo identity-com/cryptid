@@ -95,7 +95,7 @@ export class DemoHome extends Page {
     airdropSolana(): void {
         cy.wait(1000)
         cy.findByText('Request Airdrop').click()
-        cy.get(cryptidUi.solBalance).contains('5.0000 SOL', {timeout: 5000})
+        cy.get(cryptidUi.solBalance).contains('2.0000 SOL', {timeout: 5000})
     }
 
     confirmSolanaBalance(balance: string): void{

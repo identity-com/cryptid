@@ -30,12 +30,12 @@ Feature: Create sender and recipient cryptid accounts and do transfers between a
 #        When I airdrop solana to cryptid wallet address
 #        When I airdrop solana to did address
 #        When I send 1 solana to recipient address
-#        Then Solana balance of '4.0000' is confirmed
+#        Then Solana balance of '1.0000' is confirmed
 #
 #    Scenario: Switch to recipient account and confirm balance
 #        Given Solana balance of '4.0000' is confirmed
 #        When I switch to account named 'mitch-mobile'
-#        Then Solana balance of '6.0000' is confirmed
+#        Then Solana balance of '3.0000' is confirmed
 
 
 #    Scenario: Add a controller from first wallet to new wallet
