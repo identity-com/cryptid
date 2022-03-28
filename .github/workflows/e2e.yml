@@ -75,7 +75,6 @@ jobs:
 
     steps:
       - name: Cypress
-        uses: cypress-io/github-action@v2
         run: yarn cypress run
         working-directory: ./e2e
 
