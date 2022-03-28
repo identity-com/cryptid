@@ -1,0 +1,25 @@
+{
+  "types": [
+    "cypress",
+    "node"
+  ],
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmit": false,
+    // be explicit about types included
+    // to avoid clashing with Jest types
+    "types": ["cypress", "@testing-library/cypress", "cypress-file-upload", "node"],
+    "noImplicitAny": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "../node_modules/cypress",
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "../node_modules/**/*"
+  ],
+  "rules": {
+    "no-unused-vars": "off"
+  }
+}
