@@ -50,6 +50,7 @@ build_cryptid:
 
 start-cryptid:
   build:
+    name: Test Build Name
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -93,7 +94,14 @@ start-cryptid:
       - name: Start cryptid
         run: yarn workspace @identity.com/cryptid-wallet start
 
-  test:
+  deploy:
+    name: Test Build Name
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ["16.x"]
+        os: [ubuntu-latest]
+    steps:
       - name: Run cypress tests
         uses: cypress-io/github-action@v2
         run: yarn cypress run
