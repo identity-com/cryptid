@@ -1,4 +1,8 @@
-name: Frontend-Cypress
+name: e2e-tests
+on:
+  push:
+    paths:
+      - 'e2e-tests/**'
 jobs:
   deploy:
     name: Cypress test for cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
