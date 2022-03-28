@@ -1,7 +1,4 @@
 name: Cypress test for cryptid frontend
-defaults:
-  run:
-    working-directory: ./
 on:
   push:
     paths:
