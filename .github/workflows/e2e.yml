@@ -3,13 +3,13 @@ on: push
 jobs:
   build-cryptid:
     build:
-      name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
+    name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
 
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node: ["16.x"]
-          os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ["16.x"]
+        os: [ubuntu-latest]
 
     steps:
       - name: Checkout repo
@@ -52,12 +52,12 @@ jobs:
   start-cryptid:
     needs: build-cryptid
     build:
-      name: Start cryptid
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node: ['16.x']
-          os: [ubuntu-latest]
+    name: Start cryptid
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ['16.x']
+        os: [ubuntu-latest]
 
     steps:
       - name: Start cryptid
@@ -66,12 +66,12 @@ jobs:
   run-cypress-tests:
     needs: start-cryptid
     test:
-      name: Run cypress cryptid tests
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node: ['16.x']
-          os: [ubuntu-latest]
+    name: Run cypress cryptid tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ['16.x']
+        os: [ubuntu-latest]
 
     steps:
       - name: Cypress
