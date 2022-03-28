@@ -93,22 +93,3 @@ start-cryptid:
         run: yarn workspace @identity.com/cryptid build
       - name: Start cryptid
         run: yarn workspace @identity.com/cryptid-wallet start
-
-run-cypress-tests:
-  test:
-    name: Test Build Name 2
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node: ["16.x"]
-        os: [ubuntu-latest]
-
-    steps:
-      - name: Run cypress tests
-        uses: cypress-io/github-action@v2
-        run: yarn cypress run
-        working-directory: ./e2e
-
-      env:
-        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
