@@ -4,12 +4,10 @@ defaults:
     working-directory: ./
 on:
   push:
-    branches:
-      - develop
     paths:
       - "./"
 jobs:
-  deploy:
+  cypress-tests:
     name: Cypress test for cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
