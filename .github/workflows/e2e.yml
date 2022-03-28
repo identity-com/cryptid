@@ -1,95 +1,72 @@
 name: e2e
 on: push
-build_cryptid:
-  build:
-    name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
+jobs:
+  build-cryptid:
+    build:
+      name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
 
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node: ["16.x"]
-        os: [ubuntu-latest]
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          node: ["16.x"]
+          os: [ubuntu-latest]
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v2
 
-      - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
+        - name: Use Node ${{ matrix.node }}
+          uses: actions/setup-node@v1
+          with:
+            node-version: ${{ matrix.node }}
 
-      - name: Cache node dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/yarn
-          key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+        - name: Cache node dependencies
+          uses: actions/cache@v2
+          with:
+            path: ~/.cache/yarn
+            key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-build-
+              ${{ runner.os }}-
 
-      - name: Install
-        run: yarn
+        - name: Install
+          run: yarn
 
-      - name: Set environment for branch
-        run: |
-          echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
+        - name: Set environment for branch
+          run: |
+            echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CIVIC_ENV)]}}
-          aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CIVIC_ENV)]}}
-          aws-region: us-east-1
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CIVIC_ENV)]}}
+            aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CIVIC_ENV)]}}
+            aws-region: us-east-1
 
-      - name: Build cryptid
-        run: yarn workspace @identity.com/cryptid build
+        - name: Build cryptid
+          run: yarn workspace @identity.com/cryptid build
 
-      - name: Start validator
-        run: yarn start-validator
+        - name: Start validator
+          run: yarn start-validator
 
-start-cryptid:
-  build:
-    name: Test Build Name
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node: ["16.x"]
-        os: [ubuntu-latest]
+  start-cryptid:
+    needs: build-cryptid
+    build:
+      name: Start cryptid
+      steps:
+        - name: Start cryptid
+          run: yarn workspace @identity.com/cryptid-wallet start
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
+  run-cypress-tests:
+    needs: start-cryptid
+    test:
+      name: Run cypress cryptid tests
+      steps:
+        - name: Cypress
+          uses: cypress-io/github-action@v2
+          run: yarn cypress run
+          working-directory: ./e2e
 
-      - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Cache node dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/yarn
-          key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: Install
-        run: yarn
-
-      - name: Set environment for branch
-        run: |
-          echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CIVIC_ENV)]}}
-          aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CIVIC_ENV)]}}
-          aws-region: us-east-1
-
-      - name: Build cryptid
-        run: yarn workspace @identity.com/cryptid build
-      - name: Start cryptid
-        run: yarn workspace @identity.com/cryptid-wallet start
+      env:
+        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
