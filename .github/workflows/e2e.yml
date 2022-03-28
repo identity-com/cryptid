@@ -53,6 +53,12 @@ jobs:
     needs: build-cryptid
     build:
       name: Start cryptid
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          node: ['16.x']
+          os: [ubuntu-latest]
+
       steps:
         - name: Start cryptid
           run: yarn workspace @identity.com/cryptid-wallet start
@@ -61,6 +67,12 @@ jobs:
     needs: start-cryptid
     test:
       name: Run cypress cryptid tests
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          node: ['16.x']
+          os: [ubuntu-latest]
+
       steps:
         - name: Cypress
           uses: cypress-io/github-action@v2
