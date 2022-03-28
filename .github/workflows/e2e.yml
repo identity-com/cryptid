@@ -49,36 +49,36 @@ jobs:
         - name: Start validator
           run: yarn start-validator
 
-  start-cryptid:
-    needs: build-cryptid
-    build:
-      name: Start cryptid
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node: ['16.x']
-          os: [ubuntu-latest]
-
-      steps:
-        - name: Start cryptid
-          run: yarn workspace @identity.com/cryptid-wallet start
-
-  run-cypress-tests:
-    needs: start-cryptid
-    test:
-      name: Run cypress cryptid tests
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node: ['16.x']
-          os: [ubuntu-latest]
-
-      steps:
-        - name: Cypress
-          uses: cypress-io/github-action@v2
-          run: yarn cypress run
-          working-directory: ./e2e
-
-      env:
-        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  start-cryptid:
+#    needs: build-cryptid
+#    build:
+#      name: Start cryptid
+#      runs-on: ${{ matrix.os }}
+#      strategy:
+#        matrix:
+#          node: ['16.x']
+#          os: [ubuntu-latest]
+#
+#      steps:
+#        - name: Start cryptid
+#          run: yarn workspace @identity.com/cryptid-wallet start
+#
+#  run-cypress-tests:
+#    needs: start-cryptid
+#    test:
+#      name: Run cypress cryptid tests
+#      runs-on: ${{ matrix.os }}
+#      strategy:
+#        matrix:
+#          node: ['16.x']
+#          os: [ubuntu-latest]
+#
+#      steps:
+#        - name: Cypress
+#          uses: cypress-io/github-action@v2
+#          run: yarn cypress run
+#          working-directory: ./e2e
+#
+#      env:
+#        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
