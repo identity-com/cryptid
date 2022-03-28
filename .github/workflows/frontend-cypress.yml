@@ -2,7 +2,7 @@ name: Cypress test for cryptid frontend
 on:
   push:
     paths:
-      - "./"
+      - 'e2e-tests/**'
 jobs:
   cypress-tests:
     name: Cypress test for cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
