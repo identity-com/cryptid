@@ -72,8 +72,9 @@ jobs:
       - name: 'UI Tests - Chrome'
         uses: cypress-io/github-action@v2
         with:
+          path: ./e2e
           install: false
-          start: yarn workspace @identity.com/cryptid-wallet start
+          start: yarn start
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 120
           browser: chrome
