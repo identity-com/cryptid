@@ -3,7 +3,9 @@ on: push
 jobs:
   build-local-cryptid:
     name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
-
+    env:
+      SOLANA_PROGRAM_ID: tcrjc6mfci8bQLmXPfrVw9fJm9Y5tr268tByjSQmSe9
+      SOLANA_AUTHORITY: ${{ secrets.SOLANA_DEV_AUTHORITY }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
