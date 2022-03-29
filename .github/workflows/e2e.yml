@@ -9,7 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ["16.x"]
+        rust: ['1.59']
+        solana: ['v1.9.2']
         os: [ubuntu-latest]
 
     steps:
