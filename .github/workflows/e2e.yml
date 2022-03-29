@@ -1,7 +1,7 @@
 name: e2e
 on: push
 jobs:
-  build-cryptid:
+  build-local-cryptid:
     name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
@@ -28,8 +28,14 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
+      - name: NVM Install
+        run: nvm install
+
       - name: Install
         run: yarn
+
+      - name: Cargo build
+        run: cargo build-bpf
 
       - name: Set environment for branch
         run: |
@@ -42,7 +48,7 @@ jobs:
         run: yarn start-validator
 
   start-cryptid:
-    needs: build-cryptid
+    needs: build-local-cryptid
     name: Start cryptid
     runs-on: ${{ matrix.os }}
     strategy:
