@@ -73,8 +73,9 @@ jobs:
         uses: cypress-io/github-action@v2
         with:
           install: false
-          start: yarn workspace @identity.com/cryptid-wallet start
+          start: yarn start
           wait-on: 'http://localhost:3000'
-          wait-on-timeout: 120
-          runTests: cd e2e && yarn cypress run
+          wait-on-timeout: 60
+          working-directory: ./e2e
+          runTests: yarn cypress run
           browser: chrome
