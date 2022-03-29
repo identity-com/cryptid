@@ -69,10 +69,11 @@ jobs:
       - name: Build cryptid
         run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
 
-      - name: Start cryptid
-        run: yarn workspace @identity.com/cryptid-wallet start && wait-on http://localhost:3000
-
-      - name: Cypress
-        run: |
-          cd ~/e2e
-          yarn cypress run
+      - name: 'UI Tests - Chrome'
+        uses: cypress-io/github-action@v2
+        with:
+          install: false
+          start: yarn workspace @identity.com/cryptid-wallet start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
