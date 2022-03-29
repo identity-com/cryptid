@@ -35,13 +35,6 @@ jobs:
         run: |
           echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CIVIC_ENV)]}}
-          aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CIVIC_ENV)]}}
-          aws-region: us-east-1
-
       - name: Build cryptid
         run: yarn workspace @identity.com/cryptid build
 
