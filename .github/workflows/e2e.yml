@@ -69,29 +69,9 @@ jobs:
       - name: Build cryptid
         run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
 
-#  start-cryptid:
-#    needs: build-local-cryptid
-#    name: Start cryptid
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        node: ['16.x']
-#        os: [ubuntu-latest]
-
-#    steps:
       - name: Start cryptid
         run: yarn workspace @identity.com/cryptid-wallet start wait-on http://localhost:3000
 
-#  run-cypress-tests:
-#    needs: start-cryptid
-#    name: Run cypress cryptid tests
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        node: ['16.x']
-#        os: [ubuntu-latest]
-#
-#    steps:
       - name: Cypress
         run: yarn cypress run
         working-directory: ./e2e
