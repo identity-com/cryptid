@@ -65,11 +65,7 @@ jobs:
           echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
 
       - name: Build cryptid
-        run: yarn workspace @identity.com/cryptid build
-
-      - name: Start validator
-        run: yarn start-validator
-        background: true
+        run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
 
   start-cryptid:
     needs: build-local-cryptid
@@ -82,8 +78,8 @@ jobs:
 
     steps:
       - name: Start cryptid
-        run: yarn workspace @identity.com/cryptid-wallet start
-        background: true
+        run: |
+        yarn workspace @identity.com/cryptid-wallet start wait-on http://localhost:3000
 
   run-cypress-tests:
     needs: start-cryptid
