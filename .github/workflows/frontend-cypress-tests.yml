@@ -1,4 +1,4 @@
-name: e2e
+name: Frontend Cypress Tests
 # disabling job for now until we can get more meaningful tests in place
 #on: push
 jobs:
