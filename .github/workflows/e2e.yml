@@ -69,6 +69,7 @@ jobs:
 
       - name: Start validator
         run: yarn start-validator
+        background: true
 
   start-cryptid:
     needs: build-local-cryptid
@@ -82,6 +83,7 @@ jobs:
     steps:
       - name: Start cryptid
         run: yarn workspace @identity.com/cryptid-wallet start
+        background: true
 
   run-cypress-tests:
     needs: start-cryptid
