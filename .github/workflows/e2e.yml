@@ -54,9 +54,6 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - name: NVM Install
-        run: nvm install
-
       - name: Install
         run: yarn
 
