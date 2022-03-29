@@ -78,8 +78,7 @@ jobs:
 
     steps:
       - name: Start cryptid
-        run: |
-        yarn workspace @identity.com/cryptid-wallet start wait-on http://localhost:3000
+        run: yarn workspace @identity.com/cryptid-wallet start wait-on http://localhost:3000
 
   run-cypress-tests:
     needs: start-cryptid
