@@ -62,6 +62,9 @@ jobs:
       - name: Install
         run: yarn
 
+      - name: Install cypress dependencies
+        run: cd e2e && yarn
+
       - name: Set environment for branch
         run: |
           echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
