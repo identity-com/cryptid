@@ -72,7 +72,7 @@ jobs:
       - name: Build cryptid
         run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
 
-      - name: 'UI Tests - Chrome'
+      - name: 'Run cypress tests'
         uses: cypress-io/github-action@v2
         with:
           install: false

@@ -1,4 +1,4 @@
-Feature: Create sender and recipient cryptid accounts and do transfers between accounts
+Feature: Create account
 
     Scenario: Create recipient account
         Given I open to cryptid home page
@@ -8,19 +8,21 @@ Feature: Create sender and recipient cryptid accounts and do transfers between a
         Then Wallet cryptid address is copied
         Then Wallet did address is copied
 
-    Scenario: Airdrop 1 solana to wallet
-        Given Wallet is created
-        When I select localnet
-        When I airdrop solana to cryptid wallet address
-        When I airdrop solana to did address
+# Scenarios will be used to create more tests.  For now, just getting cypress to work
+
+#    Scenario: Airdrop 1 solana to wallet
+#        Given Wallet is created
+#        When I select localnet
+#        When I airdrop solana to cryptid wallet address
+#        When I airdrop solana to did address
 
 
 #    Scenario: Add controller to cryptid
 #        When Controller is added
 
-    Scenario: Add additional cryptid account
-        When I import account with alias of 'recipient2'
-        Given I open to cryptid home page
+#    Scenario: Add additional cryptid account
+#        When I import account with alias of 'recipient2'
+#        Given I open to cryptid home page
 #        When I type wallet Alias name of 'mitch'
 #        When I create sender new key
 #        Then Wallet is created
