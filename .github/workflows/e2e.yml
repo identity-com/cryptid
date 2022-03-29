@@ -14,10 +14,36 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Use Node ${{ matrix.node }}
-        uses: actions/setup-node@v1
+      - name: Use Rust ${{ matrix.rust }}
+        uses: actions-rs/toolchain@v1
         with:
-          node-version: ${{ matrix.node }}
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache build dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ./target
+          key: cargo-build-${{ hashFiles('Cargo.lock') }}
+
+      - name: Cache Solana version
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache
+          key: solana-${{ matrix.solana }}
+
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/${{ matrix.solana }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Build programs
+        uses: actions-rs/cargo@v1
+        with:
+          command: build-bpf
 
       - name: Cache node dependencies
         uses: actions/cache@v2
@@ -33,9 +59,6 @@ jobs:
 
       - name: Install
         run: yarn
-
-      - name: Cargo build
-        run: cargo build-bpf
 
       - name: Set environment for branch
         run: |
