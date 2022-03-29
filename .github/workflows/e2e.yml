@@ -70,8 +70,9 @@ jobs:
         run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
 
       - name: Start cryptid
-        run: yarn workspace @identity.com/cryptid-wallet start wait-on http://localhost:3000
+        run: yarn workspace @identity.com/cryptid-wallet start && wait-on http://localhost:3000
 
       - name: Cypress
-        run: yarn cypress run
-        working-directory: ./e2e
+        run: |
+          cd ~/e2e
+          yarn cypress run
