@@ -11,7 +11,7 @@ import { DecentralizedIdentifier } from "@identity.com/sol-did-client";
 import { create as createPropose } from "../instructions/proposeTransaction";
 import { create as createExecute } from "../instructions/executeTransaction";
 
-import { isTxValid } from "../../util";
+import { isCorrectSize } from "../../util";
 import { create as createExpand } from "../instructions/expandTransaction";
 import InstructionOperation from "../model/InstructionOperation";
 
@@ -58,31 +58,33 @@ export const largeExecute = async (
   // Build propose transaction
   let proposeTransaction;
   // check if the transaction is too big
-  while (!isTxValid(proposeTransaction)) {
+  while (!proposeTransaction) {
     nrOfOverflowInstructions++;
     const mappedProposeInstructions = mappedInstructions.slice(0, mappedInstructions.length - nrOfOverflowInstructions);
-    try {
-      const proposeInstruction = await createPropose(
-        mappedAccounts,
-        mappedProposeInstructions,
-        didPDAKey,
-        'cryptid',
-        TRANSACTION_SEED,
-        signersNormalized,
-        nrOfOverflowInstructions <= 0,
-        cryptidAccount,
-        { accountSize: ACCOUNT_SIZE }
-      );
+    const proposeInstruction = await createPropose(
+      mappedAccounts,
+      mappedProposeInstructions,
+      didPDAKey,
+      'cryptid',
+      TRANSACTION_SEED,
+      signersNormalized,
+      nrOfOverflowInstructions <= 0,
+      cryptidAccount,
+      { accountSize: ACCOUNT_SIZE }
+    );
 
+    const sizeTx = new Transaction({
+      recentBlockhash: unsignedTransaction.recentBlockhash,
+      feePayer: unsignedTransaction.feePayer,
+    }).add(proposeInstruction);
+
+    if (isCorrectSize(sizeTx, 1)) {
       proposeTransaction = await createTransaction(
         unsignedTransaction.recentBlockhash,
         [proposeInstruction],
         payer,
         signersNormalized.map(([signer]) => signer)
       );
-    } catch (e) {
-      // catches Range errors during signing
-      // continue to next iteration
     }
   }
   // After the loop, proposeTransaction is valid

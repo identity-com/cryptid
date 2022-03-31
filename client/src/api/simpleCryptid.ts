@@ -4,7 +4,6 @@ import { CryptidOptions } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
 import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
-import { checkTxSize } from '../lib/util';
 import { NonEmptyArray } from '../types/lang';
 import { largeExecute } from '../lib/solana/transactions/largeExecute';
 
@@ -22,24 +21,14 @@ export class SimpleCryptid extends AbstractCryptid {
   }
 
   async sign(transaction: Transaction): Promise<Transaction> {
-    try {
-      const wrappedTransaction = await directExecute(
-        transaction,
-        this.did,
-        this.signer.publicKey,
-        [[this.signer, []]]
-      );
+    const wrappedTransaction = await directExecute(
+      transaction,
+      this.did,
+      this.signer.publicKey,
+      [[this.signer, []]]
+    );
 
-      checkTxSize(wrappedTransaction);
-
-      return wrappedTransaction;
-    } catch (e) {
-      if (e instanceof RangeError) {
-        throw new Error(`Transaction is too large.`);
-      } else {
-        throw e; // another (unhandled) error was thrown
-      }
-    }
+    return wrappedTransaction;
   }
 
   async signLarge(transaction: Transaction): Promise<{

@@ -19,6 +19,7 @@ import TransactionAccount from "../accounts/TransactionAccount";
 import InstructionData from "../model/InstructionData";
 import TransactionAccountMeta from "../model/TransactionAccountMeta";
 import { AssignableBuffer } from "../solanaBorsh";
+import { isCorrectSize } from "../../util";
 
 /**
  * Create a new empty transaction, initialised with a fee payer and a recent transaction hash
@@ -44,6 +45,10 @@ export const createTransaction = async (
   let transaction = await makeEmptyTransaction(recentBlockhash, payer);
 
   transaction = transaction.add(...instructions);
+
+  if (!isCorrectSize(transaction, signers.length)) {
+    throw new Error('Transaction too large');
+  }
 
   for (const signer of signers) {
     transaction = await signer.sign(transaction);
