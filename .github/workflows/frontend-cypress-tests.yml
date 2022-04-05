@@ -1,0 +1,85 @@
+name: Frontend Cypress Tests
+# disabling job for now until we can get more meaningful tests in place
+#on: push
+jobs:
+  build-local-cryptid:
+    name: Build cypress cryptid frontend on Node ${{ matrix.node }} and ${{ matrix.os }}
+    env:
+      SOLANA_PROGRAM_ID: tcrjc6mfci8bQLmXPfrVw9fJm9Y5tr268tByjSQmSe9
+      SOLANA_AUTHORITY: ${{ secrets.SOLANA_DEV_AUTHORITY }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: ['1.59']
+        solana: ['v1.9.2']
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Rust ${{ matrix.rust }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache build dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ./target
+          key: cargo-build-${{ hashFiles('Cargo.lock') }}
+
+      - name: Cache Solana version
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache
+          key: solana-${{ matrix.solana }}
+
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/${{ matrix.solana }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Build programs
+        uses: actions-rs/cargo@v1
+        with:
+          command: build-bpf
+
+      - name: Cache node dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Install
+        run: yarn
+
+      - name: Install cypress dependencies
+        run: cd e2e && yarn
+
+      - name: Set environment for branch
+        run: |
+          echo "CIVIC_ENV=DEV" >> "$GITHUB_ENV"
+
+      - name: Build cryptid
+        run: yarn workspace @identity.com/cryptid build start-validator http://localhost:8899/health
+
+      - name: 'Run cypress tests'
+        uses: cypress-io/github-action@v2
+        with:
+          install: false
+          start: yarn start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 60
+          working-directory: ./e2e
+          runTests: yarn cypress run
+          browser: chrome

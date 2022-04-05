@@ -55,7 +55,7 @@ export default function KeyList({items}: KeyListInterface) {
               <p className="text-sm font-medium text-gray-900" style={item.capabilityInvocation ? {} : { textDecoration: 'line-through' }}>{item.alias}</p>
               {item.isActive && <CheckCircleIcon className="ml-1 text-green-500 w-5 h-5"/>}
             </div>
-            <p className="text-sm text-gray-500">{item.base58Key}</p>
+            <p className="text-sm text-gray-500"  data-testid="didWalletAddress">{item.base58Key}</p>
           </div>
           <div className="flex-grow" />
           {item.capabilityInvocation && item.airdropCB && !isProdNetwork &&

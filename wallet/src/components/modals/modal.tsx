@@ -45,7 +45,7 @@ export const Modal:React.FC<ModalProps> = (
     console.log("onClose suppressClose: ", suppressClose);
     suppressClose || onClose();
   }, []);
-  
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef}
@@ -79,7 +79,7 @@ export const Modal:React.FC<ModalProps> = (
           >
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg pr-6">
               <div className="mb-5 mx-auto flex-shrink-0 inline-flex items-center justify-center h-12 rounded-full sm:mx-0 sm:h-10">
-                <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true" />
+                <Icon className={classNames(iconClasses, "h-6 w-6")} aria-hidden="true"/>
                 <Dialog.Title as="h3" className="text-lg pl-5 mt-1 leading-6 font-medium text-gray-900">
                   {title}
                 </Dialog.Title>
@@ -96,6 +96,7 @@ export const Modal:React.FC<ModalProps> = (
                     "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm"
                   )}
                   onClick={onOK}
+                  data-testid='modalAddButton'
                 >
                   {okText}
                 </button>}

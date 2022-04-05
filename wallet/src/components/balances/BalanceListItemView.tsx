@@ -69,15 +69,16 @@ export function BalanceListItemView({
         // swapInfo={swapInfo}
         isAssociatedToken={isAssociatedToken}
       />
-      <div className="flex items-center pl-4 py-4 sm:pl-6">
+      <div className="flex items-center pl-4 py-4 sm:pl-6" data-testid="listedWallet">
         <TokenIcon
+          data-testid='tokenIcon'
           mint={mint}
           tokenName={tokenName}
           url={tokenLogoUri}
           size={30}
         />
         <div className="min-w-0 w-1.5 md:max-w-max flex-1 flex pl-4 md:pr-4 md:gap-4">
-          <div className='text-sm md:text-lg flex-1'>
+          <div className='text-sm md:text-lg flex-1' data-testid="solBalance">
             {balanceFormat.format(amount / Math.pow(10, decimals))} {tokenSymbol}{
             usdValue &&
             <p className="text-sm text-gray-900">
@@ -92,8 +93,8 @@ export function BalanceListItemView({
           </div>
         </div>
         <div className='inline-flex shadow-sm rounded-md'>
-          <CryptidButton label="Receive" Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
-          <CryptidButton label="Send" Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
+          <CryptidButton label="Receive" data-testid='receiveButton' Icon={ArrowCircleDownIcon} onClick={() => {setDepositDialogOpen(true)}}/>
+          <CryptidButton label="Send" data-testid='sendButton' Icon={ArrowCircleUpIcon} onClick={() => {setSendDialogOpen(true)}}/>
         </div>
       </div>
     </li>

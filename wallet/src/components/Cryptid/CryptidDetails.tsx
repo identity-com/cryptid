@@ -145,11 +145,11 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Identifier</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.did}</dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" data-testid="didAddress">{cryptidAccount.did}</dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Cryptid address</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{cryptidAccount.address.toBase58()}</dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" data-testid="cryptidWalletAddress">{cryptidAccount.address.toBase58()}</dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Controlled By</dt>
@@ -172,7 +172,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
               <dt>
                 <div className="flex items-center">
                   <p className="text-sm font-medium text-gray-500">Keys</p>
-                  <button className="ml-4" onClick={() => setAddKeyDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" aria-hidden="true"/></button>
+                  <button className="ml-4" onClick={() => setAddKeyDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" data-testid="keysPlusCircleIcon" aria-hidden="true"/></button>
                 </div>
               </dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -189,7 +189,7 @@ export const CryptidDetails = ({ cryptidAccount, connectWallet, wallet } : Crypt
               <dt>
                 <div className="flex items-center">
                   <p className="text-sm font-medium text-gray-500">Controllers</p>
-                  <button className="ml-4" onClick={() => setAddControllerDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" aria-hidden="true"/></button>
+                  <button className="ml-4" onClick={() => setAddControllerDialogOpen(true)}><PlusCircleIcon className="h-7 w-7" data-testid="controllersPlusCircleIcon" aria-hidden="true"/></button>
                 </div>
               </dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -209,7 +209,7 @@ type CryptidDetailsListItemInterface = {
   removeCallback: (primary: string) => void
 }
 
-const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> = 
+const CryptidDetailsListItem:React.FC<CryptidDetailsListItemInterface> =
   ({primary, secondary, removeCallback, children}) => {
   return (
     <div className="min-w-0 max-w-3xl flex-1 flex items-center">
