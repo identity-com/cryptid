@@ -17,7 +17,7 @@ export default function ProposedPage() {
       return;
     }
 
-    const accounts = await selectedCryptidAccount.listPendingTx();
+    const accounts =[];//= await selectedCryptidAccount.listPendingTx();
 
     setHistory(accounts);
   }
@@ -33,14 +33,14 @@ export default function ProposedPage() {
   }
 
   const retryAccount = async (account: PublicKey) => {
-    if (!selectedCryptidAccount) {
-      return;
-    }
-    const trx = selectedCryptidAccount?.signExecuteLarge(account);
-
-    sendTransaction(trx, {
-      onSuccess: updateHistory,
-    })
+    // if (!selectedCryptidAccount) {
+    //   return;
+    // }
+    // const trx = selectedCryptidAccount?.signExecuteLarge(account);
+    //
+    // sendTransaction(trx, {
+    //   onSuccess: updateHistory,
+    // })
   }
 
   useEffect(() => {

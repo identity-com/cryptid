@@ -122,6 +122,8 @@ export default function SignTransactionFormContent({
                                                      onApprove,
                                                      autoApprove,
                                                      buttonRef,
+                                                     isLargeTransaction,
+                                                     numFailed
                                                    }) {
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
@@ -294,7 +296,6 @@ export default function SignTransactionFormContent({
       // </Box>
     );
   };
-
   return (
     <CardContent>
       {parsing ? (
@@ -327,9 +328,12 @@ export default function SignTransactionFormContent({
         <>
           <div className='text-2xl pb-3'>
             {txInstructions
-              ? `Approve from ${origin}:`
+              ? (isLargeTransaction ?  `Propose from ${origin}:` : `Approve from ${origin}:`)
               : `Unknown transaction data`}
           </div>
+          {numFailed == 0 || <div class="text-red-800 px-2 pb-2">
+            {numFailed > 1 ? `{numFailed} transactions have ` : `1 transaction has `} failed as it is too large. Click the expand button below to split the transction.
+          </div>}
           {txInstructions ? (
             txInstructions.map((instructions, txIdx) =>
               txListItem(instructions, txIdx),
