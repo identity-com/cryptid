@@ -139,9 +139,10 @@ export default function PopupPage({opener}: { opener: Window }) {
   const popRequest = () => setRequests((requests) => requests.slice(1));
 
   const {payloads, messageDisplay}: {
-      payloads: (Buffer | Uint8Array)[],
+      payloads: Payload[],
       messageDisplay: 'tx' | 'utf8' | 'hex' | 'message'
     } = useMemo(() => {
+
         if (!request || request.method === 'connect') {
           return {payloads: [], messageDisplay: 'tx'};
         }
@@ -149,25 +150,29 @@ export default function PopupPage({opener}: { opener: Window }) {
           case 'signTransaction':
             window.focus();
             return {
-              payloads: [bs58.decode(request.params.transaction)],
+              payloads: [{payloads: [bs58.decode(request.params.transaction)], failed: false}],
               messageDisplay: 'tx',
             };
           case 'signAllTransactions':
             window.focus();
             return {
-              payloads: request.params.transactions.map((t) => bs58.decode(t)),
+              payloads: request.params.transactions.map((t, i) => ({payloads: [bs58.decode(t)], failed: request.params.failed ? request.params.failed[i] : false})),
               messageDisplay: 'tx',
             };
           case 'proposeTransactions':
             window.focus();
             return {
-              payloads: request.params.transactions.reduce((previousValue: Buffer[], currentValue: { transactions: string[], propose: boolean }) => {
-                currentValue.transactions.forEach(t => {
-                  previousValue.push(bs58.decode(t))
-                });
-
-                return previousValue;
-              }, []),
+              // payloads: request.params.transactions.reduce((previousValue: Buffer[], currentValue: { transactions: string[], propose: boolean }) => {
+              //   currentValue.transactions.forEach(t => {
+              //     previousValue.push(bs58.decode(t))
+              //   });
+              //
+              //   return previousValue;
+              // }, []),
+              payloads: request.params.transactions.map(t => ({
+                payloads: t.transactions.map(it => bs58.decode(it)),
+                failed: false
+              })),
               messageDisplay: 'tx',
             };
           case 'sign':
@@ -176,7 +181,7 @@ export default function PopupPage({opener}: { opener: Window }) {
             }
             window.focus();
             return {
-              payloads: [request.params.data],
+              payloads: [{payloads: [request.params.data], failed: false}],
               messageDisplay: request.params.display === 'utf8' ? 'utf8' : 'hex',
             };
           case 'getDID':
@@ -196,7 +201,7 @@ export default function PopupPage({opener}: { opener: Window }) {
           case
           'signWithDIDKey':
             if (wallet.signMessage !== undefined) {
-              return {payloads: [request.params.message], messageDisplay: 'message'}
+              return {payloads: [{payloads: [request.params.message], failed: false}], messageDisplay: 'message'}
             } else {
               postMessage({
                 error: 'Wallet does not support signing messages',
@@ -206,6 +211,9 @@ export default function PopupPage({opener}: { opener: Window }) {
               return {payloads: [], messageDisplay: 'tx'}
             }
         }
+
+        return {payloads: [], messageDisplay: 'tx'};
+
       },
       [request, postMessage, selectedCryptidAccount, wallet]
     )
@@ -345,7 +353,7 @@ export default function PopupPage({opener}: { opener: Window }) {
         popRequest();
         throw new Error('onApprove: Not supported');
       case 'signTransaction':
-        if (await sendTransaction(payloads[0])) {
+        if(await sendTransaction(payloads[0].payloads[0])) {
           popRequest();
           opener.focus();
         } else {
@@ -354,7 +362,7 @@ export default function PopupPage({opener}: { opener: Window }) {
         }
         break;
       case 'signAllTransactions':
-        if (await sendTransactions(payloads)) {
+        if (await sendTransactions(payloads.map(p => p.payloads[0]))) {
           popRequest();
           opener.focus();
         } else {
@@ -543,35 +551,12 @@ export default function PopupPage({opener}: { opener: Window }) {
     : 0;
 
   const isPropose = request.method === 'proposeTransactions';
-  let payloadMeta: { failed: boolean | undefined, index: number, group: number, grouped: boolean }[] = [];
-
-  if (request.method === 'signAllTransactions') {
-    payloadMeta = request.params.transactions.map((t, i) => ({
-      failed: request.params.failed ? request.params.failed[i] : undefined,
-      group: i,
-      index: i,
-      grouped: false
-    }));
-  } else if (request.method === 'proposeTransactions') {
-    request.params.transactions.forEach((transactions, group) => {
-      transactions.transactions.forEach((transaction, index) => {
-        payloadMeta.push({
-          failed: undefined,
-          group,
-          index: index + 1,
-          grouped: transactions.transactions.length > 1
-        })
-      });
-    });
-  }
-
   return (
     <ApproveSignatureForm
       key={request.id}
       autoApprove={autoApprove}
       origin={origin}
       payloads={payloads}
-      payloadMeta={payloadMeta}
       messageDisplay={messageDisplay}
       onApprove={onApprove}
       onReject={sendReject}
@@ -682,10 +667,14 @@ function ApproveConnectionForm({origin, onApprove, autoApprove}: {
   );
 }
 
+type Payload = {
+  payloads: (Buffer | Uint8Array)[],
+  failed: boolean,
+}
+
 type ApproveSignerFormProps = {
   origin: string,
-  payloads: (Buffer | Uint8Array)[],
-  payloadMeta: { failed: boolean | undefined, group: number, index: number, grouped: boolean }[],
+  payloads: Payload[],
   messageDisplay: 'tx' | 'utf8' | 'hex' | 'message',
   onApprove: () => void,
   onReject: () => void,
@@ -698,7 +687,6 @@ type ApproveSignerFormProps = {
 function ApproveSignatureForm({
                                 origin,
                                 payloads,
-                                payloadMeta,
                                 messageDisplay,
                                 onApprove,
                                 onReject,
@@ -723,8 +711,10 @@ function ApproveSignatureForm({
         <SignTransactionFormContent
           autoApprove={autoApprove}
           origin={origin}
-          messages={payloads.map(mapTransactionToMessageBuffer)}
-          messageMeta={payloadMeta}
+          messages={payloads.map(p => ({
+            failed: p.failed,
+            messages: payloads.map(mapTransactionToMessageBuffer)
+          }))}
           onApprove={onApprove}
           buttonRef={buttonRef}
           isLargeTransaction={isLargeTransaction}
@@ -737,13 +727,13 @@ function ApproveSignatureForm({
           {`${origin} wants to sign a message: `}
         </Typography>
         <Divider style={{margin: 20}}/>
-        <Typography style={{wordBreak: 'break-all'}}>{bs58.encode(payloads[0])}</Typography>
+        <Typography style={{wordBreak: 'break-all'}}>{bs58.encode(payloads[0].payloads[0])}</Typography>
         <Divider style={{margin: 20}}/>
       </CardContent>;
     } else {
       return <SignFormContent
         origin={origin}
-        message={mapTransactionToMessageBuffer(payloads[0])}
+        message={mapTransactionToMessageBuffer(payloads[0].payloads[0])}
         messageDisplay={messageDisplay}
         buttonRef={buttonRef}
       />;
