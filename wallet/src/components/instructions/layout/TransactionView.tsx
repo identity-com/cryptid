@@ -10,9 +10,7 @@ const TransactionView: React.FC<{
         index,
         meta = {},
         children
-      }) => {
-
-  return (
+      }) => (
     <div>
       <Accordion>
         <AccordionSummary
@@ -36,7 +34,6 @@ const TransactionView: React.FC<{
         </AccordionDetails>
       </Accordion>
     </div>
-  )
-}
+  );
 
 export default TransactionView;
