@@ -488,33 +488,40 @@ export default function PopupPage({opener}: { opener: Window }) {
       throw new Error('Invalid method for propose');
     }
 
-    const signedTransactions: string[] = [];
-    for (let transactions of request.params.transactions) {
-      let lastSignature: string | undefined;
-      for (let i in transactions.transactions) {
-        let signedTransaction = transactions.transactions[i];
-        // if it is not a propose tx, or it is the last tx, send back to client - else execute
-        if (!transactions.propose || transactions.transactions.length === (parseInt(i) + 1)) {
-          signedTransactions.push(signedTransaction);
-        } else {
-          lastSignature = await connection.sendRawTransaction(bs58.decode(signedTransaction));
-          await connection.confirmTransaction(lastSignature, 'confirmed');
+    try {
+      const signedTransactions: string[] = [];
+      for (let transactions of request.params.transactions) {
+        let lastSignature: string | undefined;
+        for (let i in transactions.transactions) {
+          let signedTransaction = transactions.transactions[i];
+          // if it is not a propose tx, or it is the last tx, send back to client - else execute
+          if (!transactions.propose || transactions.transactions.length === (parseInt(i) + 1)) {
+            signedTransactions.push(signedTransaction);
+          } else {
+            lastSignature = await connection.sendRawTransaction(bs58.decode(signedTransaction));
+            await connection.confirmTransaction(lastSignature, 'confirmed');
+          }
         }
       }
-    }
 
-    if (request.params.singleTx) {
+      if (request.params.singleTx) {
+        postMessage({
+          result: {
+            transaction: signedTransactions[0],
+          },
+          id: request.id,
+        });
+      } else {
+        postMessage({
+          result: {
+            transactions: signedTransactions,
+          },
+          id: request.id,
+        });
+      }
+    } catch(e) {
       postMessage({
-        result: {
-          transaction: signedTransactions[0],
-        },
-        id: request.id,
-      });
-    } else {
-      postMessage({
-        result: {
-          transactions: signedTransactions,
-        },
+        error: 'An error occured while proposing transactions: ' + e,
         id: request.id,
       });
     }

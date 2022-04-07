@@ -335,8 +335,8 @@ export default function SignTransactionFormContent({
               : `Unknown transaction data`}
           </div>
           {numFailed == 0 || <div class="text-red-800 px-2 pb-2">
-            {numFailed > 1 ? `{numFailed} transactions have ` : `1 transaction has `} failed as it is too large. Click
-            the expand button below to split the transction.
+            {numFailed > 1 ? `${numFailed} transactions have ` : `1 transaction has `} for being too large. Click
+            the expand button below to split the transaction.
           </div>}
           {txInstructions ? (
             txInstructions.map((instructions, txIdx) =>
