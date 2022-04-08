@@ -1,11 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
-mod constants;
+mod util;
 
-use constants::*;
-use cryptid_signer::instruction::{
-    CryptidInstruction, DirectExecuteBuild, DirectExecuteFlags, SigningKeyBuild,
-};
+use cryptid_signer::instruction::direct_execute::{DirectExecuteBuild, DirectExecuteFlags};
+use cryptid_signer::instruction::{CryptidInstruction, SigningKeyBuild};
 use cryptid_signer::state::InstructionData;
 use cryptid_signer::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 use dummy_program::DummyInstruction;
@@ -23,6 +21,7 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::iter::once;
 use test_utils::{start_tests, ClientExpansion};
+use util::*;
 
 #[tokio::test]
 async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>> {
@@ -51,17 +50,14 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
 
     let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
-    let (cryptid_account, _cryptid_nonce) = PDAGenerator::new(
-        cryptid_id,
-        GenerativeCryptidSeeder {
-            did_program: sol_did_id(),
-            did: did_pda,
-        },
-    )
-    .find_address();
+    let (cryptid_account, _cryptid_nonce) = GenerativeCryptidSeeder {
+        did_program: sol_did_id(),
+        did: did_pda,
+    }
+    .find_address(cryptid_id);
     trace!(target: LOG_TARGET, "cryptid_account: {}", cryptid_account);
     let (cryptid_signer, _cryptid_signer_nonce) =
-        PDAGenerator::new(cryptid_id, CryptidSignerSeeder { cryptid_account }).find_address();
+        CryptidSignerSeeder { cryptid_account }.find_address(cryptid_id);
     trace!(target: LOG_TARGET, "cryptid_signer: {}", cryptid_signer);
 
     let dummy_instruction1: SolanaInstruction = build_instruction!(
@@ -178,17 +174,14 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
     let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
-    let (cryptid_account, _cryptid_nonce) = PDAGenerator::new(
-        cryptid_id,
-        GenerativeCryptidSeeder {
-            did_program: sol_did_id(),
-            did: did_pda,
-        },
-    )
-    .find_address();
+    let (cryptid_account, _cryptid_nonce) = GenerativeCryptidSeeder {
+        did_program: sol_did_id(),
+        did: did_pda,
+    }
+    .find_address(cryptid_id);
     trace!(target: LOG_TARGET, "cryptid_account: {}", cryptid_account);
     let (cryptid_signer, _cryptid_signer_nonce) =
-        PDAGenerator::new(cryptid_id, CryptidSignerSeeder { cryptid_account }).find_address();
+        CryptidSignerSeeder { cryptid_account }.find_address(cryptid_id);
     trace!(target: LOG_TARGET, "cryptid_signer: {}", cryptid_signer);
 
     let dummy_instruction1: SolanaInstruction = build_instruction!(

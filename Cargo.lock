@@ -452,11 +452,15 @@ dependencies = [
  "bitflags",
  "borsh",
  "dummy_program",
+ "futures",
  "log",
+ "num-derive",
+ "num-traits",
  "sol-did",
  "solana-program-test",
  "solana-sdk",
  "solana_generator",
+ "strum 0.22.0",
  "test_utils",
  "tokio",
 ]
@@ -2482,7 +2486,7 @@ dependencies = [
 [[package]]
 name = "solana_generator"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
+source = "git+https://github.com/identity-com/solana_generator?rev=759e8c72a97e96c1fb7b2c42e625d1a3f69a105f#759e8c72a97e96c1fb7b2c42e625d1a3f69a105f"
 dependencies = [
  "array-init",
  "bincode",
@@ -2490,14 +2494,14 @@ dependencies = [
  "num-traits",
  "solana-program",
  "solana_generator_derive",
- "strum",
+ "strum 0.21.0",
  "zeroize",
 ]
 
 [[package]]
 name = "solana_generator_derive"
 version = "0.1.0"
-source = "git+https://github.com/identity-com/solana_generator?rev=e8ce32472f667363cd64309c7c32a8b00b897f6c#e8ce32472f667363cd64309c7c32a8b00b897f6c"
+source = "git+https://github.com/identity-com/solana_generator?rev=759e8c72a97e96c1fb7b2c42e625d1a3f69a105f#759e8c72a97e96c1fb7b2c42e625d1a3f69a105f"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro-error",
@@ -2550,7 +2554,16 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aaf86bbcfd1fa9670b7a129f64fc0c9fcbbfe4f1bc4210e9e98fe71ffc12cde2"
 dependencies = [
- "strum_macros",
+ "strum_macros 0.21.1",
+]
+
+[[package]]
+name = "strum"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7ac893c7d471c8a21f31cfe213ec4f6d9afeed25537c772e08ef3f005f8729e"
+dependencies = [
+ "strum_macros 0.22.0",
 ]
 
 [[package]]
@@ -2558,6 +2571,18 @@ name = "strum_macros"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d06aaeeee809dbc59eb4556183dd927df67db1540de5be8d3ec0b6636358a5ec"
+dependencies = [
+ "heck",
+ "proc-macro2 1.0.29",
+ "quote 1.0.9",
+ "syn 1.0.77",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "339f799d8b549e3744c7ac7feb216383e4005d94bdb22561b3ab8f3b808ae9fb"
 dependencies = [
  "heck",
  "proc-macro2 1.0.29",

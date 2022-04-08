@@ -11,8 +11,6 @@ import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 const { expect } = chai;
 
-const TRANSACTION_FEE = 5000;
-
 describe('DID Key operations', function () {
   this.timeout(60_000);
 
@@ -23,9 +21,11 @@ describe('DID Key operations', function () {
   let did: string;
   let doaSigner: PublicKey;
   let cryptid: Cryptid;
+  let feePerSignature: number;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
+    feePerSignature = (await connection.getRecentBlockhash()).feeCalculator.lamportsPerSignature;
   });
 
   beforeEach(async () => {
@@ -120,7 +120,7 @@ describe('DID Key operations', function () {
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
-        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+        expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
       });
 
       it('should add a new key, if SIGNER_PAYS is set', async () => {
@@ -140,7 +140,7 @@ describe('DID Key operations', function () {
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
-        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+        expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
       });
     });
   });
@@ -203,7 +203,7 @@ describe('DID Key operations', function () {
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
-        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+        expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
       });
 
       it('should use the added key to remove the original key', async () => {

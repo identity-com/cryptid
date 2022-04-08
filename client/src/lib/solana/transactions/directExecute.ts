@@ -1,7 +1,7 @@
 import { AccountMeta, PublicKey, Transaction } from '@solana/web3.js';
 import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
-import { createTransaction } from './util';
+import { createTransaction, normalizeSigner } from './util';
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 /**
@@ -21,17 +21,10 @@ export const directExecute = async (
   did: string,
   payer: PublicKey,
   signers: SignerArg[],
-  doa?: PublicKey,
+  cryptidAccount?: PublicKey,
   debug = false
 ): Promise<Transaction> => {
-  const signersNormalized: [Signer, AccountMeta[]][] = signers.map((signer) => {
-    if (Array.isArray(signer)) {
-      return [signer[0], signer[1].map(normalizeExtra)];
-    } else {
-      return [signer, []];
-    }
-  });
-
+  const signersNormalized = normalizeSigner(signers);
   const parsedDID = DecentralizedIdentifier.parse(did);
   const didPDAKey = await parsedDID.pdaSolanaPubkey();
 
@@ -39,7 +32,7 @@ export const directExecute = async (
     unsignedTransaction,
     didPDAKey,
     signersNormalized,
-    doa,
+    cryptidAccount,
     debug
   );
   return createTransaction(
@@ -50,18 +43,3 @@ export const directExecute = async (
   );
 };
 
-/**
- * Normalizes a `PublicKey | AccountMeta` to an `AccountMeta` where permissions are lowest if it's a `PublicKey`
- * @param key The key or meta to normalize
- */
-const normalizeExtra = (key: PublicKey | AccountMeta): AccountMeta => {
-  if (key instanceof PublicKey) {
-    return {
-      pubkey: key,
-      isSigner: false,
-      isWritable: false,
-    };
-  } else {
-    return key;
-  }
-};

@@ -5,13 +5,13 @@
  * - Generative Method from Wallet keys
  * -
  */
-import React, { FC, useCallback, useContext, useEffect, useState } from "react";
-import { build as buildCryptid, Cryptid, Signer } from "@identity.com/cryptid";
-import { Connection, PublicKey, Transaction, TransactionSignature } from "@solana/web3.js";
-import { DIDDocument } from "did-resolver";
-import { setInitialAccountInfo, useCluster, useConnection } from "../connection";
-import { refreshCache, useAsyncData } from "../fetch-loop";
-import { useLocalStorageState, useRefEqual } from "../utils";
+import React, {FC, useCallback, useContext, useEffect, useState} from "react";
+import {build as buildCryptid, Cryptid, Signer} from "@identity.com/cryptid";
+import {AccountInfo, Connection, PublicKey, Transaction, TransactionSignature} from "@solana/web3.js";
+import {DIDDocument} from "did-resolver";
+import {setInitialAccountInfo, useCluster, useConnection} from "../connection";
+import {refreshCache, useAsyncData} from "../fetch-loop";
+import {useLocalStorageState, useRefEqual} from "../utils";
 import {
   closeTokenAccount,
   createAssociatedTokenAccount,
@@ -19,10 +19,10 @@ import {
   nativeTransfer,
   transferTokens
 } from "../tokens";
-import { ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo } from "../tokens/data";
-import { ServiceEndpoint } from "did-resolver/src/resolver";
-import { useWalletContext } from "../wallet";
-import { DUMMY_PUBKEY } from "../config";
+import {ACCOUNT_LAYOUT, parseTokenAccountData, TokenInfo} from "../tokens/data";
+import {ServiceEndpoint} from "did-resolver/src/resolver";
+import {useWalletContext} from "../wallet";
+import {DUMMY_PUBKEY} from "../config";
 
 interface CryptidAccountInitData {
   didPrefix: string,
@@ -48,18 +48,18 @@ export class CryptidAccount {
   private _parent: CryptidAccount | undefined;
 
   private updateDocWrapper = async (f: () => Promise<TransactionSignature>) => {
-    const signature =  f()
+    const signature = f()
     await this.updateDocument()
     return signature;
   }
 
-  private constructor({ didPrefix, didAddress, alias, signer, connection, isSelected, parent} : CryptidAccountInitData) {
+  private constructor({didPrefix, didAddress, alias, signer, connection, isSelected, parent}: CryptidAccountInitData) {
     this.didPrefix = didPrefix
     this.didAddress = didAddress
     this.alias = alias
     this._connection = connection
     this._address = new PublicKey(didAddress) // Note this is wrong, but will be updated by INIT, constructor is private
-    this._document =  { id: "UNINITIALIZED" }; //Note this is wrong, but will be updated by INIT, constructor is private
+    this._document = {id: "UNINITIALIZED"}; //Note this is wrong, but will be updated by INIT, constructor is private
     this._signer = signer
     this._isSelected = isSelected
     this._parent = parent
@@ -101,6 +101,7 @@ export class CryptidAccount {
     // console.log(`Getting address: ${this._address}`)
     // console.log(`Getting document: ${JSON.stringify(this.document)}`)
   }
+
   async as(controllerDidAddress: string, controllerAlias: string): Promise<CryptidAccount> {
     return CryptidAccount.create({
       didPrefix: this.didPrefix,
@@ -112,9 +113,9 @@ export class CryptidAccount {
       parent: this,
     })
   }
-  
-  signTransaction = (transaction: Transaction):Promise<Transaction> =>
-    this.cryptid.sign(transaction).then(([signedTransaction]) => signedTransaction)
+
+  signTransaction = (transaction: Transaction): Promise<Transaction> =>
+    this.cryptid.sign(transaction)
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()
@@ -150,7 +151,7 @@ export class CryptidAccount {
   }
 
   get capabilityInvocations() {
-    if (!this._document || !this._document.capabilityInvocation){
+    if (!this._document || !this._document.capabilityInvocation) {
       return [];
     }
 
@@ -162,7 +163,7 @@ export class CryptidAccount {
       return []
     }
 
-    return Array.isArray(this._document.controller) ? this._document.controller : [ this._document.controller ]
+    return Array.isArray(this._document.controller) ? this._document.controller : [this._document.controller]
   }
 
   containsKey = (key: PublicKey): boolean => !!this.verificationMethods.find(x => x.publicKeyBase58 === key.toBase58())
@@ -180,26 +181,26 @@ export class CryptidAccount {
     //   connection: this.connection,
     // })
   }
-  
-  get activeSigningKey():PublicKey {
+
+  get activeSigningKey(): PublicKey {
     return this.baseAccount()._signer.publicKey
   }
 
   get isSelected() {
     return this._isSelected(this)
   }
-  
-  signerBalance():Promise<number | undefined> {
+
+  signerBalance(): Promise<number | undefined> {
     const key = this.activeSigningKey;
-    
+
     if (!key) return Promise.resolve(undefined);
     return this._connection.getBalance(key);
   }
 
-  get activeSigningKeyAlias():string {
+  get activeSigningKeyAlias(): string {
     const activeVerificationMethod = this.baseAccount().verificationMethods.find(vm => vm.publicKeyBase58 === this.activeSigningKey?.toBase58());
     if (!activeVerificationMethod) return 'NOT SET!';
-    return activeVerificationMethod.id.replace(/.*#/,'');
+    return activeVerificationMethod.id.replace(/.*#/, '');
   }
 
   addKey = async (address: PublicKey, alias: string): Promise<TransactionSignature> =>
@@ -219,6 +220,14 @@ export class CryptidAccount {
 
   removeController = async (did: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.removeController(did))
+
+  signExecuteLarge = (account: PublicKey): Promise<TransactionSignature> =>
+    this.cryptid.signExecuteLarge(account);
+
+  listPendingTx = async (): Promise<{ ready: boolean; key: PublicKey }[]> =>
+    this.cryptid.listPendingTx().then(txs => txs.sort((tx1, tx2) => {
+      return tx1.key.toBase58().localeCompare(tx2.key.toBase58());
+    }));
 
   // Sollet Interface Wallet Functionality.
   transferToken = async (
@@ -258,7 +267,6 @@ export class CryptidAccount {
   };
 
   transferSol = async (destination, amount) => {
-
     // The Tokens Interfaces expect a wallet with
     // interface Wallet {
     //   publicKey: PublicKey
@@ -283,14 +291,14 @@ export class CryptidAccount {
     return accounts.map<{
       publicKey: PublicKey,
       parsed: TokenInfo,
-    }>(({ publicKey, accountInfo }) => {
+    }>(({publicKey, accountInfo}) => {
       setInitialAccountInfo(this._connection, publicKey, accountInfo);
       return {
         publicKey,
         parsed: parseTokenAccountData(accountInfo.data),
       };
     }).sort((account1, account2) =>
-        account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
+      account1.parsed.mint.toBase58().localeCompare(account2.parsed.mint.toBase58())
     );
   }
 
@@ -312,7 +320,7 @@ export class CryptidAccount {
     });
   };
 
-  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey):Promise<[PublicKey, string]> => {
+  createAssociatedTokenAccount = async (splTokenMintAddress: PublicKey): Promise<[PublicKey, string]> => {
     return await createAssociatedTokenAccount({
       connection: this._connection,
       wallet: {
@@ -326,18 +334,18 @@ export class CryptidAccount {
 
 export function useCryptidAccountPublicKeys(cryptid: CryptidAccount | undefined): [PublicKey[], boolean] {
   let [tokenAccountInfo, loaded] = useAsyncData(
-      cryptid ? cryptid.getTokenAccountInfo : async () => [],
-      cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
+    cryptid ? cryptid.getTokenAccountInfo : async () => [],
+    cryptid ? cryptid.getTokenAccountInfo : async () => [], //TODO: Is thsi the best way to handle null?
   );
   let publicKeys = [
-      ...(cryptid && cryptid.address ? [cryptid.address] : []),
-      ...(tokenAccountInfo ? tokenAccountInfo.map(({ publicKey }) => publicKey) : []),
+    ...(cryptid && cryptid.address ? [cryptid.address] : []),
+    ...(tokenAccountInfo ? tokenAccountInfo.map(({publicKey}) => publicKey) : []),
   ]
   publicKeys = useRefEqual(
-      publicKeys,
-      (oldKeys, newKeys) =>
-          oldKeys.length === newKeys.length
-          && oldKeys.every((key, i) => key.equals(newKeys[i]))
+    publicKeys,
+    (oldKeys, newKeys) =>
+      oldKeys.length === newKeys.length
+      && oldKeys.every((key, i) => key.equals(newKeys[i]))
   );
   return [publicKeys, loaded]
 }
@@ -347,7 +355,7 @@ export function refreshCryptidAccountPublicKeys(cryptidAccount: CryptidAccount) 
 }
 
 export function useCryptidAccountTokenAccounts() {
-  const { selectedCryptidAccount } = useCryptid();
+  const {selectedCryptidAccount} = useCryptid();
 
 
   return useAsyncData(
@@ -376,9 +384,12 @@ interface CryptidContextInterface {
 const CryptidContext = React.createContext<CryptidContextInterface>({
   cryptidAccounts: [],
   selectedCryptidAccount: undefined,
-  setSelectedCryptidAccount: () => {},
-  addCryptidAccount: () => {},
-  removeCryptidAccount: () => {},
+  setSelectedCryptidAccount: () => {
+  },
+  addCryptidAccount: () => {
+  },
+  removeCryptidAccount: () => {
+  },
   getDidPrefix: () => '',
   ready: false,
 });
@@ -411,7 +422,7 @@ export const convertToPublicKey = (base58: string | undefined) => {
   }
 };
 
-export const isValidPublicKey = (base58: string):boolean => {
+export const isValidPublicKey = (base58: string): boolean => {
   try {
     validatePublicKey(base58)
     return true;
@@ -437,8 +448,8 @@ const validatePublicKey = (base58: string) => {
  *  - Allow to add DIDs Cryptid Accounts that are not generative. (needs to add state).
  *
  */
-export const CryptidProvider:FC = ({ children }) => {
-  const { wallet, hasWallet, connectWallet } = useWalletContext();
+export const CryptidProvider: FC = ({children}) => {
+  const {wallet, hasWallet, connectWallet} = useWalletContext();
 
   const connection = useConnection();
   const cluster = useCluster();
@@ -472,7 +483,7 @@ export const CryptidProvider:FC = ({ children }) => {
 
   const addCryptidAccount = useCallback((base58: string, alias: string, parent?: CryptidAccount) => {
     validatePublicKey(base58);
-    
+
     if (cryptidExtAccounts.map(x => x.account).indexOf(base58) < 0) {
       // set to new account
       setCryptidSelector({
@@ -480,7 +491,7 @@ export const CryptidProvider:FC = ({ children }) => {
       })
 
       const parentBase58 = parent?.didAddress
-      setCryptidExtAccounts(cryptidExtAccounts.concat([ { account: base58, alias, parent: parentBase58 }]))
+      setCryptidExtAccounts(cryptidExtAccounts.concat([{account: base58, alias, parent: parentBase58}]))
     }
   }, [cryptidExtAccounts, setCryptidExtAccounts, setCryptidSelector])
 
@@ -492,10 +503,10 @@ export const CryptidProvider:FC = ({ children }) => {
   }, [cryptidExtAccounts, setCryptidExtAccounts])
 
   const getDidPrefix = useCallback(() => {
-    // sol dids on mainnet have no cluster prefix 
+    // sol dids on mainnet have no cluster prefix
     const clusterPrefix = cluster === 'mainnet-beta' ? '' : `:${cluster}`;
     return `did:sol${clusterPrefix}`;
-  },[cluster])
+  }, [cluster])
 
   const isSelectedCryptidAccount = useCallback((account: CryptidAccount) => account.did === selectedCryptidAccount?.did, [selectedCryptidAccount])
 
@@ -557,7 +568,9 @@ export const CryptidProvider:FC = ({ children }) => {
   useEffect(() => {
     console.log('useEffect findWallet')
 
-    if (!selectedCryptidAccount) { return }
+    if (!selectedCryptidAccount) {
+      return
+    }
 
     const baseAccount = selectedCryptidAccount.baseAccount()
 
@@ -574,14 +587,14 @@ export const CryptidProvider:FC = ({ children }) => {
     // TODO: consider base-case
     for (const vm of baseAccount.verificationMethods) {
       const pubKey = convertToPublicKey(vm.publicKeyBase58)
-      console.log('Matching to Wallet: '+ vm.publicKeyBase58)
+      console.log('Matching to Wallet: ' + vm.publicKeyBase58)
 
       // TODO: this might need to wait for the wallet-adapter to be ready
       if (pubKey && hasWallet(pubKey)) {
-          console.log('Changing to Wallet: '+ vm.publicKeyBase58)
-          connectWallet(pubKey)
-          break
-        }
+        console.log('Changing to Wallet: ' + vm.publicKeyBase58)
+        connectWallet(pubKey)
+        break
+      }
     }
 
   }, [selectedCryptidAccount, wallet.publicKey, hasWallet, connectWallet])

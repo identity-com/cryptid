@@ -20,6 +20,8 @@ entrypoint_list!(CryptidInstruction);
 pub const CRYPTID_SIGNER_SEED: &str = "cryptid_signer";
 /// The seed for generative Cryptid Accounts
 pub const GENERATIVE_CRYPTID_SEED: &str = "cryptid_doa";
+/// The seed for transaction accounts
+pub const TRANSACTION_SEED: &str = "cryptid_transaction";
 
 /// The seeder for cryptid signers
 #[derive(Debug)]
@@ -48,6 +50,27 @@ impl PDASeeder for GenerativeCryptidSeeder {
                 &GENERATIVE_CRYPTID_SEED as &dyn PDASeed,
                 &self.did_program,
                 &self.did,
+            ]
+            .into_iter(),
+        )
+    }
+}
+
+/// The seeder for transaction accounts
+#[derive(Debug)]
+pub struct TransactionSeeder {
+    /// The cryptid account for this transaction
+    pub cryptid_account: Pubkey,
+    /// The seed/name of this transaction
+    pub seed: String,
+}
+impl PDASeeder for TransactionSeeder {
+    fn seeds<'a>(&'a self) -> Box<dyn Iterator<Item = &'a dyn PDASeed> + 'a> {
+        Box::new(
+            [
+                &TRANSACTION_SEED as &dyn PDASeed,
+                &self.cryptid_account,
+                &self.seed,
             ]
             .into_iter(),
         )

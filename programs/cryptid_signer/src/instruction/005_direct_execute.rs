@@ -5,7 +5,7 @@ use solana_generator::*;
 use crate::account::CryptidAccountAddress;
 use crate::error::CryptidSignerError;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
-use crate::state::{AccountMeta, InstructionData};
+use crate::state::{AccountMeta, CryptidAccount, InstructionData};
 use crate::CryptidSignerSeeder;
 use bitflags::bitflags;
 use solana_generator::solana_program::log::sol_log_compute_units;
@@ -35,41 +35,37 @@ impl Instruction for DirectExecute {
         }
 
         // Retrieve needed data from cryptid account
-        let (key_threshold, signer_generator, signer_key, signer_nonce) =
-            match &accounts.cryptid_account {
-                CryptidAccountAddress::OnChain(cryptid) => {
-                    cryptid.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
-                    let generator = PDAGenerator::new(
-                        program_id,
-                        CryptidSignerSeeder {
-                            cryptid_account: cryptid.info.key,
-                        },
-                    );
-                    let signer_key = generator.create_address_with_nonce(cryptid.signer_nonce)?;
-                    (
-                        cryptid.key_threshold,
-                        generator,
-                        signer_key,
-                        [cryptid.signer_nonce],
-                    )
-                }
-                CryptidAccountAddress::Generative(cryptid) => {
-                    CryptidAccountAddress::verify_seeds(
-                        cryptid.key,
-                        program_id,
-                        accounts.did_program.key,
-                        accounts.did.key,
-                    )?;
-                    let generator = PDAGenerator::new(
-                        program_id,
-                        CryptidSignerSeeder {
-                            cryptid_account: cryptid.key,
-                        },
-                    );
-                    let (signer_key, signer_nonce) = generator.find_address();
-                    (1, generator, signer_key, [signer_nonce])
-                }
-            };
+        let (key_threshold, signer_key, signer_seed_set) = match &accounts.cryptid_account {
+            CryptidAccountAddress::OnChain(cryptid) => {
+                cryptid.verify_did_and_program(accounts.did.key, accounts.did_program.key)?;
+                let seeder = CryptidSignerSeeder {
+                    cryptid_account: cryptid.info.key,
+                };
+                let signer_key = seeder.create_address(program_id, cryptid.signer_nonce)?;
+                (
+                    cryptid.key_threshold,
+                    signer_key,
+                    PDASeedSet::new(seeder, cryptid.signer_nonce),
+                )
+            }
+            CryptidAccountAddress::Generative(cryptid) => {
+                CryptidAccountAddress::verify_seeds(
+                    cryptid.key,
+                    program_id,
+                    accounts.did_program.key,
+                    accounts.did.key,
+                )?;
+                let seeder = CryptidSignerSeeder {
+                    cryptid_account: cryptid.key,
+                };
+                let (signer_key, signer_nonce) = seeder.find_address(program_id);
+                (
+                    CryptidAccount::GENERATIVE_CRYPTID_KEY_THRESHOLD,
+                    signer_key,
+                    PDASeedSet::new(seeder, signer_nonce),
+                )
+            }
+        };
 
         // Error if there aren't enough signers
         if data.signers_extras.len() < key_threshold as usize {
@@ -94,9 +90,6 @@ impl Instruction for DirectExecute {
             .iter()
             .map(|account| account.key)
             .collect::<Vec<_>>();
-        let signer_seeds = signer_generator
-            .seeds_to_bytes_with_nonce(&signer_nonce)
-            .collect::<Vec<_>>();
 
         msg!("Executing instructions");
         // Execute instructions
@@ -115,14 +108,13 @@ impl Instruction for DirectExecute {
             // Check if the metas contain a the signer and run relevant invoke
             let sub_instruction_result = if metas.iter().any(|meta| meta.pubkey == signer_key) {
                 msg!("Invoking signed");
-                invoke_signed_variable_size(
+                signer_seed_set.invoke_signed_variable_size(
                     &SolanaInstruction {
                         program_id: instruction_account_keys[instruction.program_id as usize],
                         accounts: metas,
                         data: instruction.data,
                     },
                     &instruction_accounts_ref,
-                    &[&signer_seeds],
                 )
             } else {
                 msg!("Invoking without signature");
@@ -149,13 +141,10 @@ impl Instruction for DirectExecute {
         program_id: Pubkey,
         arg: Self::BuildArg,
     ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
-        let signer_key = PDAGenerator::new(
-            program_id,
-            CryptidSignerSeeder {
-                cryptid_account: arg.cryptid_account,
-            },
-        )
-        .find_address()
+        let signer_key = CryptidSignerSeeder {
+            cryptid_account: arg.cryptid_account,
+        }
+        .find_address(program_id)
         .0;
         let mut instruction_accounts = HashMap::new();
 

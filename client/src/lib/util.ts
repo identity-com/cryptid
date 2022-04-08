@@ -1,7 +1,15 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
+import {
+  Keypair,
+  PACKET_DATA_SIZE,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
 import { SignCallback, Signer } from '../types/crypto';
 import * as u8a from 'uint8arrays';
-import { deriveDefaultDOA, deriveDOASigner } from './solana/util';
+import {
+  deriveDefaultCryptidAccount,
+  deriveCryptidAccountSigner,
+} from './solana/util';
 import { complement, isNil } from 'ramda';
 import { NonEmptyArray } from '../types/lang';
 
@@ -32,12 +40,49 @@ export const bytesToBase58 = (bytes: Uint8Array): string =>
 export const didToDefaultDOASigner = async (
   did: string
 ): Promise<PublicKey> => {
-  const doa = await deriveDefaultDOA(did);
-  const [doaSigner] = await deriveDOASigner(doa);
-  return doaSigner;
+  const cryptidAccount = await deriveDefaultCryptidAccount(did);
+  const [cryptidAccountSigner] = await deriveCryptidAccountSigner(
+    cryptidAccount
+  );
+  return cryptidAccountSigner;
 };
 
 export const filterNotNil = <T>(entries: (T | null | undefined)[]): T[] =>
   entries.filter(complement(isNil)) as T[];
 
 export const headNonEmpty = <T>(t: NonEmptyArray<T>): T => t[0];
+
+// taken from https://github.com/solana-labs/solana-web3.js/blob/master/src/util/shortvec-encoding.ts
+function encodeLength(bytes: Array<number>, len: number) {
+  let rem_len = len;
+  for (;;) {
+    let elem = rem_len & 0x7f;
+    rem_len >>= 7;
+    if (rem_len == 0) {
+      bytes.push(elem);
+      break;
+    } else {
+      elem |= 0x80;
+      bytes.push(elem);
+    }
+  }
+}
+
+const SIGNATURE_LENGTH = 64;
+
+/**
+ * Checks if the transaction data and signatures would fit the packet size without signing
+ */
+export const isCorrectSize = (
+  transaction: Transaction,
+  numSigners: number
+): boolean => {
+  const signData = transaction.serializeMessage();
+
+  const signatureCount: number[] = [];
+  encodeLength(signatureCount, numSigners);
+  const transactionLength =
+    signatureCount.length + numSigners * SIGNATURE_LENGTH + signData.length;
+
+  return transactionLength < PACKET_DATA_SIZE;
+};

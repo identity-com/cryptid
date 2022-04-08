@@ -105,7 +105,7 @@ export const transfer = async (
   const address = await cryptid.address();
   const tx = await makeTransferTransaction(config, address, recipient, amount);
 
-  const [signedTx] = await cryptid.sign(tx);
+  const signedTx = await cryptid.sign(tx);
   const txSignature = await config.connection.sendRawTransaction(
     signedTx.serialize()
   );

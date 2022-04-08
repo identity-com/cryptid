@@ -3,7 +3,7 @@ import LabelValue from './LabelValue';
 import InstructionView, { WritableIndicator } from "../layout/InstructionView";
 
 export default function UnknownInstruction({ instruction, onOpenAddress, index, expanded, setExpanded, program }) {
-  console.log(instruction.accountMetas);
+  // console.log(instruction.accountMetas);
 
   return <InstructionView index={index} expanded={expanded} setExpanded={setExpanded} title={program} instruction={instruction}>
     {

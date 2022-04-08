@@ -2,9 +2,10 @@ import { Signer } from '../types/crypto';
 import { Transaction } from '@solana/web3.js';
 import { CryptidOptions } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
-import { NonEmptyArray } from '../types/lang';
 import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
+import { NonEmptyArray } from '../types/lang';
+import { largeExecute } from '../lib/solana/transactions/largeExecute';
 
 export class SimpleCryptid extends AbstractCryptid {
   constructor(did: string, private _signer: Signer, options: CryptidOptions) {
@@ -19,14 +20,24 @@ export class SimpleCryptid extends AbstractCryptid {
     return new ControlledCryptid(controlledDid, this, this.options);
   }
 
-  async sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>> {
+  async sign(transaction: Transaction): Promise<Transaction> {
     const wrappedTransaction = await directExecute(
       transaction,
       this.did,
       this.signer.publicKey,
       [[this.signer, []]]
     );
-    return [wrappedTransaction];
+
+    return wrappedTransaction;
+  }
+
+  async signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }> {
+    return await largeExecute(transaction, this.did, this.signer.publicKey, [
+      [this.signer, []],
+    ]);
   }
 
   updateSigner(signer: Signer): void {

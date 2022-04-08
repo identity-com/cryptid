@@ -1,5 +1,7 @@
 //! Error types for `cryptid_signer`
 
+use crate::instruction::SigningKeyData;
+use crate::state::TransactionState;
 use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::{Error, Pubkey};
 
@@ -45,5 +47,19 @@ pub enum CryptidSignerError {
     UnsupportedDIDProgram {
         /// The unsupported program
         program: Pubkey,
+    },
+    /// Invalid transaction state
+    #[error_msg("Invalid transaction state `{:?}`, expected: `{:?}`", found, expected)]
+    InvalidTransactionState {
+        /// The expected state
+        expected: TransactionState,
+        /// The found state
+        found: TransactionState,
+    },
+    /// Key is not a proposer for the transaction
+    #[error_msg("Key `{:?}` is not a proposer for the transaction", key)]
+    KeyCannotChangeTransaction {
+        /// The key that tried to change the transaction
+        key: SigningKeyData,
     },
 }

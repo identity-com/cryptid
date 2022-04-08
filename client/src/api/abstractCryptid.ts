@@ -9,7 +9,9 @@ import { addController as addControllerTransaction } from '../lib/solana/transac
 import { removeController as removeControllerTransaction } from '../lib/solana/transactions/did/removeController';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { resolve } from '@identity.com/sol-did-client';
-import { didToDefaultDOASigner, headNonEmpty } from '../lib/util';
+import { didToDefaultDOASigner } from '../lib/util';
+import { CRYPTID_PROGRAM_ID } from '../lib/constants';
+import { deriveDefaultCryptidAccount } from '../lib/solana/util';
 import { NonEmptyArray } from '../types/lang';
 
 export abstract class AbstractCryptid implements Cryptid {
@@ -36,7 +38,11 @@ export abstract class AbstractCryptid implements Cryptid {
     return didToDefaultDOASigner(this.did);
   }
 
-  abstract sign(transaction: Transaction): Promise<NonEmptyArray<Transaction>>;
+  abstract sign(transaction: Transaction): Promise<Transaction>;
+  abstract signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }>;
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
@@ -65,8 +71,7 @@ export abstract class AbstractCryptid implements Cryptid {
     const publicKey = await this.address();
     return {
       publicKey,
-      sign: (transaction: Transaction) =>
-        this.sign(transaction).then(headNonEmpty),
+      sign: (transaction: Transaction) => this.sign(transaction),
     };
   }
 
@@ -181,5 +186,19 @@ export abstract class AbstractCryptid implements Cryptid {
   // a transaction with controller chains. Each controller layer adds an additional key here
   async additionalKeys(): Promise<PublicKey[]> {
     return [];
+  }
+
+  async listPendingTx(): Promise<PublicKey[]> {
+    const address = await deriveDefaultCryptidAccount(this.did);
+
+    return this.options.connection
+      .getProgramAccounts(CRYPTID_PROGRAM_ID, {
+        filters: [
+          // TODO: Confirm these filters are correct
+          { memcmp: { offset: 0, bytes: '3' } },
+          { memcmp: { offset: 1, bytes: address.toBase58() } },
+        ],
+      })
+      .then((accounts) => accounts.map((account) => account.pubkey));
   }
 }

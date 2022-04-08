@@ -29,13 +29,12 @@ impl Instruction for CreateCryptid {
         let signer_seeds = CryptidSignerSeeder {
             cryptid_account: accounts.cryptid_account.info().key,
         };
-        let signer = PDAGenerator::new(program_id, &signer_seeds)
-            .create_address_with_nonce(data.signer_nonce)?;
+        let signer = signer_seeds.create_address(program_id, data.signer_nonce)?;
 
         if signer == accounts.funder.key {
             accounts
                 .cryptid_account
-                .set_funder_seeds(Box::new(signer_seeds));
+                .set_funder_seeds(PDASeedSet::new(signer_seeds, data.signer_nonce));
         }
 
         if let Some(nonce) = data.account_nonce {
@@ -43,9 +42,14 @@ impl Instruction for CreateCryptid {
                 did_program: accounts.did_program.key,
                 did: accounts.did.key,
             });
-            PDAGenerator::new(program_id, &seeder)
-                .verify_address_with_nonce(accounts.cryptid_account.info().key, nonce)?;
-            accounts.cryptid_account.set_account_seeds(seeder);
+            seeder.verify_address_with_nonce(
+                program_id,
+                accounts.cryptid_account.info().key,
+                nonce,
+            )?;
+            accounts
+                .cryptid_account
+                .set_account_seeds(PDASeedSet::new(seeder, nonce));
         }
 
         verify_keys(
@@ -67,13 +71,10 @@ impl Instruction for CreateCryptid {
         program_id: Pubkey,
         arg: CreateCryptidBuild,
     ) -> GeneratorResult<(Vec<SolanaAccountMeta>, Self::Data)> {
-        let (_cryptid_signer, signer_nonce) = PDAGenerator::new(
-            program_id,
-            CryptidSignerSeeder {
-                cryptid_account: arg.cryptid_account,
-            },
-        )
-        .find_address();
+        let (_cryptid_signer, signer_nonce) = CryptidSignerSeeder {
+            cryptid_account: arg.cryptid_account,
+        }
+        .find_address(program_id);
         let mut accounts = vec![
             SolanaAccountMeta::new(arg.funder, true),
             SolanaAccountMeta::new(arg.cryptid_account, !arg.cryptid_account_is_zeroed),

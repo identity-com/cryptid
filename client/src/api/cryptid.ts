@@ -6,6 +6,7 @@ import {
 } from '@solana/web3.js';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
 import { Signer } from '../types/crypto';
+import { NonEmptyArray } from '../types/lang';
 
 export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {
@@ -32,10 +33,26 @@ export interface Cryptid {
 
   /**
    * Signs a transaction from the DID. Returns a meta-transaction
-   * that wraps the transaction into a call to the DOA program
+   * that wraps the transaction into a call to the cryptid program
+   * @param transaction The transaction to sign
+   * @throws RangeError if the transaction size is too large
+   */
+  sign(transaction: Transaction): Promise<Transaction>;
+
+  /**
+   * List pending large transactions that were previously not executed
+   */
+  listPendingTx(): Promise<PublicKey[]>;
+
+  /**
+   * Signs a set of setup transactions followed by an execute transaction
+   * that should be sent to the dapp
    * @param transaction The transaction to sign
    */
-  sign(transaction: Transaction): Promise<Transaction[]>;
+  signLarge(transaction: Transaction): Promise<{
+    setupTransactions: NonEmptyArray<Transaction>;
+    executeTransaction: Transaction;
+  }>;
 
   /**
    * Adds a key to your the Crytid account

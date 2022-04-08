@@ -1,7 +1,13 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
-import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+} from '@solana/web3.js';
 import {
   airdrop,
   Balances,
@@ -12,11 +18,11 @@ import {
 import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = 20_000;
-
-const FEE = 5_000;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -29,9 +35,13 @@ describe('transfers', function () {
 
   let cryptid: Cryptid;
   let balances: Balances;
+  let feePerSignature: number;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
+    feePerSignature = (await connection.getRecentBlockhash()).feeCalculator
+      .lamportsPerSignature;
+
     key = Keypair.generate();
     did = publicKeyToDid(key.publicKey, 'localnet');
     recipient = Keypair.generate().publicKey;
@@ -65,14 +75,14 @@ describe('transfers', function () {
         lamportsToTransfer
       );
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -97,14 +107,14 @@ describe('transfers', function () {
         instruction2,
       ]);
 
-      const [cryptidTx] = await cryptid.sign(tx);
+      const cryptidTx = await cryptid.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-(lamportsToTransfer * 2)); // the amount transferred
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // fees only
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // fees only
 
       // skip for now as it is consistently returning 2,439 lamports too few
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
@@ -138,13 +148,57 @@ describe('transfers', function () {
 
       await balances.recordBefore(); // reset balances to exclude rent costs for adding device2
 
-      const [cryptidTx] = await cryptidForDevice2.sign(tx);
+      const cryptidTx = await cryptidForDevice2.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
 
       // assert balances are correct
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
+    });
+
+    it('should fail on a large Transaction (that normally succeed)', async () => {
+      const cryptid = build(did, key, { connection });
+
+      const sender = Keypair.generate();
+
+      const tx_signed = await createTransferTransaction(
+        connection,
+        sender.publicKey,
+        recipient,
+        lamportsToTransfer,
+        60
+      );
+      tx_signed.partialSign(sender);
+      // make sure that signature does not increase the serialization size.
+      expect(() => tx_signed.serialize()).to.not.throw();
+
+      const tx = await createTransferTransaction(
+        connection,
+        cryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        20 // this is pretty small compared to 60.
+      );
+
+      const tx_over = await createTransferTransaction(
+        connection,
+        cryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        61
+      );
+
+      // make sure the original transaction is not too big
+      expect(() => tx.serialize({ verifySignatures: false })).to.not.throw();
+      expect(() => tx_over.serialize({ verifySignatures: false })).to.throw(
+        'Transaction too large'
+      );
+
+      // expect the transaction
+      await expect(cryptid.sign(tx)).to.be.rejectedWith(
+        /Transaction too large/
+      );
     });
   });
   context('a controller cryptid', () => {
@@ -169,7 +223,7 @@ describe('transfers', function () {
       controllerCryptid = cryptid.as(controlledDID);
 
       // airdrop funds to the controlled DID cryptid account
-      await airdrop(connection, controlledCryptidAddress);
+      await airdrop(connection, controlledCryptidAddress, 5 * LAMPORTS_PER_SOL);
       // airdrop funds to the controlled DID signer key (for fees)
       await airdrop(connection, controlledDIDKey.publicKey, 10_000);
 
@@ -193,7 +247,7 @@ describe('transfers', function () {
         lamportsToTransfer
       );
 
-      const [cryptidTx] = await controllerCryptid.sign(tx); // sign with the controller
+      const cryptidTx = await controllerCryptid.sign(tx); // sign with the controller
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 
       await balances.recordAfter();
@@ -203,7 +257,39 @@ describe('transfers', function () {
         -lamportsToTransfer
       ); // the amount transferred
       expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
-      expect(balances.for(key.publicKey)).to.equal(-FEE); // the controller's signer key pays the fee
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // the controller's signer key pays the fee
+    });
+
+    it('should sign a large transaction for a controlled DID with a controller key', async () => {
+      // create a transfer from the controlled DID
+      const nrInstructions = 18;
+
+      const tx = await createTransferTransaction(
+        connection,
+        controlledCryptidAddress,
+        recipient,
+        lamportsToTransfer,
+        nrInstructions
+      );
+
+      const { setupTransactions, executeTransaction } =
+        await controllerCryptid.signLarge(tx); // sign with the controller
+
+      for (const tx of setupTransactions) {
+        await sendAndConfirmCryptidTransaction(connection, tx);
+      }
+
+      await sendAndConfirmCryptidTransaction(connection, executeTransaction);
+
+      await balances.recordAfter();
+
+      expect(balances.for(controlledCryptidAddress)).to.equal(
+        -lamportsToTransfer * nrInstructions
+      ); // the amount transferred
+      expect(balances.for(cryptidAddress)).to.equal(0); // no change to the controller balance
+      expect(balances.for(key.publicKey)).to.equal(
+        -feePerSignature * (setupTransactions.length + 1)
+      ); // the controller's signer key pays the fee
     });
   });
 });

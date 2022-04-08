@@ -2,11 +2,12 @@
 
 use std::iter::once;
 
+use crate::error::CryptidSignerError;
 use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 
 use crate::state::CryptidAccount;
-use crate::GenerativeCryptidSeeder;
+use crate::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 
 /// A cryptid account address, supporting generative (derived from inputs) or on-chain (data stored on-chain)
 #[derive(Debug)]
@@ -32,8 +33,58 @@ impl CryptidAccountAddress {
         did_program: Pubkey,
         did: Pubkey,
     ) -> GeneratorResult<u8> {
-        PDAGenerator::new(program_id, GenerativeCryptidSeeder { did_program, did })
-            .verify_address_find_nonce(account)
+        GenerativeCryptidSeeder { did_program, did }.verify_address_find_nonce(program_id, account)
+    }
+
+    /// Verifies that the cryptid account has the given did and did_program
+    pub fn verify_cryptid_account(
+        &self,
+        program_id: &Pubkey,
+        did_program: &Pubkey,
+        did: &Pubkey,
+    ) -> GeneratorResult<()> {
+        match self {
+            Self::OnChain(account) => {
+                if &account.did_program != did_program {
+                    Err(CryptidSignerError::WrongDIDProgram {
+                        expected: *did_program,
+                        received: account.did_program,
+                    }
+                    .into())
+                } else if &account.did != did {
+                    Err(CryptidSignerError::WrongDID {
+                        expected: *did,
+                        received: account.did,
+                    }
+                    .into())
+                } else {
+                    Ok(())
+                }
+            }
+            Self::Generative(info) => {
+                Self::verify_seeds(info.key, *program_id, *did_program, *did)?;
+                Ok(())
+            }
+        }
+    }
+
+    /// Gets the seed set for the cryptid signer
+    pub fn get_signer(&self, program_id: &Pubkey) -> PDASeedSet<'_> {
+        match self {
+            CryptidAccountAddress::OnChain(account) => PDASeedSet::new(
+                CryptidSignerSeeder {
+                    cryptid_account: account.info.key,
+                },
+                account.signer_nonce,
+            ),
+            CryptidAccountAddress::Generative(account) => {
+                let seeder = CryptidSignerSeeder {
+                    cryptid_account: account.key,
+                };
+                let nonce = seeder.find_address(*program_id).1;
+                PDASeedSet::new(seeder, nonce)
+            }
+        }
     }
 }
 impl AccountArgument for CryptidAccountAddress {

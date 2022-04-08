@@ -1,12 +1,31 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { add_struct_to_schema, Assignable } from '../solanaBorsh';
 
-export class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
+export default class TransactionAccountMeta extends Assignable<TransactionAccountMeta> {
   key!: number;
   meta!: number;
 
   constructor(props: { key: number; meta: number }) {
     super(props);
+  }
+
+  isSigner(): boolean {
+    return (this.meta & IS_SIGNER) > 0;
+  }
+
+  isWritable(): boolean {
+    return (this.meta & IS_WRITABLE) > 0;
+  }
+
+  static fromIndexAndMeta(
+    key: number,
+    isSigner: boolean,
+    isWriteable: boolean
+  ): TransactionAccountMeta {
+    return new TransactionAccountMeta({
+      key,
+      meta: (isSigner ? IS_SIGNER : 0) | (isWriteable ? IS_WRITABLE : 0),
+    });
   }
 
   static fromAccountMeta(

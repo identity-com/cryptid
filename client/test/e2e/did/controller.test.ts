@@ -11,8 +11,6 @@ import {
 
 const { expect } = chai;
 
-const TRANSACTION_FEE = 5000;
-
 const controller =
   'did:sol:localnet:' + Keypair.generate().publicKey.toBase58();
 
@@ -26,9 +24,11 @@ describe('DID Controller operations', function () {
   let did: string;
   let doaSigner: PublicKey;
   let cryptid: Cryptid;
+  let feePerSignature: number;
 
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
+    feePerSignature = (await connection.getRecentBlockhash()).feeCalculator.lamportsPerSignature;
   });
 
   beforeEach(async () => {
@@ -101,7 +101,7 @@ describe('DID Controller operations', function () {
         // cryptid account paid nothing
         expect(balances.for(doaSigner)).to.equal(0);
         // signer paid fee
-        expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+        expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
       });
 
       it('should add a second controller', async () => {
@@ -140,12 +140,12 @@ describe('DID Controller operations', function () {
 
       const document = await cryptid.document();
       expectDocumentNotToIncludeController(document, controller);
-      expect(document.verificationMethod).to.have.lengthOf(1) // default key
+      expect(document.verificationMethod).to.have.lengthOf(1); // default key
 
       // cryptid account paid nothing
       expect(balances.for(doaSigner)).to.equal(0);
       // signer paid fee
-      expect(balances.for(key.publicKey)).to.equal(-TRANSACTION_FEE);
+      expect(balances.for(key.publicKey)).to.equal(-feePerSignature);
     });
 
     it('should keep any other added content', async () => {
@@ -158,18 +158,17 @@ describe('DID Controller operations', function () {
       expectDocumentToIncludeKey(document, key2);
 
       // TODO this is a bug in sol-did. The default key is being duplicated
-      expect(document.verificationMethod).to.have.lengthOf(2) // default and key2
+      expect(document.verificationMethod).to.have.lengthOf(2); // default and key2
     });
   });
 
   context('removeController with existing key', () => {
-    const key_A = Keypair.generate().publicKey
-    const controller_A =
-      'did:sol:localnet:' + key_A.toBase58()
+    const key_A = Keypair.generate().publicKey;
+    const controller_A = 'did:sol:localnet:' + key_A.toBase58();
 
     beforeEach(async () => {
       // add a controller to upgrade (anchor) the did
-      await cryptid.addKey(key_A, 'keyA')
+      await cryptid.addKey(key_A, 'keyA');
       await cryptid.addController(controller_A);
     });
 
@@ -179,7 +178,7 @@ describe('DID Controller operations', function () {
       const document = await cryptid.document();
 
       expectDocumentNotToIncludeController(document, controller_A);
-      expect(document.verificationMethod).to.have.lengthOf(2) // default key + keyA
+      expect(document.verificationMethod).to.have.lengthOf(2); // default key + keyA
 
       // add controller again
       await cryptid.addController(controller_A);

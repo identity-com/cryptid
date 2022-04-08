@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import * as Util from '../../../../../src/lib/solana/transactions/util';
-import { Connection, Keypair, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import {
   pubkey,
   dummyDIDAccountInfo,
@@ -139,6 +139,85 @@ describe('transactions/util', () => {
       return expect(shouldFail).to.be.rejectedWith(
         /registered to another program/
       );
+    });
+  });
+
+  context('AccountFilter and InstructionFilters', () => {
+    it('should filter out public keys and accounts in a unique way', () => {
+
+      const sender = Keypair.generate();
+      const receipient1 = Keypair.generate();
+      const receipient2 = Keypair.generate();
+
+      const instruction1 = SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: receipient1.publicKey,
+        lamports: 0,
+      });
+      const instruction2 = SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: receipient2.publicKey,
+        lamports: 0,
+      });
+
+      const uniqAccounts = Util.collectAccounts([instruction1, instruction2])
+      expect(uniqAccounts).to.deep.equal([instruction1.programId, sender.publicKey, receipient1.publicKey, receipient2.publicKey])
+    });
+
+    it('should return the right index on non-reference PublicKeys', () => {
+
+      const key1 = Keypair.generate();
+      const key2 = Keypair.generate();
+      const key3 = Keypair.generate();
+
+      expect(Util.findAccountIndex(
+        new PublicKey(key1.publicKey.toBase58()),
+        [key1.publicKey, key2.publicKey, key3.publicKey]
+        )).to.equal(0)
+      expect(Util.findAccountIndex(
+        new PublicKey(key3.publicKey.toBuffer()),
+        [key1.publicKey, key2.publicKey, key3.publicKey]
+      )).to.equal(2)
+      expect(Util.findAccountIndex(
+        new PublicKey(key2.publicKey.toBytes()),
+        [key1.publicKey, key2.publicKey, key2.publicKey]
+      )).to.equal(1)
+    });
+
+    it('should filter and reduce AccountMeta correctly', () => {
+      const key_sign1 = Keypair.generate();
+      const key_sign2 = Keypair.generate();
+      const key3 = Keypair.generate();
+
+      const instruction1 = SystemProgram.transfer({
+        fromPubkey: key_sign1.publicKey,
+        toPubkey: key_sign2.publicKey,
+        lamports: 0,
+      });
+      const instruction2 = SystemProgram.transfer({
+        fromPubkey: key_sign2.publicKey,
+        toPubkey: key3.publicKey,
+        lamports: 0,
+      });
+
+      const uniqAccounts = Util.collectAccountMetas([instruction1, instruction2])
+      expect(uniqAccounts).to.deep.equal([{
+        pubkey: instruction1.programId,
+        isSigner: false,
+        isWritable: false,
+      }, {
+        pubkey: key_sign1.publicKey,
+        isSigner: true,
+        isWritable: true,
+      }, {
+        pubkey: key_sign2.publicKey,
+        isSigner: true,
+        isWritable: true,
+      }, {
+        pubkey: key3.publicKey,
+        isSigner: false,
+        isWritable: true,
+      }]);
     });
   });
 });

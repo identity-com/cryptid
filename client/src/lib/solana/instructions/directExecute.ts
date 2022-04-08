@@ -9,24 +9,23 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
-import { deriveDefaultDOAFromKey, deriveDOASigner } from '../util';
+import { deriveDefaultCryptidAccountFromKey, deriveCryptidAccountSigner } from '../util';
 import { CryptidInstruction } from './instruction';
 import { CRYPTID_PROGRAM_ID, SOL_DID_PROGRAM_ID } from '../../constants';
 import { find, propEq } from 'ramda';
-import { InstructionData } from '../model/InstructionData';
+import InstructionData from '../model/InstructionData';
 
 export const create = async (
   unsignedTransaction: Transaction,
   didPDAKey: PublicKey,
   signers: [Signer, AccountMeta[]][],
-  doa?: PublicKey,
+  cryptidAccount?: PublicKey,
   debug = false
 ): Promise<TransactionInstruction[]> => {
-  const cryptidAccount: PublicKey =
-    doa || (await deriveDefaultDOAFromKey(didPDAKey));
+  const defCryptidAccount = cryptidAccount || (await deriveDefaultCryptidAccountFromKey(didPDAKey));
 
-  const cryptidSignerKey: PublicKey = await deriveDOASigner(
-    cryptidAccount
+  const cryptidSignerKey: PublicKey = await deriveCryptidAccountSigner(
+    defCryptidAccount
   ).then((signer) => signer[0]);
 
   if (signers.length < 1) {
@@ -41,7 +40,7 @@ export const create = async (
           instruction,
           didPDAKey,
           signers,
-          cryptidAccount,
+          defCryptidAccount,
           cryptidSignerKey,
           debug
         )
@@ -202,24 +201,24 @@ function convertInstruction(
 const addMetaUnique = (
   array: AccountMeta[],
   add: AccountMeta,
-  doa_signer_key: PublicKey
+  cryptidSignerKey: PublicKey
 ) => {
   const found: AccountMeta | undefined = find<AccountMeta>(
     propEq('pubkey', add.pubkey)
   )(array);
   if (found) {
     // Instruction account already present
-    // Make signer if new is signer and not the doa signer
+    // Make signer if new is signer and not the CryptidAccount signer
     found.isSigner =
-      found.isSigner || (add.isSigner && !add.pubkey.equals(doa_signer_key));
+      found.isSigner || (add.isSigner && !add.pubkey.equals(cryptidSignerKey));
     // Make writable if new is writable
     found.isWritable = found.isWritable || add.isWritable;
   } else {
     // Instruction account not present, add it
     array.push({
       ...add,
-      // Don't make signer if is doa signer
-      isSigner: add.isSigner && !add.pubkey.equals(doa_signer_key),
+      // Don't make signer if is Cryptid signer
+      isSigner: add.isSigner && !add.pubkey.equals(cryptidSignerKey),
     });
   }
 };
