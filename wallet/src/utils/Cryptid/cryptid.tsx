@@ -115,10 +115,16 @@ export class CryptidAccount {
   }
 
   signTransaction = (transaction: Transaction): Promise<Transaction> =>
-    this.cryptid.sign(transaction)
+    this.cryptid.sign(transaction);
 
   signLargeTransaction = (transaction: Transaction): Promise<{ setupTransactions: Transaction[]; executeTransaction: Transaction }> =>
-    this.cryptid.signLarge(transaction)
+    this.cryptid.signLarge(transaction);
+
+  cancelLargeTransaction = (transactionAccount: PublicKey): Promise<TransactionSignature> =>
+    this.cryptid.cancelLarge(transactionAccount);
+
+  listPendingTx = (): Promise<PublicKey[]> =>
+    this.cryptid.listPendingTx();
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()

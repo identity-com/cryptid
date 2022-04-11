@@ -26,7 +26,7 @@ const TransactionView: React.FC<{
           }
 
           <Typography>
-            Transaction {(meta.grouped && meta.index) ? (`${meta.group}.${meta.index}`) : index} {meta.failed}
+            Transaction {(meta.grouped && meta.index) ? (`${meta.group}.${meta.index}`) : (meta.group ?? index)} {meta.failed}
           </Typography>
         </AccordionSummary>
         <AccordionDetails>

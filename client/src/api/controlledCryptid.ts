@@ -1,4 +1,4 @@
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import { Cryptid, CryptidOptions } from './cryptid';
 import { directExecute } from '../lib/solana/transactions/directExecute';
 import { AbstractCryptid } from './abstractCryptid';
@@ -6,6 +6,7 @@ import { didToPDA } from '../lib/solana/util';
 import { Signer } from '../types/crypto';
 import { NonEmptyArray } from '../types/lang';
 import { largeExecute } from '../lib/solana/transactions/largeExecute';
+import { largeCancel } from '../lib/solana/transactions/largeCancel';
 
 export class ControlledCryptid extends AbstractCryptid {
   /**
@@ -60,6 +61,22 @@ export class ControlledCryptid extends AbstractCryptid {
     return await largeExecute(transaction, this.did, this.signer.publicKey, [
       [this.signer, additionalSigners],
     ]);
+  }
+
+  async cancelLarge(
+    transactionAccount: PublicKey
+  ): Promise<TransactionSignature> {
+    const additionalSigners = await this.additionalKeys();
+
+    const transaction = await largeCancel(
+      this.options.connection,
+      transactionAccount,
+      this.did,
+      this.signer.publicKey,
+      [[this.signer, additionalSigners]],
+    );
+
+    return this.send(transaction);
   }
 
   updateSigner(signer: Signer): void {

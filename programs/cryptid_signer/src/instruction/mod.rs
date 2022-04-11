@@ -6,6 +6,9 @@ pub mod create_cryptid;
 /// Directly executes a transaction
 #[path = "./005_direct_execute.rs"]
 pub mod direct_execute;
+/// Cancels a transaction
+#[path = "./004_cancel_transaction.rs"]
+pub mod cancel_transaction;
 /// Executes a transaction
 #[path = "./003_execute_transaction.rs"]
 pub mod execute_transaction;
@@ -31,6 +34,7 @@ use create_cryptid::CreateCryptid;
 use direct_execute::DirectExecute;
 use execute_transaction::ExecuteTransaction;
 use expand_transaction::ExpandTransaction;
+use cancel_transaction::CancelTransaction;
 use propose_transaction::ProposeTransaction;
 use test_instruction::TestInstruction;
 
@@ -53,6 +57,9 @@ pub enum CryptidInstruction {
     /// Executes a transaction
     #[instruction_list(instruction = ExecuteTransaction, discriminant = 3)]
     ExecuteTransaction,
+    /// Cancels a transaction
+    #[instruction_list(instruction = CancelTransaction, discriminant = 4)]
+    CancelTransaction,
     /// Executes a transaction directly if all required keys sign
     #[instruction_list(instruction = DirectExecute, discriminant = 5)]
     DirectExecute,
