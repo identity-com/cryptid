@@ -73,7 +73,7 @@ export class ControlledCryptid extends AbstractCryptid {
       transactionAccount,
       this.did,
       this.signer.publicKey,
-      [[this.signer, additionalSigners]],
+      [[this.signer, additionalSigners]]
     );
 
     return this.send(transaction);

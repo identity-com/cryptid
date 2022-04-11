@@ -130,7 +130,6 @@ export default function PopupPage({opener}: { opener: Window }) {
         setRequests((requests) => [...requests, e.data]);
       }
     }
-
     window.addEventListener('message', messageHandler);
     return () => window.removeEventListener('message', messageHandler);
   }, [origin, postMessage]);
@@ -260,35 +259,6 @@ export default function PopupPage({opener}: { opener: Window }) {
     throw new Error('No selected cryptid account');
   }
 
-  async function convertToLarge(transactionBuffer: Buffer | Uint8Array) {
-    if (!selectedCryptidAccount) {
-      throw new Error('sendTransaction: no selected cryptid account');
-    }
-
-    const transaction = Transaction.from(transactionBuffer);
-
-    const {setupTransactions, executeTransaction} = await selectedCryptidAccount.signLargeTransaction(transaction);
-    const transactions = [
-      ...setupTransactions.map(tx => bs58.encode(tx.serialize({verifySignatures: false}))),
-      bs58.encode(executeTransaction.serialize({verifySignatures: false}))
-    ];
-
-    setRequests([
-      {
-        // TODO ?
-        id: request?.id | 1,
-        method: 'proposeTransactions',
-        params: {
-          transactions: [{
-            transactions,
-            propose: true
-          }],
-          singleTx: true
-        }
-      }
-    ]);
-  }
-
   async function onExpand() {
     if (!selectedCryptidAccount) {
       throw new Error('No selected cryptid account');
@@ -387,14 +357,13 @@ export default function PopupPage({opener}: { opener: Window }) {
   }
 
   async function sendTransaction(transactionBuffer: Buffer | Uint8Array) {
+    const transaction = Transaction.from(transactionBuffer);
     if (!request) {
       throw new Error('sendTransaction: no request');
     }
     if (!selectedCryptidAccount) {
       throw new Error('sendTransaction: no selected cryptid account');
     }
-
-    const transaction = Transaction.from(transactionBuffer);
 
     try {
       postMessage({
@@ -452,6 +421,7 @@ export default function PopupPage({opener}: { opener: Window }) {
       }
     }
 
+    // No failures
     if (failed.filter(f => f).length === 0) {
       postMessage({
         result: {
@@ -680,9 +650,7 @@ function ApproveConnectionForm({origin, onApprove, autoApprove}: {
         </CardContent>
         <CardActions className='justify-end'>
           <CryptidButton label='Deny' Icon={XCircleIcon} onClick={window.close}/>
-          <CryptidButton label='Allow' Icon={CheckCircleIcon}
-                         disabled={!selectedCryptidAccount || !selectedCryptidAccount.activeSigningKey}
-                         onClick={() => onApprove(autoApprove)}/>
+          <CryptidButton label='Allow' Icon={CheckCircleIcon} disabled={!selectedCryptidAccount || !selectedCryptidAccount.activeSigningKey} onClick={() => onApprove(autoApprove)}/>
         </CardActions>
       </Card>
     </>
@@ -743,9 +711,9 @@ function ApproveSignatureForm({
         <Typography variant="h6" gutterBottom>
           {`${origin} wants to sign a message: `}
         </Typography>
-        <Divider style={{margin: 20}}/>
-        <Typography style={{wordBreak: 'break-all'}}>{bs58.encode(payloads[0])}</Typography>
-        <Divider style={{margin: 20}}/>
+        <Divider style={{ margin: 20 }} />
+        <Typography style={{ wordBreak: 'break-all' }}>{bs58.encode(payloads[0])}</Typography>
+        <Divider style={{ margin: 20 }} />
       </CardContent>;
     } else {
       return <SignFormContent

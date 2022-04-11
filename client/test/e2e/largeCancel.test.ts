@@ -50,7 +50,7 @@ describe('large cancel', function () {
   beforeEach(async () => {
     balances = await new Balances(connection).register(
       cryptidAddress,
-      key.publicKey,
+      key.publicKey
     );
   });
 

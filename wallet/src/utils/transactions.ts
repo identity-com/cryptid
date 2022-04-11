@@ -15,7 +15,6 @@ import { decodeTokenInstruction } from '@project-serum/token';
 import { PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './tokens/instructions';
 import { StrictWalletInterface } from "./wallet";
-import {CRYPTID_PROGRAM_ID} from "@identity.com/cryptid";
 
 type DecodedInstructionView = {
   programId: PublicKey,
@@ -165,15 +164,6 @@ const toInstruction = async (
         accountKeys,
         decodedInstruction,
       );
-    } else if (programId.equals(CRYPTID_PROGRAM_ID)) {
-      return {
-        type: 'Propose',
-        accountMetas: instruction.accounts.map((index) => ({
-          publicKey: accountKeys[index],
-          isWritable: transactionMessage.isAccountWritable(index),
-        })),
-        programId,
-      };
     } else {
       return {
         type: 'Unknown',

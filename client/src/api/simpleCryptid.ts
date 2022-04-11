@@ -6,7 +6,7 @@ import { ControlledCryptid } from './controlledCryptid';
 import { AbstractCryptid } from './abstractCryptid';
 import { NonEmptyArray } from '../types/lang';
 import { largeExecute } from '../lib/solana/transactions/largeExecute';
-import { largeCancel } from "../lib/solana/transactions/largeCancel";
+import { largeCancel } from '../lib/solana/transactions/largeCancel';
 
 export class SimpleCryptid extends AbstractCryptid {
   constructor(did: string, private _signer: Signer, options: CryptidOptions) {
@@ -49,7 +49,7 @@ export class SimpleCryptid extends AbstractCryptid {
       transactionAccount,
       this.did,
       this.signer.publicKey,
-      [[this.signer, []]],
+      [[this.signer, []]]
     );
 
     return this.send(transaction);

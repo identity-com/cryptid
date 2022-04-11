@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import bs58 from 'bs58';
-import {Typography} from '@material-ui/core';
+import { Typography } from '@material-ui/core';
 import CardContent from '@material-ui/core/CardContent';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import {decodeMessage, getProgram} from '../utils/transactions';
-import {useConnection, useSolanaExplorerUrlSuffix} from '../utils/connection';
+import { decodeMessage, getProgram } from '../utils/transactions';
+import { useConnection, useSolanaExplorerUrlSuffix } from '../utils/connection';
 import NewOrder from './instructions/views/NewOrder';
 import UnknownInstruction from './instructions/views/UnknownInstruction';
 import StakeInstruction from '../components/instructions/views/StakeInstruction';
@@ -53,7 +53,7 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
         ) {
           // It is always considered safe to cancel orders, match orders
         } else if (instruction.type === 'systemCreate') {
-          let {newAccountPubkey} = instruction.data;
+          let { newAccountPubkey } = instruction.data;
           if (!newAccountPubkey) {
             unsafe = true;
           } else {
@@ -61,7 +61,7 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
           }
         } else if (['newOrder', 'newOrderV3'].includes(instruction.type)) {
           // New order instructions are safe if the owner is this wallet
-          let {openOrdersPubkey, ownerPubkey} = instruction.data;
+          let { openOrdersPubkey, ownerPubkey } = instruction.data;
           if (ownerPubkey && owner.equals(ownerPubkey)) {
             accountStates[openOrdersPubkey.toBase58()] = states.OWNED;
           } else {
@@ -69,7 +69,7 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
           }
         } else if (instruction.type === 'initializeAccount') {
           // New SPL token accounts are only considered safe if they are owned by this wallet and newly created
-          let {ownerPubkey, accountPubkey} = instruction.data;
+          let { ownerPubkey, accountPubkey } = instruction.data;
           if (
             owner &&
             ownerPubkey &&
@@ -83,13 +83,13 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
           }
         } else if (instruction.type === 'settleFunds') {
           // Settling funds is only safe if the destinations are owned
-          let {basePubkey, quotePubkey} = instruction.data;
+          let { basePubkey, quotePubkey } = instruction.data;
           if (!isOwned(basePubkey) || !isOwned(quotePubkey)) {
             unsafe = true;
           }
         } else if (instruction.type === 'closeAccount') {
           // Closing is only safe if the destination is owned
-          let {sourcePubkey, destinationPubkey} = instruction.data;
+          let { sourcePubkey, destinationPubkey } = instruction.data;
           if (isOwned(destinationPubkey)) {
             accountStates[sourcePubkey.toBase58()] =
               states.CLOSED_TO_OWNED_DESTINATION;
@@ -117,19 +117,19 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
 }
 
 export default function SignTransactionFormContent({
-                                                     origin,
-                                                     messages,
-                                                     messageMeta,
-                                                     onApprove,
-                                                     autoApprove,
-                                                     buttonRef,
-                                                     isLargeTransaction,
-                                                     numFailed
-                                                   }) {
+  origin,
+  messages,
+  messageMeta,
+  onApprove,
+  autoApprove,
+  buttonRef,
+  isLargeTransaction,
+  numFailed
+}) {
 
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
-  const {selectedCryptidAccount} = useCryptid();
+  const { selectedCryptidAccount } = useCryptid();
   const [publicKeys] = useCryptidAccountPublicKeys(selectedCryptidAccount);
 
   const [parsing, setParsing] = useState(true);
@@ -181,7 +181,7 @@ export default function SignTransactionFormContent({
       // approvals for unknown reasons.
       let currentButtonRef = buttonRef.current;
       if (currentButtonRef) {
-        currentButtonRef.scrollIntoView({behavior: 'smooth'});
+        currentButtonRef.scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => currentButtonRef.focus(), 50);
       }
     }
@@ -190,10 +190,10 @@ export default function SignTransactionFormContent({
 
   const onOpenAddress = (address) => {
     address &&
-    window.open(
-      'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
-      '_blank',
-    );
+      window.open(
+        'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
+        '_blank',
+      );
   };
 
   const getContent = (instruction, props) => {
@@ -272,16 +272,16 @@ export default function SignTransactionFormContent({
 
   const txListItem = (instructions, txIdx) => {
     const ixs = instructions.map((instruction, i) => (
-      getContent(instruction, {
-        index: i,
-        expanded: expandedInstruction === i,
-        setExpanded: (expand) => {
-          expand ?
-            setExpandedInstruction(i) : // expand this instruction
-            (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
-        },
-        program: getProgram(instruction)
-      })
+        getContent(instruction, {
+          index: i,
+          expanded: expandedInstruction === i,
+          setExpanded: (expand) => {
+            expand ?
+              setExpandedInstruction(i) : // expand this instruction
+              (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
+          },
+          program: getProgram(instruction)
+        })
     ));
 
     if (!isMultiTx) {
@@ -299,6 +299,7 @@ export default function SignTransactionFormContent({
       // </Box>
     );
   };
+
   return (
     <CardContent>
       {parsing ? (
@@ -310,20 +311,18 @@ export default function SignTransactionFormContent({
               marginBottom: 20,
             }}
           >
-            <CircularProgress style={{marginRight: 20}}/>
+            <CircularProgress style={{ marginRight: 20 }} />
             <Typography
               variant="subtitle1"
-              style={{fontWeight: 'bold'}}
+              style={{ fontWeight: 'bold' }}
               gutterBottom
             >
               Parsing transaction{isMultiTx > 0 ? 's' : ''}:
             </Typography>
           </div>
           {messages.map((message, idx) => (
-            <Typography key={idx} style={{wordBreak: 'break-all'}}>
-              HERE
-              JSON.stringify(message, null, 2);
-              {/*{bs58.encode(message)}*/}
+            <Typography key={idx} style={{ wordBreak: 'break-all' }}>
+              {bs58.encode(message)}
             </Typography>
           ))}
         </>
@@ -346,13 +345,13 @@ export default function SignTransactionFormContent({
             <>
               <Typography
                 variant="subtitle1"
-                style={{fontWeight: 'bold'}}
+                style={{ fontWeight: 'bold' }}
                 gutterBottom
               >
                 Unknown transaction{isMultiTx > 0 ? 's' : ''}:
               </Typography>
               {messages.map((message) => (
-                <Typography style={{wordBreak: 'break-all'}}>
+                <Typography style={{ wordBreak: 'break-all' }}>
                   {bs58.encode(message)}
                 </Typography>
               ))}

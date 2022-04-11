@@ -54,7 +54,9 @@ export abstract class AbstractCryptid implements Cryptid {
    * @param transaction
    * @private
    */
-  protected async send(transaction: Transaction): Promise<TransactionSignature> {
+  protected async send(
+    transaction: Transaction
+  ): Promise<TransactionSignature> {
     const signature = await this.options.connection.sendRawTransaction(
       transaction.serialize()
     );
