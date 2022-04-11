@@ -95,7 +95,7 @@ const toInstruction = async (
   instruction,
   transactionMessage: Message,
   index: number,
-):Promise<DecodedInstructionView|undefined> => {
+): Promise<DecodedInstructionView | undefined> => {
   if (
     instruction?.data == null ||
     !instruction?.accounts ||
@@ -388,8 +388,7 @@ const handleStakeInstruction = (publicKey, instruction, accountKeys): DecodedIns
       const lockup = decoded.lockup;
       if (lockup && lockup.unixTimestamp === 0 && lockup.epoch === 0 && lockup.custodian.equals(PublicKey.default)) {
         decoded.lockup = 'Inactive';
-      }
-      else {
+      } else {
         decoded.lockup = `unixTimestamp: ${lockup.unixTimestamp}, custodian: ${lockup.epoch}, custodian: ${lockup.custodian.toBase58()}`;
       }
       // flatten authorized to allow address render
