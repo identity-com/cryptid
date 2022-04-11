@@ -28,7 +28,7 @@ export type SignerArg = Signer | [Signer, SignerExtra[]];
  * Creates a Direct_Execute transaction, that signs and sends a transaction from a DID
  */
 const ACCOUNT_SIZE = 10_000;
-// const TRANSACTION_SEED = 'transaction'; // TODO: Change!
+const TRANSACTION_SEED = 'transaction'; // TODO: Change!
 
 export const largeExecute = async (
   unsignedTransaction: Transaction,
@@ -40,7 +40,6 @@ export const largeExecute = async (
   setupTransactions: NonEmptyArray<Transaction>;
   executeTransaction: Transaction;
 }> => {
-  const TRANSACTION_SEED = new Date().getTime() + '';
   const signersNormalized = normalizeSigner(signers);
   const parsedDID = DecentralizedIdentifier.parse(did);
   const didPDAKey = await parsedDID.pdaSolanaPubkey();
