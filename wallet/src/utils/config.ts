@@ -15,6 +15,6 @@ export const pages = <const>[
   // 'Swap',
   // 'Connections',
   'Identity',
-  'Proposed',
+  'Pending',
 ]
 export type Page = typeof pages[number]
