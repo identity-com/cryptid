@@ -117,15 +117,15 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
 }
 
 export default function SignTransactionFormContent({
-  origin,
-  messages,
-  messageMeta,
-  onApprove,
-  autoApprove,
-  buttonRef,
-  isLargeTransaction,
-  numFailed
-}) {
+                                                     origin,
+                                                     messages,
+                                                     messageMeta,
+                                                     onApprove,
+                                                     autoApprove,
+                                                     buttonRef,
+                                                     isLargeTransaction,
+                                                     numFailed
+                                                  }) {
 
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
@@ -190,10 +190,10 @@ export default function SignTransactionFormContent({
 
   const onOpenAddress = (address) => {
     address &&
-      window.open(
-        'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
-        '_blank',
-      );
+    window.open(
+      'https://explorer.identity.com/address/' + address + explorerUrlSuffix,
+      '_blank',
+    );
   };
 
   const getContent = (instruction, props) => {
@@ -272,16 +272,16 @@ export default function SignTransactionFormContent({
 
   const txListItem = (instructions, txIdx) => {
     const ixs = instructions.map((instruction, i) => (
-        getContent(instruction, {
-          index: i,
-          expanded: expandedInstruction === i,
-          setExpanded: (expand) => {
-            expand ?
-              setExpandedInstruction(i) : // expand this instruction
-              (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
-          },
-          program: getProgram(instruction)
-        })
+      getContent(instruction, {
+        index: i,
+        expanded: expandedInstruction === i,
+        setExpanded: (expand) => {
+          expand ?
+            setExpandedInstruction(i) : // expand this instruction
+            (expandedInstruction === i && setExpandedInstruction(undefined))  // contract this isntruction if expanded
+        },
+        program: getProgram(instruction)
+      })
     ));
 
     if (!isMultiTx) {

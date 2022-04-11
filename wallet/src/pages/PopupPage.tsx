@@ -20,6 +20,7 @@ import {useConnection} from '../utils/connection';
 
 type ID = any;
 
+
 type RequestMessage = {
   id: ID,
 } & ({
@@ -74,8 +75,8 @@ export default function PopupPage({opener}: { opener: Window }) {
     }
     return origin;
   }, []);
-  const {selectedCryptidAccount} = useCryptid();
   const connection = useConnection();
+  const {selectedCryptidAccount} = useCryptid();
 
   const [connectedAccount, setConnectedAccount] = useState<PublicKey | null>(null);
   const hasConnectedAccount = useMemo(() => {
@@ -130,6 +131,7 @@ export default function PopupPage({opener}: { opener: Window }) {
         setRequests((requests) => [...requests, e.data]);
       }
     }
+
     window.addEventListener('message', messageHandler);
     return () => window.removeEventListener('message', messageHandler);
   }, [origin, postMessage]);
