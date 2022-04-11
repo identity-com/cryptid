@@ -90,8 +90,8 @@ describe('SimpleCryptid', () => {
 
       await controlledCryptid.sign(dummyTx);
 
-      // spyDirectExecute.restore();
-      // spyIsCorrectSize.restore();
+      spyDirectExecute.restore();
+      spyIsCorrectSize.restore();
       sandbox.assert.calledOnce(spyDirectExecute);
       sandbox.assert.calledOnce(spyIsCorrectSize);
     });

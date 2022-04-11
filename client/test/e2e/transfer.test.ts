@@ -263,7 +263,7 @@ describe('transfers', function () {
     it('should sign a large transaction for a controlled DID with a controller key', async () => {
       // create a transfer from the controlled DID
       // TODO: (IDCOM-1953) Increase the number of instructions
-      const nrInstructions = 14;
+      const nrInstructions = 12;
 
       const tx = await createTransferTransaction(
         connection,
