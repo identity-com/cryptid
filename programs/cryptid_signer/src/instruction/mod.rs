@@ -1,14 +1,14 @@
 //! Instructions for `cryptid_signer`
 
+/// Cancels a transaction
+#[path = "./004_cancel_transaction.rs"]
+pub mod cancel_transaction;
 /// Crates a cryptid account
 #[path = "./000_create_cryptid.rs"]
 pub mod create_cryptid;
 /// Directly executes a transaction
 #[path = "./005_direct_execute.rs"]
 pub mod direct_execute;
-/// Cancels a transaction
-#[path = "./004_cancel_transaction.rs"]
-pub mod cancel_transaction;
 /// Executes a transaction
 #[path = "./003_execute_transaction.rs"]
 pub mod execute_transaction;
@@ -30,11 +30,11 @@ use solana_generator::solana_program::program_error::ProgramError;
 use solana_generator::*;
 use std::iter::once;
 
+use cancel_transaction::CancelTransaction;
 use create_cryptid::CreateCryptid;
 use direct_execute::DirectExecute;
 use execute_transaction::ExecuteTransaction;
 use expand_transaction::ExpandTransaction;
-use cancel_transaction::CancelTransaction;
 use propose_transaction::ProposeTransaction;
 use test_instruction::TestInstruction;
 
