@@ -9,7 +9,7 @@ import {stubGetBlockhash} from "../../../../utils/lang";
 import {largeCancel} from "../../../../../src/lib/solana/transactions/largeCancel";
 import {publicKeyToDid} from "../../../../../src/lib/solana/util";
 import {didToDefaultDOASigner, normalizeSigner} from "../../../../../src/lib/util";
-import {CRYPTID_PROGRAM_ID} from "../../../../../dist";
+import {CRYPTID_PROGRAM_ID} from "../../../../../src";
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
