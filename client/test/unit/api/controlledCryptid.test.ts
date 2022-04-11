@@ -77,8 +77,7 @@ describe('SimpleCryptid', () => {
   });
 
   context('sign', () => {
-    // TODO: (william) fix
-    it.skip('should delegate to directExecute', async () => {
+    it('should delegate to directExecute', async () => {
       const dummyTx = new Transaction({ recentBlockhash: 'HCSZfZ2m2XXPQYXiev6ZLiRQJTFqTCm43LGsvztUUyFW' }).add(
         SystemProgram.transfer({
           lamports: 0,
@@ -86,13 +85,15 @@ describe('SimpleCryptid', () => {
           toPubkey: keypair.publicKey,
         })
       );
-      const expectDirectExecute = sandbox.mock(DirectExecute).expects('directExecute');
-      const expectCheckTxSize = sandbox.mock(Util).expects('isCorrectSize');
+      const spyDirectExecute = sandbox.spy(DirectExecute, 'directExecute');
+      const spyIsCorrectSize = sandbox.spy(Util, 'isCorrectSize');
 
       await controlledCryptid.sign(dummyTx);
 
-      expectDirectExecute.verify();
-      expectCheckTxSize.verify();
+      // spyDirectExecute.restore();
+      // spyIsCorrectSize.restore();
+      sandbox.assert.calledOnce(spyDirectExecute);
+      sandbox.assert.calledOnce(spyIsCorrectSize);
     });
   });
 
