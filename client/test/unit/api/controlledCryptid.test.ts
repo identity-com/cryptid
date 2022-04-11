@@ -6,13 +6,13 @@ import sinonChai from 'sinon-chai';
 
 import { Cryptid } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
-import { Connection, Keypair, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { did, makeKeypair } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import { CryptidOptions } from '../../../src/api/cryptid';
 import { didToPDA } from '../../../src/lib/solana/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
-import * as Util from "../../../src/lib/util";
+import * as Util from '../../../src/lib/util';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -79,10 +79,15 @@ describe('SimpleCryptid', () => {
   context('sign', () => {
     // TODO: (william) fix
     it.skip('should delegate to directExecute', async () => {
-      const dummyTx = new Transaction();
-
+      const dummyTx = new Transaction({ recentBlockhash: 'HCSZfZ2m2XXPQYXiev6ZLiRQJTFqTCm43LGsvztUUyFW' }).add(
+        SystemProgram.transfer({
+          lamports: 0,
+          fromPubkey: keypair.publicKey,
+          toPubkey: keypair.publicKey,
+        })
+      );
       const expectDirectExecute = sandbox.mock(DirectExecute).expects('directExecute');
-      const expectCheckTxSize = sandbox.mock(Util).expects('checkTxSize');
+      const expectCheckTxSize = sandbox.mock(Util).expects('isCorrectSize');
 
       await controlledCryptid.sign(dummyTx);
 

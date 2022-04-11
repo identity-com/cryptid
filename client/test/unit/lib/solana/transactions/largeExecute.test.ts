@@ -34,6 +34,7 @@ describe('transactions/largeExecute', () => {
   const makeSimpleTransaction = async (): Promise<Transaction> =>
     new Transaction({
       recentBlockhash: await recentBlockhash(),
+      feePayer: payer.publicKey,
     }).add(
       SystemProgram.transfer({
         fromPubkey: payer.publicKey,

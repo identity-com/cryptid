@@ -69,22 +69,7 @@ function encodeLength(bytes: Array<number>, len: number) {
 }
 
 const SIGNATURE_LENGTH = 64;
-/**
- * Checks if the transaction data and signatures would fit the packet size without signing
- */
-export const _isCorrectSize = (
-  transaction: Transaction,
-  numSigners: number
-): boolean => {
-  const signData = transaction.serializeMessage();
 
-  const signatureCount: number[] = [];
-  encodeLength(signatureCount, numSigners);
-  const transactionLength =
-    signatureCount.length + numSigners * SIGNATURE_LENGTH + signData.length;
-
-  return transactionLength < PACKET_DATA_SIZE;
-};
 /**
  * Checks if the transaction data and signatures would fit the packet size without signing
  */

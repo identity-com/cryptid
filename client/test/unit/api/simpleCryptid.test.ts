@@ -6,7 +6,13 @@ import sinonChai from 'sinon-chai';
 
 import { Cryptid, Signer } from '../../../src';
 import { SimpleCryptid } from '../../../src/api/simpleCryptid';
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from '@solana/web3.js';
 import { did, makeKeypair, makeService } from '../../utils/did';
 import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
@@ -49,12 +55,17 @@ describe('SimpleCryptid', () => {
   afterEach(sandbox.restore);
 
   context('sign', () => {
-    // TODO: (william) fix test
     it.skip('should delegate to directExecute', async () => {
-      const dummyTx = new Transaction();
+      const dummyTx = new Transaction({ recentBlockhash: 'HCSZfZ2m2XXPQYXiev6ZLiRQJTFqTCm43LGsvztUUyFW' }).add(
+        SystemProgram.transfer({
+          lamports: 0,
+          fromPubkey: keypair.publicKey,
+          toPubkey: keypair.publicKey,
+        })
+      );
 
       const expectDirectExecute = sandbox.mock(DirectExecute).expects('directExecute');
-      const expectCheckTxSize = sandbox.mock(Util).expects('checkTxSize');
+      const expectCheckTxSize = sandbox.mock(Util).expects('isCorrectSize');
 
       await cryptid.sign(dummyTx);
 
