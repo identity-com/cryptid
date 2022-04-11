@@ -87,7 +87,7 @@ describe('transfers', function () {
 
       const cryptid = build(did, key, { connection });
 
-      const nrInstructions = 23;
+      const nrInstructions = 20;
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
