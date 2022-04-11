@@ -35,6 +35,9 @@ jobs:
       - name: Build Dependencies
         run: yarn workspace @identity.com/cryptid build
 
+      - name: Build Wallet
+        run: yarn workspace @identity.com/cryptid build
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
