@@ -48,15 +48,6 @@ impl Instruction for CancelTransaction {
         }
         msg!("Verified cryptid account is owner of transaction");
 
-        if accounts.transaction_account.state != TransactionState::Ready {
-            return Err(CryptidSignerError::InvalidTransactionState {
-                expected: TransactionState::Ready,
-                found: accounts.transaction_account.state,
-            }
-            .into());
-        }
-        msg!("Verified transaction state");
-
         let signing_key_data = accounts.signing_key.to_key_data();
         if !accounts
             .transaction_account
@@ -78,8 +69,6 @@ impl Instruction for CancelTransaction {
         for account in accounts.execution_accounts.iter() {
             msg!("Account: {}", account.key);
         }
-
-        accounts.transaction_account.state = TransactionState::Executed;
 
         let mut transaction_lamports = accounts.transaction_account.info.lamports.borrow_mut();
         **accounts.funds_to.lamports.borrow_mut() += **transaction_lamports;
