@@ -2,7 +2,7 @@ use crate::account::CryptidAccountAddress;
 use crate::error::CryptidSignerError;
 use crate::instruction::expand_transaction::SeedOrAccount;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
-use crate::state::{TransactionAccount, TransactionState};
+use crate::state::TransactionAccount;
 use num_traits::ToPrimitive;
 use sol_did::solana_program::pubkey::Pubkey;
 use solana_generator::*;
