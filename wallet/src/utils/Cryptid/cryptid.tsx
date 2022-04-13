@@ -115,7 +115,16 @@ export class CryptidAccount {
   }
 
   signTransaction = (transaction: Transaction): Promise<Transaction> =>
-    this.cryptid.sign(transaction)
+    this.cryptid.sign(transaction);
+
+  signLargeTransaction = (transaction: Transaction): Promise<{ setupTransactions: Transaction[]; executeTransaction: Transaction }> =>
+    this.cryptid.signLarge(transaction);
+
+  cancelLargeTransaction = (transactionAccount: PublicKey): Promise<TransactionSignature> =>
+    this.cryptid.cancelLarge(transactionAccount);
+
+  listPendingTx = (): Promise<PublicKey[]> =>
+    this.cryptid.listPendingTx();
 
   updateDocument = async () => {
     this._document = await this.cryptid.document()
@@ -220,14 +229,6 @@ export class CryptidAccount {
 
   removeController = async (did: string): Promise<TransactionSignature> =>
     this.updateDocWrapper(() => this.cryptid.removeController(did))
-
-  signExecuteLarge = (account: PublicKey): Promise<TransactionSignature> =>
-    this.cryptid.signExecuteLarge(account);
-
-  listPendingTx = async (): Promise<{ ready: boolean; key: PublicKey }[]> =>
-    this.cryptid.listPendingTx().then(txs => txs.sort((tx1, tx2) => {
-      return tx1.key.toBase58().localeCompare(tx2.key.toBase58());
-    }));
 
   // Sollet Interface Wallet Functionality.
   transferToken = async (

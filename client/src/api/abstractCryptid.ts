@@ -44,6 +44,8 @@ export abstract class AbstractCryptid implements Cryptid {
     executeTransaction: Transaction;
   }>;
 
+  abstract cancelLarge(transactionAccount: PublicKey): Promise<string>;
+
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
    * This is private as it is intended as a utility function for internal
@@ -52,7 +54,9 @@ export abstract class AbstractCryptid implements Cryptid {
    * @param transaction
    * @private
    */
-  private async send(transaction: Transaction): Promise<TransactionSignature> {
+  protected async send(
+    transaction: Transaction
+  ): Promise<TransactionSignature> {
     const signature = await this.options.connection.sendRawTransaction(
       transaction.serialize()
     );

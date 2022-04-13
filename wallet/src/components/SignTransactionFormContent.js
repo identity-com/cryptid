@@ -119,10 +119,14 @@ function isSafeInstruction(publicKeys, owner, txInstructions) {
 export default function SignTransactionFormContent({
                                                      origin,
                                                      messages,
+                                                     messageMeta,
                                                      onApprove,
                                                      autoApprove,
                                                      buttonRef,
-                                                   }) {
+                                                     isLargeTransaction,
+                                                     numFailed
+                                                  }) {
+
   const explorerUrlSuffix = useSolanaExplorerUrlSuffix();
   const connection = useConnection();
   const { selectedCryptidAccount } = useCryptid();
@@ -283,9 +287,10 @@ export default function SignTransactionFormContent({
     if (!isMultiTx) {
       return ixs;
     }
+    const meta = messageMeta.length >= txIdx ? messageMeta[txIdx] : {failed: undefined, group: txIdx};
 
     return (
-      <TransactionView index={txIdx}>
+      <TransactionView index={txIdx} meta={meta}>
         {ixs}
       </TransactionView>
       // <Box style={{ marginTop: 20 }} key={txIdx}>
@@ -317,9 +322,7 @@ export default function SignTransactionFormContent({
           </div>
           {messages.map((message, idx) => (
             <Typography key={idx} style={{ wordBreak: 'break-all' }}>
-              HERE
-              JSON.stringify(message, null, 2);
-              {/*{bs58.encode(message)}*/}
+              {bs58.encode(message)}
             </Typography>
           ))}
         </>
@@ -327,9 +330,13 @@ export default function SignTransactionFormContent({
         <>
           <div className='text-2xl pb-3'>
             {txInstructions
-              ? `Approve from ${origin}:`
+              ? (isLargeTransaction ? `Propose from ${origin}:` : `Approve from ${origin}:`)
               : `Unknown transaction data`}
           </div>
+          {numFailed == 0 || <div class="text-red-800 px-2 pb-2">
+            {numFailed > 1 ? `${numFailed} transactions have ` : `1 transaction has `} failed for being too large. Click
+            the expand button below to split the transaction.
+          </div>}
           {txInstructions ? (
             txInstructions.map((instructions, txIdx) =>
               txListItem(instructions, txIdx),

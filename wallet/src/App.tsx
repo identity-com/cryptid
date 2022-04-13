@@ -40,7 +40,7 @@ const PageContents: React.FC = () => {
       //   return <>TODO no page</>;
       case 'Identity':
         return <IdentityPage/>;
-      case 'Proposed':
+      case 'Pending':
         return <ProposedPage/>;
     }
   }

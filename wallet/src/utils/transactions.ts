@@ -15,7 +15,6 @@ import {decodeTokenInstruction} from '@project-serum/token';
 import {PublicKey} from '@solana/web3.js';
 import {TOKEN_PROGRAM_ID} from './tokens/instructions';
 import {StrictWalletInterface} from "./wallet";
-import {JsonSerializedTransaction, deserializeTransaction} from "@identity.com/wallet-adapter-cryptid";
 
 type DecodedInstructionView = {
   programId: PublicKey,
@@ -61,10 +60,7 @@ const cacheDuration = 15 * 1000;
 
 export const decodeMessage = async (connection: Connection, wallet: StrictWalletInterface, message: Buffer) => {
   // get message object
-  const transactionMessage = message instanceof Buffer
-    ? Message.from(message)
-    : deserializeTransaction(message).compileMessage();
-
+  const transactionMessage = Message.from(message);
   if (!transactionMessage?.instructions || !transactionMessage?.accountKeys) {
     return;
   }
@@ -161,7 +157,6 @@ const toInstruction = async (
         accountKeys,
         decodedInstruction,
       );
-      // } else if (programId.equals(CRYPTID_PROGRAM_ID)) {
     } else if (programId.equals(MANGO_PROGRAM_ID) || programId.equals(MANGO_PROGRAM_ID_V2)) {
       console.log('[' + index + '] Handled as mango markets instruction');
       // @ts-ignore

@@ -17,7 +17,8 @@ const InstructionView:React.FC<{
   expanded: boolean
   setExpanded: (boolean) => void
   title: string
-  instruction: { programId: PublicKey }
+  instruction: { programId: PublicKey },
+  failed?: boolean
 }> = (
   {
     index,

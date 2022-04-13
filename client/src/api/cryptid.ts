@@ -54,6 +54,8 @@ export interface Cryptid {
     executeTransaction: Transaction;
   }>;
 
+  cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;
+
   /**
    * Adds a key to your the Crytid account
    * @param publicKey The public key to add

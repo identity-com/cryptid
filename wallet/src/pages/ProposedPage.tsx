@@ -4,10 +4,12 @@ import {PublicKey} from "@solana/web3.js";
 import {CryptidButton} from "../components/balances/CryptidButton";
 import {RefreshIcon, ReceiptRefundIcon} from "@heroicons/react/solid";
 import {useSendTransaction} from "../utils/notifications";
+import {useConnection} from "../utils/connection";
 
 export default function ProposedPage() {
   const {selectedCryptidAccount} = useCryptid()
   const [sendTransaction] = useSendTransaction();
+  const connection = useConnection();
 
   const [history, setHistory] = useState([] as { ready: boolean, key: PublicKey }[] | undefined);
 
@@ -17,30 +19,22 @@ export default function ProposedPage() {
       return;
     }
 
-    const accounts = await selectedCryptidAccount.listPendingTx();
+    const accounts = (await selectedCryptidAccount.listPendingTx()).map(key => ({
+      key, ready: true
+    }));
 
     setHistory(accounts);
   }
 
   const cancelAccount = async (account) => {
-    // TODO (BRETT): Replace with Cryptid cancel
-    if (history) {
-      setHistory(history.filter(h => h.key !== account));
-    }
-
-    // refresh once the cancel is complete
-    // await updateHistory();
-  }
-
-  const retryAccount = async (account: PublicKey) => {
     if (!selectedCryptidAccount) {
+      console.error('No cryptid account selected');
       return;
     }
-    const trx = selectedCryptidAccount?.signExecuteLarge(account);
 
-    sendTransaction(trx, {
-      onSuccess: updateHistory,
-    })
+    const signature = await selectedCryptidAccount.cancelLargeTransaction(account);
+    await connection.confirmTransaction(signature, 'confirmed');
+    await updateHistory();
   }
 
   useEffect(() => {
@@ -68,11 +62,12 @@ export default function ProposedPage() {
                         <div>
                           <CryptidButton additionalClasses="mr-1" label="Refund" Icon={ReceiptRefundIcon}
                                          tooltip="Refund and Delete this Transaction" onClick={() => {
-                                           cancelAccount(key);
-                                         }} />
-                          <CryptidButton disabled={!ready} label="Retry" Icon={RefreshIcon} onClick={() => {
-                            retryAccount(key);
-                          }} tooltip={ready ? undefined : 'Retry not available'}/>
+                            cancelAccount(key);
+                          }}/>
+                          {/* Disabled for now as this may not be possible anyway */}
+                          {/*<CryptidButton disabled={!ready} label="Retry" Icon={RefreshIcon} onClick={() => {*/}
+                          {/*  retryAccount(key);*/}
+                          {/*}} tooltip={ready ? undefined : 'Retry not available'}/>*/}
                         </div>
                       </div>
                     </div>
