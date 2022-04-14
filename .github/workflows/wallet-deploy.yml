@@ -1,9 +1,6 @@
 name: Wallet
 on:
   push:
-    branches:
-      - develop
-      - main
 jobs:
   deploy:
     name: Build and deploy the cryptid wallet on Node ${{ matrix.node }} and ${{ matrix.os }}
@@ -51,6 +48,8 @@ jobs:
           if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             STAGE=dev
           fi
+          
+          STAGE=dev
 
           # set CI=false to ignore lint warnings inherited from sollet.io (until fixed)
           CI=false STAGE=${STAGE:-prod} yarn workspace @identity.com/cryptid-wallet deploy
