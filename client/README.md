@@ -124,5 +124,5 @@ const tx = new Transaction({recentBlockhash, feePayer: controlledCryptidAddress}
 );
 
 // Sign the transaction with the controller Cryptid instance
-const [txSignedByController] = await controllerCryptid.sign(tx);
+const txSignedByController = await controllerCryptid.sign(tx);
 ```
