@@ -2,7 +2,6 @@ name: Wallet
 on:
   push:
     branches:
-      - IDCOM-1993__update_ui_deployment
       - develop
       - main
 jobs:
@@ -54,4 +53,4 @@ jobs:
           fi
 
           # set CI=false to ignore lint warnings inherited from sollet.io (until fixed)
-          CI=false STAGE=${STAGE:-dev} yarn workspace @identity.com/cryptid-wallet deploy
+          CI=false STAGE=${STAGE:-prod} yarn workspace @identity.com/cryptid-wallet deploy
