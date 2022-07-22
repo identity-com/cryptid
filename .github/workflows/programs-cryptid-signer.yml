@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.62']
+        rust: ['1.60']
         os: [ubuntu-latest]
 
     steps:
@@ -51,7 +51,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.62']
+        rust: ['1.60']
         os: [ubuntu-latest]
 
     steps:
@@ -84,7 +84,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.62']
+        rust: ['1.60']
         solana: ['v1.10.31']
         os: [ubuntu-latest]
 
@@ -141,7 +141,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.62']
+        rust: ['1.60']
         solana: ['v1.10.31']
         os: [ubuntu-latest]
 
