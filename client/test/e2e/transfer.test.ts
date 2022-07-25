@@ -22,7 +22,7 @@ import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
-const lamportsToTransfer = 20_000;
+const lamportsToTransfer = 1_000_000; // minimum that can be transferred to a new account is 890_880 lamports to be rent-exempt
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -52,7 +52,7 @@ describe('transfers', function () {
 
     await Promise.all([
       airdrop(connection, cryptidAddress), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+      airdrop(connection, key.publicKey, 1_000_000), // to cover fees only
     ]);
   });
 
@@ -129,7 +129,7 @@ describe('transfers', function () {
       const alias = 'device2';
 
       // airdrop to device2 key to cover fees for the transfer only
-      await airdrop(connection, device2Key.publicKey, 10_000);
+      await airdrop(connection, device2Key.publicKey, 1_000_000);
 
       // add the new key and create a cryptid client for device 2
       await cryptidForDevice1.addKey(device2Key.publicKey, alias);
@@ -225,7 +225,7 @@ describe('transfers', function () {
       // airdrop funds to the controlled DID cryptid account
       await airdrop(connection, controlledCryptidAddress, 5 * LAMPORTS_PER_SOL);
       // airdrop funds to the controlled DID signer key (for fees)
-      await airdrop(connection, controlledDIDKey.publicKey, 10_000);
+      await airdrop(connection, controlledDIDKey.publicKey, 1_000_000);
 
       // add the controller to the controlled DID (this anchors the controlled DID)
       await controlledCryptid.addController(did);
