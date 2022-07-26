@@ -44,7 +44,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         &[transfer(&funder.pubkey(), &return_account.pubkey(), rent)],
         Some(&funder.pubkey()),
         &[&funder],
-        banks.get_recent_blockhash().await?,
+        banks.get_latest_blockhash().await?,
     );
     banks.send_transaction(transaction).await?;
 
@@ -145,7 +145,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         &[direct_execute_instruction],
         Some(&funder.pubkey()),
         &[&funder, &did, &return_account],
-        banks.get_recent_blockhash().await?,
+        banks.get_latest_blockhash().await?,
     );
     banks
         .process_transaction_longer_timeout(transaction)
@@ -237,7 +237,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
         &[direct_execute_instruction],
         Some(&funder.pubkey()),
         &[&funder],
-        banks.get_recent_blockhash().await?,
+        banks.get_latest_blockhash().await?,
     );
     let error = banks
         .process_transaction_longer_timeout(transaction)

@@ -299,7 +299,7 @@ impl<R> ProgramValues<R> {
             Some(&self.funder.pubkey()),
             &signers,
             self.banks
-                .get_recent_blockhash()
+                .get_latest_blockhash()
                 .await
                 .expect("Could not get recent block hash"),
         );
@@ -516,7 +516,7 @@ pub async fn propose_transaction(
         &[&program_values.funder, &program_values.did],
         program_values
             .banks
-            .get_recent_blockhash()
+            .get_latest_blockhash()
             .await
             .expect("Could not get recent block hash"),
     );
