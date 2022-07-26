@@ -69,7 +69,7 @@ async fn create_cryptid() {
         Some(&funder.pubkey()),
         &[&funder, &cryptid_address, &did],
         banks
-            .get_recent_blockhash()
+            .get_latest_blockhash()
             .await
             .expect("Could not get recent block hash"),
     );

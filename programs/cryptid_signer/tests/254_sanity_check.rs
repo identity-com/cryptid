@@ -28,7 +28,7 @@ async fn sanity_check() {
         Some(&funder.pubkey()),
         &[&funder],
         banks
-            .get_recent_blockhash()
+            .get_latest_blockhash()
             .await
             .expect("Could not get recent blockhash"),
     );
