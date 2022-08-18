@@ -4,7 +4,6 @@ use crate::instruction::expand_transaction::SeedOrAccount;
 use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{TransactionAccount, TransactionState};
 use num_traits::ToPrimitive;
-use sol_did::solana_program::pubkey::Pubkey;
 use solana_generator::*;
 use std::collections::BTreeMap;
 use std::iter::once;

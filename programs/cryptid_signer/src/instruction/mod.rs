@@ -22,8 +22,6 @@ pub mod propose_transaction;
 #[path = "./254_test_instruction.rs"]
 pub mod test_instruction;
 
-use std::borrow::Cow;
-
 use crate::error::CryptidSignerError;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use solana_generator::solana_program::program_error::ProgramError;
@@ -77,15 +75,25 @@ pub fn verify_keys<'a>(
         for signing_key in signing_keys {
             // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
             unsafe {
-                sol_did::validate_owner(
+                let controlling_did_accounts: Vec<solana_program::account_info::AccountInfo> = signing_key
+                    .extra_accounts
+                    .iter()
+                    .map(|info| info.to_solana_account_info())
+                    .collect();
+                // .map(Cow::Owned),
+
+                let signer_is_authority = sol_did::is_authority(
                     &did.to_solana_account_info(),
-                    &signing_key.signing_key.to_solana_account_info(),
-                    signing_key
-                        .extra_accounts
-                        .iter()
-                        .map(|info| info.to_solana_account_info())
-                        .map(Cow::Owned),
-                )?;
+                    controlling_did_accounts.as_slice(),
+                    &signing_key.signing_key.key,
+                    &[],
+                    None,
+                    None
+                ).map_err(|_| -> Box<dyn solana_generator::Error> { CryptidSignerError::KeyCannotChangeTransaction { key: signing_key.to_key_data() }.into() })?;
+
+                if !signer_is_authority {
+                    return Err(CryptidSignerError::KeyCannotChangeTransaction { key: signing_key.to_key_data() }.into());
+                }
             }
         }
         Ok(())

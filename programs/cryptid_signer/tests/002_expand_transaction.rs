@@ -48,7 +48,8 @@ async fn expand_transaction_test() {
     )
     .await;
     for _ in 0..10 {
-        let account_operations = (0..program_values.gen_range(0, 10))
+        let operation: u8 = program_values.gen_range(0, 10);
+        let account_operations = (0..operation)
             .map(|_| {
                 let operation = on_chain_transaction.random_account_operation(&mut program_values);
                 on_chain_transaction.apply_account_operation(operation.clone());
@@ -56,7 +57,8 @@ async fn expand_transaction_test() {
             })
             .collect::<Vec<_>>();
 
-        let instruction_operations = (0..program_values.gen_range(0, 10))
+        let operation: u8 = program_values.gen_range(0, 10);
+        let instruction_operations = (0..operation)
             .map(|_| {
                 let operation =
                     on_chain_transaction.random_instruction_operation(&mut program_values);

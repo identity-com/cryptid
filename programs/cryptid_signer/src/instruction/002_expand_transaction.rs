@@ -4,7 +4,6 @@ use crate::instruction::{verify_keys, SigningKey, SigningKeyBuild};
 use crate::state::{InstructionData, TransactionAccount, TransactionAccountMeta, TransactionState};
 use crate::TransactionSeeder;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use sol_did::solana_program::pubkey::Pubkey;
 use solana_generator::*;
 use std::iter::once;
 

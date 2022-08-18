@@ -8,8 +8,7 @@ use cryptid_signer::state::InstructionData;
 use cryptid_signer::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 use dummy_program::DummyInstruction;
 use log::trace;
-use sol_did::id as sol_did_id;
-use sol_did::state::get_sol_address_with_seed;
+use sol_did::{derive_did_account, id as sol_did_id};
 use solana_generator::solana_program::system_instruction::transfer;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_sdk::instruction::InstructionError;
@@ -48,7 +47,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
     );
     banks.send_transaction(transaction).await?;
 
-    let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
+    let (did_pda, _did_pda_nonce) = derive_did_account(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
     let (cryptid_account, _cryptid_nonce) = GenerativeCryptidSeeder {
         did_program: sol_did_id(),
@@ -172,7 +171,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
 
     let did = Keypair::generate(&mut rng);
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
-    let (did_pda, _did_pda_nonce) = get_sol_address_with_seed(&did.pubkey());
+    let (did_pda, _did_pda_nonce) = derive_did_account(&did.pubkey());
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
     let (cryptid_account, _cryptid_nonce) = GenerativeCryptidSeeder {
         did_program: sol_did_id(),
