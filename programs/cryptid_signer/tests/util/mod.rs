@@ -15,13 +15,13 @@ use num_traits::ToPrimitive;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_program_test::BanksClient;
 use solana_sdk::account::Account;
+use solana_sdk::clock::UnixTimestamp;
 use solana_sdk::hash::Hash;
+use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::{Keypair, Signature, Signer, SignerError};
 use solana_sdk::transaction::Transaction;
 use std::iter::{empty, once};
 use std::ops::Deref;
-use solana_sdk::clock::UnixTimestamp;
-use solana_sdk::pubkey::Pubkey;
 use test_utils::rand::distributions::uniform::{SampleBorrow, SampleUniform};
 use test_utils::rand::distributions::{Distribution, Standard};
 use test_utils::rand::{CryptoRng, Rng, RngCore, SeedableRng};
@@ -133,8 +133,8 @@ impl OnChainTransaction {
                 _ => unreachable!(),
             }
         } else {
-            let operation8 : u8 = program_values.gen_range(0, 8);
-            let operation4 : u8 = program_values.gen_range(0, 4);
+            let operation8: u8 = program_values.gen_range(0, 8);
+            let operation4: u8 = program_values.gen_range(0, 4);
             match operation8 {
                 0 => InstructionOperation::Push(
                     self.random_instruction(program_values.gen_range(0, 10), program_values),

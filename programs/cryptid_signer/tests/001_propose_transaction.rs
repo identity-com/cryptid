@@ -18,7 +18,7 @@ async fn verify(
     size_override: Option<u16>,
 ) {
     trace!(target: LOG_TARGET, "Transaction Seed: {}", transaction_seed);
-    let operation : u8 = program_values.gen_range(2, 5);
+    let operation: u8 = program_values.gen_range(2, 5);
     let on_chain_transaction = OnChainTransaction::random(
         program_values.gen_range(2, 10),
         (0..operation)

@@ -2,12 +2,13 @@
 
 mod util;
 
+use cryptid_signer::error::CryptidSignerError;
 use cryptid_signer::instruction::direct_execute::{DirectExecuteBuild, DirectExecuteFlags};
 use cryptid_signer::instruction::{CryptidInstruction, SigningKeyBuild};
 use cryptid_signer::state::InstructionData;
 use cryptid_signer::{CryptidSignerSeeder, GenerativeCryptidSeeder};
 use dummy_program::DummyInstruction;
-use log::trace;
+use log::{info, trace};
 use sol_did::{derive_did_account, id as sol_did_id};
 use solana_generator::solana_program::system_instruction::transfer;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
@@ -146,6 +147,7 @@ async fn direct_execute_generative_should_succeed() -> Result<(), Box<dyn Error>
         &[&funder, &did, &return_account],
         banks.get_recent_blockhash().await?,
     );
+    info!(target: LOG_TARGET, "Processing transaction...");
     banks
         .process_transaction_longer_timeout(transaction)
         .await?;
@@ -169,6 +171,7 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
     )
     .await;
 
+    info!(target: "solana_program_test", "funder: {}", funder.pubkey());
     let did = Keypair::generate(&mut rng);
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
     let (did_pda, _did_pda_nonce) = derive_did_account(&did.pubkey());
@@ -242,10 +245,11 @@ async fn direct_execute_generative_sig_missing() -> Result<(), Box<dyn Error>> {
         .process_transaction_longer_timeout(transaction)
         .await
         .unwrap_err();
+
     match error {
         TransportError::TransactionError(TransactionError::InstructionError(
             0,
-            InstructionError::MissingRequiredSignature,
+            InstructionError::Custom(707),
         )) => {}
         error => panic!("Error `{:?}` not what was expected", error),
     }

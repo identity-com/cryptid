@@ -73,13 +73,22 @@ pub fn verify_keys<'a>(
     // TODO: Handle higher key threshold than 1
     if did_program.key == sol_did::id() {
         for signing_key in signing_keys {
+            if !signing_key.signing_key.is_signer {
+                let error: Box<dyn solana_generator::Error> = CryptidSignerError::KeyMustBeSigner {
+                    key: signing_key.signing_key.key,
+                }
+                .into();
+                return Err(error);
+            }
+            // msg!("Key to verify: {:?}", signing_key.signing_key.key.to_string());
             // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
             unsafe {
-                let controlling_did_accounts: Vec<solana_program::account_info::AccountInfo> = signing_key
-                    .extra_accounts
-                    .iter()
-                    .map(|info| info.to_solana_account_info())
-                    .collect();
+                let controlling_did_accounts: Vec<solana_program::account_info::AccountInfo> =
+                    signing_key
+                        .extra_accounts
+                        .iter()
+                        .map(|info| info.to_solana_account_info())
+                        .collect();
                 // .map(Cow::Owned),
 
                 let signer_is_authority = sol_did::is_authority(
@@ -88,11 +97,22 @@ pub fn verify_keys<'a>(
                     &signing_key.signing_key.key,
                     &[],
                     None,
-                    None
-                ).map_err(|_| -> Box<dyn solana_generator::Error> { CryptidSignerError::KeyCannotChangeTransaction { key: signing_key.to_key_data() }.into() })?;
+                    None,
+                )
+                .map_err(|error| -> Box<dyn solana_generator::Error> {
+                    msg!("Error executing is_authority: {}", error);
+                    CryptidSignerError::KeyCannotChangeTransaction {
+                        key: signing_key.to_key_data(),
+                    }
+                    .into()
+                })?;
 
                 if !signer_is_authority {
-                    return Err(CryptidSignerError::KeyCannotChangeTransaction { key: signing_key.to_key_data() }.into());
+                    msg!("Signer is not an authority on the DID");
+                    return Err(CryptidSignerError::KeyCannotChangeTransaction {
+                        key: signing_key.to_key_data(),
+                    }
+                    .into());
                 }
             }
         }
@@ -142,6 +162,7 @@ impl SigningKey {
         }
     }
 }
+
 impl FromAccounts<()> for SigningKey {
     fn from_accounts(
         _program_id: Pubkey,
