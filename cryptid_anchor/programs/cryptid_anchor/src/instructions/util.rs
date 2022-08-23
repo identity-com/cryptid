@@ -1,67 +1,57 @@
 use anchor_lang::prelude::*;
 use anchor_lang::ToAccountInfo;
+use sol_did::state::DidAccount;
+use crate::error::CryptidSignerError;
 
 /// Verifies the given keys are valid.
 /// Currently only checks that there is a single valid key for `sol-did` and lets all other program through without checks
 pub fn verify_keys<'a>(
-    did_program: &AccountInfo,
-    did: &AccountInfo,
-    signing_keys: impl Iterator<Item = &'a SigningKey>,
-) -> GeneratorResult<()> {
+    did: &DidAccount,
+    signing_keys: &[AccountInfo<'a>]
+) -> Result<()> {
     // TODO: Handle higher key threshold than 1
-    if did_program.key == sol_did::id() {
-        for signing_key in signing_keys {
-            if !signing_key.signing_key.is_signer {
-                let error: Box<dyn solana_generator::Error> = CryptidSignerError::KeyMustBeSigner {
-                    key: signing_key.signing_key.key,
-                }
-                    .into();
-                return Err(error);
-            }
-            // msg!("Key to verify: {:?}", signing_key.signing_key.key.to_string());
-            // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
-            unsafe {
-                let controlling_did_accounts: Vec<solana_program::account_info::AccountInfo> =
-                    signing_key
-                        .extra_accounts
-                        .iter()
-                        .map(|info| info.to_solana_account_info())
-                        .collect();
-                // .map(Cow::Owned),
+    for signing_key in signing_keys {
+        if !signing_key.is_signer {
+            return err!(CryptidSignerError::KeyMustBeSigner);
+        }
 
-                let signer_is_authority = sol_did::is_authority(
-                    &did.to_solana_account_info(),
-                    controlling_did_accounts.as_slice(),
-                    &signing_key.signing_key.key,
-                    &[],
-                    None,
-                    None,
-                )
-                    .map_err(|error| -> Box<dyn solana_generator::Error> {
-                        msg!("Error executing is_authority: {}", error);
-                        CryptidSignerError::KeyCannotChangeTransaction {
-                            key: signing_key.to_key_data(),
-                        }
-                            .into()
-                    })?;
+        // msg!("Key to verify: {:?}", signing_key.signing_key.key.to_string());
+        // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
+        unsafe {
+            let controlling_did_accounts: Vec<AccountInfo> =
+                signing_key
+                    .extra_accounts
+                    .iter()
+                    .map(|info| info.to_solana_account_info())
+                    .collect();
+            // .map(Cow::Owned),
 
-                if !signer_is_authority {
-                    msg!("Signer is not an authority on the DID");
-                    return Err(CryptidSignerError::KeyCannotChangeTransaction {
+            let signer_is_authority = sol_did::is_authority(
+                &did.to_solana_account_info(),
+                controlling_did_accounts.as_slice(),
+                &signing_key.signing_key.key,
+                &[],
+                None,
+                None,
+            )
+                .map_err(|error| -> Box<dyn solana_generator::Error> {
+                    msg!("Error executing is_authority: {}", error);
+                    CryptidSignerError::KeyCannotChangeTransaction {
                         key: signing_key.to_key_data(),
                     }
-                        .into());
+                        .into()
+                })?;
+
+            if !signer_is_authority {
+                msg!("Signer is not an authority on the DID");
+                return Err(CryptidSignerError::KeyCannotChangeTransaction {
+                    key: signing_key.to_key_data(),
                 }
+                    .into());
             }
         }
-        Ok(())
-    } else {
-        //TODO: Verify signing key against did using interface
-        Err(CryptidSignerError::UnsupportedDIDProgram {
-            program: did_program.key,
-        }
-            .into())
     }
+    Ok(())
 }
 
 

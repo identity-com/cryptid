@@ -5,6 +5,7 @@ use bitflags::bitflags;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::state::instruction_data::InstructionData;
 use crate::util::SolDID;
+use sol_did::state::DidAccount;
 
 #[derive(Accounts)]
 #[instruction(
@@ -44,7 +45,7 @@ pub fn direct_execute<'info>(
     }
 
     // let signing_keys: Vec<AccountInfo> = ctx.remaining_accounts;
-    if (ctx.accounts.cryptid_account.is_generative()) {
+    if ctx.accounts.cryptid_account.is_generative() {
         msg!("Cryptid is generative")
     } else {
         msg!("Cryptid is not generative")
@@ -147,69 +148,69 @@ pub fn direct_execute<'info>(
     Ok(())
 }
 
-fn build_instruction(
-    program_id: Pubkey,
-    arg: Self::BuildArg,
-) -> Result<(Vec<SolanaAccountMeta>, Self::Data)> {
-    let signer_key = CryptidSignerSeeder {
-        cryptid_account: arg.cryptid_account,
-    }
-        .find_address(program_id)
-        .0;
-    let mut instruction_accounts = HashMap::new();
-
-    // Go through all the instructions and collect all the accounts together
-    for instruction in arg.instructions.iter() {
-        instruction_accounts
-            .entry(instruction.program_id)
-            .or_insert_with(AccountMeta::empty); // No need to take the strongest as program has both false
-        for account in instruction.accounts.iter() {
-            let meta_value = if arg.instruction_accounts[account.key as usize] == signer_key {
-                // If the account is the signer we don't want to sign it ourselves, the program will do that
-                account.meta & AccountMeta::IS_WRITABLE
-            } else {
-                account.meta
-            };
-
-            *instruction_accounts
-                .entry(account.key)
-                .or_insert_with(AccountMeta::empty) |= meta_value; // Take the strongest value for each account
-        }
-    }
-    // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
-    let instruction_accounts =
-        arg.instruction_accounts
-            .into_iter()
-            .enumerate()
-            .map(|(index, value)| {
-                let meta = instruction_accounts
-                    .get(&(index as u8))
-                    .expect("Could not get meta");
-                SolanaAccountMeta {
-                    pubkey: value,
-                    is_signer: meta.contains(AccountMeta::IS_SIGNER),
-                    is_writable: meta.contains(AccountMeta::IS_WRITABLE),
-                }
-            });
-
-    let data = DirectExecuteData {
-        signers_extras: arg
-            .signing_keys
-            .iter()
-            .map(SigningKeyBuild::extra_count)
-            .collect(),
-        instructions: arg.instructions,
-        flags: arg.flags,
-    };
-    let mut accounts = vec![
-        SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
-        arg.did,
-        SolanaAccountMeta::new_readonly(arg.did_program, false),
-    ];
-    accounts.extend(arg.signing_keys.iter().flat_map(SigningKeyBuild::to_metas));
-    accounts.extend(instruction_accounts);
-    Ok((accounts, data))
-}
+// fn build_instruction(
+//     program_id: Pubkey,
+//     arg: Self::BuildArg,
+// ) -> Result<(Vec<SolanaAccountMeta>, Self::Data)> {
+//     let signer_key = CryptidSignerSeeder {
+//         cryptid_account: arg.cryptid_account,
+//     }
+//         .find_address(program_id)
+//         .0;
+//     let mut instruction_accounts = HashMap::new();
+//
+//     // Go through all the instructions and collect all the accounts together
+//     for instruction in arg.instructions.iter() {
+//         instruction_accounts
+//             .entry(instruction.program_id)
+//             .or_insert_with(AccountMeta::empty); // No need to take the strongest as program has both false
+//         for account in instruction.accounts.iter() {
+//             let meta_value = if arg.instruction_accounts[account.key as usize] == signer_key {
+//                 // If the account is the signer we don't want to sign it ourselves, the program will do that
+//                 account.meta & AccountMeta::IS_WRITABLE
+//             } else {
+//                 account.meta
+//             };
+//
+//             *instruction_accounts
+//                 .entry(account.key)
+//                 .or_insert_with(AccountMeta::empty) |= meta_value; // Take the strongest value for each account
+//         }
+//     }
+//     // recombine `instruction_accounts` into a iterator of `SolanaAccountMeta`s
+//     let instruction_accounts =
+//         arg.instruction_accounts
+//             .into_iter()
+//             .enumerate()
+//             .map(|(index, value)| {
+//                 let meta = instruction_accounts
+//                     .get(&(index as u8))
+//                     .expect("Could not get meta");
+//                 SolanaAccountMeta {
+//                     pubkey: value,
+//                     is_signer: meta.contains(AccountMeta::IS_SIGNER),
+//                     is_writable: meta.contains(AccountMeta::IS_WRITABLE),
+//                 }
+//             });
+//
+//     let data = DirectExecuteData {
+//         signers_extras: arg
+//             .signing_keys
+//             .iter()
+//             .map(SigningKeyBuild::extra_count)
+//             .collect(),
+//         instructions: arg.instructions,
+//         flags: arg.flags,
+//     };
+//     let mut accounts = vec![
+//         SolanaAccountMeta::new_readonly(arg.cryptid_account, false),
+//         arg.did,
+//         SolanaAccountMeta::new_readonly(arg.did_program, false),
+//     ];
+//     accounts.extend(arg.signing_keys.iter().flat_map(SigningKeyBuild::to_metas));
+//     accounts.extend(instruction_accounts);
+//     Ok((accounts, data))
+// }
 
 impl DirectExecute {
     /// Prints all the keys to the program log (compute budget intensive)
