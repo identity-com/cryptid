@@ -199,7 +199,7 @@ describe('SimpleCryptid', () => {
 
       const address = await cryptid.address();
       expect(address.toBase58()).to.equal(
-        '4Uk7SRqmZH2avVaTE63FjVrJPS7whve3muPEgDv9FMCy'
+        'FHyWGTKCbAFFFYJU3qw5EaUvGzDfpCWzYfauxp5mrUmo'
       );
     });
   });
