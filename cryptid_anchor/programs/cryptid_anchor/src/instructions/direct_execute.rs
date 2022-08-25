@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::log::sol_log_compute_units;
 use bitflags::bitflags;
@@ -38,7 +37,7 @@ pub struct DirectExecute<'info> {
 /// Executes a transaction directly if all required keys sign
 pub fn direct_execute<'info>(
     ctx: Context<'_, '_, '_, 'info, DirectExecute<'info>>,
-    signers_extras: Vec<u8>,
+    controller_chain: Vec<u8>,
     instructions: Vec<InstructionData>,
     flags: DirectExecuteFlags,
 ) -> Result<()> {
@@ -58,10 +57,21 @@ pub fn direct_execute<'info>(
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
-        &ctx.accounts.did,
-        &[ctx.accounts.signer],
+        &ctx.accounts.signer,
+        ctx.all_accounts(),
+        controller_chain.as_slice(),
     )?;
 
+    // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instruction
+    // TODO - if we want direct-execute to support multisig, we need to support more signers here
+    // If we dont need direct-execute to support multisig, then we still need to verify that the cryptid account
+    // does not have a key threshold > 1, and if so, reject the tx (because direct-execute would only have one key)
+    // For now, we just go ahead and execute the instruction, ignoring key_threshold
+
+    // generate the instructions to execute
+    let solana_instructions = instructions.into_iter().map(|instruction| {
+        instruction.into_solana_instruction(ctx.all_accounts())
+    }).collect::<Result<Vec<_>>>()?;
 
     // // Retrieve needed data from cryptid account
     // let (key_threshold, signer_key, signer_seed_set) = match &ctx.accounts.cryptid_account {

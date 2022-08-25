@@ -3,6 +3,12 @@ use anchor_lang::ToAccountInfo;
 use sol_did::state::DidAccount;
 use crate::error::CryptidSignerError;
 
+impl AllAccounts for Context<'_, '_, '_, '_, _> {
+    fn all_accounts(&self) -> Vec<AccountInfo> {
+        self.accounts.iter().collect::<Vec<_>>().into().append(self.remaining_accounts.into_vec())
+    }
+}
+
 /// Verifies that the signer has the permission to sign for the DID
 /// If the controller-chain is empty, it expects the signer to be a key on the did itself
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)

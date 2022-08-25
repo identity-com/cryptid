@@ -4,9 +4,9 @@ use anchor_lang::solana_program::clock::UnixTimestamp;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::solana_program::msg;
 use crate::error::CryptidSignerError;
+use crate::state::account_meta_props::AccountMetaProps;
 use crate::state::instruction_data::InstructionData;
 use crate::state::instruction_size::InstructionSize;
-use crate::state::signing_key_data::SigningKeyData;
 use crate::state::transaction_account_meta::TransactionAccountMeta;
 use crate::state::transaction_state::TransactionState;
 use crate::util::DISCRIMINATOR_SIZE;
@@ -21,7 +21,7 @@ pub struct TransactionAccount {
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
-    pub signers: Vec<(SigningKeyData, UnixTimestamp)>,
+    pub signers: Vec<(Pubkey, UnixTimestamp)>, //TODO: this was changed from SigningKeyData in the original version - Check if we are safe to leave it as PublicKey
     /// The state of the transaction
     pub state: TransactionState,
     /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
@@ -40,8 +40,8 @@ impl TransactionAccount {
             + 4 + instruction_sizes.into_iter().map(InstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 4 + signer_extras
             .into_iter()
-            .map(SigningKeyData::calculate_size)
-            .map(|size|size + 8) //Expiry time
+            .map(32 + 8)    // pubkey + expiry time
+            // .map(|size|size + 8) //Expiry time
             .sum::<usize>() //signers
             + TransactionState::calculate_size() //state
             + 2 //settings_sequence
@@ -70,6 +70,7 @@ impl TransactionAccount {
 mod test {
     use std::iter::once;
     use anchor_lang::prelude::borsh::BorshSerialize;
+    use crate::state::cryptid_account_meta::AccountMetaProps;
     use crate::state::instruction_data::InstructionData;
     use super::*;
 

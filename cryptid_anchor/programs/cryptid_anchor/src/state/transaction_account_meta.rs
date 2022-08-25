@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use anchor_lang::prelude::*;
-use crate::state::cryptid_account_meta::AccountMetaProps;
+use crate::state::account_meta_props::AccountMetaProps;
 
 /// An account for an instruction, similar to Solana's [`AccountMeta`](AccountMeta)
 #[account]

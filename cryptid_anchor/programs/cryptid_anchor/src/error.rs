@@ -1,8 +1,6 @@
 //! Error types for `cryptid_signer`
 
 use anchor_lang::prelude::*;
-use crate::state::signing_key_data::SigningKeyData;
-use crate::state::transaction_account::TransactionState;
 
 /// The main error type for `cryptid_signer`.
 #[error_code]
