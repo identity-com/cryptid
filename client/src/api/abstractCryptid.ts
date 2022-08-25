@@ -8,7 +8,7 @@ import { removeService as removeServiceTransaction } from '../lib/solana/transac
 import { addController as addControllerTransaction } from '../lib/solana/transactions/did/addController';
 import { removeController as removeControllerTransaction } from '../lib/solana/transactions/did/removeController';
 import { DIDDocument, ServiceEndpoint } from 'did-resolver';
-import { resolve } from '@identity.com/sol-did-client';
+import { DidSolIdentifier, DidSolService } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner } from '../lib/util';
 import { CRYPTID_PROGRAM_ID } from '../lib/constants';
 import { deriveDefaultCryptidAccount } from '../lib/solana/util';
@@ -30,8 +30,10 @@ export abstract class AbstractCryptid implements Cryptid {
 
   abstract as(did: string): Cryptid;
 
-  document(): Promise<DIDDocument> {
-    return resolve(this.did);
+  async document(): Promise<DIDDocument> {
+    const identifier = DidSolIdentifier.parse(this.did);
+    const service = await DidSolService.build(identifier);
+    return service.resolve();
   }
 
   address(): Promise<PublicKey> {

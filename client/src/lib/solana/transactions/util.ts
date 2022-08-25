@@ -7,8 +7,8 @@ import {
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
 import {
-  createRegisterInstruction,
-  DecentralizedIdentifier,
+  LegacyClient, // TODO: remove
+  DidSolIdentifier,
 } from '@identity.com/sol-did-client';
 import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
 import { DIDDocument } from 'did-resolver';
@@ -62,7 +62,8 @@ const registerInstruction = async (
   document?: Partial<DIDDocument>,
   size: number = DEFAULT_DID_DOCUMENT_SIZE
 ) =>
-  createRegisterInstruction({
+  // TODO: replace with new Client
+  LegacyClient.createRegisterInstruction({
     payer,
     authority,
     size,
@@ -73,8 +74,8 @@ export const didIsRegistered = async (
   connection: Connection,
   did: string
 ): Promise<boolean> => {
-  const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
-  const pda = await decentralizedIdentifier.pdaSolanaPubkey();
+  const decentralizedIdentifier = DidSolIdentifier.parse(did);
+  const [pda] = await decentralizedIdentifier.dataAccount();
 
   const account = await connection.getAccountInfo(pda);
 

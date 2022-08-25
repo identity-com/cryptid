@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { createAddControllerInstruction } from '@identity.com/sol-did-client';
+import { LegacyClient } from '@identity.com/sol-did-client'; // TODO: remove
 import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
 import { createTransaction } from '../util';
 import { filterNotNil } from '../../../util';
@@ -18,7 +18,7 @@ export const addController = async (
   controller: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const instruction = await createAddControllerInstruction({
+  const instruction = await LegacyClient.createAddControllerInstruction({
     authority,
     did,
     connection,

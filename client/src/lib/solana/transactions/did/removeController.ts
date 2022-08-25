@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Signer } from '../../../../types/crypto';
-import { createRemoveControllerInstruction } from '@identity.com/sol-did-client';
+import { LegacyClient } from '@identity.com/sol-did-client' // TODO: remove;
 import { filterNotNil } from '../../../util';
 import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
 import { createTransaction } from '../util';
@@ -18,7 +18,7 @@ export const removeController = async (
   controller: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const instruction = await createRemoveControllerInstruction({
+  const instruction = await LegacyClient.createRemoveControllerInstruction({
     authority,
     did,
     connection,

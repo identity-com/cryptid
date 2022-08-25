@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { createAddKeyInstruction } from '@identity.com/sol-did-client';
+import { LegacyClient } from '@identity.com/sol-did-client'; // TODO: remove
 import { Signer } from '../../../../types/crypto';
 import { createTransaction } from '../util';
 import { filterNotNil } from '../../../util';
@@ -19,7 +19,7 @@ export const addKey = async (
   alias: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const instruction = await createAddKeyInstruction({
+  const instruction = await LegacyClient.createAddKeyInstruction({
     authority,
     did,
     key: newKey,

@@ -7,7 +7,7 @@ import {
   expectDocumentNotToIncludeKey,
   expectDocumentToIncludeKey,
 } from '../../utils/did';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
+import { DidSolIdentifier } from '@identity.com/sol-did-client';
 
 const { expect } = chai;
 
@@ -213,10 +213,10 @@ describe('DID Key operations', function () {
           waitForConfirmation: true,
         });
 
-        const defaultId = DecentralizedIdentifier.parse(cryptid.did);
-        defaultId.urlField = 'default';
-        const ledgerId = DecentralizedIdentifier.parse(cryptid.did);
-        ledgerId.urlField = 'ledger';
+        const defaultId = DidSolIdentifier.parse(cryptid.did);
+        defaultId.fragment = 'default';
+        const ledgerId = DidSolIdentifier.parse(cryptid.did);
+        ledgerId.fragment = 'ledger';
 
         let document = await cryptid.document();
         expect(document.capabilityInvocation).to.include(defaultId.toString());

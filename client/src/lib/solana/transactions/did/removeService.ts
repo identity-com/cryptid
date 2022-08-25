@@ -3,7 +3,7 @@ import { Signer } from '../../../../types/crypto';
 import { DEFAULT_DID_DOCUMENT_SIZE } from '../../../constants';
 import { createTransaction } from '../util';
 import { filterNotNil } from '../../../util';
-import { createRemoveServiceInstruction } from '@identity.com/sol-did-client';
+import { LegacyClient } from '@identity.com/sol-did-client'; // TODO: remove
 
 /**
  * Creates a transaction that removes a service from a DID.
@@ -15,7 +15,7 @@ export const removeService = async (
   alias: string,
   authority: PublicKey
 ): Promise<Transaction> => {
-  const instruction = await createRemoveServiceInstruction({
+  const instruction = await LegacyClient.createRemoveServiceInstruction({
     authority,
     did,
     connection,

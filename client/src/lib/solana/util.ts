@@ -6,8 +6,7 @@ import {
 } from '../constants';
 import { ExtendedCluster } from '../../types/solana';
 import {
-  ClusterType,
-  DecentralizedIdentifier,
+  DidSolIdentifier,
 } from '@identity.com/sol-did-client';
 
 export const DOA_SEED = 'cryptid_doa';
@@ -18,9 +17,9 @@ export const publicKeyToDid = (
   publicKey: PublicKey,
   cluster?: ExtendedCluster
 ): string =>
-  DecentralizedIdentifier.create(
+  DidSolIdentifier.create(
     publicKey,
-    ClusterType.parse(cluster || DEFAULT_CLUSTER)
+    cluster || DEFAULT_CLUSTER
   ).toString();
 
 /**
@@ -43,10 +42,10 @@ export const deriveDefaultCryptidAccountFromKey = async (
 };
 
 export const didToPublicKey = (did: string): PublicKey =>
-  DecentralizedIdentifier.parse(did).authorityPubkey.toPublicKey();
+  DidSolIdentifier.parse(did).authority;
 
 export const didToPDA = (did: string) =>
-  DecentralizedIdentifier.parse(did).pdaSolanaPubkey();
+  DidSolIdentifier.parse(did).dataAccount().then(dataAccount => dataAccount[0]);
 
 export const deriveDefaultCryptidAccount = async (did: string): Promise<PublicKey> => {
   const didKey = await didToPDA(did);
