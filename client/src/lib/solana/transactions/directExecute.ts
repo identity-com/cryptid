@@ -36,15 +36,6 @@ export const directExecute = async (
     debug
   );
 
-  for (const inst of directExecuteInstruction) {
-    console.log(JSON.stringify(inst.keys.map(value => ({
-      key: value.pubkey.toBase58(),
-      isSigner: value.isSigner,
-      isWritable: value.isWritable,
-      })
-    ), null, 2));
-  }
-
   return createTransaction(
     unsignedTransaction.recentBlockhash,
     directExecuteInstruction,
