@@ -19,6 +19,7 @@ import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
 import chaiAsPromised from 'chai-as-promised';
+// import { DidSolIdentifier, DidSolService } from "@identity.com/sol-did-client";
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
@@ -133,6 +134,10 @@ describe('transfers', function () {
 
       // add the new key and create a cryptid client for device 2
       await cryptidForDevice1.addKey(device2Key.publicKey, alias);
+      // TODO: Challenge: Replace this with a did:sol library call for addKey
+      // const id = DidSolIdentifier.parse(cryptid.did);
+      // const service = await DidSolService.build(id);
+      // service.addVerificationMethod(...);
       const cryptidForDevice2 = await build(did, device2Key, {
         connection,
         waitForConfirmation: true,
