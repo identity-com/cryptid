@@ -6,6 +6,7 @@ use crate::state::cryptid_account::CryptidAccount;
 use crate::state::instruction_data::InstructionData;
 use crate::util::SolDID;
 use sol_did::state::DidAccount;
+use crate::instructions::util::verify_keys;
 
 #[derive(Accounts)]
 #[instruction(
@@ -23,6 +24,8 @@ pub struct DirectExecute<'info> {
     pub did: Account<'info, DidAccount>,
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
+    /// The signer of the transaction
+    pub signer: Signer<'info>,
 
     // RemainingAccounts:
     // /// The set of keys that sign for this transaction
@@ -44,12 +47,21 @@ pub fn direct_execute<'info>(
         accounts.print_keys();
     }
 
-    // let signing_keys: Vec<AccountInfo> = ctx.remaining_accounts;
+    // TODO remove - just for testing
     if ctx.accounts.cryptid_account.is_generative() {
         msg!("Cryptid is generative")
     } else {
         msg!("Cryptid is not generative")
     }
+
+    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
+    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
+    verify_keys(
+        &ctx.accounts.did,
+        &ctx.accounts.did,
+        &[ctx.accounts.signer],
+    )?;
+
 
     // // Retrieve needed data from cryptid account
     // let (key_threshold, signer_key, signer_seed_set) = match &ctx.accounts.cryptid_account {

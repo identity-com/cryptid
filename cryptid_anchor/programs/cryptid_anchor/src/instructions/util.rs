@@ -3,55 +3,55 @@ use anchor_lang::ToAccountInfo;
 use sol_did::state::DidAccount;
 use crate::error::CryptidSignerError;
 
-/// Verifies the given keys are valid.
-/// Currently only checks that there is a single valid key for `sol-did` and lets all other program through without checks
+/// Verifies that the signer has the permission to sign for the DID
+/// If the controller-chain is empty, it expects the signer to be a key on the did itself
+/// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
 pub fn verify_keys<'a>(
     did: &DidAccount,
-    signing_keys: &[AccountInfo<'a>]
+    signer: &Signer,
+    accounts: &[AccountInfo<'a>],
+    controller_chain: &[u8]
 ) -> Result<()> {
-    // TODO: Handle higher key threshold than 1
-    for signing_key in signing_keys {
-        if !signing_key.is_signer {
-            return err!(CryptidSignerError::KeyMustBeSigner);
-        }
+    // convert the controller chain (an array of account indices) into an array of accounts
+    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
+    // sol_did does that
+    let controlling_did_accounts: Vec<AccountInfo> =
+        resolve_account_indexes(controller_chain, accounts)?;
 
-        // msg!("Key to verify: {:?}", signing_key.signing_key.key.to_string());
-        // Safety: This is safe because the generated references are not leaked or used after another use of the value they came from
-        unsafe {
-            let controlling_did_accounts: Vec<AccountInfo> =
-                signing_key
-                    .extra_accounts
-                    .iter()
-                    .map(|info| info.to_solana_account_info())
-                    .collect();
-            // .map(Cow::Owned),
+    let signer_is_authority = sol_did::is_authority(
+        &did.to_solana_account_info(),
+        controlling_did_accounts.as_slice(),
+        &signing_key.signing_key.key,
+        &[],
+        None,
+        None,
+    )
+        .map_err(|error| -> CryptidSignerError {
+            msg!("Error executing is_authority: {}", error);
+            CryptidSignerError::KeyCannotChangeTransaction
+        })?;
 
-            let signer_is_authority = sol_did::is_authority(
-                &did.to_solana_account_info(),
-                controlling_did_accounts.as_slice(),
-                &signing_key.signing_key.key,
-                &[],
-                None,
-                None,
-            )
-                .map_err(|error| -> Box<dyn solana_generator::Error> {
-                    msg!("Error executing is_authority: {}", error);
-                    CryptidSignerError::KeyCannotChangeTransaction {
-                        key: signing_key.to_key_data(),
-                    }
-                        .into()
-                })?;
-
-            if !signer_is_authority {
-                msg!("Signer is not an authority on the DID");
-                return Err(CryptidSignerError::KeyCannotChangeTransaction {
-                    key: signing_key.to_key_data(),
-                }
-                    .into());
-            }
-        }
+    if !signer_is_authority {
+        msg!("Signer is not an authority on the DID");
+        return err!(CryptidSignerError::KeyCannotChangeTransaction);
     }
     Ok(())
+}
+
+pub fn resolve_account_indexes(
+    account_indexes: &[u8],
+    accounts: &[AccountInfo],
+) -> Result<Vec<AccountInfo>> {
+    let mut resolved_accounts = Vec::new();
+    for account_index in account_indexes {
+        let account_index = account_index.to_usize()?;
+        if account_index >= accounts.len() {
+            msg!("Account index {} out of bounds", account_index);
+            return err!(CryptidSignerError::IndexOutOfRange);
+        }
+        resolved_accounts.push(accounts[account_index].to_solana_account_info());
+    }
+    Ok(resolved_accounts)
 }
 
 
