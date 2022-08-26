@@ -43,7 +43,7 @@ pub fn direct_execute<'info>(
 ) -> Result<()> {
     let debug = flags.contains(DirectExecuteFlags::DEBUG);
     if debug {
-        accounts.print_keys();
+        ctx.accounts.print_keys();
     }
 
     // TODO remove - just for testing
