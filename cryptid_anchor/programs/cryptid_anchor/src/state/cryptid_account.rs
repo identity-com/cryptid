@@ -1,9 +1,6 @@
 //! The types that are stored in accounts for `cryptid_signer`
 
-use bitflags::bitflags;
-use std::collections::HashMap;
-use anchor_lang::prelude::{*, AccountMeta as SolanaAccountMeta};
-use anchor_lang::solana_program::clock::UnixTimestamp;
+use anchor_lang::prelude::*;
 use crate::error::CryptidSignerError;
 
 /// The data for an on-chain Cryptid Account

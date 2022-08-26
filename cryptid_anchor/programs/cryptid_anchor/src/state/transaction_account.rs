@@ -1,13 +1,8 @@
-use std::collections::HashMap;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::UnixTimestamp;
-use anchor_lang::solana_program::instruction::Instruction;
-use anchor_lang::solana_program::msg;
 use crate::error::CryptidSignerError;
-use crate::state::account_meta_props::AccountMetaProps;
 use crate::state::instruction_data::InstructionData;
 use crate::state::instruction_size::InstructionSize;
-use crate::state::transaction_account_meta::TransactionAccountMeta;
 use crate::state::transaction_state::TransactionState;
 use crate::util::DISCRIMINATOR_SIZE;
 
@@ -40,7 +35,7 @@ impl TransactionAccount {
             + 4 + instruction_sizes.into_iter().map(InstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 4 + signer_extras
             .into_iter()
-            .map(32 + 8)    // pubkey + expiry time
+            .map(|_| 32 + 8)    // pubkey + expiry time
             // .map(|size|size + 8) //Expiry time
             .sum::<usize>() //signers
             + TransactionState::calculate_size() //state

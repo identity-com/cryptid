@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::state::transaction_account::InstructionData;
+use crate::state::instruction_data::InstructionData;
 
 /// A helper struct for calculating [`InstructionData`] size
 #[derive(Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, PartialEq)]

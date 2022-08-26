@@ -1,11 +1,23 @@
 use anchor_lang::prelude::*;
-use anchor_lang::ToAccountInfo;
 use sol_did::state::DidAccount;
 use crate::error::CryptidSignerError;
+use num_traits::cast::ToPrimitive;
 
-impl AllAccounts for Context<'_, '_, '_, '_, _> {
-    fn all_accounts(&self) -> Vec<AccountInfo> {
-        self.accounts.iter().collect::<Vec<_>>().into().append(self.remaining_accounts.into_vec())
+/// A trait that extracts all accounts from an anchor instruction context, combining
+pub trait AllAccounts<'a> {
+    fn all_accounts(&self) -> Vec<AccountInfo<'a>>;
+}
+
+/// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
+/// By Generative, we mean that the account is not on chain, but derived from a public key and has default properties.
+pub trait IsGenerative<T> {
+    fn is_generative(&self) -> bool;
+}
+
+impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> for Account<'_, T> {
+    fn is_generative(&self) -> bool {
+        // TODO: I just want to check that it is zero. Why is this so hard!?
+        self.to_account_info().try_borrow_lamports().unwrap().to_u64().unwrap() == 0 && *self.to_account_info().owner == System::id()
     }
 }
 
@@ -13,21 +25,26 @@ impl AllAccounts for Context<'_, '_, '_, '_, _> {
 /// If the controller-chain is empty, it expects the signer to be a key on the did itself
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
 pub fn verify_keys<'a>(
-    did: &DidAccount,
+    did: &Account<'a, DidAccount>,
     signer: &Signer,
-    accounts: &[AccountInfo<'a>],
+    accounts: &'a [AccountInfo<'a>],
     controller_chain: &[u8]
 ) -> Result<()> {
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    let controlling_did_accounts: Vec<AccountInfo> =
+    let controlling_did_accounts: Vec<&AccountInfo<'a>> =
         resolve_account_indexes(controller_chain, accounts)?;
 
     let signer_is_authority = sol_did::is_authority(
-        &did.to_solana_account_info(),
-        controlling_did_accounts.as_slice(),
-        &signing_key.signing_key.key,
+        &did.to_account_info(),
+        // TODO: this is purely to change Vec<&AccountInfo> into &[AccountInfo] - there must be a better way to do this?!
+        controlling_did_accounts
+            .into_iter()
+            .map(|a| *a)
+            .collect::<Vec<_>>()
+            .as_slice(),
+        &signer.to_account_info().key,
         &[],
         None,
         None,
@@ -44,18 +61,18 @@ pub fn verify_keys<'a>(
     Ok(())
 }
 
-pub fn resolve_account_indexes(
+pub fn resolve_account_indexes<'a>(
     account_indexes: &[u8],
-    accounts: &[AccountInfo],
-) -> Result<Vec<AccountInfo>> {
+    accounts: &'a [AccountInfo<'a>],
+) -> Result<Vec<&'a AccountInfo<'a>>> {
     let mut resolved_accounts = Vec::new();
     for account_index in account_indexes {
-        let account_index = account_index.to_usize()?;
+        let account_index = *account_index as usize;
         if account_index >= accounts.len() {
             msg!("Account index {} out of bounds", account_index);
             return err!(CryptidSignerError::IndexOutOfRange);
         }
-        resolved_accounts.push(accounts[account_index].to_solana_account_info());
+        resolved_accounts.push(&accounts[account_index]);
     }
     Ok(resolved_accounts)
 }
@@ -110,14 +127,3 @@ pub fn resolve_account_indexes(
 //     }
 // }
 
-/// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
-/// By Generative, we mean that the account is not on chain, but derived from a public key and has default properties.
-trait IsGenerative {
-    fn is_generative(&self) -> bool;
-}
-
-impl IsGenerative for Account<'_, T> {
-    fn is_generative(&self) -> bool {
-        self.to_account_info().try_borrow_lamports().unwrap() == 0 && self.to_account_info().owner == System::id()
-    }
-}

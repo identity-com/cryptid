@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_compute_units;
 use bitflags::bitflags;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::state::instruction_data::InstructionData;
-use crate::util::SolDID;
+use crate::util::*;
+use crate::instructions::util::*;
 use sol_did::state::DidAccount;
-use crate::instructions::util::verify_keys;
 
 #[derive(Accounts)]
 #[instruction(
@@ -25,18 +24,40 @@ pub struct DirectExecute<'info> {
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction
     pub signer: Signer<'info>,
+}
+/// Collect all accounts as a single vector so that they can be referenced by index by instructions
+// TODO: Note - I initially wanted to use some crate to iterate over a struct's fields, so I could define
+// this for all Contexts automatically, but failed. We could either leave it like this or try again.
+// Once decided, remove this comment.
+// Note also - the lifetime parameters here are all the same because the accounts in the Context all use the same lifetime
+// I don't think it needs to be this way, but I don't think it matters,
+// since all accounts will have the same lifetime in effect (i.e. the lifetime of the tx)
+impl<'a> AllAccounts<'a> for Context<'a, 'a, 'a, 'a, DirectExecute<'a>> {
+    fn all_accounts(&self) -> Vec<AccountInfo<'a>> {
+        // let mut named_accounts = vec![
+        //     self.cryptid_account.info(),
+        //     self.did.info(),
+        //     self.did_program.info(),
+        //     self.signer.info(),
+        // ];
+        // named_accounts.append(&mut self.remaining_accounts.to_vec())
+        // named_accounts
 
-    // RemainingAccounts:
-    // /// The set of keys that sign for this transaction
-    // #[account_argument(instruction_data = signers_extras)]
-    // pub signing_keys: Vec<SigningKey>,
-    // /// Accounts for the instructions, each should only appear once
-    // pub instruction_accounts: Rest<AccountInfo>,
+        [
+            &[
+                self.accounts.cryptid_account.to_account_info(),
+                self.accounts.did.to_account_info(),
+                self.accounts.did_program.to_account_info(),
+                self.accounts.signer.to_account_info()
+            ],
+            &self.remaining_accounts[..]
+        ].concat()
+    }
 }
 
 /// Executes a transaction directly if all required keys sign
 pub fn direct_execute<'info>(
-    ctx: Context<'_, '_, '_, 'info, DirectExecute<'info>>,
+    ctx: Context<'info, 'info, 'info, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<InstructionData>,
     flags: DirectExecuteFlags,
@@ -55,11 +76,14 @@ pub fn direct_execute<'info>(
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
+    let all_accounts_vec = ctx.all_accounts();
+    let all_keys_vec = all_accounts_vec.iter().map(|a| *a.key).collect::<Vec<_>>();
+    // let all_keys = all_keys_vec.as_slice();
     verify_keys(
         &ctx.accounts.did,
         &ctx.accounts.signer,
-        ctx.all_accounts(),
-        controller_chain.as_slice(),
+        &all_accounts_vec[..],
+        &controller_chain[..],
     )?;
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instruction
@@ -69,9 +93,13 @@ pub fn direct_execute<'info>(
     // For now, we just go ahead and execute the instruction, ignoring key_threshold
 
     // generate the instructions to execute
-    let solana_instructions = instructions.into_iter().map(|instruction| {
-        instruction.into_solana_instruction(ctx.all_accounts())
-    }).collect::<Result<Vec<_>>>()?;
+    let solana_instructions = instructions
+        .into_iter()
+        .map(
+            |instruction| {
+                instruction.into_instruction(&all_keys_vec[..])
+            })
+        .collect::<Vec<_>>();
 
     // // Retrieve needed data from cryptid account
     // let (key_threshold, signer_key, signer_seed_set) = match &ctx.accounts.cryptid_account {
@@ -234,27 +262,13 @@ pub fn direct_execute<'info>(
 //     Ok((accounts, data))
 // }
 
-impl DirectExecute {
+impl DirectExecute<'_> {
     /// Prints all the keys to the program log (compute budget intensive)
     pub fn print_keys(&self) {
-        msg!("cryptid_account: {}", self.cryptid_account.info().key);
-        msg!("did: {}", self.did.key);
-        msg!("did_program: {}", self.did_program.key);
-        msg!(
-            "signing_keys: {:?}",
-            self.signing_keys
-                .iter()
-                .map(|signing_keys| signing_keys.to_key_string())
-                .collect::<Vec<_>>()
-        );
-        msg!(
-            "instruction_accounts: {:?}",
-            self.instruction_accounts
-                .0
-                .iter()
-                .map(|account| account.key)
-                .collect::<Vec<_>>()
-        );
+        msg!("cryptid_account: {}", self.cryptid_account.to_account_info().key);
+        msg!("did: {}", self.did.to_account_info().key);
+        msg!("did_program: {}", self.did_program.to_account_info().key);
+        msg!("signer: {}", self.signer.to_account_info().key);
     }
 }
 
