@@ -33,7 +33,7 @@ pub struct DirectExecute<'info> {
 // I don't think it needs to be this way, but I don't think it matters,
 // since all accounts will have the same lifetime in effect (i.e. the lifetime of the tx)
 impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
-    fn all_accounts(&self) -> Vec<AccountInfo<'info>> {
+    fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
         // let mut named_accounts = vec![
         //     self.cryptid_account.info(),
         //     self.did.info(),
@@ -42,16 +42,14 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
         // ];
         // named_accounts.append(&mut self.remaining_accounts.to_vec())
         // named_accounts
-
         [
-            &[
-                self.accounts.cryptid_account.to_account_info(),
-                self.accounts.did.to_account_info(),
-                self.accounts.did_program.to_account_info(),
-                self.accounts.signer.to_account_info()
-            ],
-            &self.remaining_accounts[..]
-        ].concat()
+            self.accounts.cryptid_account.as_ref(),
+            self.accounts.did.as_ref(),
+            self.accounts.did_program.as_ref(),
+            self.accounts.signer.as_ref()
+        ].into_iter()
+            .chain(self.remaining_accounts.iter()).collect()
+
     }
 }
 
@@ -76,13 +74,14 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
-    let all_accounts_vec = ctx.all_accounts();
-    let all_keys_vec = all_accounts_vec.iter().map(|a| *a.key).collect::<Vec<_>>();
+    let all_accounts_ref_vec = ctx.all_accounts();
+    let all_keys_vec = all_accounts_ref_vec.iter().map(|a| a.key.clone()).collect::<Vec<_>>();
     // let all_keys = all_keys_vec.as_slice();
+    let all_keys: &[&AccountInfo<'info>] = all_accounts_ref_vec.as_slice();
     verify_keys(
         &ctx.accounts.did,
         &ctx.accounts.signer,
-        &all_accounts_vec[..],
+        all_keys,
         &controller_chain[..],
     )?;
 
