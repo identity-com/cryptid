@@ -36,14 +36,15 @@ pub fn verify_keys<'a>(
     let controlling_did_accounts: Vec<&AccountInfo<'a>> =
         resolve_account_indexes(controller_chain, accounts)?;
 
+    let controlling_did_accounts = controlling_did_accounts
+        .into_iter()
+        .cloned()
+        // .map(|a| a.clone())
+        .collect::<Vec<_>>();
     let signer_is_authority = sol_did::is_authority(
         &did.to_account_info(),
         // TODO: this is purely to change Vec<&AccountInfo> into &[AccountInfo] - there must be a better way to do this?!
-        controlling_did_accounts
-            .into_iter()
-            .map(|a| *a)
-            .collect::<Vec<_>>()
-            .as_slice(),
+        controlling_did_accounts.as_slice(),
         &signer.to_account_info().key,
         &[],
         None,
@@ -72,6 +73,7 @@ pub fn resolve_account_indexes<'a>(
             msg!("Account index {} out of bounds", account_index);
             return err!(CryptidSignerError::IndexOutOfRange);
         }
+        let test = &accounts[account_index];
         resolved_accounts.push(&accounts[account_index]);
     }
     Ok(resolved_accounts)
