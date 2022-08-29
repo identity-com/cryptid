@@ -1122,7 +1122,7 @@ checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 [[package]]
 name = "sol-did"
 version = "3.0.0"
-source = "git+https://github.com/identity-com/sol-did?rev=e413386dfead12b90848455175ab74f12002d69a#e413386dfead12b90848455175ab74f12002d69a"
+source = "git+https://github.com/identity-com/sol-did?rev=b0a32154aa7d2d42666865a90356e9c50616dca2#b0a32154aa7d2d42666865a90356e9c50616dca2"
 dependencies = [
  "anchor-lang",
  "bitflags",
