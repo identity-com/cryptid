@@ -32,8 +32,8 @@ pub struct DirectExecute<'info> {
 // Note also - the lifetime parameters here are all the same because the accounts in the Context all use the same lifetime
 // I don't think it needs to be this way, but I don't think it matters,
 // since all accounts will have the same lifetime in effect (i.e. the lifetime of the tx)
-impl<'a> AllAccounts<'a> for Context<'a, 'a, 'a, 'a, DirectExecute<'a>> {
-    fn all_accounts(&self) -> Vec<AccountInfo<'a>> {
+impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
+    fn all_accounts(&self) -> Vec<AccountInfo<'info>> {
         // let mut named_accounts = vec![
         //     self.cryptid_account.info(),
         //     self.did.info(),
@@ -56,8 +56,8 @@ impl<'a> AllAccounts<'a> for Context<'a, 'a, 'a, 'a, DirectExecute<'a>> {
 }
 
 /// Executes a transaction directly if all required keys sign
-pub fn direct_execute<'info>(
-    ctx: Context<'info, 'info, 'info, 'info, DirectExecute<'info>>,
+pub fn direct_execute<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<InstructionData>,
     flags: DirectExecuteFlags,

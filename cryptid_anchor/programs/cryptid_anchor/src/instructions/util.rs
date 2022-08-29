@@ -4,8 +4,8 @@ use crate::error::CryptidSignerError;
 use num_traits::cast::ToPrimitive;
 
 /// A trait that extracts all accounts from an anchor instruction context, combining
-pub trait AllAccounts<'a> {
-    fn all_accounts(&self) -> Vec<AccountInfo<'a>>;
+pub trait AllAccounts<'a, 'b, 'c, 'info> {
+    fn all_accounts(&self) -> Vec<AccountInfo<'info>>;
 }
 
 /// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
@@ -24,16 +24,16 @@ impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> f
 /// Verifies that the signer has the permission to sign for the DID
 /// If the controller-chain is empty, it expects the signer to be a key on the did itself
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
-pub fn verify_keys<'a>(
+pub fn verify_keys<'a, 'b, 'c>(
     did: &Account<'a, DidAccount>,
     signer: &Signer,
-    accounts: &'a [AccountInfo<'a>],
-    controller_chain: &[u8]
+    accounts: &'b [AccountInfo<'b>],
+    controller_chain: &'c [u8]
 ) -> Result<()> {
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    let controlling_did_accounts: Vec<&AccountInfo<'a>> =
+    let controlling_did_accounts: Vec<&AccountInfo<'b>> =
         resolve_account_indexes(controller_chain, accounts)?;
 
     let controlling_did_accounts = controlling_did_accounts
@@ -60,10 +60,10 @@ pub fn verify_keys<'a>(
     Ok(())
 }
 
-pub fn resolve_account_indexes<'a>(
-    account_indexes: &[u8],
-    accounts: &'a [AccountInfo<'a>],
-) -> Result<Vec<&'a AccountInfo<'a>>> {
+pub fn resolve_account_indexes<'a, 'b>(
+    account_indexes: &'a [u8],
+    accounts: &'b [AccountInfo<'b>],
+) -> Result<Vec<&'b AccountInfo<'b>>> {
     let mut resolved_accounts = Vec::new();
     for account_index in account_indexes {
         let account_index = *account_index as usize;
