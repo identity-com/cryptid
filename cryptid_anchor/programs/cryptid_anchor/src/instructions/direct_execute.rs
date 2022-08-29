@@ -5,6 +5,8 @@ use crate::state::instruction_data::InstructionData;
 use crate::util::*;
 use crate::instructions::util::*;
 use sol_did::state::DidAccount;
+use crate::error::CryptidSignerError;
+
 
 #[derive(Accounts)]
 #[instruction(
@@ -34,14 +36,6 @@ pub struct DirectExecute<'info> {
 // since all accounts will have the same lifetime in effect (i.e. the lifetime of the tx)
 impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
-        // let mut named_accounts = vec![
-        //     self.cryptid_account.info(),
-        //     self.did.info(),
-        //     self.did_program.info(),
-        //     self.signer.info(),
-        // ];
-        // named_accounts.append(&mut self.remaining_accounts.to_vec())
-        // named_accounts
         [
             self.accounts.cryptid_account.as_ref(),
             self.accounts.did.as_ref(),
@@ -49,7 +43,20 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
             self.accounts.signer.as_ref()
         ].into_iter()
             .chain(self.remaining_accounts.iter()).collect()
+    }
 
+    fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>> {
+        let accounts = self.all_accounts();
+        let mut resolved_accounts = Vec::new();
+        for i in indexes {
+            let i = *i as usize;
+            if i >= accounts.len() {
+                msg!("Account index {} out of bounds", i);
+                return err!(CryptidSignerError::IndexOutOfRange);
+            }
+            resolved_accounts.push(accounts[i]);
+        }
+        Ok(resolved_accounts)
     }
 }
 
@@ -72,18 +79,22 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         msg!("Cryptid is not generative")
     }
 
+
+
+    // convert the controller chain (an array of account indices) into an array of accounts
+    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
+    // sol_did does that
+    let controlling_did_accounts = ctx.get_accounts_by_indexes(controller_chain.as_slice())?;
+    verify_keys(
+        &ctx.accounts.did,
+        &ctx.accounts.signer,
+        controlling_did_accounts,
+    )?;
+
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     let all_accounts_ref_vec = ctx.all_accounts();
     let all_keys_vec = all_accounts_ref_vec.iter().map(|a| a.key.clone()).collect::<Vec<_>>();
-    // let all_keys = all_keys_vec.as_slice();
-    let all_keys: &[&AccountInfo<'info>] = all_accounts_ref_vec.as_slice();
-    verify_keys(
-        &ctx.accounts.did,
-        &ctx.accounts.signer,
-        all_keys,
-        &controller_chain[..],
-    )?;
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instruction
     // TODO - if we want direct-execute to support multisig, we need to support more signers here

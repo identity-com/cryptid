@@ -6,6 +6,7 @@ use num_traits::cast::ToPrimitive;
 /// A trait that extracts all accounts from an anchor instruction context, combining
 pub trait AllAccounts<'a, 'b, 'c, 'info> {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>>;
+    fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>>;
 }
 
 /// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
@@ -27,14 +28,8 @@ impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> f
 pub fn verify_keys<'a, 'b, 'c, 'info>(
     did: &Account<'a, DidAccount>,
     signer: &Signer,
-    accounts: &'b [&AccountInfo<'info>],
-    controller_chain: &'c [u8]
+    controlling_did_accounts: Vec<&AccountInfo<'info>>,
 ) -> Result<()> {
-    // convert the controller chain (an array of account indices) into an array of accounts
-    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
-    // sol_did does that
-    let controlling_did_accounts: Vec<&AccountInfo<'info>> =
-        resolve_account_indexes(controller_chain, accounts)?;
 
     let controlling_did_accounts = controlling_did_accounts
         .into_iter()
@@ -60,21 +55,21 @@ pub fn verify_keys<'a, 'b, 'c, 'info>(
     Ok(())
 }
 
-pub fn resolve_account_indexes<'a, 'b, 'info>(
-    account_indexes: &'a [u8],
-    accounts: &'b [&AccountInfo<'info>],
-) -> Result<Vec<&'b AccountInfo<'info>>> {
-    let mut resolved_accounts = Vec::new();
-    for account_index in account_indexes {
-        let account_index = *account_index as usize;
-        if account_index >= accounts.len() {
-            msg!("Account index {} out of bounds", account_index);
-            return err!(CryptidSignerError::IndexOutOfRange);
-        }
-        resolved_accounts.push(accounts[account_index]);
-    }
-    Ok(resolved_accounts)
-}
+// pub fn resolve_account_indexes<'a, 'b, 'info>(
+//     account_indexes: &'a [u8],
+//     accounts: &'b [&AccountInfo<'info>],
+// ) -> Result<Vec<&'b AccountInfo<'info>>> {
+//     let mut resolved_accounts = Vec::new();
+//     for account_index in account_indexes {
+//         let account_index = *account_index as usize;
+//         if account_index >= accounts.len() {
+//             msg!("Account index {} out of bounds", account_index);
+//             return err!(CryptidSignerError::IndexOutOfRange);
+//         }
+//         resolved_accounts.push(accounts[account_index]);
+//     }
+//     Ok(resolved_accounts)
+// }
 
 
 //
