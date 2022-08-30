@@ -23,7 +23,8 @@ flags: DirectExecuteFlags,
 )]
 pub struct DirectExecute<'info> {
     /// The Cryptid instance to execute with
-    pub cryptid_account: Account<'info, CryptidAccount>,
+    /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
+    pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
     pub did: Account<'info, DidAccount>,
     /// The program for the DID
@@ -76,21 +77,26 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
-    let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
-        true => {
-            msg!("Cryptid is generative");
-            Box::new(GenerativeCryptidSeeder {
-                did_program: *ctx.accounts.did_program.key,
-                did: ctx.accounts.did.key(),
-            })
-        },
-        false => {
-            msg!("Cryptid is not generative");
-            Box::new(CryptidSignerSeeder {
-                cryptid_account: ctx.accounts.cryptid_account.key(),
-            })
-        }
-    };
+    let seeder =  Box::new(GenerativeCryptidSeeder {
+        did_program: *ctx.accounts.did_program.key,
+        did: ctx.accounts.did.key(),
+    });
+
+    // let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
+    //     true => {
+    //         msg!("Cryptid is generative");
+    //         Box::new(GenerativeCryptidSeeder {
+    //             did_program: *ctx.accounts.did_program.key,
+    //             did: ctx.accounts.did.key(),
+    //         })
+    //     },
+    //     false => {
+    //         msg!("Cryptid is not generative");
+    //         Box::new(CryptidSignerSeeder {
+    //             cryptid_account: ctx.accounts.cryptid_account.key(),
+    //         })
+    //     }
+    // };
 
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
