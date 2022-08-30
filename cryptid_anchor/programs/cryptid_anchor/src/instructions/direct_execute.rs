@@ -144,7 +144,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
             invoke_signed(
                 &solana_instruction,
                 account_infos.as_slice(),
-                &[seeds],
+                &[&[seeds.as_slice()]],
             )
                 .map_err(|_| error!(CryptidError::SubInstructionError))
 

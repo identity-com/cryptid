@@ -12,7 +12,7 @@ pub const TRANSACTION_SEED: &[u8; 19] = br"cryptid_transaction";
 /// A set of seeds for a given PDA type.
 pub trait PDASeeder: Debug {
     /// Gets a slice of seeds for this address.
-    fn seeds(&self) -> &[&[u8]];
+    fn seeds(&self) -> Vec<u8>;
 }
 
 /// The seeder for cryptid signers
@@ -22,8 +22,8 @@ pub struct CryptidSignerSeeder {
     pub cryptid_account: Pubkey,
 }
 impl PDASeeder for CryptidSignerSeeder {
-    fn seeds(&self) -> &[&[u8]] {
-        &[CRYPTID_SIGNER_SEED as &[u8], &self.cryptid_account.to_bytes()]
+    fn seeds(&self) -> Vec<u8> {
+        [CRYPTID_SIGNER_SEED as &[u8], &self.cryptid_account.to_bytes()].concat()
     }
 }
 
@@ -36,12 +36,12 @@ pub struct GenerativeCryptidSeeder {
     pub did: Pubkey,
 }
 impl PDASeeder for GenerativeCryptidSeeder {
-    fn seeds(&self) -> &[&[u8]] {
-        &[
+    fn seeds(&self) -> Vec<u8> {
+        [
             GENERATIVE_CRYPTID_SEED as &[u8],
             &self.did_program.clone().to_bytes(),
             &self.did.to_bytes(),
-        ].as_slice()
+        ].concat()
     }
 }
 
@@ -54,12 +54,11 @@ pub struct TransactionSeeder {
     pub seed: String,
 }
 impl PDASeeder for TransactionSeeder {
-    fn seeds<'a>(&'a self) -> &[&[u8]] {
-        &[
+    fn seeds<'a>(&'a self) -> Vec<u8> {
+        [
             TRANSACTION_SEED as &[u8],
             &self.cryptid_account.to_bytes(),
             &self.seed.as_bytes(),
-        ]
-            .as_slice()
+        ].concat()
     }
 }
