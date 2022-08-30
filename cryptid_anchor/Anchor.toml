@@ -15,5 +15,10 @@ wallet = "~/.config/solana/id.json"
 address = "didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc"
 program = "../programs/cryptid_signer/tests/fixtures/sol_did_2.0.0.so"
 
+[[test.validator.account]]
+address = "78CJ7rLRbMg1eLKudJqmQp1wzPu1NEo9qRJhMXQKoNe7"
+filename = "../fixtures/did-sol-idl-account.json"
+
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
