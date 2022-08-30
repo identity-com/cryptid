@@ -115,7 +115,8 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 
     // generate the instructions to execute
     let solana_instructions = instructions
-        .into_iter()
+        .iter()
+        .cloned()
         .map(
             |instruction| {
                 instruction.into_instruction(&all_keys_vec[..])
@@ -123,8 +124,8 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         .collect::<Vec<_>>();
 
     // Execute instructions
-    for (index, instruction_data) in instructions.into_iter().enumerate() {
-        let solana_instruction = instruction_data.into_instruction(&all_keys_vec[..]);
+    for (index, instruction_data) in instructions.iter().enumerate() {
+        let solana_instruction = instruction_data.clone().into_instruction(&all_keys_vec[..]);
         let account_indexes = instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>();
         let account_infos = ctx
             .get_accounts_by_indexes(account_indexes.as_slice())?
