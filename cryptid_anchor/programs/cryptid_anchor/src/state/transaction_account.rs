@@ -16,7 +16,8 @@ pub struct TransactionAccount {
     /// The instructions that will be executed
     pub transaction_instructions: Vec<InstructionData>,
     /// The signers of the transaction with their expiry times
-    pub signers: Vec<(Pubkey, UnixTimestamp)>, //TODO: this was changed from SigningKeyData in the original version - Check if we are safe to leave it as PublicKey
+    // TODO: Commented because of anchor serialization problems
+    // pub signers: Vec<(Pubkey, UnixTimestamp)>, //TODO: this was changed from SigningKeyData in the original version - Check if we are safe to leave it as PublicKey
     /// The state of the transaction
     pub state: TransactionState,
     /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same

@@ -19,7 +19,7 @@ signers_extras: Vec<u8>,
 /// The instructions to execute
 instructions: Vec<InstructionData>,
 /// Additional flags
-flags: DirectExecuteFlags,
+flags: u8,
 )]
 pub struct DirectExecute<'info> {
     /// The Cryptid instance to execute with
@@ -70,9 +70,9 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<InstructionData>,
-    flags: DirectExecuteFlags,
+    flags: u8,
 ) -> Result<()> {
-    let debug = flags.contains(DirectExecuteFlags::DEBUG);
+    let debug = DirectExecuteFlags::from_bits(flags).unwrap().contains(DirectExecuteFlags::DEBUG);
     if debug {
         ctx.accounts.print_keys();
     }

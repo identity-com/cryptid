@@ -3,8 +3,7 @@ use anchor_lang::prelude::*;
 
 bitflags! {
     /// The meta information about an instruction account
-    #[derive(AnchorDeserialize, AnchorSerialize)]
-    pub struct AccountMetaProps: u8{
+    pub struct AccountMetaProps: u8 {
         /// The account is a signer
         const IS_SIGNER = 1 << 0;
         /// The account is writable

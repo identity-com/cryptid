@@ -9,3 +9,4 @@ pub mod direct_execute;
 // pub mod test_instruction;
 
 pub mod util;
+pub use direct_execute::*;

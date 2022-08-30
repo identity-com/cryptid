@@ -4,7 +4,7 @@ use anchor_lang::prelude::Pubkey;
 /// The seed for the Cryptid signer
 pub const CRYPTID_SIGNER_SEED: &[u8; 14] = br"cryptid_signer";
 /// The seed for generative Cryptid Accounts
-pub const GENERATIVE_CRYPTID_SEED: &[u8; 11] = br"cryptid_doa";
+pub const GENERATIVE_CRYPTID_SEED: &[u8; 15] = br"cryptid_account";
 /// The seed for transaction accounts
 pub const TRANSACTION_SEED: &[u8; 19] = br"cryptid_transaction";
 
