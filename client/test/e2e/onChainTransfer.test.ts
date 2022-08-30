@@ -59,7 +59,7 @@ describe('on-chain transfer', function () {
     [didPDAKey] = await Promise.all([
       didToPDA(did),
       airdrop(connection, cryptidSigner, 5 * LAMPORTS_PER_SOL),
-      airdrop(connection, key.publicKey, 100_000),
+      airdrop(connection, key.publicKey, LAMPORTS_PER_SOL),
     ]);
 
     console.log('key: ', key.publicKey.toBase58());

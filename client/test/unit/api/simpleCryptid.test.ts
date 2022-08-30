@@ -18,11 +18,6 @@ import { normalizeSigner } from '../../../src/lib/util';
 import * as DirectExecute from '../../../src/lib/solana/transactions/directExecute';
 import * as Util from '../../../src/lib/util';
 import * as AddKey from '../../../src/lib/solana/transactions/did/addKey';
-import * as RemoveKey from '../../../src/lib/solana/transactions/did/removeKey';
-import * as AddService from '../../../src/lib/solana/transactions/did/addService';
-import * as RemoveService from '../../../src/lib/solana/transactions/did/removeService';
-import * as AddController from '../../../src/lib/solana/transactions/did/addController';
-import * as RemoveController from '../../../src/lib/solana/transactions/did/removeController';
 import { pubkey } from '../../utils/solana';
 import { decode } from 'bs58';
 import { CryptidOptions, PayerOption } from '../../../src/api/cryptid';
@@ -129,63 +124,6 @@ describe('SimpleCryptid', () => {
       const shouldFail = cryptid.addKey(pubkey(), 'alias');
 
       return expect(shouldFail).to.be.rejectedWith(/Unsupported payer option/);
-    });
-  });
-
-  context('removeKey', () => {
-    it('should delegate to removeKey', async () => {
-      const expectation = sandbox.mock(RemoveKey).expects('removeKey');
-      expectation.resolves(new Transaction());
-
-      await cryptid.removeKey('alias');
-
-      expectation.verify();
-    });
-  });
-
-  context('addController', () => {
-    it('should delegate to addController', async () => {
-      const expectation = sandbox.mock(AddController).expects('addController');
-      expectation.resolves(new Transaction());
-
-      await cryptid.addController('did:sol:controller');
-
-      expectation.verify();
-    });
-  });
-
-  context('removeController', () => {
-    it('should delegate to removeController', async () => {
-      const expectation = sandbox
-        .mock(RemoveController)
-        .expects('removeController');
-      expectation.resolves(new Transaction());
-
-      await cryptid.removeController('did:sol:controller');
-
-      expectation.verify();
-    });
-  });
-
-  context('addService', () => {
-    it('should delegate to addService', async () => {
-      const expectation = sandbox.mock(AddService).expects('addService');
-      expectation.resolves(new Transaction());
-
-      await cryptid.addService(makeService());
-
-      expectation.verify();
-    });
-  });
-
-  context('removeService', () => {
-    it('should delegate to removeService', async () => {
-      const expectation = sandbox.mock(RemoveService).expects('removeService');
-      expectation.resolves(new Transaction());
-
-      await cryptid.removeService('service1');
-
-      expectation.verify();
     });
   });
 

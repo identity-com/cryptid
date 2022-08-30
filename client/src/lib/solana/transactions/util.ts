@@ -7,12 +7,10 @@ import {
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
 import {
-  LegacyClient, // TODO: remove
   DidSolIdentifier,
 } from '@identity.com/sol-did-client';
-import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
-import { DIDDocument } from 'did-resolver';
-import { deriveCryptidAccountSigner, didToPublicKey } from '../util';
+import { SOL_DID_PROGRAM_ID } from '../../constants';
+import { deriveCryptidAccountSigner } from '../util';
 import { SignerArg } from "./directExecute";
 import * as R from "ramda";
 import TransactionAccount from "../accounts/TransactionAccount";
@@ -56,19 +54,7 @@ export const createTransaction = async (
   return transaction;
 };
 
-const registerInstruction = async (
-  payer: PublicKey,
-  authority: PublicKey,
-  document?: Partial<DIDDocument>,
-  size: number = DEFAULT_DID_DOCUMENT_SIZE
-) =>
-  // TODO: replace with new Client
-  LegacyClient.createRegisterInstruction({
-    payer,
-    authority,
-    size,
-    document,
-  });
+
 
 export const didIsRegistered = async (
   connection: Connection,
@@ -88,25 +74,6 @@ export const didIsRegistered = async (
   );
 };
 
-export const registerInstructionIfNeeded = async (
-  connection: Connection,
-  did: string,
-  payer: PublicKey,
-  document?: Partial<DIDDocument>,
-  size?: number
-): Promise<TransactionInstruction | null> => {
-  const isRegistered = await didIsRegistered(connection, did);
-
-  if (isRegistered) return null;
-
-  const [instruction] = await registerInstruction(
-    payer,
-    didToPublicKey(did),
-    document,
-    size
-  );
-  return instruction;
-};
 
 /**
  * Normalizes a `PublicKey | AccountMeta` to an `AccountMeta` where permissions are lowest if it's a `PublicKey`

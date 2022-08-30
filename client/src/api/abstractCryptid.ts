@@ -1,13 +1,8 @@
 import { Signer } from '../types/crypto';
 import { PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
-import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
-import { removeKey as removeKeyTransaction } from '../lib/solana/transactions/did/removeKey';
-import { addService as addServiceTransaction } from '../lib/solana/transactions/did/addService';
-import { removeService as removeServiceTransaction } from '../lib/solana/transactions/did/removeService';
-import { addController as addControllerTransaction } from '../lib/solana/transactions/did/addController';
-import { removeController as removeControllerTransaction } from '../lib/solana/transactions/did/removeController';
-import { DIDDocument, ServiceEndpoint } from 'did-resolver';
+// import { addKey as addKeyTransaction } from '../lib/solana/transactions/did/addKey';
+import { DIDDocument } from 'did-resolver';
 import { DidSolIdentifier, DidSolService } from '@identity.com/sol-did-client';
 import { didToDefaultDOASigner } from '../lib/util';
 import { CRYPTID_PROGRAM_ID } from '../lib/constants';
@@ -96,97 +91,22 @@ export abstract class AbstractCryptid implements Cryptid {
     }
   }
 
-  async addKey(
-    publicKey: PublicKey,
-    alias: string
-  ): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-    const transaction = await addKeyTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      publicKey,
-      alias,
-      authority
-    );
-    return this.send(transaction);
-  }
-
-  async removeKey(alias: string): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-
-    const transaction = await removeKeyTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      alias,
-      authority
-    );
-
-    return this.send(transaction);
-  }
-
-  async addService(service: ServiceEndpoint): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-
-    const transaction = await addServiceTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      service,
-      authority
-    );
-
-    return this.send(transaction);
-  }
-
-  async removeService(alias: string): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-
-    const transaction = await removeServiceTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      alias,
-      authority
-    );
-
-    return this.send(transaction);
-  }
-
-  async addController(controller: string): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-
-    const transaction = await addControllerTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      controller,
-      authority
-    );
-
-    return this.send(transaction);
-  }
-
-  async removeController(controller: string): Promise<TransactionSignature> {
-    const signer = await this.getSignerForInternalTransaction();
-    const authority = await this.signer.publicKey;
-
-    const transaction = await removeControllerTransaction(
-      this.options.connection,
-      this.did,
-      signer,
-      controller,
-      authority
-    );
-
-    return this.send(transaction);
-  }
+//   async addKey(
+//     publicKey: PublicKey,
+//     alias: string
+//   ): Promise<TransactionSignature> {
+//     const signer = await this.getSignerForInternalTransaction();
+//     const authority = await this.signer.publicKey;
+//     const transaction = await addKeyTransaction(
+//       this.options.connection,
+//       this.did,
+//       signer,
+//       publicKey,
+//       alias,
+//       authority
+//     );
+//     return this.send(transaction);
+//   }
 
   // Base case for collecting all additional keys that must be provided when signing
   // a transaction with controller chains. Each controller layer adds an additional key here

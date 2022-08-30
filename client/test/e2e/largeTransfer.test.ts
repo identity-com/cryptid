@@ -88,7 +88,7 @@ describe('transfers', function () {
       const cryptid = build(did, key, { connection });
 
       // TODO: (IDCOM-1953) Increase the number of instructions
-      const nrInstructions = 18;
+      const nrInstructions = 10;
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
