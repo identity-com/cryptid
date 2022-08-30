@@ -1,7 +1,7 @@
 //! The types that are stored in accounts for `cryptid_signer`
 
 use anchor_lang::prelude::*;
-use crate::error::CryptidSignerError;
+use crate::error::CryptidError;
 
 /// The data for an on-chain Cryptid Account
 #[account]
@@ -34,8 +34,8 @@ impl CryptidAccount {
 
     /// Verifies that this Cryptid Account comes from the DID and DID Program
     pub fn verify_did_and_program(&self, did: Pubkey, did_program: Pubkey) -> Result<()> {
-        require_keys_eq!(self.did, did, CryptidSignerError::WrongDID);
-        require_keys_eq!(self.did_program, did_program, CryptidSignerError::WrongDIDProgram);
+        require_keys_eq!(self.did, did, CryptidError::WrongDID);
+        require_keys_eq!(self.did_program, did_program, CryptidError::WrongDIDProgram);
         Ok(())
     }
 }

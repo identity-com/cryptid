@@ -55,4 +55,13 @@ impl InstructionData {
             data: self.data,
         }
     }
+
+    pub fn select_account_infos<'a>(self, account_infos: &'a [AccountInfo<'a>]) -> Vec<AccountInfo<'a>> {
+        self.accounts
+            .into_iter()
+            .map(|meta| {
+                account_infos[meta.key as usize].clone()
+            })
+            .collect()
+    }
 }

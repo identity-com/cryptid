@@ -1,3 +1,7 @@
+// pub mod cpi;
+// pub mod pda_seeds;
+pub mod seeder;
+
 use anchor_lang::prelude::*;
 use std::str::FromStr;
 

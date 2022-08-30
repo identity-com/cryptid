@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::UnixTimestamp;
-use crate::error::CryptidSignerError;
+use crate::error::CryptidError;
 use crate::state::instruction_data::InstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_state::TransactionState;
@@ -44,19 +44,19 @@ impl TransactionAccount {
 
     /// Gets an instruction or errors if no instruction at index
     pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut InstructionData> {
-        require_gte!(index as usize, self.transaction_instructions.len(), CryptidSignerError::IndexOutOfRange);
+        require_gte!(index as usize, self.transaction_instructions.len(), CryptidError::IndexOutOfRange);
         Ok(&mut self.transaction_instructions[index as usize])
     }
 
     /// Checks if a given index is valid for the instructions list
     pub fn check_instruction_index(&self, index: u8) -> Result<()> {
-        require_gte!(index as usize, self.transaction_instructions.len(), CryptidSignerError::IndexOutOfRange);
+        require_gte!(index as usize, self.transaction_instructions.len(), CryptidError::IndexOutOfRange);
         Ok(())
     }
 
     /// Checks of a given index is valid for the accounts list
     pub fn check_account_index(&self, index: u8) -> Result<()> {
-        require_gte!(index as usize, self.accounts.len(), CryptidSignerError::IndexOutOfRange);
+        require_gte!(index as usize, self.accounts.len(), CryptidError::IndexOutOfRange);
         Ok(())
     }
 }

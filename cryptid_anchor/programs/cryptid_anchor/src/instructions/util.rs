@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use sol_did::state::DidAccount;
-use crate::error::CryptidSignerError;
+use crate::error::CryptidError;
 use num_traits::cast::ToPrimitive;
 
 /// A trait that extracts all accounts from an anchor instruction context, combining
@@ -43,14 +43,14 @@ pub fn verify_keys<'a, 'b, 'c, 'info>(
         None,
         None,
     )
-        .map_err(|error| -> CryptidSignerError {
+        .map_err(|error| -> CryptidError {
             msg!("Error executing is_authority: {}", error);
-            CryptidSignerError::KeyCannotChangeTransaction
+            CryptidError::KeyCannotChangeTransaction
         })?;
 
     if !signer_is_authority {
         msg!("Signer is not an authority on the DID");
-        return err!(CryptidSignerError::KeyCannotChangeTransaction);
+        return err!(CryptidError::KeyCannotChangeTransaction);
     }
     Ok(())
 }
@@ -64,7 +64,7 @@ pub fn verify_keys<'a, 'b, 'c, 'info>(
 //         let account_index = *account_index as usize;
 //         if account_index >= accounts.len() {
 //             msg!("Account index {} out of bounds", account_index);
-//             return err!(CryptidSignerError::IndexOutOfRange);
+//             return err!(CryptidError::IndexOutOfRange);
 //         }
 //         resolved_accounts.push(accounts[account_index]);
 //     }

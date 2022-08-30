@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 
 /// The main error type for `cryptid_signer`.
 #[error_code]
-pub enum CryptidSignerError {
+pub enum CryptidError {
     /// Not enough signers were passed
     #[msg("Not enough signers")]
     NotEnoughSigners,
@@ -31,4 +31,10 @@ pub enum CryptidSignerError {
     /// Indexer went out of possible range
     #[msg("Index out of range.")]
     IndexOutOfRange,
+    /// An attempt to make a PDA from a set of seeds failed
+    #[msg("No account from seeds.")]
+    NoAccountFromSeeds,
+    /// Error validating a PDA from a set of seeds
+    #[msg("Account not from seeds.")]
+    AccountNotFromSeeds
 }

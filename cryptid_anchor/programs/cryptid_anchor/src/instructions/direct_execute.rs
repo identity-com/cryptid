@@ -1,11 +1,15 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::solana_program::log::sol_log_compute_units;
+use anchor_lang::solana_program::program::invoke_signed;
 use bitflags::bitflags;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::state::instruction_data::InstructionData;
 use crate::util::*;
 use crate::instructions::util::*;
 use sol_did::state::DidAccount;
-use crate::error::CryptidSignerError;
+use crate::error::CryptidError;
+use crate::util::seeder::*;
 
 
 #[derive(Accounts)]
@@ -52,7 +56,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
             let i = *i as usize;
             if i >= accounts.len() {
                 msg!("Account index {} out of bounds", i);
-                return err!(CryptidSignerError::IndexOutOfRange);
+                return err!(CryptidError::IndexOutOfRange);
             }
             resolved_accounts.push(accounts[i]);
         }
@@ -72,14 +76,21 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
-    // TODO remove - just for testing
-    if ctx.accounts.cryptid_account.is_generative() {
-        msg!("Cryptid is generative")
-    } else {
-        msg!("Cryptid is not generative")
-    }
-
-
+    let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
+        true => {
+            msg!("Cryptid is generative");
+            Box::new(GenerativeCryptidSeeder {
+                did_program: *ctx.accounts.did_program.key,
+                did: ctx.accounts.did.key(),
+            })
+        },
+        false => {
+            msg!("Cryptid is not generative");
+            Box::new(CryptidSignerSeeder {
+                cryptid_account: ctx.accounts.cryptid_account.key(),
+            })
+        }
+    };
 
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
@@ -110,6 +121,46 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
                 instruction.into_instruction(&all_keys_vec[..])
             })
         .collect::<Vec<_>>();
+
+    // Execute instructions
+    for (index, instruction_data) in instructions.into_iter().enumerate() {
+        let solana_instruction = instruction_data.into_instruction(&all_keys_vec[..]);
+        let account_indexes = instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>();
+        let account_infos = ctx
+            .get_accounts_by_indexes(account_indexes.as_slice())?
+            .into_iter()
+            .cloned()
+            .collect::<Vec<_>>();
+
+        let seeds = seeder.seeds();
+
+        msg!("Remaining compute units for sub-instruction `{}`", index);
+        sol_log_compute_units();
+
+        // Check if the metas contain a the signer and run relevant invoke
+        let is_signed_by_cryptid = solana_instruction.accounts.iter().any(|meta| meta.pubkey.eq(ctx.accounts.signer.key));
+        let sub_instruction_result = if is_signed_by_cryptid {
+            msg!("Invoking signed");
+            invoke_signed(
+                &solana_instruction,
+                account_infos.as_slice(),
+                &[seeds],
+            )
+                .map_err(|_| error!(CryptidError::SubInstructionError))
+
+        } else {
+            msg!("Invoking without signature");
+            Ok(())
+            // TODO
+            // invoke_variable_size(instruction);
+        };
+
+        // If sub-instruction errored log the index and error
+        if let Err(ref error) = sub_instruction_result {
+            msg!("Error in sub-instruction `{}`: {:?}", index, error);
+            return sub_instruction_result;
+        }
+    }
 
     // // Retrieve needed data from cryptid account
     // let (key_threshold, signer_key, signer_seed_set) = match &ctx.accounts.cryptid_account {
@@ -145,7 +196,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // };
     //
     // // Error if there aren't enough signers
-    // require_gte!(data.signers_extras.len(), key_threshold as usize, CryptidSignerError::NotEnoughSigners);
+    // require_gte!(data.signers_extras.len(), key_threshold as usize, CryptidError::NotEnoughSigners);
     //
     // msg!("Verifying keys");
     // // Verify the keys sent, this only checks that one is valid for now but will use the threshold eventually
@@ -201,7 +252,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     //
     //     // If sub-instruction errored log the index and error
     //     if let Err(error) = sub_instruction_result {
-    //         return err!(CryptidSignerError::SubInstructionError);
+    //         return err!(CryptidError::SubInstructionError);
     //     }
     // }
 
