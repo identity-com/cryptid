@@ -15,11 +15,6 @@ use state::instruction_data::InstructionData;
 pub mod cryptid_anchor {
     use super::*;
 
-
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        Ok(())
-    }
-
     pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
         controller_chain: Vec<u8>,
@@ -29,7 +24,4 @@ pub mod cryptid_anchor {
         instructions::direct_execute(ctx, controller_chain, instructions, flags)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
 

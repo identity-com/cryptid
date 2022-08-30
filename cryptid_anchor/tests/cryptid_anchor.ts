@@ -21,12 +21,6 @@ describe("cryptid_anchor", () => {
   const cluster: ExtendedCluster = 'localnet';
 
 
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
-  });
-
   it("Can transfer through Cryptid!", async () => {
     // Add your test here.
     const did = DidSolIdentifier.create(authority.publicKey, cluster);
