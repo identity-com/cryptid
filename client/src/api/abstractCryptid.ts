@@ -91,23 +91,6 @@ export abstract class AbstractCryptid implements Cryptid {
     }
   }
 
-//   async addKey(
-//     publicKey: PublicKey,
-//     alias: string
-//   ): Promise<TransactionSignature> {
-//     const signer = await this.getSignerForInternalTransaction();
-//     const authority = await this.signer.publicKey;
-//     const transaction = await addKeyTransaction(
-//       this.options.connection,
-//       this.did,
-//       signer,
-//       publicKey,
-//       alias,
-//       authority
-//     );
-//     return this.send(transaction);
-//   }
-
   // Base case for collecting all additional keys that must be provided when signing
   // a transaction with controller chains. Each controller layer adds an additional key here
   async additionalKeys(): Promise<PublicKey[]> {

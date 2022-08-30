@@ -56,13 +56,6 @@ export interface Cryptid {
 
   cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;
 
-//   /**
-//    * Adds a key to your the Crytid account
-//    * @param publicKey The public key to add
-//    * @param alias A unique alias for that key
-//    */
-//   addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature>;
-
   /**
    * Retrieves the DID document for this Cryptid account
    */
