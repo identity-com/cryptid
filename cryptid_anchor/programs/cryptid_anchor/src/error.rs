@@ -23,9 +23,9 @@ pub enum CryptidError {
     /// Key is not a proposer for the transaction
     #[msg("Key is not a proposer for the transaction")]
     KeyCannotChangeTransaction,
-    /// Non-signing key marked as a signer
+    /// Signer is not authorised to sign for this Cryptid account
     #[msg(
-        "A key was passed as a SigningKey but is not a signer of the transaction"
+        "Signer is not authorised to sign for this Cryptid account"
     )]
     KeyMustBeSigner,
     /// Indexer went out of possible range

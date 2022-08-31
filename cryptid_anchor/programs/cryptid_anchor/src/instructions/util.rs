@@ -50,7 +50,7 @@ pub fn verify_keys<'a, 'b, 'c, 'info>(
 
     if !signer_is_authority {
         msg!("Signer is not an authority on the DID");
-        return err!(CryptidError::KeyCannotChangeTransaction);
+        return err!(CryptidError::KeyMustBeSigner);
     }
     Ok(())
 }
