@@ -20,6 +20,12 @@ describe("cryptid_anchor", () => {
   const authority = programProvider.wallet;
   const cluster: ExtendedCluster = 'localnet';
 
+  before(() => {
+    programProvider.connection.onLogs("all", (log) =>
+        console.log(log.logs)
+    );
+  })
+
 
   it("Can transfer through Cryptid!", async () => {
     // Add your test here.
@@ -49,7 +55,7 @@ describe("cryptid_anchor", () => {
     }).data;
 
 
-    const tx = await program.methods.directExecute(Buffer.from([]), [{
+    const instructionData = [{
       program_id: 5,
       accounts: [
         {
@@ -60,9 +66,10 @@ describe("cryptid_anchor", () => {
           key: 4,
           meta: 2,
         }
-        ],
-       data: transferData,
-    }], 0).accounts({
+      ],
+      data: transferData,
+    }];
+    const tx = await program.methods.directExecute(Buffer.from([]), instructionData, 0).accounts({
       cryptidAccount,
       didProgram: DID_SOL_PROGRAM,
       did: didAccount,
@@ -76,7 +83,7 @@ describe("cryptid_anchor", () => {
       pubkey: SystemProgram.programId,
       isWritable: false,
       isSigner: false,
-    }]).rpc();
+    }]).rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
 
     const lamports = await programProvider.connection.getAccountInfo(cryptidAccount).then(a => a.lamports);
     expect(lamports).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL

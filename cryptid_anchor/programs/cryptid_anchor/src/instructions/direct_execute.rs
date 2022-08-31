@@ -119,17 +119,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // does not have a key threshold > 1, and if so, reject the tx (because direct-execute would only have one key)
     // For now, we just go ahead and execute the instruction, ignoring key_threshold
 
-    // generate the instructions to execute
-    let solana_instructions = instructions
-        .iter()
-        .cloned()
-        .map(
-            |instruction| {
-                instruction.into_instruction(&all_keys_vec[..])
-            })
-        .collect::<Vec<_>>();
-
-    // Execute instructions
+    // Generate and Execute instructions
     for (index, instruction_data) in instructions.iter().enumerate() {
         let solana_instruction = instruction_data.clone().into_instruction(&all_keys_vec[..]);
         let account_indexes = instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>();
@@ -144,8 +134,8 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         msg!("Remaining compute units for sub-instruction `{}`", index);
         sol_log_compute_units();
 
-        // Check if the metas contain a the signer and run relevant invoke
-        let is_signed_by_cryptid = solana_instruction.accounts.iter().any(|meta| meta.pubkey.eq(ctx.accounts.signer.key));
+        // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
+        let is_signed_by_cryptid = solana_instruction.accounts.iter().any(|meta| meta.pubkey.eq(ctx.accounts.cryptid_account.key));
         let sub_instruction_result = if is_signed_by_cryptid {
             msg!("Invoking signed");
             invoke_signed(
