@@ -18,12 +18,15 @@ use crate::util::seeder::*;
 signers_extras: Vec<u8>,
 /// The instructions to execute
 instructions: Vec<InstructionData>,
+/// The bump seed for the Cryptid signer
+signer_bump: u8,
 /// Additional flags
 flags: u8,
 )]
 pub struct DirectExecute<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
+    #[account(mut)]
     pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
     pub did: Account<'info, DidAccount>,
@@ -70,6 +73,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<InstructionData>,
+    signer_bump: u8,
     flags: u8,
 ) -> Result<()> {
     let debug = DirectExecuteFlags::from_bits(flags).unwrap().contains(DirectExecuteFlags::DEBUG);
@@ -80,6 +84,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     let seeder =  Box::new(GenerativeCryptidSeeder {
         did_program: *ctx.accounts.did_program.key,
         did: ctx.accounts.did.key(),
+        bump: signer_bump
     });
 
     // let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
@@ -121,6 +126,13 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 
     // Generate and Execute instructions
     for (index, instruction_data) in instructions.iter().enumerate() {
+        if debug {
+            msg!("Executing instruction {} program {} accounts {:?}",
+                index,
+                instruction_data.program_id,
+                instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>()
+            );
+        }
         let solana_instruction = instruction_data.clone().into_instruction(&all_keys_vec[..]);
         let account_indexes = instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>();
         let account_infos = ctx
@@ -131,17 +143,24 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 
         let seeds = seeder.seeds();
 
-        msg!("Remaining compute units for sub-instruction `{}`", index);
+        msg!("Remaining compute units for sub-instruction `{}` of {}", index, instructions.len());
         sol_log_compute_units();
 
         // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
         let is_signed_by_cryptid = solana_instruction.accounts.iter().any(|meta| meta.pubkey.eq(ctx.accounts.cryptid_account.key));
         let sub_instruction_result = if is_signed_by_cryptid {
-            msg!("Invoking signed");
+            if debug {
+                msg!("Invoking signed with seeds: {:?}", seeds);
+            }
+
+            // Ohhh kay - time to try to turn Vec<Vec<u8>> into &[&[u8]]
+            // TODO: do it better (presumably by changing the type of `seeds`)
+            let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
+
             invoke_signed(
                 &solana_instruction,
                 account_infos.as_slice(),
-                &[&[seeds.as_slice()]],
+                &[&seeds_slices_vec[..]],
             )
                 .map_err(|_| error!(CryptidError::SubInstructionError))
 

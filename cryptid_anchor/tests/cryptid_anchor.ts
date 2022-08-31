@@ -4,6 +4,7 @@ import { CryptidAnchor } from "../target/types/cryptid_anchor";
 import { DidSolIdentifier, ExtendedCluster, DID_SOL_PROGRAM, DidSolService } from "@identity.com/sol-did-client";
 import { PublicKey, LAMPORTS_PER_SOL, SystemProgram, Keypair } from "@solana/web3.js";
 import chai, { expect } from 'chai';
+import BN from "bn.js";
 
 
 describe("cryptid_anchor", () => {
@@ -37,7 +38,7 @@ describe("cryptid_anchor", () => {
     await didSolService.initialize(10_000).rpc();
 
     // Cryptid Account
-    const [cryptidAccount] = await PublicKey.findProgramAddress(
+    const [cryptidAccount, bump] = await PublicKey.findProgramAddress(
       [anchor.utils.bytes.utf8.encode("cryptid_account"),
         DID_SOL_PROGRAM.toBuffer(),
       didAccount.toBuffer()],
@@ -56,7 +57,7 @@ describe("cryptid_anchor", () => {
 
 
     const instructionData = [{
-      program_id: 5,
+      programId: 5,
       accounts: [
         {
           key: 0,
@@ -69,7 +70,15 @@ describe("cryptid_anchor", () => {
       ],
       data: transferData,
     }];
-    const tx = await program.methods.directExecute(Buffer.from([]), instructionData, 0).accounts({
+
+    console.log("accounts", {
+      cryptidAccount: cryptidAccount.toBase58(),
+        recipient: recipient.publicKey.toBase58(),
+      signer: authority.publicKey.toBase58(),
+      DID_SOL_PROGRAM: DID_SOL_PROGRAM.toBase58(),
+    })
+
+    const tx = await program.methods.directExecute(Buffer.from([]), instructionData, bump, 0).accounts({
       cryptidAccount,
       didProgram: DID_SOL_PROGRAM,
       did: didAccount,

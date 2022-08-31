@@ -19,9 +19,10 @@ pub mod cryptid_anchor {
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
         controller_chain: Vec<u8>,
         instructions: Vec<InstructionData>,
+        signer_bump: u8,
         flags: u8
     ) -> Result<()> {
-        instructions::direct_execute(ctx, controller_chain, instructions, flags)
+        instructions::direct_execute(ctx, controller_chain, instructions, signer_bump, flags)
     }
 }
 
