@@ -4,7 +4,8 @@ use crate::error::CryptidError;
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_state::TransactionState;
-use crate::util::DISCRIMINATOR_SIZE;
+
+pub const DISCRIMINATOR_SIZE: usize = 8;
 
 /// A proposed transaction stored on-chain, in preparation to be executed
 #[account]

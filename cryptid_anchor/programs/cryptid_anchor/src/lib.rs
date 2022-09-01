@@ -2,14 +2,14 @@ extern crate core;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-pub mod error;
-pub mod state;
 pub mod util;
 pub mod instructions;
+pub mod state;
+pub mod error;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-use state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 
 #[program]
 pub mod cryptid_anchor {

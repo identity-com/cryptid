@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/cryptid_anchor",
+    "programs/middleware/*"
 ]
 
 [profile.release]
