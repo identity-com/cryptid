@@ -3,23 +3,15 @@
 use anchor_lang::prelude::*;
 use crate::error::CryptidError;
 
-/// The data for an on-chain Cryptid Account
+/// The data for an on-chain Cryptid Account - TODO Temp until fixed - wi
 #[account]
 pub struct CryptidAccount {
-    /// The DID for this
+    /// The DID for this account
     pub did: Pubkey,
     /// The program for the DID
     pub did_program: Pubkey,
-    /// The nonce of the Cryptid Signer
-    pub signer_nonce: u8,
-    /// The number of keys needed for transactions to be executed
-    pub key_threshold: u8,
-    /// A tracker to invalidate transactions when settings change
-    pub settings_sequence: u16,
-    // TODO: Implement when permissions added
-    // pub sign_permissions: ?,
-    // pub execute_permissions: ?,
-    // pub remove_permissions: ?,
+    /// The middleware, if any, used by this cryptid account
+    pub middleware: Option<Pubkey>,
 }
 impl CryptidAccount {
     /// The value for [`CryptidAccount::key_threshold`] on a generative cryptid account

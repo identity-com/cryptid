@@ -2,23 +2,24 @@ use std::collections::HashMap;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use crate::state::instruction_size::InstructionSize;
-use crate::state::transaction_account_meta::TransactionAccountMeta;
+use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
 
 /// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
+/// Accounts are stored as indices in AbbreviatedAccountMeta to save space
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
-pub struct InstructionData {
+pub struct AbbreviatedInstructionData {
     /// The program to execute
     pub program_id: u8,
     /// The accounts to send to the program
-    pub accounts: Vec<TransactionAccountMeta>,
+    pub accounts: Vec<AbbreviatedAccountMeta>,
     /// The data for the instruction
     pub data: Vec<u8>,
 }
-impl InstructionData {
+impl AbbreviatedInstructionData {
     /// Calculates the on-chain size of a [`InstructionData`]
     pub const fn calculate_size(size: InstructionSize) -> usize {
         1 //program_id
-            + 4 + TransactionAccountMeta::calculate_size() * size.accounts as usize //accounts
+            + 4 + AbbreviatedAccountMeta::calculate_size() * size.accounts as usize //accounts
             + 4 + size.data_len as usize //data
     }
 
@@ -37,7 +38,7 @@ impl InstructionData {
             accounts: instruction
                 .accounts
                 .into_iter()
-                .map(|meta| TransactionAccountMeta::from_solana_account_meta(meta, accounts))
+                .map(|meta| AbbreviatedAccountMeta::from_solana_account_meta(meta, accounts))
                 .collect(),
             data: instruction.data,
         }

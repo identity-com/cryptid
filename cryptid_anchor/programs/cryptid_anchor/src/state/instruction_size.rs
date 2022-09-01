@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::state::instruction_data::InstructionData;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 
 /// A helper struct for calculating [`InstructionData`] size
 #[derive(Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, PartialEq)]
@@ -12,7 +12,7 @@ pub struct InstructionSize {
 impl InstructionSize {
     /// Creates a size iterator from an iterator of data refs
     pub fn from_iter_to_iter<'a>(
-        iter: impl Iterator<Item = &'a InstructionData> + 'a,
+        iter: impl Iterator<Item = &'a AbbreviatedInstructionData> + 'a,
     ) -> impl Iterator<Item = InstructionSize> + 'a {
         iter.map(|instruction| Self {
             accounts: instruction.accounts.len() as u8,

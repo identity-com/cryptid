@@ -4,26 +4,17 @@ use anchor_lang::solana_program::log::sol_log_compute_units;
 use anchor_lang::solana_program::program::invoke_signed;
 use bitflags::bitflags;
 use crate::state::cryptid_account::CryptidAccount;
-use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use crate::state::abbreviated_instruction_data::{AbbreviatedInstructionData};
 use crate::util::*;
 use crate::instructions::util::*;
 use sol_did::state::DidAccount;
 use crate::error::CryptidError;
+use crate::state::transaction_account::TransactionAccount;
 use crate::util::seeder::*;
 
 
 #[derive(Accounts)]
-#[instruction(
-/// A vector of the number of extras for each signer, signer count is the length
-controller_chain: Vec<u8>,
-/// The instructions to execute
-instructions: Vec<AbbreviatedInstructionData>,
-/// The bump seed for the Cryptid signer
-signer_bump: u8,
-/// Additional flags
-flags: u8,
-)]
-pub struct DirectExecute<'info> {
+pub struct ExecuteTransaction<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
     #[account(mut)]
@@ -34,12 +25,15 @@ pub struct DirectExecute<'info> {
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction
     pub signer: Signer<'info>,
+    /// The instruction to execute
+    pub instruction_data_account: Account<'info, TransactionAccount>
 }
 /// Collect all accounts as a single vector so that they can be referenced by index by instructions
-// TODO: Note - I initially wanted to use some crate to iterate over a struct's fields, so I could define
-// this for all Contexts automatically, but failed. We could either leave it like this or try again.
-// Once decided, remove this comment.
-impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
+/// The order must be preserved between Propose and Execute
+/// The did, did program, signer accounts are omitted from the Propose instruction
+/// instruction_data_account is not considered here as it is a temporary "carrier" account that can not be referenced
+/// as part of the instruction
+impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>> {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
         [
             self.accounts.cryptid_account.as_ref(),
@@ -57,8 +51,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
 }
 
 /// Executes a transaction directly if all required keys sign
-pub fn direct_execute<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
+pub fn execute_transaction<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<AbbreviatedInstructionData>,
     signer_bump: u8,
@@ -327,7 +321,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 //     Ok((accounts, data))
 // }
 
-impl DirectExecute<'_> {
+impl ExecuteTransaction<'_> {
     /// Prints all the keys to the program log (compute budget intensive)
     pub fn print_keys(&self) {
         msg!("cryptid_account: {}", self.cryptid_account.to_account_info().key);
