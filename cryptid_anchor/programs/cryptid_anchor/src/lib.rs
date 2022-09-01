@@ -32,5 +32,14 @@ pub mod cryptid_anchor {
     ) -> Result<()> {
         instructions::propose_transaction(ctx, instructions)
     }
+
+    pub fn execute_transaction<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
+        controller_chain: Vec<u8>,
+        signer_bump: u8,
+        flags: u8
+    ) -> Result<()> {
+        instructions::execute_transaction(ctx, controller_chain, signer_bump, flags)
+    }
 }
 

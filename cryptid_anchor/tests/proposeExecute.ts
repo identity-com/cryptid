@@ -1,13 +1,10 @@
-import * as anchor from "@project-serum/anchor";
-import {AnchorProvider, Program} from "@project-serum/anchor";
-import {CryptidAnchor} from "../target/types/cryptid_anchor";
-import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram} from "@solana/web3.js";
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} from "./util/cryptid";
 import {initializeDIDAccount} from "./util/did";
 import {fund, createTestContext} from "./util/anchorUtils";
+import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -41,23 +38,49 @@ describe.skip("proposeExecute", () => {
 
         const previousBalance = await balanceOf(cryptidAccount);
 
-        // execute the Cryptid transaction
-        const tx = await program.methods.proposeTransaction(
+        const transactionAccount = Keypair.generate();
+        // propose the Cryptid transaction
+        await program.methods.proposeTransaction(
             [instructionData],
             2,
         ).accounts({
                 cryptidAccount,
                 authority: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
+            }
+        ).remainingAccounts([
+                toAccountMeta(recipient.publicKey, true, false),
+                toAccountMeta(SystemProgram.programId)
+            ]
+        ).signers(
+            [transactionAccount]
+        ).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
+
+        let currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
+
+        // execute the Cryptid transaction
+        await program.methods.executeTransaction(
+            Buffer.from([]),  // no controller chain
+            cryptidBump,
+            0
+        ).accounts({
+                cryptidAccount,
+                didProgram: DID_SOL_PROGRAM,
+                did: didAccount,
+                signer: authority.publicKey,
+                destination: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
             }
         ).remainingAccounts([
             toAccountMeta(recipient.publicKey, true, false),
             toAccountMeta(SystemProgram.programId)
-        ]).rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+        ]).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
 
-        const currentBalance = await balanceOf(cryptidAccount);
-
-        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
+        currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
+
     //
     // it("rejects the transfer if the cryptid account is not a signer", async () => {
     //     const recipient = Keypair.generate();

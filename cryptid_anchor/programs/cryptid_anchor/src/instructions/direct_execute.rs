@@ -61,10 +61,10 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
     instructions: Vec<AbbreviatedInstructionData>,
-    signer_bump: u8,
+    cryptid_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
-    let debug = DirectExecuteFlags::from_bits(flags).unwrap().contains(DirectExecuteFlags::DEBUG);
+    let debug = ExecuteFlags::from_bits(flags).unwrap().contains(ExecuteFlags::DEBUG);
     if debug {
         ctx.accounts.print_keys();
     }
@@ -72,7 +72,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     let seeder =  Box::new(GenerativeCryptidSeeder {
         did_program: *ctx.accounts.did_program.key,
         did: ctx.accounts.did.key(),
-        bump: signer_bump
+        bump: cryptid_account_bump
     });
 
     // let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
@@ -334,14 +334,5 @@ impl DirectExecute<'_> {
         msg!("did: {}", self.did.to_account_info().key);
         msg!("did_program: {}", self.did_program.to_account_info().key);
         msg!("signer: {}", self.signer.to_account_info().key);
-    }
-}
-
-bitflags! {
-    /// Extra flags passed to DirectExecute
-    #[derive(AnchorDeserialize, AnchorSerialize)]
-    pub struct DirectExecuteFlags: u8{
-        /// Print debug logs, uses a large portion of the compute budget
-        const DEBUG = 1 << 0;
     }
 }
