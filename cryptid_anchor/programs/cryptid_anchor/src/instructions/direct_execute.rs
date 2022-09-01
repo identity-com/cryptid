@@ -4,7 +4,7 @@ use anchor_lang::solana_program::log::sol_log_compute_units;
 use anchor_lang::solana_program::program::invoke_signed;
 use bitflags::bitflags;
 use crate::state::cryptid_account::CryptidAccount;
-use crate::state::instruction_data::InstructionData;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::util::*;
 use crate::instructions::util::*;
 use sol_did::state::DidAccount;
@@ -15,9 +15,9 @@ use crate::util::seeder::*;
 #[derive(Accounts)]
 #[instruction(
 /// A vector of the number of extras for each signer, signer count is the length
-signers_extras: Vec<u8>,
+controller_chain: Vec<u8>,
 /// The instructions to execute
-instructions: Vec<InstructionData>,
+instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
 signer_bump: u8,
 /// Additional flags
@@ -39,9 +39,6 @@ pub struct DirectExecute<'info> {
 // TODO: Note - I initially wanted to use some crate to iterate over a struct's fields, so I could define
 // this for all Contexts automatically, but failed. We could either leave it like this or try again.
 // Once decided, remove this comment.
-// Note also - the lifetime parameters here are all the same because the accounts in the Context all use the same lifetime
-// I don't think it needs to be this way, but I don't think it matters,
-// since all accounts will have the same lifetime in effect (i.e. the lifetime of the tx)
 impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
         [
@@ -55,16 +52,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
 
     fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>> {
         let accounts = self.all_accounts();
-        let mut resolved_accounts = Vec::new();
-        for i in indexes {
-            let i = *i as usize;
-            if i >= accounts.len() {
-                msg!("Account index {} out of bounds", i);
-                return err!(CryptidError::IndexOutOfRange);
-            }
-            resolved_accounts.push(accounts[i]);
-        }
-        Ok(resolved_accounts)
+        resolve_by_index(indexes, accounts)
     }
 }
 
@@ -72,11 +60,11 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, '
 pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
     controller_chain: Vec<u8>,
-    instructions: Vec<InstructionData>,
-    signer_bump: u8,
+    instructions: Vec<AbbreviatedInstructionData>,
+    cryptid_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
-    let debug = DirectExecuteFlags::from_bits(flags).unwrap().contains(DirectExecuteFlags::DEBUG);
+    let debug = ExecuteFlags::from_bits(flags).unwrap().contains(ExecuteFlags::DEBUG);
     if debug {
         ctx.accounts.print_keys();
     }
@@ -84,7 +72,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     let seeder =  Box::new(GenerativeCryptidSeeder {
         did_program: *ctx.accounts.did_program.key,
         did: ctx.accounts.did.key(),
-        bump: signer_bump
+        bump: cryptid_account_bump
     });
 
     // let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
@@ -346,14 +334,5 @@ impl DirectExecute<'_> {
         msg!("did: {}", self.did.to_account_info().key);
         msg!("did_program: {}", self.did_program.to_account_info().key);
         msg!("signer: {}", self.signer.to_account_info().key);
-    }
-}
-
-bitflags! {
-    /// Extra flags passed to DirectExecute
-    #[derive(AnchorDeserialize, AnchorSerialize)]
-    pub struct DirectExecuteFlags: u8{
-        /// Print debug logs, uses a large portion of the compute budget
-        const DEBUG = 1 << 0;
     }
 }

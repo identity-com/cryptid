@@ -1,57 +1,49 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::UnixTimestamp;
 use crate::error::CryptidError;
-use crate::state::instruction_data::InstructionData;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_state::TransactionState;
 use crate::util::DISCRIMINATOR_SIZE;
 
-/// The data to store about a proposed transaction
+/// A proposed transaction stored on-chain, in preparation to be executed
 #[account]
 pub struct TransactionAccount {
     /// The cryptid account for the transaction
     pub cryptid_account: Pubkey,
-    /// The accounts `transaction_instructions` references
+    /// The accounts `instructions` references (excluding the cryptid account
     pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
-    pub transaction_instructions: Vec<InstructionData>,
-    /// The signers of the transaction with their expiry times
-    // TODO: Commented because of anchor serialization problems
-    // pub signers: Vec<(Pubkey, UnixTimestamp)>, //TODO: this was changed from SigningKeyData in the original version - Check if we are safe to leave it as PublicKey
-    /// The state of the transaction
-    pub state: TransactionState,
-    /// The value of [`CryptidAccount::settings_sequence`] when this was proposed, only valid while that's the same
-    pub settings_sequence: u16,
+    pub instructions: Vec<AbbreviatedInstructionData>,
+    /// The most recent middleware PDA that approved the transaction
+    pub approved_middleware: Option<Pubkey>,
+    /// The slot in which the transaction was proposed
+    /// This is used to prevent replay attacks TODO: Do we need it?
+    pub slot: u8,
 }
 impl TransactionAccount {
     /// Calculates the on-chain size of a [`TransactionAccount`]
     pub fn calculate_size(
         num_accounts: usize,
         instruction_sizes: impl Iterator<Item = InstructionSize>,
-        signer_extras: impl Iterator<Item = usize>,
     ) -> usize {
         DISCRIMINATOR_SIZE
             + 32 //cryptid_account
             + 4 + 32 * num_accounts //accounts
-            + 4 + instruction_sizes.into_iter().map(InstructionData::calculate_size).sum::<usize>() //transaction_instructions
-            + 4 + signer_extras
-            .into_iter()
-            .map(|_| 32 + 8)    // pubkey + expiry time
-            // .map(|size|size + 8) //Expiry time
-            .sum::<usize>() //signers
-            + TransactionState::calculate_size() //state
-            + 2 //settings_sequence
+            + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
+            + 1 + 32 // approved_middleware
+            + 1 // slot
     }
 
     /// Gets an instruction or errors if no instruction at index
-    pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut InstructionData> {
-        require_gte!(index as usize, self.transaction_instructions.len(), CryptidError::IndexOutOfRange);
-        Ok(&mut self.transaction_instructions[index as usize])
+    pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut AbbreviatedInstructionData> {
+        require_gte!(index as usize, self.instructions.len(), CryptidError::IndexOutOfRange);
+        Ok(&mut self.instructions[index as usize])
     }
 
     /// Checks if a given index is valid for the instructions list
     pub fn check_instruction_index(&self, index: u8) -> Result<()> {
-        require_gte!(index as usize, self.transaction_instructions.len(), CryptidError::IndexOutOfRange);
+        require_gte!(index as usize, self.instructions.len(), CryptidError::IndexOutOfRange);
         Ok(())
     }
 
@@ -67,7 +59,8 @@ mod test {
     use std::iter::once;
     use anchor_lang::prelude::borsh::BorshSerialize;
     use crate::state::cryptid_account_meta::AccountMetaProps;
-    use crate::state::instruction_data::InstructionData;
+    use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+    use crate::state::account_meta_props::AccountMetaProps;
     use super::*;
 
     #[test]
@@ -78,14 +71,13 @@ mod test {
                 accounts: 1,
                 data_len: 1,
             }),
-            once(1),
         );
         println!("Size: {}", size);
 
         let account = TransactionAccount {
             cryptid_account: Default::default(),
             accounts: vec![Default::default()],
-            transaction_instructions: vec![InstructionData {
+            instructions: vec![AbbreviatedInstructionData {
                 program_id: 0,
                 accounts: vec![TransactionAccountMeta {
                     key: 0,
@@ -93,15 +85,8 @@ mod test {
                 }],
                 data: vec![0],
             }],
-            signers: vec![(
-                SigningKeyData {
-                    key: Default::default(),
-                    extra_keys: vec![Default::default()],
-                },
-                0,
-            )],
-            state: Default::default(),
-            settings_sequence: 0,
+            approved_middleware: None,
+            slot: 0,
         };
         let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len()
             + TransactionAccount::DISCRIMINANT

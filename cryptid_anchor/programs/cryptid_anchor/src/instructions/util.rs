@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use bitflags::bitflags;
 use sol_did::state::DidAccount;
 use crate::error::CryptidError;
 use num_traits::cast::ToPrimitive;
@@ -7,6 +8,19 @@ use num_traits::cast::ToPrimitive;
 pub trait AllAccounts<'a, 'b, 'c, 'info> {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>>;
     fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>>;
+}
+
+pub fn resolve_by_index<'c, 'info>(indexes: &[u8], accounts: Vec<&'c AccountInfo<'info>>) -> Result<Vec<&'c AccountInfo<'info>>> {
+    let mut resolved_accounts = Vec::new();
+    for i in indexes {
+        let i = *i as usize;
+        if i >= accounts.len() {
+            msg!("Account index {} out of bounds", i);
+            return err!(CryptidError::IndexOutOfRange);
+        }
+        resolved_accounts.push(accounts[i]);
+    }
+    Ok(resolved_accounts)
 }
 
 /// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
@@ -55,69 +69,11 @@ pub fn verify_keys<'a, 'b, 'c, 'info>(
     Ok(())
 }
 
-// pub fn resolve_account_indexes<'a, 'b, 'info>(
-//     account_indexes: &'a [u8],
-//     accounts: &'b [&AccountInfo<'info>],
-// ) -> Result<Vec<&'b AccountInfo<'info>>> {
-//     let mut resolved_accounts = Vec::new();
-//     for account_index in account_indexes {
-//         let account_index = *account_index as usize;
-//         if account_index >= accounts.len() {
-//             msg!("Account index {} out of bounds", account_index);
-//             return err!(CryptidError::IndexOutOfRange);
-//         }
-//         resolved_accounts.push(accounts[account_index]);
-//     }
-//     Ok(resolved_accounts)
-// }
-
-
-//
-// /// The on-chain format of [`SigningKey`]
-// #[derive(Debug, BorshSerialize, BorshDeserialize, BorshSchema, Eq, PartialEq, Clone)]
-// pub struct SigningKeyData {
-//     /// The signing key
-//     pub key: Pubkey,
-//     /// Extra keys needed for signing
-//     pub extra_keys: Vec<Pubkey>,
-// }
-// impl SigningKeyData {
-//     /// Calculates the on-chain size of a [`SigningKeyData`]
-//     pub const fn calculate_size(num_extras: usize) -> usize {
-//         32 //key
-//             + 4 + 32 * num_extras //extra_keys
-//     }
-// }
-//
-// /// A builder for [`SigningKey`]
-// #[derive(Debug, Clone)]
-// pub struct SigningKeyBuild {
-//     /// The key that constitutes the signature
-//     pub signing_key: SolanaAccountMeta,
-//     /// Extra accounts for the DID program
-//     pub extra_accounts: Vec<SolanaAccountMeta>,
-// }
-// impl SigningKeyBuild {
-//     /// Turns `self` into an iterator of [`SolanaAccountMeta`]s
-//     pub fn to_metas(&self) -> impl Iterator<Item = SolanaAccountMeta> + '_ {
-//         once(self.signing_key.clone()).chain(self.extra_accounts.iter().cloned())
-//     }
-//
-//     /// Returns the size of [`SigningKeyBuild::extra_accounts`]
-//     pub fn extra_count(&self) -> u8 {
-//         self.extra_accounts.len() as u8
-//     }
-//
-//     /// Turns this into a [`SigningKeyData`]
-//     pub fn to_data(&self) -> SigningKeyData {
-//         SigningKeyData {
-//             key: self.signing_key.pubkey,
-//             extra_keys: self
-//                 .extra_accounts
-//                 .iter()
-//                 .map(|account| account.pubkey)
-//                 .collect(),
-//         }
-//     }
-// }
-
+bitflags! {
+    /// Extra flags passed to execution instructions
+    #[derive(AnchorDeserialize, AnchorSerialize)]
+    pub struct ExecuteFlags: u8{
+        /// Print debug logs, uses a large portion of the compute budget
+        const DEBUG = 1 << 0;
+    }
+}

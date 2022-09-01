@@ -4,14 +4,14 @@ use crate::state::account_meta_props::AccountMetaProps;
 
 /// An account for an instruction, similar to Solana's [`AccountMeta`](AccountMeta)
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct TransactionAccountMeta {
+pub struct AbbreviatedAccountMeta {
     /// The key of the account
     pub key: u8,
     /// Information about the account
     pub meta: u8,
 }
 
-impl TransactionAccountMeta {
+impl AbbreviatedAccountMeta {
     /// Calculates the on-chain size of a [`TransactionAccountMeta`]
     pub const fn calculate_size() -> usize {
         1 //key
