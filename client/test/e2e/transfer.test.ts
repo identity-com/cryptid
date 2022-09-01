@@ -16,11 +16,9 @@ import {
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
 import { publicKeyToDid } from '../../src/lib/solana/util';
-
+import { DidSolIdentifier, DidSolService, VerificationMethodFlags, VerificationMethodType } from '@identity.com/sol-did-client';
 const { expect } = chai;
 import chaiAsPromised from 'chai-as-promised';
-// import { DidSolIdentifier, DidSolService } from "@identity.com/sol-did-client";
-// import { METHODS } from 'http';
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
@@ -122,29 +120,34 @@ describe('transfers', function () {
       // expect(balances.for(recipient).to.equal(lamportsToTransfer);
     });
 
-    it.skip('should sign a transaction from a DID with a second key', async () => {
+    it('should sign a transaction from a DID with a second key', async () => {
       // the cryptid client for device 1 that will add the new key
       // const cryptidForDevice1 = cryptid;
 
       // the new key that will be added to the DID
       const device2Key = Keypair.generate();
-      // const alias = 'device2';
+      const alias = 'device2';
 
       // airdrop to device2 key to cover fees for the transfer only
       await airdrop(connection, device2Key.publicKey, 10_000);
 
-      // add the new key and create a cryptid client for device 2
       // await cryptidForDevice1.addKey(device2Key.publicKey, alias);
       // TODO: Challenge: Replace this with a did:sol library call for addKey
-      // const id = DidSolIdentifier.parse(cryptid.did);
-      // const service = await DidSolService.build(id);
-      // service.addVerificationMethod(...);
+      const id = DidSolIdentifier.parse(cryptid.did);
+      const service = await DidSolService.build(id);
+      await service.addVerificationMethod({
+       fragment: alias,
+        keyData: device2Key.publicKey.toBytes(),
+        methodType: VerificationMethodType.Ed25519VerificationKey2018,
+        flags: VerificationMethodFlags.CapabilityInvocation,
+    }).withPartialSigners(key).rpc();
+      
       const cryptidForDevice2 = await build(did, device2Key, {
         connection,
         waitForConfirmation: true,
       });
 
-      //create a transfer and sign with cryptid for device 2
+      // create a transfer and sign with cryptid for device 2
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
@@ -235,6 +238,7 @@ describe('transfers', function () {
 
       // add the controller to the controlled DID (this anchors the controlled DID)
       // await controlledCryptid.addController(did);
+
       balances = await new Balances(connection).register(
         cryptidAddress, // controller cryptid
         controlledCryptidAddress, // controlled cryptid
