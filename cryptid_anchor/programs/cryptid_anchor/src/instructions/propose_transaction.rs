@@ -66,6 +66,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     // Account indexes must reflect this, so the first entry
     // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
     // despite being index 0 in the remaining accounts.
+    // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
     ctx.accounts.transaction_account.accounts = ctx.remaining_accounts.iter().map(|a| *a.key).collect();
 
     Ok(())
