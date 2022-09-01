@@ -5,6 +5,7 @@ import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} 
 import {initializeDIDAccount} from "./util/did";
 import {fund, createTestContext} from "./util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {InstructionData} from "./util/types";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -21,27 +22,12 @@ describe.skip("proposeExecute", () => {
     let cryptidAccount: PublicKey;
     let cryptidBump: number;
 
-    before('Set up DID account', async () => {
-        didAccount = await initializeDIDAccount(authority);
-    })
+    const recipient = Keypair.generate();
+    const instructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
 
-    before('Set up generative Cryptid Account', async () => {
-        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
-
-        await fund(provider, cryptidAccount, 20 * LAMPORTS_PER_SOL);
-    })
-
-    it("can propose and execute a transfer through Cryptid", async () => {
-        const recipient = Keypair.generate();
-
-        const instructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
-
-        const previousBalance = await balanceOf(cryptidAccount);
-
-        const transactionAccount = Keypair.generate();
-        // propose the Cryptid transaction
-        await program.methods.proposeTransaction(
-            [instructionData],
+    const propose = async (transactionAccount: Keypair, instruction: InstructionData = instructionData) =>
+        program.methods.proposeTransaction(
+            [instruction],
             2,
         ).accounts({
                 cryptidAccount,
@@ -56,11 +42,9 @@ describe.skip("proposeExecute", () => {
             [transactionAccount]
         ).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
 
-        let currentBalance = await balanceOf(cryptidAccount);
-        expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
-
+    const execute = (transactionAccount: Keypair) =>
         // execute the Cryptid transaction
-        await program.methods.executeTransaction(
+        program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
             cryptidBump,
             0
@@ -77,38 +61,87 @@ describe.skip("proposeExecute", () => {
             toAccountMeta(SystemProgram.programId)
         ]).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
 
+    before('Set up DID account', async () => {
+        didAccount = await initializeDIDAccount(authority);
+    })
+
+    before('Set up generative Cryptid Account', async () => {
+        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
+
+        await fund(provider, cryptidAccount, 20 * LAMPORTS_PER_SOL);
+    })
+
+    it("can propose and execute a transfer through Cryptid", async () => {
+        const previousBalance = await balanceOf(cryptidAccount);
+
+        const transactionAccount = Keypair.generate();
+
+        // propose the Cryptid transaction
+        await propose(transactionAccount);
+
+        let currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
+
+        // execute the Cryptid transaction
+        await execute(transactionAccount);
+
         currentBalance = await balanceOf(cryptidAccount);
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
-    //
-    // it("rejects the transfer if the cryptid account is not a signer", async () => {
-    //     const recipient = Keypair.generate();
-    //
-    //     const instructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
-    //
-    //     // set the cryptid account as a non-signer on the transfer
-    //     instructionData.accounts[0].meta = 2; // writable but not a signer
-    //
-    //     // execute the Cryptid transaction
-    //     const shouldFail = program.methods.directExecute(
-    //         Buffer.from([]),  // no controller chain
-    //         [instructionData],
-    //         cryptidBump,
-    //         0
-    //     ).accounts({
-    //             cryptidAccount,
-    //             didProgram: DID_SOL_PROGRAM,
-    //             did: didAccount,
-    //             signer: authority.publicKey,
-    //         }
-    //     ).remainingAccounts([
-    //         toAccountMeta(recipient.publicKey, true, false),
-    //         toAccountMeta(SystemProgram.programId)
-    //     ]).rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
-    //
-    //     return expect(shouldFail).to.be.rejectedWith(/MissingRequiredSignature/);
-    // });
+    it("can reuse the same transfer account", async () => {
+        const previousBalance = await balanceOf(cryptidAccount);
+
+        const transactionAccount = Keypair.generate();
+
+        // Propose & execute once
+        await propose(transactionAccount);
+        await execute(transactionAccount);
+
+        // Propose & execute twice
+        await propose(transactionAccount);
+        await execute(transactionAccount);
+
+        const currentBalance = await balanceOf(cryptidAccount);
+
+        // The tx has been executed twice
+        // Note - this is not a double-spend, as the tx has to be proposed twice
+        expect(previousBalance - currentBalance).to.equal(2 * LAMPORTS_PER_SOL);
+    });
+
+    it("cannot re-execute the same proposed transfer", async () => {
+        const previousBalance = await balanceOf(cryptidAccount);
+
+        const transactionAccount = Keypair.generate();
+
+        // Propose & execute
+        await propose(transactionAccount);
+        await execute(transactionAccount);
+
+        // cannot re-execute
+        const shouldFail = execute(transactionAccount);
+
+        const currentBalance = await balanceOf(cryptidAccount);
+
+        // The tx has been executed once only
+        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL);
+
+        // TODO expose the error message
+        return expect(shouldFail).to.be.rejected;
+    });
+
+    it("rejects the execution if the cryptid account is not a signer", async () => {
+        const transactionAccount = Keypair.generate();
+
+        const instructionDataWithUnauthorisedSigner = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
+        // set the cryptid account as a non-signer on the transfer
+        instructionDataWithUnauthorisedSigner.accounts[0].meta = 2; // writable but not a signer
+
+        await propose(transactionAccount, instructionDataWithUnauthorisedSigner);
+        const shouldFail = execute(transactionAccount);
+
+        return expect(shouldFail).to.be.rejectedWith(/MissingRequiredSignature/);
+    });
     //
     // it("rejects the transfer if the recipient account index is invalid", async () => {
     //     const recipient = Keypair.generate();

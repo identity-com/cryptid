@@ -2,6 +2,7 @@ import {AccountMeta, PublicKey, SystemProgram} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {CRYPTID_PROGRAM} from "./constants";
+import {InstructionData, TransactionAccountMeta} from "./types";
 
 export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
     pubkey: publicKey,
@@ -10,8 +11,6 @@ export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false,
 })
 
 // Creates a reference to an account, that is passed as part of cryptid instruction data for each account.
-// TODO how to extract this from the anchor idl?
-type TransactionAccountMeta = { key: number, meta: number };
 const toTransactionAccountMeta = (publicKeyIndex: number, isWritable: boolean = false, isSigner: boolean = false): TransactionAccountMeta => ({
     key: publicKeyIndex,
     meta: (+isWritable << 1) | +isSigner,
@@ -31,7 +30,7 @@ const transferInstructionData = (amount: number): Buffer => SystemProgram.transf
 // 0: the cryptid account to transfer from
 // 4: the recipient account
 // 5: the system program
-export const cryptidTransferInstruction = (amount: number) => (
+export const cryptidTransferInstruction = (amount: number):InstructionData => (
     {
         programId: 5, // The System program - index 1 in remainingAccounts = 5 overall.
         accounts: [
