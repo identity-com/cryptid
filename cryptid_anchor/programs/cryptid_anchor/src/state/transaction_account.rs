@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 use crate::error::CryptidError;
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
-use crate::state::transaction_state::TransactionState;
 
 pub const DISCRIMINATOR_SIZE: usize = 8;
 

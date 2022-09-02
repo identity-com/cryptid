@@ -1,5 +1,4 @@
 use bitflags::bitflags;
-use anchor_lang::prelude::*;
 
 bitflags! {
     /// The meta information about an instruction account

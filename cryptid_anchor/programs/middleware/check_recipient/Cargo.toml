@@ -17,4 +17,4 @@ default = []
 
 [dependencies]
 anchor-lang = "0.25.0"
-cryptid_anchor = { path = "../../cryptid_anchor", features = ["no-entrypoint"] }
+cryptid_anchor = { path = "../../cryptid_anchor", features = ["no-entrypoint", "cpi"] }

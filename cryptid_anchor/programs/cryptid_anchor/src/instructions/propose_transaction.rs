@@ -1,18 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::instruction::Instruction;
-use anchor_lang::solana_program::log::sol_log_compute_units;
-use anchor_lang::solana_program::program::invoke_signed;
-use bitflags::bitflags;
-use crate::state::cryptid_account::CryptidAccount;
 use crate::state::abbreviated_instruction_data::{AbbreviatedInstructionData};
-use crate::util::*;
-use crate::instructions::util::*;
-use sol_did::state::DidAccount;
-use crate::error::CryptidError;
 use crate::state::transaction_account::TransactionAccount;
 use crate::state::instruction_size::InstructionSize;
-use crate::util::seeder::*;
-
 
 #[derive(Accounts)]
 #[instruction(

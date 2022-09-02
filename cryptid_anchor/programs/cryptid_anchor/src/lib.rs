@@ -14,6 +14,7 @@ use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 #[program]
 pub mod cryptid_anchor {
     use super::*;
+    pub use instructions::ApproveExecution;
 
     pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
@@ -40,6 +41,12 @@ pub mod cryptid_anchor {
         flags: u8
     ) -> Result<()> {
         instructions::execute_transaction(ctx, controller_chain, signer_bump, flags)
+    }
+
+    pub fn approve_execution<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ApproveExecution<'info>>,
+    ) -> Result<()> {
+        instructions::approve_execution(ctx)
     }
 }
 
