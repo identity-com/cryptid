@@ -16,7 +16,12 @@ import {
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
 import { publicKeyToDid } from '../../src/lib/solana/util';
-import { DidSolIdentifier, DidSolService, VerificationMethodFlags, VerificationMethodType } from '@identity.com/sol-did-client';
+import {
+  DidSolIdentifier,
+  DidSolService,
+  VerificationMethodFlags,
+  VerificationMethodType,
+} from '@identity.com/sol-did-client';
 const { expect } = chai;
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
@@ -130,18 +135,20 @@ describe('transfers', function () {
 
       // airdrop to device2 key to cover fees for the transfer only
       await airdrop(connection, device2Key.publicKey, 10_000);
-
       // await cryptidForDevice1.addKey(device2Key.publicKey, alias);
       // TODO: Challenge: Replace this with a did:sol library call for addKey
       const id = DidSolIdentifier.parse(cryptid.did);
       const service = await DidSolService.build(id);
-      await service.addVerificationMethod({
-       fragment: alias,
-        keyData: device2Key.publicKey.toBytes(),
-        methodType: VerificationMethodType.Ed25519VerificationKey2018,
-        flags: VerificationMethodFlags.CapabilityInvocation,
-    }).withPartialSigners(key).rpc();
-      
+      await service
+        .addVerificationMethod({
+          fragment: alias,
+          keyData: device2Key.publicKey.toBytes(),
+          methodType: VerificationMethodType.Ed25519VerificationKey2018,
+          flags: VerificationMethodFlags.CapabilityInvocation,
+        })
+        .withPartialSigners(key)
+        .rpc();
+        
       const cryptidForDevice2 = await build(did, device2Key, {
         connection,
         waitForConfirmation: true,
@@ -247,7 +254,7 @@ describe('transfers', function () {
       );
     });
 
-    it('should sign a transaction for a controlled DID with a controller key', async () => {
+    it.skip('should sign a transaction for a controlled DID with a controller key', async () => {
       // create a transfer from the controlled DID
       const tx = await createTransferTransaction(
         connection,
@@ -269,7 +276,7 @@ describe('transfers', function () {
       expect(balances.for(key.publicKey)).to.equal(-feePerSignature); // the controller's signer key pays the fee
     });
 
-    it('should sign a large transaction for a controlled DID with a controller key', async () => {
+    it.skip('should sign a large transaction for a controlled DID with a controller key', async () => {
       // create a transfer from the controlled DID
       // TODO: (IDCOM-1953) Increase the number of instructions
       const nrInstructions = 12;
