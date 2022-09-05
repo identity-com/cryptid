@@ -1,0 +1,23 @@
+[package]
+name = "check_pass"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "check_pass"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.25.0"
+cryptid_anchor = { path = "../../cryptid_anchor", features = ["no-entrypoint", "cpi"] }
+num-traits = "0.2.15"
+sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b0a32154aa7d2d42666865a90356e9c50616dca2", features = ["no-entrypoint"] }
+solana-gateway = "0.2.0"

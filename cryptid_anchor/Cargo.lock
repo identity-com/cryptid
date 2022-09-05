@@ -392,6 +392,8 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "cryptid_anchor",
+ "num-traits",
+ "sol-did 3.0.0",
  "solana-gateway",
 ]
 

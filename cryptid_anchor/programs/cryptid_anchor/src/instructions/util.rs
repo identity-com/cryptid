@@ -51,7 +51,7 @@ impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> f
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
 pub fn verify_keys<'a, 'info>(
     did: &Account<'a, DidAccount>,
-    signer: &Signer,
+    signer: &Pubkey,
     controlling_did_accounts: Vec<&AccountInfo<'info>>,
 ) -> Result<()> {
     let controlling_did_accounts = controlling_did_accounts
@@ -61,7 +61,7 @@ pub fn verify_keys<'a, 'info>(
     let signer_is_authority = sol_did::is_authority(
         &did.to_account_info(),
         controlling_did_accounts.as_slice(),
-        signer.to_account_info().key,
+        signer,
         &[],
         None,
         None,

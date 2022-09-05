@@ -8,6 +8,8 @@
     },
     "devDependencies": {
         "@identity.com/sol-did-client": "^3.0.0",
+        "@identity.com/solana-gatekeeper-lib": "^4.0.0",
+        "@identity.com/solana-gateway-ts": "^0.8.2",
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/mocha": "^9.0.0",
