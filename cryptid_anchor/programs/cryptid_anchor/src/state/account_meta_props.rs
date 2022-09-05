@@ -21,7 +21,7 @@ impl AccountMetaProps {
             ((is_signer as u8) * Self::IS_SIGNER.bits)
                 | ((is_writable as u8) * Self::IS_WRITABLE.bits),
         )
-            .unwrap()
+        .unwrap()
     }
 }
 
@@ -32,9 +32,18 @@ mod test {
 
     #[test]
     fn account_meta_from_bools() {
-        assert_eq!(AccountMetaProps::new(false, false), AccountMetaProps::empty());
-        assert_eq!(AccountMetaProps::new(true, false), AccountMetaProps::IS_SIGNER);
-        assert_eq!(AccountMetaProps::new(false, true), AccountMetaProps::IS_WRITABLE);
+        assert_eq!(
+            AccountMetaProps::new(false, false),
+            AccountMetaProps::empty()
+        );
+        assert_eq!(
+            AccountMetaProps::new(true, false),
+            AccountMetaProps::IS_SIGNER
+        );
+        assert_eq!(
+            AccountMetaProps::new(false, true),
+            AccountMetaProps::IS_WRITABLE
+        );
         assert_eq!(AccountMetaProps::new(true, true), AccountMetaProps::all());
     }
 }

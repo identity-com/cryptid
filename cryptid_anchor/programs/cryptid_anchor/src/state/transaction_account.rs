@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::error::CryptidError;
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
+use anchor_lang::prelude::*;
 
 pub const DISCRIMINATOR_SIZE: usize = 8;
 
@@ -36,31 +36,66 @@ impl TransactionAccount {
 
     /// Gets an instruction or errors if no instruction at index
     pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut AbbreviatedInstructionData> {
-        require_gte!(index as usize, self.instructions.len(), CryptidError::IndexOutOfRange);
+        require_gte!(
+            index as usize,
+            self.instructions.len(),
+            CryptidError::IndexOutOfRange
+        );
         Ok(&mut self.instructions[index as usize])
     }
 
     /// Checks if a given index is valid for the instructions list
     pub fn check_instruction_index(&self, index: u8) -> Result<()> {
-        require_gte!(index as usize, self.instructions.len(), CryptidError::IndexOutOfRange);
+        require_gte!(
+            index as usize,
+            self.instructions.len(),
+            CryptidError::IndexOutOfRange
+        );
         Ok(())
     }
 
     /// Checks of a given index is valid for the accounts list
     pub fn check_account_index(&self, index: u8) -> Result<()> {
-        require_gte!(index as usize, self.accounts.len(), CryptidError::IndexOutOfRange);
+        require_gte!(
+            index as usize,
+            self.accounts.len(),
+            CryptidError::IndexOutOfRange
+        );
+        Ok(())
+    }
+
+    /// When an account index as defined in AbbreviatedInstructionData
+    /// is used to reference an entry in transactionAccount.accounts, it should
+    /// not include the implicit accounts that are passed to the ExecuteTransaction instruction
+    pub fn normalize_transaction_account_index(index: u8) -> usize {
+        // Implicit Execute Transaction Accounts:
+        // 0 - cryptid account
+        // 1 - did
+        // 2 - did program
+        // 3 - signer
+        // ... remaining accounts
+        (index - 4) as usize
+    }
+
+    pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
+        let normalized_index = Self::normalize_transaction_account_index(index);
+        require_keys_eq!(
+            self.accounts[normalized_index],
+            *account,
+            CryptidError::AccountMismatch
+        );
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::iter::once;
-    use anchor_lang::prelude::borsh::BorshSerialize;
-    use crate::state::cryptid_account_meta::AccountMetaProps;
+    use super::*;
     use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
     use crate::state::account_meta_props::AccountMetaProps;
-    use super::*;
+    use crate::state::cryptid_account_meta::AccountMetaProps;
+    use anchor_lang::prelude::borsh::BorshSerialize;
+    use std::iter::once;
 
     #[test]
     fn calculate_size() {
@@ -89,8 +124,8 @@ mod test {
         };
         let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len()
             + TransactionAccount::DISCRIMINANT
-            .discriminant_serialized_length()
-            .unwrap();
+                .discriminant_serialized_length()
+                .unwrap();
         println!("SerSize: {}", ser_size);
         assert_eq!(size, ser_size);
     }

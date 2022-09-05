@@ -2,14 +2,14 @@ extern crate core;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-pub mod util;
+pub mod error;
 pub mod instructions;
 pub mod state;
-pub mod error;
+pub mod util;
 
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use anchor_lang::prelude::*;
 use instructions::*;
-use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 
 #[program]
 pub mod cryptid_anchor {
@@ -20,10 +20,16 @@ pub mod cryptid_anchor {
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
         controller_chain: Vec<u8>,
         instructions: Vec<AbbreviatedInstructionData>,
-        signer_bump: u8,
-        flags: u8
+        cryptid_account_bump: u8,
+        flags: u8,
     ) -> Result<()> {
-        instructions::direct_execute(ctx, controller_chain, instructions, signer_bump, flags)
+        instructions::direct_execute(
+            ctx,
+            controller_chain,
+            instructions,
+            cryptid_account_bump,
+            flags,
+        )
     }
 
     pub fn propose_transaction<'a, 'b, 'c, 'info>(
@@ -37,10 +43,17 @@ pub mod cryptid_anchor {
     pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
         controller_chain: Vec<u8>,
-        signer_bump: u8,
-        flags: u8
+        middleware_account: Option<Pubkey>,
+        cryptid_account_bump: u8,
+        flags: u8,
     ) -> Result<()> {
-        instructions::execute_transaction(ctx, controller_chain, signer_bump, flags)
+        instructions::execute_transaction(
+            ctx,
+            controller_chain,
+            middleware_account,
+            cryptid_account_bump,
+            flags,
+        )
     }
 
     pub fn approve_execution<'a, 'b, 'c, 'info>(
@@ -49,4 +62,3 @@ pub mod cryptid_anchor {
         instructions::approve_execution(ctx)
     }
 }
-

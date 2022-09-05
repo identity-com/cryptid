@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
+use crate::state::instruction_size::InstructionSize;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
-use crate::state::instruction_size::InstructionSize;
-use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
+use std::collections::HashMap;
 
 /// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
 /// Accounts are stored as indices in AbbreviatedAccountMeta to save space
@@ -24,10 +24,7 @@ impl AbbreviatedInstructionData {
     }
 
     /// Creates an [`InstructionData`] from a given [`SolanaInstruction`]
-    pub fn from_instruction(
-        instruction: Instruction,
-        accounts: &HashMap<Pubkey, u8>,
-    ) -> Self {
+    pub fn from_instruction(instruction: Instruction, accounts: &HashMap<Pubkey, u8>) -> Self {
         Self {
             program_id: *accounts.get(&instruction.program_id).unwrap_or_else(|| {
                 panic!(
@@ -57,12 +54,13 @@ impl AbbreviatedInstructionData {
         }
     }
 
-    pub fn select_account_infos<'a>(self, account_infos: &'a [AccountInfo<'a>]) -> Vec<AccountInfo<'a>> {
+    pub fn select_account_infos<'a>(
+        self,
+        account_infos: &'a [AccountInfo<'a>],
+    ) -> Vec<AccountInfo<'a>> {
         self.accounts
             .into_iter()
-            .map(|meta| {
-                account_infos[meta.key as usize].clone()
-            })
+            .map(|meta| account_infos[meta.key as usize].clone())
             .collect()
     }
 }

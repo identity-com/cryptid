@@ -6,6 +6,7 @@ import {initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {InstructionData} from "./util/types";
+import {web3} from "@project-serum/anchor";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -13,7 +14,9 @@ const {expect} = chai;
 describe("proposeExecute", () => {
     const {
         program,
+        provider,
         authority,
+        keypair
     } = createTestContext();
 
     let didAccount: PublicKey;
@@ -43,7 +46,8 @@ describe("proposeExecute", () => {
     const execute = (transactionAccount: Keypair) =>
         // execute the Cryptid transaction
         program.methods.executeTransaction(
-            Buffer.from([]),  // no controller chain
+            Buffer.from([]),  // no controller chain,
+            null,
             cryptidBump,
             0
         ).accounts({
@@ -94,15 +98,45 @@ describe("proposeExecute", () => {
         const transactionAccount = Keypair.generate();
 
         // propose the Cryptid transaction
-        await propose(transactionAccount);
+        const proposeIx = await program.methods.proposeTransaction(
+            [transferInstructionData],
+            2,
+        ).accounts({
+                cryptidAccount,
+                authority: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
+            }
+        ).remainingAccounts([
+                toAccountMeta(recipient.publicKey, true, false),
+                toAccountMeta(SystemProgram.programId)
+            ]
+        ).signers(
+            [transactionAccount]
+        ).instruction()
 
-        let currentBalance = await balanceOf(cryptidAccount);
-        expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
+        const executeIx = await program.methods.executeTransaction(
+            Buffer.from([]),  // no controller chain
+            null,
+            cryptidBump,
+            0
+        ).accounts({
+                cryptidAccount,
+                didProgram: DID_SOL_PROGRAM,
+                did: didAccount,
+                signer: authority.publicKey,
+                destination: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
+            }
+        ).remainingAccounts([
+            toAccountMeta(recipient.publicKey, true, false),
+            toAccountMeta(SystemProgram.programId)
+        ]).instruction()
 
-        // execute the Cryptid transaction
-        await execute(transactionAccount);
+        const transaction = new web3.Transaction().add(proposeIx, executeIx);
 
-        currentBalance = await balanceOf(cryptidAccount);
+        await provider.sendAndConfirm(transaction, [keypair, transactionAccount]);
+
+        const currentBalance = await balanceOf(cryptidAccount);
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
@@ -183,6 +217,7 @@ describe("proposeExecute", () => {
         // execute the Cryptid transaction
         const shouldFail = program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
+            null,
             cryptidBump,
             0
         ).accounts({
