@@ -4,19 +4,19 @@ import chaiAsPromised from "chai-as-promised";
 import {
     cryptidTransferInstruction,
     deriveCryptidAccountAddressWithMiddleware,
-    deriveMiddlewareAccountAddress,
+    deriveCheckRecipientMiddlewareAccountAddress,
     toAccountMeta
 } from "../util/cryptid";
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {InstructionData} from "../util/types";
-import {CHECK_RECIPIENT_MIDDLEWARE_PROGRAM, CRYPTID_PROGRAM} from "../util/constants";
+import {CRYPTID_PROGRAM} from "../util/constants";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe("checkRecipient", () => {
+describe("Middleware: checkRecipient", () => {
     const {
         program,
         authority,
@@ -87,7 +87,7 @@ describe("checkRecipient", () => {
     })
 
     before('Set up middleware PDA', async () => {
-        [middlewareAccount, middlewareBump] = await deriveMiddlewareAccountAddress(CHECK_RECIPIENT_MIDDLEWARE_PROGRAM, authority.publicKey, 0);
+        [middlewareAccount, middlewareBump] = await deriveCheckRecipientMiddlewareAccountAddress(authority.publicKey, 0);
 
         await checkRecipientMiddlewareProgram.methods.create(recipient.publicKey, 0, middlewareBump).accounts({
             middlewareAccount,

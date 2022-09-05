@@ -67,7 +67,7 @@ pub struct Create<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + 32 + 32 + 8 + 8,
+        space = 8 + CheckRecipient::MAX_SIZE,
         seeds = [CheckRecipient::SEED_PREFIX, authority.key().as_ref(), nonce.to_le_bytes().as_ref()],
         bump,
     )]
@@ -124,6 +124,8 @@ pub struct CheckRecipient {
 }
 impl CheckRecipient {
     pub const SEED_PREFIX: &'static [u8] = b"check_recipient";
+
+    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1;
 }
 
 #[error_code]

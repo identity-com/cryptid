@@ -1,8 +1,9 @@
 import {AccountMeta, PublicKey, SystemProgram} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CRYPTID_PROGRAM} from "./constants";
+import {CHECK_RECIPIENT_MIDDLEWARE_PROGRAM, CRYPTID_PROGRAM, TIME_DELAY_MIDDLEWARE_PROGRAM} from "./constants";
 import {InstructionData, TransactionAccountMeta} from "./types";
+import BN from "bn.js";
 
 export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
     pubkey: publicKey,
@@ -61,11 +62,28 @@ export const deriveCryptidAccountAddressWithMiddleware = (didAccount: PublicKey,
     CRYPTID_PROGRAM
 );
 
-export const deriveMiddlewareAccountAddress = (middlewareProgramId: PublicKey, authority: PublicKey, nonce: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKey, nonce: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
     [
         anchor.utils.bytes.utf8.encode("check_recipient"),
         authority.toBuffer(),
         Buffer.from([nonce]),
     ],
-    middlewareProgramId
+    CHECK_RECIPIENT_MIDDLEWARE_PROGRAM
+);
+
+export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, seconds: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+    [
+        anchor.utils.bytes.utf8.encode("time_delay"),
+        authority.toBuffer(),
+        new BN(seconds).toArrayLike(Buffer, "le", 8),
+    ],
+    TIME_DELAY_MIDDLEWARE_PROGRAM
+);
+
+export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (transaction_account: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+    [
+        anchor.utils.bytes.utf8.encode("time_delay_creation_time"),
+        transaction_account.toBuffer()
+    ],
+    TIME_DELAY_MIDDLEWARE_PROGRAM
 );

@@ -387,6 +387,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "check_pass"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "cryptid_anchor",
+ "solana-gateway",
+]
+
+[[package]]
 name = "check_recipient"
 version = "0.1.0"
 dependencies = [
@@ -487,7 +496,7 @@ dependencies = [
  "anchor-lang",
  "bitflags",
  "num-traits",
- "sol-did",
+ "sol-did 3.0.0",
 ]
 
 [[package]]
@@ -1129,6 +1138,19 @@ checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
 name = "sol-did"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2546d424d6898908c205d99d3af07ad42e2e8aec8f0d459235dc0bd4e9866fe"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
+name = "sol-did"
 version = "3.0.0"
 source = "git+https://github.com/identity-com/sol-did?rev=b0a32154aa7d2d42666865a90356e9c50616dca2#b0a32154aa7d2d42666865a90356e9c50616dca2"
 dependencies = [
@@ -1174,6 +1196,21 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn",
+]
+
+[[package]]
+name = "solana-gateway"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "243daaf437dff89891d520c3e9be7b4a6940c30a1bda2ac094e621046f303eda"
+dependencies = [
+ "bitflags",
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "sol-did 0.2.0",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]
@@ -1272,6 +1309,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "time_delay"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "cryptid_anchor",
 ]
 
 [[package]]

@@ -3,11 +3,13 @@ import {AnchorProvider, Program, Provider} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {CryptidAnchor} from "../../target/types/cryptid_anchor";
 import {CheckRecipient} from "../../target/types/check_recipient";
+import {TimeDelay} from "../../target/types/time_delay";
 
 const envProvider = anchor.AnchorProvider.env();
 const envProgram = anchor.workspace.CryptidAnchor as Program<CryptidAnchor>;
 
 const envCheckRecipientMiddlewareProgram = anchor.workspace.CheckRecipient as Program<CheckRecipient>;
+const envTimeDelayMiddlewareProgram = anchor.workspace.TimeDelay as Program<TimeDelay>;
 
 if (!process.env.QUIET) {
     envProvider.connection.onLogs("all", (log) =>
@@ -36,6 +38,7 @@ export type CryptidTestContext = {
     keypair: Keypair,
     middleware: {
         checkRecipient : Program<CheckRecipient>
+        timeDelay : Program<TimeDelay>
     }
 }
 
@@ -48,6 +51,7 @@ export const createTestContext = (): CryptidTestContext => {
     const authority = provider.wallet;
 
     const checkRecipientMiddlewareProgram = new Program<CheckRecipient>(envCheckRecipientMiddlewareProgram.idl, envCheckRecipientMiddlewareProgram.programId, anchorProvider);
+    const timeDelayMiddlewareProgram = new Program<TimeDelay>(envTimeDelayMiddlewareProgram.idl, envTimeDelayMiddlewareProgram.programId, anchorProvider);
 
     return {
         program,
@@ -55,7 +59,10 @@ export const createTestContext = (): CryptidTestContext => {
         authority,
         keypair,
         middleware: {
-            checkRecipient: checkRecipientMiddlewareProgram
+            checkRecipient: checkRecipientMiddlewareProgram,
+            timeDelay: timeDelayMiddlewareProgram
         }
     }
 };
+
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
