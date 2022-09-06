@@ -50,3 +50,22 @@ export const deriveCryptidAccountAddress = (didAccount: PublicKey): Promise<[Pub
         didAccount.toBuffer()],
     CRYPTID_PROGRAM
 );
+
+export const deriveCryptidAccountAddressWithMiddleware = (didAccount: PublicKey, middlewareAccount: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+    [
+        anchor.utils.bytes.utf8.encode("cryptid_account"),
+        DID_SOL_PROGRAM.toBuffer(),
+        didAccount.toBuffer(),
+        middlewareAccount.toBuffer(),
+    ],
+    CRYPTID_PROGRAM
+);
+
+export const deriveMiddlewareAccountAddress = (middlewareProgramId: PublicKey, authority: PublicKey, nonce: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+    [
+        anchor.utils.bytes.utf8.encode("check_recipient"),
+        authority.toBuffer(),
+        Buffer.from([nonce]),
+    ],
+    middlewareProgramId
+);

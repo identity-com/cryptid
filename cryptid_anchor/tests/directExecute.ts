@@ -7,7 +7,7 @@ import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} from "./util/cryptid";
 import {addKeyToDID, initializeDIDAccount} from "./util/did";
-import {fund, createTestContext} from "./util/anchorUtils";
+import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
 import {InstructionData} from "./util/types";
 
 chai.use(chaiAsPromised);
@@ -16,9 +16,8 @@ const {expect} = chai;
 describe("directExecute", () => {
     const {
         program,
-        provider,
         authority,
-        balanceOf
+        provider,
     } = createTestContext();
 
     let didAccount: PublicKey;
@@ -26,16 +25,6 @@ describe("directExecute", () => {
     let cryptidBump: number;
 
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
-
-    before('Set up DID account', async () => {
-        didAccount = await initializeDIDAccount(authority);
-    })
-
-    before('Set up generative Cryptid Account', async () => {
-        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
-
-        await fund(provider, cryptidAccount, 20 * LAMPORTS_PER_SOL);
-    })
 
     const directExecute = (recipient: Keypair, instructionData: InstructionData = transferInstructionData) => program.methods.directExecute(
         Buffer.from([]),  // no controller chain
@@ -52,6 +41,17 @@ describe("directExecute", () => {
         toAccountMeta(recipient.publicKey, true, false),
         toAccountMeta(SystemProgram.programId)
     ]).rpc({skipPreflight: true});
+
+    before('Set up DID account', async () => {
+        await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
+        didAccount = await initializeDIDAccount(authority);
+    })
+
+    before('Set up generative Cryptid Account', async () => {
+        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
+
+        await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
+    })
 
     it("can transfer through Cryptid", async () => {
         const recipient = Keypair.generate();
@@ -178,7 +178,7 @@ describe("directExecute", () => {
             program.coder
         );
         // fund the second key, because it has to pay gas this time
-        await fund(provider, secondKey.publicKey, LAMPORTS_PER_SOL);
+        await fund(secondKey.publicKey, LAMPORTS_PER_SOL);
 
         const recipient = Keypair.generate();
 

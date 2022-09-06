@@ -1,18 +1,7 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::instruction::Instruction;
-use anchor_lang::solana_program::log::sol_log_compute_units;
-use anchor_lang::solana_program::program::invoke_signed;
-use bitflags::bitflags;
-use crate::state::cryptid_account::CryptidAccount;
-use crate::state::abbreviated_instruction_data::{AbbreviatedInstructionData};
-use crate::util::*;
-use crate::instructions::util::*;
-use sol_did::state::DidAccount;
-use crate::error::CryptidError;
-use crate::state::transaction_account::TransactionAccount;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
-use crate::util::seeder::*;
-
+use crate::state::transaction_account::TransactionAccount;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(
@@ -24,7 +13,7 @@ pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
     #[account()]
-    pub cryptid_account: UncheckedAccount<'info>,    // TODO allow generative/non-generative
+    pub cryptid_account: UncheckedAccount<'info>, // TODO allow generative/non-generative
     #[account(mut)]
     authority: Signer<'info>,
     #[account(
@@ -35,7 +24,7 @@ pub struct ProposeTransaction<'info> {
             InstructionSize::from_iter_to_iter(
                 instructions.iter()
             )
-        ).into())
+        ))
     ]
     transaction_account: Account<'info, TransactionAccount>,
     system_program: Program<'info, System>,
@@ -67,7 +56,8 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
     // despite being index 0 in the remaining accounts.
     // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
-    ctx.accounts.transaction_account.accounts = ctx.remaining_accounts.iter().map(|a| *a.key).collect();
+    ctx.accounts.transaction_account.accounts =
+        ctx.remaining_accounts.iter().map(|a| *a.key).collect();
 
     Ok(())
 }

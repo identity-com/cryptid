@@ -1,9 +1,9 @@
 //! The types that are stored in accounts for `cryptid_signer`
 
-use anchor_lang::prelude::*;
 use crate::error::CryptidError;
+use anchor_lang::prelude::*;
 
-/// The data for an on-chain Cryptid Account - TODO Temp until fixed - wi
+/// The data for an on-chain Cryptid Account
 #[account]
 pub struct CryptidAccount {
     /// The DID for this account
@@ -31,4 +31,3 @@ impl CryptidAccount {
         Ok(())
     }
 }
-

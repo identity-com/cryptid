@@ -3,19 +3,20 @@ import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} from "./util/cryptid";
 import {initializeDIDAccount} from "./util/did";
-import {fund, createTestContext} from "./util/anchorUtils";
+import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {InstructionData} from "./util/types";
+import {web3} from "@project-serum/anchor";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip("proposeExecute", () => {
+describe("proposeExecute", () => {
     const {
         program,
         provider,
         authority,
-        balanceOf
+        keypair
     } = createTestContext();
 
     let didAccount: PublicKey;
@@ -45,7 +46,8 @@ describe.skip("proposeExecute", () => {
     const execute = (transactionAccount: Keypair) =>
         // execute the Cryptid transaction
         program.methods.executeTransaction(
-            Buffer.from([]),  // no controller chain
+            Buffer.from([]),  // no controller chain,
+            null,
             cryptidBump,
             0
         ).accounts({
@@ -62,13 +64,14 @@ describe.skip("proposeExecute", () => {
         ]).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
 
     before('Set up DID account', async () => {
+        await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
         didAccount = await initializeDIDAccount(authority);
     })
 
     before('Set up generative Cryptid Account', async () => {
         [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
 
-        await fund(provider, cryptidAccount, 20 * LAMPORTS_PER_SOL);
+        await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     })
 
     it("can propose and execute a transfer through Cryptid", async () => {
@@ -86,6 +89,54 @@ describe.skip("proposeExecute", () => {
         await execute(transactionAccount);
 
         currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+
+    it("can propose and execute in the same transaction", async () => {
+        const previousBalance = await balanceOf(cryptidAccount);
+
+        const transactionAccount = Keypair.generate();
+
+        // propose the Cryptid transaction
+        const proposeIx = await program.methods.proposeTransaction(
+            [transferInstructionData],
+            2,
+        ).accounts({
+                cryptidAccount,
+                authority: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
+            }
+        ).remainingAccounts([
+                toAccountMeta(recipient.publicKey, true, false),
+                toAccountMeta(SystemProgram.programId)
+            ]
+        ).signers(
+            [transactionAccount]
+        ).instruction()
+
+        const executeIx = await program.methods.executeTransaction(
+            Buffer.from([]),  // no controller chain
+            null,
+            cryptidBump,
+            0
+        ).accounts({
+                cryptidAccount,
+                didProgram: DID_SOL_PROGRAM,
+                did: didAccount,
+                signer: authority.publicKey,
+                destination: authority.publicKey,
+                transactionAccount: transactionAccount.publicKey
+            }
+        ).remainingAccounts([
+            toAccountMeta(recipient.publicKey, true, false),
+            toAccountMeta(SystemProgram.programId)
+        ]).instruction()
+
+        const transaction = new web3.Transaction().add(proposeIx, executeIx);
+
+        await provider.sendAndConfirm(transaction, [keypair, transactionAccount]);
+
+        const currentBalance = await balanceOf(cryptidAccount);
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
@@ -166,6 +217,7 @@ describe.skip("proposeExecute", () => {
         // execute the Cryptid transaction
         const shouldFail = program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
+            null,
             cryptidBump,
             0
         ).accounts({

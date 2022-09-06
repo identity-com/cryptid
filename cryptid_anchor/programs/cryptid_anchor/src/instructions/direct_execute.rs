@@ -1,16 +1,12 @@
+use crate::error::CryptidError;
+use crate::instructions::util::*;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use crate::util::seeder::*;
+use crate::util::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::solana_program::log::sol_log_compute_units;
 use anchor_lang::solana_program::program::invoke_signed;
-use bitflags::bitflags;
-use crate::state::cryptid_account::CryptidAccount;
-use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
-use crate::util::*;
-use crate::instructions::util::*;
 use sol_did::state::DidAccount;
-use crate::error::CryptidError;
-use crate::util::seeder::*;
-
 
 #[derive(Accounts)]
 #[instruction(
@@ -39,15 +35,19 @@ pub struct DirectExecute<'info> {
 // TODO: Note - I initially wanted to use some crate to iterate over a struct's fields, so I could define
 // this for all Contexts automatically, but failed. We could either leave it like this or try again.
 // Once decided, remove this comment.
-impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info> for Context<'a, 'b, 'c, 'info, DirectExecute<'info>> {
+impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
+    for Context<'a, 'b, 'c, 'info, DirectExecute<'info>>
+{
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
         [
             self.accounts.cryptid_account.as_ref(),
             self.accounts.did.as_ref(),
             self.accounts.did_program.as_ref(),
-            self.accounts.signer.as_ref()
-        ].into_iter()
-            .chain(self.remaining_accounts.iter()).collect()
+            self.accounts.signer.as_ref(),
+        ]
+        .into_iter()
+        .chain(self.remaining_accounts.iter())
+        .collect()
     }
 
     fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>> {
@@ -64,15 +64,20 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     cryptid_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
-    let debug = ExecuteFlags::from_bits(flags).unwrap().contains(ExecuteFlags::DEBUG);
+    let debug = ExecuteFlags::from_bits(flags)
+        .unwrap()
+        .contains(ExecuteFlags::DEBUG);
     if debug {
         ctx.accounts.print_keys();
     }
 
-    let seeder =  Box::new(GenerativeCryptidSeeder {
+    let seeder = Box::new(GenerativeCryptidSeeder {
         did_program: *ctx.accounts.did_program.key,
         did: ctx.accounts.did.key(),
-        bump: cryptid_account_bump
+        // TODO: by adding an empty vector here, we are saying that direct_execute does not support middleware
+        // This is true at the moment, but we might want to change this later.
+        additional_seeds: vec![],
+        bump: cryptid_account_bump,
     });
 
     // let seeder: Box<dyn PDASeeder> = match ctx.accounts.cryptid_account.is_generative() {
@@ -104,7 +109,10 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     let all_accounts_ref_vec = ctx.all_accounts();
-    let all_keys_vec = all_accounts_ref_vec.iter().map(|a| a.key.clone()).collect::<Vec<_>>();
+    let all_keys_vec = all_accounts_ref_vec
+        .iter()
+        .map(|a| *a.key)
+        .collect::<Vec<_>>();
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instruction
     // TODO - if we want direct-execute to support multisig, we need to support more signers here
@@ -115,14 +123,23 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // Generate and Execute instructions
     for (index, instruction_data) in instructions.iter().enumerate() {
         if debug {
-            msg!("Executing instruction {} program {} accounts {:?}",
+            msg!(
+                "Executing instruction {} program {} accounts {:?}",
                 index,
                 instruction_data.program_id,
-                instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>()
+                instruction_data
+                    .accounts
+                    .iter()
+                    .map(|a| a.key)
+                    .collect::<Vec<_>>()
             );
         }
         let solana_instruction = instruction_data.clone().into_instruction(&all_keys_vec[..]);
-        let account_indexes = instruction_data.accounts.iter().map(|a| a.key).collect::<Vec<_>>();
+        let account_indexes = instruction_data
+            .accounts
+            .iter()
+            .map(|a| a.key)
+            .collect::<Vec<_>>();
         let account_infos = ctx
             .get_accounts_by_indexes(account_indexes.as_slice())?
             .into_iter()
@@ -131,11 +148,18 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 
         let seeds = seeder.seeds();
 
-        msg!("Remaining compute units for sub-instruction `{}` of {}", index, instructions.len());
+        msg!(
+            "Remaining compute units for sub-instruction `{}` of {}",
+            index,
+            instructions.len()
+        );
         sol_log_compute_units();
 
         // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
-        let is_signed_by_cryptid = solana_instruction.accounts.iter().any(|meta| meta.pubkey.eq(ctx.accounts.cryptid_account.key));
+        let is_signed_by_cryptid = solana_instruction
+            .accounts
+            .iter()
+            .any(|meta| meta.pubkey.eq(ctx.accounts.cryptid_account.key));
         let sub_instruction_result = if is_signed_by_cryptid {
             if debug {
                 msg!("Invoking signed with seeds: {:?}", seeds);
@@ -150,8 +174,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
                 account_infos.as_slice(),
                 &[&seeds_slices_vec[..]],
             )
-                .map_err(|_| error!(CryptidError::SubInstructionError))
-
+            .map_err(|_| error!(CryptidError::SubInstructionError))
         } else {
             msg!("Invoking without signature");
             Ok(())
@@ -330,7 +353,10 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
 impl DirectExecute<'_> {
     /// Prints all the keys to the program log (compute budget intensive)
     pub fn print_keys(&self) {
-        msg!("cryptid_account: {}", self.cryptid_account.to_account_info().key);
+        msg!(
+            "cryptid_account: {}",
+            self.cryptid_account.to_account_info().key
+        );
         msg!("did: {}", self.did.to_account_info().key);
         msg!("did_program: {}", self.did_program.to_account_info().key);
         msg!("signer: {}", self.signer.to_account_info().key);

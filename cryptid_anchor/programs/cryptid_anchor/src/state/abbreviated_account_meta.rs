@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use anchor_lang::prelude::*;
 use crate::state::account_meta_props::AccountMetaProps;
+use anchor_lang::prelude::*;
+use std::collections::HashMap;
 
 /// An account for an instruction, similar to Solana's [`AccountMeta`](AccountMeta)
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -19,10 +19,7 @@ impl AbbreviatedAccountMeta {
     }
 
     /// Creates a [`TransactionAccountMeta`] from a given [`AccountMeta`]
-    pub fn from_solana_account_meta(
-        meta: AccountMeta,
-        accounts: &HashMap<Pubkey, u8>,
-    ) -> Self {
+    pub fn from_solana_account_meta(meta: AccountMeta, accounts: &HashMap<Pubkey, u8>) -> Self {
         Self {
             key: *accounts
                 .get(&meta.pubkey)
@@ -35,8 +32,12 @@ impl AbbreviatedAccountMeta {
     pub fn into_solana_account_meta(self, accounts: &[Pubkey]) -> AccountMeta {
         AccountMeta {
             pubkey: accounts[self.key as usize],
-            is_signer: AccountMetaProps::from_bits(self.meta).unwrap().contains(AccountMetaProps::IS_SIGNER),
-            is_writable: AccountMetaProps::from_bits(self.meta).unwrap().contains(AccountMetaProps::IS_WRITABLE),
+            is_signer: AccountMetaProps::from_bits(self.meta)
+                .unwrap()
+                .contains(AccountMetaProps::IS_SIGNER),
+            is_writable: AccountMetaProps::from_bits(self.meta)
+                .unwrap()
+                .contains(AccountMetaProps::IS_WRITABLE),
         }
     }
 }

@@ -5,8 +5,6 @@ pub mod seeder;
 use anchor_lang::prelude::*;
 use std::str::FromStr;
 
-pub const DISCRIMINATOR_SIZE: usize = 8;
-
 #[derive(Debug, Clone)]
 pub struct SolDID;
 
