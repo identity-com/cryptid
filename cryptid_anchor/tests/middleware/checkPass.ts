@@ -11,10 +11,16 @@ import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {InstructionData} from "../util/types";
-import {CRYPTID_PROGRAM} from "../util/constants";
-import {addGatekeeper, sendGatewayTransaction} from "../util/gatekeeperUtils";
+import {CRYPTID_PROGRAM, GATEWAY_PROGRAM} from "../util/constants";
+import {
+    addGatekeeper,
+    getExpireFeatureAddress,
+    sendGatewayTransaction,
+    setExpireFeature
+} from "../util/gatekeeperUtils";
 import {GatekeeperService} from "@identity.com/solana-gatekeeper-lib";
 import {getGatewayTokenAddressForOwnerAndGatekeeperNetwork} from "@identity.com/solana-gateway-ts";
+import {beforeEach} from "mocha";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -30,8 +36,11 @@ describe("Middleware: checkPass", () => {
     } = createTestContext();
 
     const gatekeeper = Keypair.generate();
-    let gatekeeperNetwork;
+    let gatekeeperNetwork: Keypair;
     let gatekeeperService: GatekeeperService;
+    // The address of the expire-on-use feature for the gatekeeper network,
+    // if it exists.
+    let expireFeatureAccount: PublicKey;
 
     let didAccount: PublicKey;
     let cryptidAccount: PublicKey;
@@ -49,6 +58,21 @@ describe("Middleware: checkPass", () => {
     const revokeGatewayToken = (gatewayToken: PublicKey) =>
         sendGatewayTransaction(() => gatekeeperService.revoke(gatewayToken))
 
+    const getGatewayToken = (owner: PublicKey) => gatekeeperService.findGatewayTokenForOwner(owner)
+
+    const setUpMiddleware = async (expireGatewayTokenOnUse: boolean) => {
+        [middlewareAccount, middlewareBump] = await deriveCheckPassMiddlewareAccountAddress(authority.publicKey, gatekeeperNetwork.publicKey);
+
+        await checkPassMiddlewareProgram.methods.create(gatekeeperNetwork.publicKey, middlewareBump, expireGatewayTokenOnUse).accounts({
+            middlewareAccount,
+            authority: authority.publicKey,
+        }).rpc({skipPreflight: true});
+    }
+
+    const setUpCryptid = async () => {
+        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, middlewareAccount);
+        await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
+    }
 
     const propose = async (transactionAccount: Keypair, instruction: InstructionData = transferInstructionData) =>
         program.methods.proposeTransaction(
@@ -94,8 +118,11 @@ describe("Middleware: checkPass", () => {
                 middlewareAccount,
                 transactionAccount: transactionAccount.publicKey,
                 owner: didAccount,
+                authority: authority.publicKey,
+            expireFeatureAccount,
                 gatewayToken,
-                cryptidProgram: CRYPTID_PROGRAM
+                cryptidProgram: CRYPTID_PROGRAM,
+                gatewayProgram: GATEWAY_PROGRAM
             }
         ).rpc({skipPreflight: true}); // skip preflight so we see validator logs on error
 
@@ -113,129 +140,137 @@ describe("Middleware: checkPass", () => {
             gatekeeperNetwork = Keypair.generate();
             await fund(gatekeeperNetwork.publicKey);
 
+            // the expire feature account does not exist yet, but derive its address anyway
+            // as all tests need to pass one in
+            expireFeatureAccount = await getExpireFeatureAddress(gatekeeperNetwork.publicKey);
+
             gatekeeperService = await addGatekeeper(provider, gatekeeperNetwork, gatekeeper);
         }
     );
 
-    beforeEach('Set up middleware PDA', async () => {
-        [middlewareAccount, middlewareBump] = await deriveCheckPassMiddlewareAccountAddress(gatekeeperNetwork.publicKey);
+    context('with a non-expiring gateway token', () => {
+        beforeEach('Set up middleware PDA', () => setUpMiddleware(false));
+        beforeEach('Set up generative Cryptid Account with middleware', setUpCryptid);
 
-        await checkPassMiddlewareProgram.methods.create(gatekeeperNetwork.publicKey, middlewareBump).accounts({
-            middlewareAccount,
-            authority: authority.publicKey,
-        }).rpc({skipPreflight: true});
-    })
+        it("blocks a transfer with no gateway token", async () => {
+            const transactionAccount = Keypair.generate();
+            // get the gateway token address but don't actually create the gateway token
+            const missingGatewayToken = await getGatewayTokenAddressForOwnerAndGatekeeperNetwork(authority.publicKey, gatekeeperNetwork.publicKey);
 
-    beforeEach('Set up generative Cryptid Account with middleware', async () => {
-        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, middlewareAccount);
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
 
-        if (!process.env.QUIET) {
-            console.log("Accounts", {
-                didAccount: didAccount.toBase58(),
-                gatekeeperNetwork: gatekeeperNetwork.publicKey.toBase58(),
-                gatekeeper: gatekeeper.publicKey.toBase58(),
-                cryptidAccount: cryptidAccount.toBase58(),
-                middlewareAccount: middlewareAccount.toBase58(),
-                authority: authority.publicKey.toBase58(),
-                recipient: recipient.publicKey.toBase58(),
-            })
-        }
+            // fails to pass through the middleware
+            const shouldFail = checkPass(transactionAccount, missingGatewayToken);
 
-        await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
-    })
+            // TODO expose the error message
+            return expect(shouldFail).to.be.rejected;
+        });
 
-    it("blocks a transfer with no gateway token", async () => {
-        const transactionAccount = Keypair.generate();
-        // get the gateway token address but don't actually create the gateway token
-        const missingGatewayToken = await getGatewayTokenAddressForOwnerAndGatekeeperNetwork(authority.publicKey, gatekeeperNetwork.publicKey);
+        it("blocks a transfer if the gateway token is present but invalid", async () => {
+            const transactionAccount = Keypair.generate();
 
-        // propose the Cryptid transaction
-        await propose(transactionAccount);
+            // create the token but revoke it
+            const gatewayToken = await createGatewayToken(authority.publicKey);
+            await revokeGatewayToken(gatewayToken.publicKey);
 
-        // fails to pass through the middleware
-        const shouldFail = checkPass(transactionAccount, missingGatewayToken);
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
 
-        // TODO expose the error message
-        return expect(shouldFail).to.be.rejected;
+            // fails to pass through the middleware
+            const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
+
+            // TODO expose the error message
+            return expect(shouldFail).to.be.rejected;
+        });
+
+        it("blocks a transfer if the gateway token is for the wrong gatekeeper network", async () => {
+            const transactionAccount = Keypair.generate();
+
+            // create a gatekeeper network, add the gatekeeper to it and issue a token from it.
+            const wrongGatekeeperNetwork = Keypair.generate();
+            await fund(wrongGatekeeperNetwork.publicKey);
+            const wrongGatekeeperService = await addGatekeeper(provider, wrongGatekeeperNetwork, gatekeeper);
+            const gatewayToken = await sendGatewayTransaction(() => wrongGatekeeperService.issue(authority.publicKey))
+
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
+
+            // fails to pass through the middleware
+            const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
+
+            // TODO expose the error message
+            return expect(shouldFail).to.be.rejected;
+        });
+
+        it("allows a transfer if the authority has a valid gateway token", async () => {
+            const previousBalance = await balanceOf(cryptidAccount);
+
+            const transactionAccount = Keypair.generate();
+
+            // issue a gateway token to the authority
+            const gatewayToken = await createGatewayToken(authority.publicKey);
+
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
+
+            // pass through the middleware
+            await checkPass(transactionAccount, gatewayToken.publicKey);
+
+            // execute the Cryptid transaction
+            await execute(transactionAccount);
+
+            const currentBalance = await balanceOf(cryptidAccount);
+            expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+        });
+
+        it("allows a transfer if the DID account has a valid gateway token", async () => {
+            // the difference between this one and the previous one is that it shows that
+            // the gateway token can be associated with the DID account itself rather than the authority wallet
+            const previousBalance = await balanceOf(cryptidAccount);
+
+            const transactionAccount = Keypair.generate();
+
+            // issue a gateway token to the authority
+            const gatewayToken = await createGatewayToken(didAccount);
+
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
+
+            // pass through the middleware
+            await checkPass(transactionAccount, gatewayToken.publicKey);
+
+            // execute the Cryptid transaction
+            await execute(transactionAccount);
+
+            const currentBalance = await balanceOf(cryptidAccount);
+            expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+        });
     });
 
-    it("blocks a transfer if the gateway token is present but invalid", async () => {
-        const transactionAccount = Keypair.generate();
+    context('with a gateway token that expires', () => {
+        beforeEach(() => setExpireFeature(provider, gatekeeperNetwork))
+        beforeEach('Set up middleware PDA', () => setUpMiddleware(true));
+        beforeEach('Set up generative Cryptid Account with middleware', setUpCryptid);
 
-        // create the token but revoke it
-        const gatewayToken = await createGatewayToken(authority.publicKey);
-        await revokeGatewayToken(gatewayToken.publicKey);
+        it("expires a gateway token after use", async () => {
+            const transactionAccount = Keypair.generate();
 
-        // propose the Cryptid transaction
-        await propose(transactionAccount);
+            // issue a gateway token to the authority
+            const gatewayToken = await createGatewayToken(authority.publicKey);
 
-        // fails to pass through the middleware
-        const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
+            // propose the Cryptid transaction
+            await propose(transactionAccount);
 
-        // TODO expose the error message
-        return expect(shouldFail).to.be.rejected;
-    });
+            // pass through the middleware
+            await checkPass(transactionAccount, gatewayToken.publicKey);
 
-    it("blocks a transfer if the gateway token is for the wrong gatekeeper network", async () => {
-        const transactionAccount = Keypair.generate();
+            // execute the Cryptid transaction
+            await execute(transactionAccount);
 
-        // create a gatekeeper network, add the gatekeeper to it and issue a token from it.
-        const wrongGatekeeperNetwork = Keypair.generate();
-        await fund(wrongGatekeeperNetwork.publicKey);
-        const wrongGatekeeperService = await addGatekeeper(provider, wrongGatekeeperNetwork, gatekeeper);
-        const gatewayToken = await sendGatewayTransaction(() => wrongGatekeeperService.issue(authority.publicKey))
-
-        // propose the Cryptid transaction
-        await propose(transactionAccount);
-
-        // fails to pass through the middleware
-        const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
-
-        // TODO expose the error message
-        return expect(shouldFail).to.be.rejected;
-    });
-
-    it("allows a transfer if the authority has a valid gateway token", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
-
-        const transactionAccount = Keypair.generate();
-
-        // issue a gateway token to the authority
-        const gatewayToken = await createGatewayToken(authority.publicKey);
-
-        // propose the Cryptid transaction
-        await propose(transactionAccount);
-
-        // pass through the middleware
-        await checkPass(transactionAccount, gatewayToken.publicKey);
-
-        // execute the Cryptid transaction
-        await execute(transactionAccount);
-
-        const currentBalance = await balanceOf(cryptidAccount);
-        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
-    });
-
-    it("allows a transfer if the DID account has a valid gateway token", async () => {
-        // the difference between this one and the previous one is that it shows that
-        // the gateway token can be associated with the DID account itself rather than the authority wallet
-        const previousBalance = await balanceOf(cryptidAccount);
-
-        const transactionAccount = Keypair.generate();
-
-        // issue a gateway token to the authority
-        const gatewayToken = await createGatewayToken(didAccount);
-
-        // propose the Cryptid transaction
-        await propose(transactionAccount);
-
-        // pass through the middleware
-        await checkPass(transactionAccount, gatewayToken.publicKey);
-
-        // execute the Cryptid transaction
-        await execute(transactionAccount);
-
-        const currentBalance = await balanceOf(cryptidAccount);
-        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+            // the pass has now been invalidated
+            const updatedGatewayToken = await getGatewayToken(authority.publicKey);
+            expect(updatedGatewayToken.isValid()).to.be.false;
+        });
     });
 });

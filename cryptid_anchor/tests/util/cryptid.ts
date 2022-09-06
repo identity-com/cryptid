@@ -76,9 +76,10 @@ export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKe
     CHECK_RECIPIENT_MIDDLEWARE_PROGRAM
 );
 
-export const deriveCheckPassMiddlewareAccountAddress = (gatekeeperNetwork: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, gatekeeperNetwork: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
     [
         anchor.utils.bytes.utf8.encode("check_pass"),
+        authority.toBuffer(),
         gatekeeperNetwork.toBuffer(),
     ],
     CHECK_PASS_MIDDLEWARE_PROGRAM

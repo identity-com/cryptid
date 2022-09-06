@@ -1,24 +1,44 @@
 extern crate core;
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program::invoke;
 use cryptid_anchor::cpi::accounts::ApproveExecution;
 use cryptid_anchor::program::CryptidAnchor;
 use cryptid_anchor::state::transaction_account::TransactionAccount;
-use solana_gateway::Gateway;
-use solana_gateway::state::GatewayToken;
-use sol_did::state::DidAccount;
 use num_traits::cast::AsPrimitive;
+use sol_did::state::DidAccount;
+use solana_gateway::instruction::expire_token;
+use solana_gateway::state::GatewayToken;
+use solana_gateway::Gateway;
+use std::str::FromStr;
 
 declare_id!("midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo");
+
+#[derive(Debug, Clone)]
+pub struct GatewayProgram;
+
+impl Id for GatewayProgram {
+    fn id() -> Pubkey {
+        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap()
+    }
+}
+
 #[program]
 pub mod check_pass {
     use super::*;
-    use solana_gateway::Gateway;
     use cryptid_anchor::instructions::util::verify_keys;
+    use solana_gateway::Gateway;
 
-    pub fn create(ctx: Context<Create>, gatekeeper_network: Pubkey, bump: u8) -> Result<()> {
+    pub fn create(
+        ctx: Context<Create>,
+        gatekeeper_network: Pubkey,
+        bump: u8,
+        expire_on_use: bool,
+    ) -> Result<()> {
         ctx.accounts.middleware_account.gatekeeper_network = gatekeeper_network;
+        ctx.accounts.middleware_account.authority = ctx.accounts.authority.key();
         ctx.accounts.middleware_account.bump = bump;
+        ctx.accounts.middleware_account.expire_on_use = expire_on_use;
         Ok(())
     }
 
@@ -43,13 +63,8 @@ pub mod check_pass {
                     // The owner wallet is not the DID, so we check if the DID is a signer on the owner wallet
                     // TODO support controller relationships?
                     let controlling_did_accounts = vec![];
-                    verify_keys(
-                        &did,
-                        &gateway_token.owner_wallet,
-                        controlling_did_accounts,
-                    ).map_err(|_| -> ErrorCode {
-                        ErrorCode::InvalidPassAuthority
-                    })?;
+                    verify_keys(did, &gateway_token.owner_wallet, controlling_did_accounts)
+                        .map_err(|_| -> ErrorCode { ErrorCode::InvalidPassAuthority })?;
                 }
             }
             Some(owner_did) => {
@@ -64,8 +79,21 @@ pub mod check_pass {
         ExecuteMiddleware::verify_gateway_token_state_and_gatekeeper_network(
             &gateway_token,
             &ctx.accounts.middleware_account.gatekeeper_network,
-            lamports
+            lamports,
         )?;
+
+        if ctx.accounts.middleware_account.expire_on_use {
+            msg!("Expiring the gateway token");
+            // Expire the gateway token
+            // Note - this requires that the signer of this transaction is the owner of the gateway token
+            // As only the owner can execute the expire instruction
+            require_keys_eq!(
+                ctx.accounts.authority.key(),
+                gateway_token.owner_wallet,
+                ErrorCode::InvalidPassAuthority
+            );
+            ExecuteMiddleware::expire_token(&ctx)?;
+        }
 
         ExecuteMiddleware::approve(ctx)
     }
@@ -76,14 +104,16 @@ pub mod check_pass {
 /// The gatekeeper_network that passes must belong to
 gatekeeper_network: Pubkey,
 /// The bump seed for the middleware signer
-bump: u8
+bump: u8,
+/// Expire a gateway token after it has been used
+expire_on_use: bool
 )]
 pub struct Create<'info> {
     #[account(
     init,
     payer = authority,
     space = 8 + CheckPass::MAX_SIZE,
-    seeds = [CheckPass::SEED_PREFIX, gatekeeper_network.key().as_ref()],
+    seeds = [CheckPass::SEED_PREFIX, authority.key().as_ref(), gatekeeper_network.key().as_ref()],
     bump,
     )]
     pub middleware_account: Account<'info, CheckPass>,
@@ -106,11 +136,21 @@ pub struct ExecuteMiddleware<'info> {
     /// The gateway token can be on any key provably owned by the DID.
     #[account()]
     pub owner: Account<'info, DidAccount>, // TODO allow generative/non-generative
+    /// An authority on the DID.
+    /// This is only needed for the expireOnUse case. In this case, the authority must be the owner
+    /// of the gateway token.
+    pub authority: Signer<'info>,
+    /// The gatekeeper network expire feature
+    /// Used only on the expireOnUse case.
+    /// CHECK: The PDA derivation is checked by the Gateway program
+    pub expire_feature_account: UncheckedAccount<'info>,
     /// The gateway token for the transaction
     /// Must be owned by the owner of the transaction
     /// CHECK: Constraints are checked by the gateway sdk
-    gateway_token: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub gateway_token: UncheckedAccount<'info>,
     pub cryptid_program: Program<'info, CryptidAnchor>,
+    pub gateway_program: Program<'info, GatewayProgram>,
 }
 impl<'info> ExecuteMiddleware<'info> {
     // TODO abstract this into shared?
@@ -122,10 +162,12 @@ impl<'info> ExecuteMiddleware<'info> {
         };
         // define seeds inline here rather than extract to a function
         // in order to avoid having to convert Vec<Vec<u8>> to &[&[u8]]
+        let authority_key = ctx.accounts.middleware_account.authority.key();
         let gatekeeper_network_key = ctx.accounts.middleware_account.gatekeeper_network.key();
         let bump = ctx.accounts.middleware_account.bump.to_le_bytes();
         let seeds = &[
             CheckPass::SEED_PREFIX,
+            authority_key.as_ref(),
             gatekeeper_network_key.as_ref(),
             bump.as_ref(),
         ][..];
@@ -134,34 +176,56 @@ impl<'info> ExecuteMiddleware<'info> {
         cryptid_anchor::cpi::approve_execution(cpi_ctx)
     }
 
-    pub fn verify_gateway_token_state_and_gatekeeper_network(gateway_token: &GatewayToken, expected_gatekeeper_network: &Pubkey, expected_balance: u64) -> Result<()> {
-        msg!("Verifying gateway token state");
-        msg!("State: {:?}", gateway_token.state);
-
+    pub fn verify_gateway_token_state_and_gatekeeper_network(
+        gateway_token: &GatewayToken,
+        expected_gatekeeper_network: &Pubkey,
+        expected_balance: u64,
+    ) -> Result<()> {
         // We are using `verify_gateway_token` here rather than the more convenient `verify_gateway_token_account_info`
         // to avoid reparsing the gateway token.
         // TODO - ideally the Gateway SDK would be DID-aware and we could just make a single call to `verify_gateway_token_account_info`
         Gateway::verify_gateway_token(
             gateway_token,
-            &gateway_token.owner_wallet,    // Do not check the owner here. It may be a DID or a key on a DID.
+            &gateway_token.owner_wallet, // Do not check the owner here. It may be a DID or a key on a DID.
             expected_gatekeeper_network,
             // parameters required when using verify_gateway_token as opposed to verify_gateway_token_account_info
             expected_balance,
             None,
         )
-            .map_err(|_| error!(ErrorCode::InvalidPass))
+        .map_err(|_| error!(ErrorCode::InvalidPass))
+    }
+
+    pub fn expire_token(ctx: &Context<ExecuteMiddleware>) -> Result<()> {
+        let instruction = expire_token(
+            ctx.accounts.gateway_token.key(),
+            ctx.accounts.authority.key(),
+            ctx.accounts.middleware_account.gatekeeper_network,
+        );
+
+        invoke(
+            &instruction,
+            &[
+                ctx.accounts.gateway_token.to_account_info(),
+                ctx.accounts.authority.to_account_info(),
+                ctx.accounts.expire_feature_account.to_account_info(),
+                ctx.accounts.gateway_program.to_account_info(),
+            ],
+        )
+        .map_err(|_| error!(ErrorCode::ExpiryError))
     }
 }
 
 #[account()]
 pub struct CheckPass {
     pub gatekeeper_network: Pubkey,
+    pub authority: Pubkey,
     pub bump: u8,
+    pub expire_on_use: bool,
 }
 impl CheckPass {
     pub const SEED_PREFIX: &'static [u8] = b"check_pass";
 
-    pub const MAX_SIZE: usize = 32 + 1;
+    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1;
 }
 
 #[error_code]
@@ -170,4 +234,6 @@ pub enum ErrorCode {
     InvalidPass,
     #[msg("The provided pass is not owned by a key on the transaction owner DID")]
     InvalidPassAuthority,
+    #[msg("An error occured when expiring the single-use gateway token")]
+    ExpiryError,
 }

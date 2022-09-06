@@ -102,7 +102,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     let controlling_did_accounts = ctx.get_accounts_by_indexes(controller_chain.as_slice())?;
     verify_keys(
         &ctx.accounts.did,
-        &ctx.accounts.signer.to_account_info().key,
+        ctx.accounts.signer.to_account_info().key,
         controlling_did_accounts,
     )?;
 
