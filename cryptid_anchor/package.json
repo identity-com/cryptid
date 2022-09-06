@@ -1,4 +1,12 @@
 {
+    "private": true,
+    "workspaces": [
+        "client/packages/cli",
+        "client/packages/core",
+        "client/packages/idl",
+        "client/packages/middleware/createRecipient",
+        "tests"
+    ],
     "scripts": {
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"

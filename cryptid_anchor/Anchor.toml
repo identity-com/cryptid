@@ -5,6 +5,7 @@ members = [
     "programs/middleware/check_pass",
     "programs/middleware/time_delay"
 ]
+types = "client/packages/idl/"
 
 [features]
 seeds = false
@@ -37,4 +38,4 @@ filename = "../fixtures/did-sol-idl-account.json"
 
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha --exit -p ./tsconfig.json -t 1000000 tests/**/*.ts"

@@ -1,13 +1,10 @@
 import {Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
 import {AnchorProvider, Program, Provider} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import {CryptidAnchor} from "../../target/types/cryptid_anchor";
-import {CheckRecipient} from "../../target/types/check_recipient";
-import {CheckPass} from "../../target/types/check_pass";
-import {TimeDelay} from "../../target/types/time_delay";
+import { Cryptid, CheckPass, CheckRecipient, TimeDelay } from "@identity.com/cryptid-idl";
 
 const envProvider = anchor.AnchorProvider.env();
-const envProgram = anchor.workspace.CryptidAnchor as Program<CryptidAnchor>;
+const envProgram = anchor.workspace.CryptidAnchor as Program<Cryptid>;
 
 const envCheckRecipientMiddlewareProgram = anchor.workspace.CheckRecipient as Program<CheckRecipient>;
 const envCheckPassMiddlewareProgram = anchor.workspace.CheckPass as Program<CheckPass>;
@@ -34,7 +31,7 @@ export const fund = async (publicKey: PublicKey, amount: number = LAMPORTS_PER_S
 export const balanceOf = (publicKey: PublicKey):Promise<number> => envProvider.connection.getAccountInfo(publicKey).then(a => a ? a.lamports : 0);
 
 export type CryptidTestContext = {
-    program: Program<CryptidAnchor>,
+    program: Program<Cryptid>,
     provider: Provider,
     authority: Wallet,
     keypair: Keypair,
