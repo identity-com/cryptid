@@ -13,7 +13,6 @@
 extern crate core;
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 use cryptid_anchor::cpi::accounts::ApproveExecution;
 use cryptid_anchor::program::CryptidAnchor;
 use cryptid_anchor::state::transaction_account::TransactionAccount;
@@ -37,8 +36,10 @@ pub mod time_delay {
         Ok(())
     }
 
-    pub fn execute_middleware(ctx: Context<ExecuteMiddleware>, _transaction_create_time_bump: u8) -> Result<()> {
-        let transaction_account = &ctx.accounts.transaction_account;
+    pub fn execute_middleware(
+        ctx: Context<ExecuteMiddleware>,
+        _transaction_create_time_bump: u8,
+    ) -> Result<()> {
         let transaction_create_time = &ctx.accounts.transaction_create_time;
         let middleware_account = &ctx.accounts.middleware_account;
 
@@ -154,7 +155,7 @@ impl TimeDelay {
 
 #[account()]
 pub struct TransactionCreationTime {
-    pub time: i64   // Matches UnixTimestamp, which is not supported by anchor idls at present
+    pub time: i64, // Matches UnixTimestamp, which is not supported by anchor idls at present
 }
 impl TransactionCreationTime {
     pub const SEED_PREFIX: &'static [u8] = b"time_delay_creation_time";

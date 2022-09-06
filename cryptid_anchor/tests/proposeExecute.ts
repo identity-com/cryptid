@@ -32,6 +32,7 @@ describe("proposeExecute", () => {
             2,
         ).accounts({
                 cryptidAccount,
+                owner: didAccount,
                 authority: authority.publicKey,
                 transactionAccount: transactionAccount.publicKey
             }
@@ -103,6 +104,7 @@ describe("proposeExecute", () => {
             2,
         ).accounts({
                 cryptidAccount,
+                owner: didAccount,
                 authority: authority.publicKey,
                 transactionAccount: transactionAccount.publicKey
             }

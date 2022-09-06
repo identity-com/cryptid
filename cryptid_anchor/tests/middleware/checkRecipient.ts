@@ -41,6 +41,7 @@ describe("Middleware: checkRecipient", () => {
             2,
         ).accounts({
                 cryptidAccount,
+                owner: didAccount,
                 authority: authority.publicKey,
                 transactionAccount: transactionAccount.publicKey
             }

@@ -1,7 +1,12 @@
 import {AccountMeta, PublicKey, SystemProgram} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CHECK_RECIPIENT_MIDDLEWARE_PROGRAM, CRYPTID_PROGRAM, TIME_DELAY_MIDDLEWARE_PROGRAM} from "./constants";
+import {
+    CHECK_PASS_MIDDLEWARE_PROGRAM,
+    CHECK_RECIPIENT_MIDDLEWARE_PROGRAM,
+    CRYPTID_PROGRAM,
+    TIME_DELAY_MIDDLEWARE_PROGRAM
+} from "./constants";
 import {InstructionData, TransactionAccountMeta} from "./types";
 import BN from "bn.js";
 
@@ -69,6 +74,15 @@ export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKe
         Buffer.from([nonce]),
     ],
     CHECK_RECIPIENT_MIDDLEWARE_PROGRAM
+);
+
+export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, gatekeeperNetwork: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+    [
+        anchor.utils.bytes.utf8.encode("check_pass"),
+        authority.toBuffer(),
+        gatekeeperNetwork.toBuffer(),
+    ],
+    CHECK_PASS_MIDDLEWARE_PROGRAM
 );
 
 export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, seconds: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
