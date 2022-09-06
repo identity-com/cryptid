@@ -1,0 +1,7 @@
+{
+  "name": "@identity.com/cryptid-cli",
+  "version": "1.0.0",
+  "dependencies": {
+    "@identity.com/cryptid-core": "1.0.0"
+  }
+}
