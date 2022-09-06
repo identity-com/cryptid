@@ -1,15 +1,18 @@
 [workspace]
 members = [
     "programs/cryptid_anchor",
-    "programs/middleware/check_recipient"
+    "programs/middleware/check_recipient",
+    "programs/middleware/time_delay"
 ]
 
 [features]
 seeds = false
 skip-lint = false
+
 [programs.localnet]
 cryptid_anchor = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
+time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
 
 [registry]
 url = "https://api.apr.dev"
