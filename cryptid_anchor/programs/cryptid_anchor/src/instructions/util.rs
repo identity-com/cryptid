@@ -1,5 +1,4 @@
 use crate::error::CryptidError;
-use crate::state::transaction_account::TransactionAccount;
 use anchor_lang::prelude::*;
 use bitflags::bitflags;
 use num_traits::cast::ToPrimitive;
@@ -84,36 +83,5 @@ bitflags! {
     pub struct ExecuteFlags: u8{
         /// Print debug logs, uses a large portion of the compute budget
         const DEBUG = 1 << 0;
-    }
-}
-
-pub fn verify_middleware(
-    transaction_account: &TransactionAccount,
-    middleware_account: &Option<Pubkey>,
-) -> Result<()> {
-    match transaction_account.approved_middleware {
-        Some(approved_middleware) => {
-            match middleware_account {
-                // no middleware needed, but provided
-                None => err!(CryptidError::UnexpectedMiddleware),
-                // middleware needed and provided, check it is the correct one
-                Some(middleware) => {
-                    require_keys_eq!(
-                        approved_middleware,
-                        *middleware,
-                        CryptidError::IncorrectMiddleware
-                    );
-                    Ok(())
-                }
-            }
-        }
-        None => {
-            match middleware_account {
-                // no middleware needed or provided
-                None => Ok(()),
-                // middleware needed, but not provided
-                Some(_) => err!(CryptidError::MiddlewareDidNotApprove),
-            }
-        }
     }
 }

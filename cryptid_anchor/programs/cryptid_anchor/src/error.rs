@@ -14,6 +14,9 @@ pub enum CryptidError {
     /// Wrong DID Program passed
     #[msg("Wrong DID program")]
     WrongDIDProgram,
+    /// Wrong Cryptid account passed
+    #[msg("Wrong Cryptid account program")]
+    WrongCryptidAccount,
     /// Sub-instruction threw an error
     #[msg("Error in sub-instruction")]
     SubInstructionError,
@@ -38,13 +41,7 @@ pub enum CryptidError {
     /// Error validating a PDA from a set of seeds
     #[msg("Account not from seeds.")]
     AccountNotFromSeeds,
-    /// The required middleware did not approve the transaction
-    #[msg("The required middleware did not approve the transaction.")]
-    MiddlewareDidNotApprove,
-    /// A middleware approved the transaction that was not registered on the cryptid account
-    #[msg("A middleware approved the transaction that was not registered on the cryptid account.")]
-    UnexpectedMiddleware,
-    /// A different middleware approved the transaction to the one registered on the cryptid account
-    #[msg("A different middleware approved the transaction to the one registered on the cryptid account.")]
+    /// The expected middleware did not approve the transaction
+    #[msg("The expected middleware did not approve the transaction.")]
     IncorrectMiddleware,
 }

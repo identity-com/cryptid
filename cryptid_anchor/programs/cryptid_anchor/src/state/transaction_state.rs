@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 /// A [`TransactionAccount`]'s state
 #[derive(Clone, Debug, AnchorDeserialize, AnchorSerialize, PartialEq)]
 pub enum TransactionState {
-    /// Transaction account is not ready to execute
+    /// Transaction account is not ready to execute - it is waiting for additional instructions to be added
     NotReady,
     /// Transaction account is ready to execute
     Ready,

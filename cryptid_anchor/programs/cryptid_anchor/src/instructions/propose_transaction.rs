@@ -1,6 +1,7 @@
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_account::TransactionAccount;
+use crate::state::transaction_state::TransactionState;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -43,6 +44,8 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
     ctx.accounts.transaction_account.approved_middleware = None;
+    // Extending transactions is not yet supported, so transactions are initialised in Ready state
+    ctx.accounts.transaction_account.state = TransactionState::Ready;
 
     // Accounts stored into the transaction account are referenced by
     // the abbreviated instruction data by index
