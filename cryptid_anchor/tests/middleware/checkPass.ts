@@ -3,9 +3,8 @@ import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {
     cryptidTransferInstruction,
-    deriveCryptidAccountAddressWithMiddleware,
     deriveCheckPassMiddlewareAccountAddress,
-    toAccountMeta,
+    toAccountMeta, createCryptidAccount,
 } from "../util/cryptid";
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
@@ -45,6 +44,7 @@ describe("Middleware: checkPass", () => {
     let didAccount: PublicKey;
     let cryptidAccount: PublicKey;
     let cryptidBump: number;
+    let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
 
     let middlewareAccount: PublicKey;
     let middlewareBump: number;
@@ -70,7 +70,7 @@ describe("Middleware: checkPass", () => {
     }
 
     const setUpCryptid = async () => {
-        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, middlewareAccount);
+        [cryptidAccount, cryptidBump] = await createCryptidAccount(program, didAccount, middlewareAccount, ++cryptidIndex);
         await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     }
 
@@ -96,7 +96,6 @@ describe("Middleware: checkPass", () => {
         // execute the Cryptid transaction
         program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
-            middlewareAccount,
             cryptidBump,
             0
         ).accounts({
@@ -150,7 +149,7 @@ describe("Middleware: checkPass", () => {
 
     context('with a non-expiring gateway token', () => {
         beforeEach('Set up middleware PDA', () => setUpMiddleware(false));
-        beforeEach('Set up generative Cryptid Account with middleware', setUpCryptid);
+        beforeEach('Set up Cryptid Account with middleware', setUpCryptid);
 
         it("blocks a transfer with no gateway token", async () => {
             const transactionAccount = Keypair.generate();

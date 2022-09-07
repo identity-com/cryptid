@@ -16,6 +16,15 @@ pub mod cryptid_anchor {
     use super::*;
     pub use instructions::ApproveExecution;
 
+    pub fn create(
+        ctx: Context<Create>,
+        middleware: Option<Pubkey>,
+        index: u32,
+        bump: u8,
+    ) -> Result<()> {
+        instructions::create(ctx, middleware, index, bump)
+    }
+
     pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
         controller_chain: Vec<u8>,
@@ -43,17 +52,10 @@ pub mod cryptid_anchor {
     pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
         controller_chain: Vec<u8>,
-        middleware_account: Option<Pubkey>,
         cryptid_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
-        instructions::execute_transaction(
-            ctx,
-            controller_chain,
-            middleware_account,
-            cryptid_account_bump,
-            flags,
-        )
+        instructions::execute_transaction(ctx, controller_chain, cryptid_account_bump, flags)
     }
 
     pub fn approve_execution<'a, 'b, 'c, 'info>(

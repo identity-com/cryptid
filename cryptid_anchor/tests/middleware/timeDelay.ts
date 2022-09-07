@@ -2,8 +2,8 @@ import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram} from "@solana/web3.
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {
+    createCryptidAccount,
     cryptidTransferInstruction,
-    deriveCryptidAccountAddressWithMiddleware,
     deriveTimeDelayMiddlewareAccountAddress, deriveTimeDelayTransactionStateMiddlewareAccountAddress,
     toAccountMeta
 } from "../util/cryptid";
@@ -67,7 +67,6 @@ describe("Middleware: timeDelay", () => {
         // execute the Cryptid transaction
         program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
-            middlewareAccount,
             cryptidBump,
             0
         ).accounts({
@@ -128,9 +127,9 @@ describe("Middleware: timeDelay", () => {
         }).rpc({skipPreflight: true});
     })
 
-    before('Set up generative Cryptid Account with middleware', async () => {
-        [slowCryptidAccount, slowCryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, slowMiddlewareAccount);
-        [fastCryptidAccount, fastCryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, fastMiddlewareAccount);
+    before('Set up Cryptid Account with middleware', async () => {
+        [slowCryptidAccount, slowCryptidBump] = await createCryptidAccount(program, didAccount, slowMiddlewareAccount, 0);
+        [fastCryptidAccount, fastCryptidBump] = await createCryptidAccount(program, didAccount, fastMiddlewareAccount, 1);
 
         if (!process.env.QUIET) {
             console.log("Accounts", {

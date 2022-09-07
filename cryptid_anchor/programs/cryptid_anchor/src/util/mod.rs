@@ -1,4 +1,4 @@
-// pub mod cpi;
+pub mod cpi;
 // pub mod pda_seeds;
 pub mod seeder;
 

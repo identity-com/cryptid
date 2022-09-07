@@ -3,6 +3,61 @@ export type CryptidAnchor = {
   "name": "cryptid_anchor",
   "instructions": [
     {
+      "name": "create",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DID of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The signer of the transaction. Must be a DID authority."
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "middleware",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "directExecute",
       "accounts": [
         {
@@ -166,12 +221,6 @@ export type CryptidAnchor = {
           "type": "bytes"
         },
         {
-          "name": "middlewareAccount",
-          "type": {
-            "option": "publicKey"
-          }
-        },
-        {
           "name": "cryptidAccountBump",
           "type": "u8"
         },
@@ -208,20 +257,6 @@ export type CryptidAnchor = {
         "kind": "struct",
         "fields": [
           {
-            "name": "did",
-            "docs": [
-              "The DID for this account"
-            ],
-            "type": "publicKey"
-          },
-          {
-            "name": "didProgram",
-            "docs": [
-              "The program for the DID"
-            ],
-            "type": "publicKey"
-          },
-          {
             "name": "middleware",
             "docs": [
               "The middleware, if any, used by this cryptid account"
@@ -229,6 +264,13 @@ export type CryptidAnchor = {
             "type": {
               "option": "publicKey"
             }
+          },
+          {
+            "name": "index",
+            "docs": [
+              "The index of this cryptid account - allows multiple cryptid accounts per DID"
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -484,6 +526,61 @@ export const IDL: CryptidAnchor = {
   "name": "cryptid_anchor",
   "instructions": [
     {
+      "name": "create",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DID of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The signer of the transaction. Must be a DID authority."
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "middleware",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "directExecute",
       "accounts": [
         {
@@ -647,12 +744,6 @@ export const IDL: CryptidAnchor = {
           "type": "bytes"
         },
         {
-          "name": "middlewareAccount",
-          "type": {
-            "option": "publicKey"
-          }
-        },
-        {
           "name": "cryptidAccountBump",
           "type": "u8"
         },
@@ -689,20 +780,6 @@ export const IDL: CryptidAnchor = {
         "kind": "struct",
         "fields": [
           {
-            "name": "did",
-            "docs": [
-              "The DID for this account"
-            ],
-            "type": "publicKey"
-          },
-          {
-            "name": "didProgram",
-            "docs": [
-              "The program for the DID"
-            ],
-            "type": "publicKey"
-          },
-          {
             "name": "middleware",
             "docs": [
               "The middleware, if any, used by this cryptid account"
@@ -710,6 +787,13 @@ export const IDL: CryptidAnchor = {
             "type": {
               "option": "publicKey"
             }
+          },
+          {
+            "name": "index",
+            "docs": [
+              "The index of this cryptid account - allows multiple cryptid accounts per DID"
+            ],
+            "type": "u32"
           }
         ]
       }
