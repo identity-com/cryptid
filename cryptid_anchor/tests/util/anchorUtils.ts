@@ -46,7 +46,7 @@ export const createTestContext = (): CryptidTestContext => {
     const keypair = anchor.web3.Keypair.generate();
     const anchorProvider = new AnchorProvider(envProvider.connection, new anchor.Wallet(keypair), envProvider.opts);
 
-    const program = new Program<CryptidAnchor>(envProgram.idl, envProgram.programId, anchorProvider);
+    const program = new Program<Cryptid>(envProgram.idl, envProgram.programId, anchorProvider);
     const provider = program.provider as anchor.AnchorProvider;
     const authority = provider.wallet;
 
