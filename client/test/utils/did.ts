@@ -1,7 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { publicKeyToDid } from '../../src/lib/solana/util';
 import { DIDDocument, ServiceEndpoint, VerificationMethod } from 'did-resolver';
-import { DIDComponent } from '../../src/lib/solana/transactions/did/util';
 import chai from 'chai';
 import { pluck } from 'ramda';
 import { randomUUID } from 'crypto';
@@ -47,23 +46,6 @@ export const expectDocumentNotToIncludeKey = (
   newKey: PublicKey
 ): Assertion => {
   return expect(keysInDocument(document)).not.to.include(newKey.toString());
-};
-
-export const serviceAlias = (component: DIDComponent): string =>
-  component.id.substring(component.id.indexOf('#') + 1);
-const servicesInDocument = (document: DIDDocument): string[] =>
-  (document.service || []).map(serviceAlias);
-
-export const expectDocumentToIncludeService = (
-  document: DIDDocument,
-  service: string
-): Assertion => expect(servicesInDocument(document)).to.include(service);
-
-export const expectDocumentNotToIncludeService = (
-  document: DIDDocument,
-  service: string
-): Assertion => {
-  return expect(servicesInDocument(document)).not.to.include(service);
 };
 
 export const expectDocumentToIncludeController = (

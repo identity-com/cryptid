@@ -27,7 +27,7 @@ import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
-const lamportsToTransfer = 20_000;
+const lamportsToTransfer = 200_000;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -57,7 +57,7 @@ describe('transfers', function () {
 
     await Promise.all([
       airdrop(connection, cryptidAddress), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+      airdrop(connection, key.publicKey, 10_000), // to cover fees only
     ]);
   });
 
@@ -134,7 +134,7 @@ describe('transfers', function () {
       const alias = 'device2';
 
       // airdrop to device2 key to cover fees for the transfer only
-      await airdrop(connection, device2Key.publicKey, 10_000);
+      await airdrop(connection, device2Key.publicKey, 1_000_000);
       // await cryptidForDevice1.addKey(device2Key.publicKey, alias);
       // TODO: Challenge: Replace this with a did:sol library call for addKey
       const id = DidSolIdentifier.parse(cryptid.did);
@@ -163,7 +163,6 @@ describe('transfers', function () {
       );
 
       await balances.recordBefore(); // reset balances to exclude rent costs for adding device2
-
       const cryptidTx = await cryptidForDevice2.sign(tx);
       await sendAndConfirmCryptidTransaction(connection, cryptidTx);
 

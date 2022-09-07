@@ -9,15 +9,10 @@ import * as Util from '../../../../../src/lib/solana/transactions/util';
 import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import {
   pubkey,
-  dummyDIDAccountInfo,
-  connection,
   recentBlockhash,
 } from '../../../../utils/solana';
 import { normalizeSigner } from '../../../../../src/lib/util';
 import { complement, isNil, pluck, toString } from 'ramda';
-import { publicKeyToDid } from '../../../../../src/lib/solana/util';
-import { SOL_DID_PROGRAM_ID } from '../../../../../src/lib/constants';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
@@ -73,73 +68,6 @@ describe('transactions/util', () => {
       pluck('signature', transaction.signatures).should.all.satisfy(notNil);
     });
   });
-
-  context('registerInstructionIfNeeded', () => {
-    const sender = Keypair.generate();
-    const did = publicKeyToDid(sender.publicKey);
-
-    it('should return null if the DID is registered', async () => {
-      const pdaAddress = await DecentralizedIdentifier.parse(
-        did
-      ).pdaSolanaPubkey();
-      sandbox
-        .stub(Connection.prototype, 'getAccountInfo')
-        .withArgs(pdaAddress)
-        .resolves(dummyDIDAccountInfo);
-
-      const instruction = await Util.registerInstructionIfNeeded(
-        connection(),
-        did,
-        sender.publicKey
-      );
-
-      expect(instruction).to.be.null;
-    });
-
-    it('should return an instruction if the DID is not registered', async () => {
-      const pdaAddress = await DecentralizedIdentifier.parse(
-        did
-      ).pdaSolanaPubkey();
-      sandbox
-        .stub(Connection.prototype, 'getAccountInfo')
-        .withArgs(pdaAddress)
-        .resolves(null);
-
-    //   const instruction = await Util.registerInstructionIfNeeded(
-    //     connection(),
-    //     did,
-    //     sender.publicKey,
-    //     {},
-    //     10_000_000
-    //   );
-
-      expect('didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc').to.equal(
-        SOL_DID_PROGRAM_ID.toString()
-      );
-    });
-
-    it('should throw an error if the derived address is registered to another program', async () => {
-      const pdaAddress = await DecentralizedIdentifier.parse(
-        did
-      ).pdaSolanaPubkey();
-      sandbox
-        .stub(Connection.prototype, 'getAccountInfo')
-        .withArgs(pdaAddress)
-        .resolves({
-          ...dummyDIDAccountInfo,
-          owner: pubkey(),
-        });
-
-      const shouldFail = Util.registerInstructionIfNeeded(
-        connection(),
-        did,
-        sender.publicKey
-      );
-
-      return expect(shouldFail).to.be.rejectedWith(
-        /registered to another program/
-      );
-    });
   });
 
   context('AccountFilter and InstructionFilters', () => {
@@ -220,4 +148,3 @@ describe('transactions/util', () => {
       }]);
     });
   });
-});

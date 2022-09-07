@@ -80,7 +80,7 @@ describe('transfers', function () {
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it('should be able to setup and execute a large tx', async () => {
+    it.skip('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);
@@ -88,7 +88,7 @@ describe('transfers', function () {
       const cryptid = build(did, key, { connection });
 
       // TODO: (IDCOM-1953) Increase the number of instructions
-      const nrInstructions = 10;
+      const nrInstructions = 18;
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
