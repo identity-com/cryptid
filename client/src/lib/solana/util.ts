@@ -44,8 +44,8 @@ export const deriveDefaultCryptidAccountFromKey = async (
 export const didToPublicKey = (did: string): PublicKey =>
   DidSolIdentifier.parse(did).authority;
 
-export const didToPDA = (did: string) =>
-  DidSolIdentifier.parse(did).dataAccount().then(dataAccount => dataAccount[0]);
+export const didToPDA = (did: string): Promise<PublicKey> =>
+ DidSolIdentifier.parse(did).dataAccount().then(dataAccount => dataAccount[0]);
 
 export const deriveDefaultCryptidAccount = async (did: string): Promise<PublicKey> => {
   const didKey = await didToPDA(did);

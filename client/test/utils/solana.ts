@@ -38,17 +38,14 @@ import * as Sinon from 'sinon';
 // };
 
 export const airdrop = async (
-    connection: Connection, 
-    recipient: PublicKey, 
-    amount: number = LAMPORTS_PER_SOL
-    ) => {
-    const blockhash = await connection.getRecentBlockhash();
-    const tx = await connection.requestAirdrop(recipient, amount);
-    // wait for the airdrop
-    await connection.confirmTransaction({
-        ...blockhash, signature: tx
-    }, 'confirmed');
-}
+  connection: Connection,
+  recipient: PublicKey,
+  amount: number = LAMPORTS_PER_SOL
+): Promise<void> => {
+  const tx = await connection.requestAirdrop(recipient, amount);
+  // wait for the airdrop
+  await connection.confirmTransaction(tx, 'confirmed');
+};
 
 export const pubkey = (): PublicKey => Keypair.generate().publicKey;
 

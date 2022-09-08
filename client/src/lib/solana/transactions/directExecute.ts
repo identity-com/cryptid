@@ -27,6 +27,8 @@ export const directExecute = async (
   const signersNormalized = normalizeSigner(signers);
   const parsedDID = DidSolIdentifier.parse(did);
   const [didPDAKey] = await parsedDID.dataAccount();
+  // console.log(JSON.stringify(signers, null, 2));
+  console.log(JSON.stringify(signersNormalized, null, 2));
 
   const directExecuteInstruction = await create(
     unsignedTransaction,
@@ -35,6 +37,17 @@ export const directExecute = async (
     cryptidAccount,
     debug
   );
+
+  for (const inst of directExecuteInstruction) {
+    console.log(JSON.stringify(inst.keys.map(value => ({
+        key: value.pubkey.toBase58(),
+        isSigner: value.isSigner,
+        isWritable: value.isWritable,
+      })
+    ), null, 2));
+  }
+
+  console.log(JSON.stringify(directExecuteInstruction, null, 2));
 
   return createTransaction(
     unsignedTransaction.recentBlockhash,

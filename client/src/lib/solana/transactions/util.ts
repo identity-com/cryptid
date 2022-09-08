@@ -43,7 +43,6 @@ export const createTransaction = async (
   let transaction = await makeEmptyTransaction(recentBlockhash, payer);
 
   transaction = transaction.add(...instructions);
-
   if (!isCorrectSize(transaction, signers.length)) {
     throw new Error('Transaction too large');
   }
@@ -80,15 +79,17 @@ export const didIsRegistered = async (
  * @param key The key or meta to normalize
  */
 const normalizeExtra = (key: PublicKey | AccountMeta): AccountMeta => {
-  if (key instanceof PublicKey) {
-    return {
-      pubkey: key,
-      isSigner: false,
-      isWritable: false,
-    };
-  } else {
-    return key;
+  // @ts-ignore
+  console.log(`Key: ${key.toBase58()}`);
+  if (key.hasOwnProperty('pubkey')) {
+    return key as AccountMeta;
   }
+
+  return {
+    pubkey: key as PublicKey,
+    isSigner: false,
+    isWritable: false,
+  };
 };
 
 

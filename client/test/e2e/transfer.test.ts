@@ -22,12 +22,12 @@ import {
   VerificationMethodFlags,
   VerificationMethodType,
 } from '@identity.com/sol-did-client';
+import { Wallet as NodeWallet } from '@project-serum/anchor';
 const { expect } = chai;
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
-// needs to be less than AIRDROP_LAMPORTS
-const lamportsToTransfer = 200_000;
+const lamportsToTransfer = LAMPORTS_PER_SOL;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -56,8 +56,8 @@ describe('transfers', function () {
     cryptidAddress = await cryptid.address();
 
     await Promise.all([
-      airdrop(connection, cryptidAddress), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 100_000), // to cover fees only
+      airdrop(connection, cryptidAddress, 5 * LAMPORTS_PER_SOL), // the main funds for the cryptid account
+      airdrop(connection, key.publicKey, 5 * LAMPORTS_PER_SOL), // to cover fees only
     ]);
   });
 
@@ -134,11 +134,14 @@ describe('transfers', function () {
       const alias = 'device2';
 
       // airdrop to device2 key to cover fees for the transfer only
-      await airdrop(connection, device2Key.publicKey, 1_000_000);
-      // await cryptidForDevice1.addKey(device2Key.publicKey, alias);
-      // TODO: Challenge: Replace this with a did:sol library call for addKey
+      await airdrop(connection, device2Key.publicKey);
+
       const id = DidSolIdentifier.parse(cryptid.did);
-      const service = await DidSolService.build(id);
+      const service = await DidSolService.build(
+        id,
+        undefined,
+        new NodeWallet(key)
+      );
       await service
         .addVerificationMethod({
           fragment: alias,
@@ -146,8 +149,12 @@ describe('transfers', function () {
           methodType: VerificationMethodType.Ed25519VerificationKey2018,
           flags: VerificationMethodFlags.CapabilityInvocation,
         })
-        .withPartialSigners(key)
+        .withAutomaticAlloc(key.publicKey)
         .rpc();
+
+      // airdrop to device2 key to cover fees for the transfer only
+      await airdrop(connection, device2Key.publicKey);
+
       const cryptidForDevice2 = await build(did, device2Key, {
         connection,
         waitForConfirmation: true,
@@ -171,7 +178,7 @@ describe('transfers', function () {
       expect(balances.for(cryptidAddress)).to.equal(-lamportsToTransfer); // the amount transferred
     });
 
-    it.skip('should fail on a large Transaction (that normally succeed)', async () => {
+    it('should fail on a large Transaction (that normally succeed)', async () => {
       const cryptid = build(did, key, { connection });
 
       const sender = Keypair.generate();
@@ -239,10 +246,23 @@ describe('transfers', function () {
       // airdrop funds to the controlled DID cryptid account
       await airdrop(connection, controlledCryptidAddress, 5 * LAMPORTS_PER_SOL);
       // airdrop funds to the controlled DID signer key (for fees)
-      await airdrop(connection, controlledDIDKey.publicKey, 10_000);
-
+      await airdrop(
+        connection,
+        controlledDIDKey.publicKey,
+        5 * LAMPORTS_PER_SOL
+      );
       // add the controller to the controlled DID (this anchors the controlled DID)
-      // await controlledCryptid.addController(did);
+
+      const id = DidSolIdentifier.parse(controlledCryptid.did);
+      const service = await DidSolService.build(
+        id,
+        undefined,
+        new NodeWallet(controlledDIDKey)
+      );
+      await service
+        .setControllers([cryptid.did])
+        .withAutomaticAlloc(controlledDIDKey.publicKey)
+        .rpc();
 
       balances = await new Balances(connection).register(
         cryptidAddress, // controller cryptid
@@ -252,7 +272,7 @@ describe('transfers', function () {
       );
     });
 
-    it.skip('should sign a transaction for a controlled DID with a controller key', async () => {
+    it('should sign a transaction for a controlled DID with a controller key', async () => {
       // create a transfer from the controlled DID
       const tx = await createTransferTransaction(
         connection,

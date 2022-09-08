@@ -43,12 +43,16 @@ export class ControlledCryptid extends AbstractCryptid {
 
   async sign(transaction: Transaction): Promise<Transaction> {
     const additionalSigners = await this.additionalKeys();
+    console.log(JSON.stringify(additionalSigners));
+    // console.log(additionalSigners.map((key) => key.toBase58()));
     const wrappedTransaction = await directExecute(
       transaction,
       this.did,
       this.signer.publicKey,
       [[this.signer, additionalSigners]]
     );
+
+    console.log(JSON.stringify(wrappedTransaction, null, 2));
 
     return wrappedTransaction;
   }
