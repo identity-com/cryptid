@@ -47,7 +47,10 @@ export const directExecute = async (
     ), null, 2));
   }
 
-  console.log(JSON.stringify(directExecuteInstruction, null, 2));
+  console.log( directExecuteInstruction.map((instruction) =>
+  instruction.keys.map((key) => key.pubkey.toBase58())
+)
+);
 
   return createTransaction(
     unsignedTransaction.recentBlockhash,
