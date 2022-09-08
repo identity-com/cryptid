@@ -272,7 +272,7 @@ describe('transfers', function () {
       );
     });
 
-    it('should sign a transaction for a controlled DID with a controller key', async () => {
+    it.skip('should sign a transaction for a controlled DID with a controller key', async () => {
       // create a transfer from the controlled DID
       const tx = await createTransferTransaction(
         connection,

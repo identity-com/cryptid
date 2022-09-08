@@ -1,6 +1,7 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
+
 import {
   Connection,
   Keypair,
@@ -8,12 +9,14 @@ import {
   PublicKey,
   sendAndConfirmTransaction,
 } from '@solana/web3.js';
+
 import {
   airdrop,
   Balances,
   createTransferTransaction,
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
+
 import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
