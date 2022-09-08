@@ -57,7 +57,7 @@ describe('transfers', function () {
 
     await Promise.all([
       airdrop(connection, cryptidAddress), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 10_000), // to cover fees only
+      airdrop(connection, key.publicKey, 100_000), // to cover fees only
     ]);
   });
 
@@ -148,7 +148,6 @@ describe('transfers', function () {
         })
         .withPartialSigners(key)
         .rpc();
-        
       const cryptidForDevice2 = await build(did, device2Key, {
         connection,
         waitForConfirmation: true,
