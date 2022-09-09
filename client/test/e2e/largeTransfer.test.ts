@@ -26,7 +26,7 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL;
 
-const FEE = 5_000;
+const FEE = 0;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -65,7 +65,7 @@ describe('transfers', function () {
       );
     });
 
-    it.skip('should be able to execute 60 transfer instructions without cryptid', async () => {
+    it('should be able to execute 60 transfer instructions without cryptid', async () => {
       const tx = await createTransferTransaction(
         connection,
         key.publicKey,
@@ -73,17 +73,18 @@ describe('transfers', function () {
         lamportsToTransfer,
         60
       );
-
+        console.log("abc")
       await sendAndConfirmTransaction(connection, tx, [key]);
       await balances.recordAfter();
-
+      console.log("b")
       expect(balances.for(key.publicKey)).to.equal(
         -(60 * lamportsToTransfer + FEE)
       ); // fees only
+      console.log("c")
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it.skip('should be able to setup and execute a large tx', async () => {
+    it('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);
