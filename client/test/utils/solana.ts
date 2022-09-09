@@ -1,6 +1,7 @@
 import {
   Connection,
   Keypair,
+  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -14,26 +15,36 @@ import {
 import { SOL_DID_PROGRAM_ID } from '../../src/lib/constants';
 import * as Sinon from 'sinon';
 
-const AIRDROP_LAMPORTS = 20_000_000;
+// const AIRDROP_LAMPORTS = 20_000_000;
+// export const airdrop = async (
+//   connection: Connection,
+//   publicKey: PublicKey,
+//   lamports = AIRDROP_LAMPORTS
+// ): Promise<void> => {
+//   let retries = 30;
+//   for (;;) {
+//     console.log(`Airdropping ${lamports} Lamports to ${publicKey}`);
+//     const airdropSignature = await connection.requestAirdrop(
+//       publicKey,
+//       lamports
+//     );
+//     await connection.confirmTransaction(airdropSignature);
+//     const balance = await connection.getBalance(publicKey);
+//     console.log('Balance: ' + balance);
+//     if (lamports <= balance) return;
+//     if (--retries <= 0) break;
+//   }
+//   throw new Error(`Airdrop of ${lamports} failed`);
+// };
+
 export const airdrop = async (
   connection: Connection,
-  publicKey: PublicKey,
-  lamports = AIRDROP_LAMPORTS
+  recipient: PublicKey,
+  amount: number = LAMPORTS_PER_SOL
 ): Promise<void> => {
-  let retries = 30;
-  for (;;) {
-    console.log(`Airdropping ${lamports} Lamports to ${publicKey}`);
-    const airdropSignature = await connection.requestAirdrop(
-      publicKey,
-      lamports
-    );
-    await connection.confirmTransaction(airdropSignature);
-    const balance = await connection.getBalance(publicKey);
-    console.log('Balance: ' + balance);
-    if (lamports <= balance) return;
-    if (--retries <= 0) break;
-  }
-  throw new Error(`Airdrop of ${lamports} failed`);
+  const tx = await connection.requestAirdrop(recipient, amount);
+  // wait for the airdrop
+  await connection.confirmTransaction(tx, 'confirmed');
 };
 
 export const pubkey = (): PublicKey => Keypair.generate().publicKey;

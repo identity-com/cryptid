@@ -7,7 +7,7 @@ import {
   mapTransactionInstructionsToAccountArray,
   normalizeSigner
 } from "./util";
-import { DecentralizedIdentifier } from "@identity.com/sol-did-client";
+import { DidSolIdentifier } from "@identity.com/sol-did-client";
 import { create as createPropose } from "../instructions/proposeTransaction";
 import { create as createExecute } from "../instructions/executeTransaction";
 
@@ -41,8 +41,8 @@ export const largeExecute = async (
   executeTransaction: Transaction;
 }> => {
   const signersNormalized = normalizeSigner(signers);
-  const parsedDID = DecentralizedIdentifier.parse(did);
-  const didPDAKey = await parsedDID.pdaSolanaPubkey();
+  const parsedDID = DidSolIdentifier.parse(did);
+  const [didPDAKey] = await parsedDID.dataAccount();
 
   // collect all accounts
   const mappedAccountMetas = collectAccountMetas(unsignedTransaction.instructions);

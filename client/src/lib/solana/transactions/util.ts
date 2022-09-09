@@ -7,12 +7,10 @@ import {
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
 import {
-  createRegisterInstruction,
-  DecentralizedIdentifier,
+  DidSolIdentifier,
 } from '@identity.com/sol-did-client';
-import { DEFAULT_DID_DOCUMENT_SIZE, SOL_DID_PROGRAM_ID } from '../../constants';
-import { DIDDocument } from 'did-resolver';
-import { deriveCryptidAccountSigner, didToPublicKey } from '../util';
+import { SOL_DID_PROGRAM_ID } from '../../constants';
+import { deriveCryptidAccountSigner } from '../util';
 import { SignerArg } from "./directExecute";
 import * as R from "ramda";
 import TransactionAccount from "../accounts/TransactionAccount";
@@ -45,7 +43,6 @@ export const createTransaction = async (
   let transaction = await makeEmptyTransaction(recentBlockhash, payer);
 
   transaction = transaction.add(...instructions);
-
   if (!isCorrectSize(transaction, signers.length)) {
     throw new Error('Transaction too large');
   }
@@ -56,25 +53,14 @@ export const createTransaction = async (
   return transaction;
 };
 
-const registerInstruction = async (
-  payer: PublicKey,
-  authority: PublicKey,
-  document?: Partial<DIDDocument>,
-  size: number = DEFAULT_DID_DOCUMENT_SIZE
-) =>
-  createRegisterInstruction({
-    payer,
-    authority,
-    size,
-    document,
-  });
+
 
 export const didIsRegistered = async (
   connection: Connection,
   did: string
 ): Promise<boolean> => {
-  const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
-  const pda = await decentralizedIdentifier.pdaSolanaPubkey();
+  const decentralizedIdentifier = DidSolIdentifier.parse(did);
+  const [pda] = await decentralizedIdentifier.dataAccount();
 
   const account = await connection.getAccountInfo(pda);
 
@@ -87,40 +73,23 @@ export const didIsRegistered = async (
   );
 };
 
-export const registerInstructionIfNeeded = async (
-  connection: Connection,
-  did: string,
-  payer: PublicKey,
-  document?: Partial<DIDDocument>,
-  size?: number
-): Promise<TransactionInstruction | null> => {
-  const isRegistered = await didIsRegistered(connection, did);
-
-  if (isRegistered) return null;
-
-  const [instruction] = await registerInstruction(
-    payer,
-    didToPublicKey(did),
-    document,
-    size
-  );
-  return instruction;
-};
 
 /**
  * Normalizes a `PublicKey | AccountMeta` to an `AccountMeta` where permissions are lowest if it's a `PublicKey`
  * @param key The key or meta to normalize
  */
 const normalizeExtra = (key: PublicKey | AccountMeta): AccountMeta => {
-  if (key instanceof PublicKey) {
-    return {
-      pubkey: key,
-      isSigner: false,
-      isWritable: false,
-    };
-  } else {
-    return key;
+  // @ts-ignore
+  console.log(`Key: ${key.toBase58()}`);
+  if (key.hasOwnProperty('pubkey')) {
+    return key as AccountMeta;
   }
+
+  return {
+    pubkey: key as PublicKey,
+    isSigner: false,
+    isWritable: false,
+  };
 };
 
 

@@ -2,7 +2,7 @@ import { AccountMeta, PublicKey, Transaction } from '@solana/web3.js';
 import { create } from '../instructions/directExecute';
 import { Signer } from '../../../types/crypto';
 import { createTransaction, normalizeSigner } from './util';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
+import { DidSolIdentifier } from '@identity.com/sol-did-client';
 
 /**
  * Optional extra keys for a signer
@@ -25,8 +25,10 @@ export const directExecute = async (
   debug = false
 ): Promise<Transaction> => {
   const signersNormalized = normalizeSigner(signers);
-  const parsedDID = DecentralizedIdentifier.parse(did);
-  const didPDAKey = await parsedDID.pdaSolanaPubkey();
+  const parsedDID = DidSolIdentifier.parse(did);
+  const [didPDAKey] = await parsedDID.dataAccount();
+  // console.log(JSON.stringify(signers, null, 2));
+  console.log(JSON.stringify(signersNormalized, null, 2));
 
   const directExecuteInstruction = await create(
     unsignedTransaction,
@@ -35,6 +37,21 @@ export const directExecute = async (
     cryptidAccount,
     debug
   );
+
+  for (const inst of directExecuteInstruction) {
+    console.log(JSON.stringify(inst.keys.map(value => ({
+        key: value.pubkey.toBase58(),
+        isSigner: value.isSigner,
+        isWritable: value.isWritable,
+      })
+    ), null, 2));
+  }
+
+  console.log( directExecuteInstruction.map((instruction) =>
+  instruction.keys.map((key) => key.pubkey.toBase58())
+)
+);
+
   return createTransaction(
     unsignedTransaction.recentBlockhash,
     directExecuteInstruction,

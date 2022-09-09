@@ -1,6 +1,7 @@
 import chai from 'chai';
 
 import { build, Cryptid } from '../../src';
+
 import {
   Connection,
   Keypair,
@@ -8,12 +9,14 @@ import {
   PublicKey,
   sendAndConfirmTransaction,
 } from '@solana/web3.js';
+
 import {
   airdrop,
   Balances,
   createTransferTransaction,
   sendAndConfirmCryptidTransaction,
 } from '../utils/solana';
+
 import { publicKeyToDid } from '../../src/lib/solana/util';
 
 const { expect } = chai;
@@ -80,7 +83,7 @@ describe('transfers', function () {
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it('should be able to setup and execute a large tx', async () => {
+    it.skip('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);

@@ -6,7 +6,7 @@ import {
 } from '@solana/web3.js';
 import { Signer } from '../../../types/crypto';
 import { createTransaction, normalizeSigner } from './util';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
+import { DidSolIdentifier } from '@identity.com/sol-did-client';
 import { create as createCancel } from '../instructions/cancelTransaction';
 
 /**
@@ -31,8 +31,8 @@ export const largeCancel = async (
   cryptidAccount?: PublicKey
 ): Promise<Transaction> => {
   const signersNormalized = normalizeSigner(signers);
-  const parsedDID = DecentralizedIdentifier.parse(did);
-  const didPDAKey = await parsedDID.pdaSolanaPubkey();
+  const parsedDID = DidSolIdentifier.parse(did);
+  const [didPDAKey] = await parsedDID.dataAccount();
 
   // Build execute Transaction.
   const execute = await createCancel(
