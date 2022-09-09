@@ -27,9 +27,6 @@ export const directExecute = async (
   const signersNormalized = normalizeSigner(signers);
   const parsedDID = DidSolIdentifier.parse(did);
   const [didPDAKey] = await parsedDID.dataAccount();
-  // console.log(JSON.stringify(signers, null, 2));
-  console.log(JSON.stringify(signersNormalized, null, 2));
-
   const directExecuteInstruction = await create(
     unsignedTransaction,
     didPDAKey,
