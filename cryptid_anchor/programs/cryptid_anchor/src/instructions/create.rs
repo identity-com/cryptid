@@ -19,7 +19,7 @@ pub struct Create<'info> {
     payer = authority,
     space = 8 + CryptidAccount::MAX_SIZE,
     seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), index.to_le_bytes().as_ref()],
-    bump,
+    bump
     )]
     pub cryptid_account: Account<'info, CryptidAccount>,
     /// The program for the DID

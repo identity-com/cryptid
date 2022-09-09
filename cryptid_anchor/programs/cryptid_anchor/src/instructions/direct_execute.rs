@@ -88,10 +88,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     )?;
 
     // TODO until we have the new macro that provides this default value
-    let default_cryptid_account = CryptidAccount {
-        middleware: None,
-        index: 0,
-    };
+    let default_cryptid_account = CryptidAccount::default();
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(

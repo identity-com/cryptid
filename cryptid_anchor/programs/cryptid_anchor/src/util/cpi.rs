@@ -18,6 +18,8 @@ pub const TRANSFER_INSTRUCTION_INDEX: u8 = 2;
 
 pub fn is_transfer(solana_instruction: &Instruction) -> bool {
     solana_instruction.program_id == System::id()
+        // TODO fix: should check the first 4 bytes not just the first one
+        // this would fail if e.g. you have more than 256 instructions in the System Program
         && solana_instruction.data[0] == TRANSFER_INSTRUCTION_INDEX
 }
 

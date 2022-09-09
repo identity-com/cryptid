@@ -11,11 +11,12 @@ const envCheckPassMiddlewareProgram = anchor.workspace.CheckPass as Program<Chec
 const envTimeDelayMiddlewareProgram = anchor.workspace.TimeDelay as Program<TimeDelay>;
 
 if (!process.env.QUIET) {
-    envProvider.connection.onLogs("all", (log) =>
-        console.log(log.logs)
-    );
-}
+    const logListener = envProvider.connection.onLogs("all", (log) => console.log(log.logs));
 
+    after('Remove log listener', () => {
+        envProvider.connection.removeOnLogsListener(logListener);
+    });
+}
 // The exported Anchor wallet type is messed up at the moment, so we define it indirectly here
 export type Wallet = AnchorProvider['wallet'];
 
