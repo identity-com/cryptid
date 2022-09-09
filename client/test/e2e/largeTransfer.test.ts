@@ -24,9 +24,9 @@ import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
-const lamportsToTransfer = LAMPORTS_PER_SOL;
+const lamportsToTransfer = LAMPORTS_PER_SOL * 0.01;
 
-const FEE = 500;
+const FEE = 5000;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -51,8 +51,8 @@ describe('transfers', function () {
     cryptidAddress = await cryptid.address();
 
     await Promise.all([
-      airdrop(connection, cryptidAddress, 5 * LAMPORTS_PER_SOL), // the main funds for the cryptid account
-      airdrop(connection, key.publicKey, 5 * LAMPORTS_PER_SOL), // to cover fees only
+      airdrop(connection, cryptidAddress, LAMPORTS_PER_SOL), // the main funds for the cryptid account
+      airdrop(connection, key.publicKey, LAMPORTS_PER_SOL), // to cover fees only
     ]);
   });
 
@@ -97,7 +97,6 @@ describe('transfers', function () {
         lamportsToTransfer,
         nrInstructions
       );
-
       const { setupTransactions, executeTransaction } = await cryptid.signLarge(
         tx
       );
@@ -106,10 +105,8 @@ describe('transfers', function () {
       for (const setupTransaction of setupTransactions) {
         await sendAndConfirmCryptidTransaction(connection, setupTransaction);
       }
-
       // execution
       await sendAndConfirmCryptidTransaction(connection, executeTransaction);
-
       await balances.recordAfter();
 
       // assert balances are correct
