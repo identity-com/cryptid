@@ -73,14 +73,11 @@ describe('transfers', function () {
         lamportsToTransfer,
         60
       );
-        console.log("abc")
       await sendAndConfirmTransaction(connection, tx, [key]);
       await balances.recordAfter();
-      console.log("b")
       expect(balances.for(key.publicKey)).to.equal(
         -(60 * lamportsToTransfer + FEE)
       ); // fees only
-      console.log("c")
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
