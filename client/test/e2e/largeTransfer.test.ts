@@ -24,7 +24,7 @@ import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
 // needs to be less than AIRDROP_LAMPORTS
-const lamportsToTransfer = 20_000;
+const lamportsToTransfer = LAMPORTS_PER_SOL;
 
 const FEE = 5_000;
 
@@ -65,7 +65,7 @@ describe('transfers', function () {
       );
     });
 
-    it('should be able to execute 60 transfer instructions without cryptid', async () => {
+    it.skip('should be able to execute 60 transfer instructions without cryptid', async () => {
       const tx = await createTransferTransaction(
         connection,
         key.publicKey,
