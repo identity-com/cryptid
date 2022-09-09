@@ -26,7 +26,7 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL;
 
-const FEE = 0;
+const FEE = 500;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -89,7 +89,7 @@ describe('transfers', function () {
       const cryptid = build(did, key, { connection });
 
       // TODO: (IDCOM-1953) Increase the number of instructions
-      const nrInstructions = 18;
+      const nrInstructions = 10;
       const tx = await createTransferTransaction(
         connection,
         cryptidAddress,
