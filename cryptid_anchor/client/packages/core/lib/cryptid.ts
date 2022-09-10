@@ -2,12 +2,9 @@ import {AccountMeta, PublicKey, SystemProgram} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {
-    CHECK_PASS_MIDDLEWARE_PROGRAM,
-    CHECK_RECIPIENT_MIDDLEWARE_PROGRAM,
     CRYPTID_PROGRAM,
-    TIME_DELAY_MIDDLEWARE_PROGRAM
-} from "./constants";
-import {InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+} from "../constants";
+import {InstructionData, TransactionAccountMeta} from "./types";
 import BN from "bn.js";
 import {Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
@@ -52,7 +49,7 @@ export const cryptidTransferInstruction = (amount: number):InstructionData => (
         data: transferInstructionData(amount),
     });
 
-export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const getCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
     [
         anchor.utils.bytes.utf8.encode("cryptid_account"),
         DID_SOL_PROGRAM.toBuffer(),
@@ -62,48 +59,13 @@ export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number
     CRYPTID_PROGRAM
 );
 
-export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKey, nonce: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
-    [
-        anchor.utils.bytes.utf8.encode("check_recipient"),
-        authority.toBuffer(),
-        Buffer.from([nonce]),
-    ],
-    CHECK_RECIPIENT_MIDDLEWARE_PROGRAM
-);
-
-export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, gatekeeperNetwork: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
-    [
-        anchor.utils.bytes.utf8.encode("check_pass"),
-        authority.toBuffer(),
-        gatekeeperNetwork.toBuffer(),
-    ],
-    CHECK_PASS_MIDDLEWARE_PROGRAM
-);
-
-export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, seconds: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
-    [
-        anchor.utils.bytes.utf8.encode("time_delay"),
-        authority.toBuffer(),
-        new BN(seconds).toArrayLike(Buffer, "le", 8),
-    ],
-    TIME_DELAY_MIDDLEWARE_PROGRAM
-);
-
-export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (transaction_account: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
-    [
-        anchor.utils.bytes.utf8.encode("time_delay_creation_time"),
-        transaction_account.toBuffer()
-    ],
-    TIME_DELAY_MIDDLEWARE_PROGRAM
-);
-
 export const createCryptidAccount = async (
     program: Program<Cryptid>,
     did: PublicKey,
     middlewareAccount?: PublicKey,
     index: number = 0,
 ): Promise<[PublicKey, number]> => {
-    const [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(did, index);
+    const [cryptidAccount, cryptidBump] = await getCryptidAccountAddress(did, index);
 
     await program.methods.create(
         middlewareAccount || null,  // anchor requires null instead of undefined
