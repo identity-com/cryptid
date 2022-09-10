@@ -75,8 +75,6 @@ function convertToDirectExecute(
     );
   });
 
-  console.log(signers)
-
   const keys: AccountMeta[] = [
     { pubkey: cryptidAccount, isSigner: false, isWritable: false },
     { pubkey: didPDAKey, isSigner: false, isWritable: false },

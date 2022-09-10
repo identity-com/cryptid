@@ -80,7 +80,6 @@ export const didIsRegistered = async (
  */
 const normalizeExtra = (key: PublicKey | AccountMeta): AccountMeta => {
   // @ts-ignore
-  console.log(`Key: ${key.toBase58()}`);
   if (key.hasOwnProperty('pubkey')) {
     return key as AccountMeta;
   }
