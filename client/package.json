@@ -32,7 +32,7 @@
     ],
     "all": true,
     "check-coverage": true,
-    "branches": 74,
+    "branches": 72,
     "lines": 87,
     "functions": 85,
     "statements": 88

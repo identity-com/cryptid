@@ -47,7 +47,7 @@ describe('SimpleCryptid', () => {
   afterEach(sandbox.restore);
 
   context('sign', () => {
-    it.skip('should delegate to directExecute', async () => {
+    it('should delegate to directExecute', async () => {
       const dummyTx = new Transaction({ recentBlockhash: 'HCSZfZ2m2XXPQYXiev6ZLiRQJTFqTCm43LGsvztUUyFW' }).add(
         SystemProgram.transfer({
           lamports: 0,
@@ -68,7 +68,7 @@ describe('SimpleCryptid', () => {
   });
 
   context('address', () => {
-    it.skip('should return the default cryptid signer address', async () => {
+    it('should return the default cryptid signer address', async () => {
       // creating with a controlled key so we can control the output
       const secret =
         '2Ki6LaRSuUPdGfEC89pdC7w5RB5gY3FmXUQWkVywqhYxvQEy4fTajNcTvY5ciQVvVMqE4nTbRCehNynwN2dBYRPa';
@@ -77,7 +77,7 @@ describe('SimpleCryptid', () => {
 
       const address = await cryptid.address();
       expect(address.toBase58()).to.equal(
-        'FHyWGTKCbAFFFYJU3qw5EaUvGzDfpCWzYfauxp5mrUmo'
+        '9h38wRFVd6KAh4naPTGVFkvywLzwtAtVGNcNJdCm5zv1'
       );
     });
   });
