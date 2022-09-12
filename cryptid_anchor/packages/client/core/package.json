@@ -1,0 +1,16 @@
+{
+  "name": "@identity.com/cryptid-core",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@identity.com/cryptid-idl": "1.0.0",
+    "@identity.com/sol-did-client": "^3.0.1-beta1",
+    "@project-serum/anchor": "^0.25.0",
+    "ramda": "^0.28.0"
+  },
+  "devDependencies": {
+    "@types/ramda": "^0.28.15"
+  }
+}

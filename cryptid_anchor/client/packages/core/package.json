@@ -1,8 +1,0 @@
-{
-  "name": "@identity.com/cryptid-core",
-  "version": "1.0.0",
-  "dependencies": {
-    "@identity.com/cryptid-idl": "1.0.0",
-    "@identity.com/sol-did-client": "^3.0.1-beta1"
-  }
-}
