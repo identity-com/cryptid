@@ -26,7 +26,7 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL * 0.01;
 
-const FEE = 5000;
+const FEE = 0;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -113,9 +113,11 @@ describe('transfers', function () {
       expect(balances.for(cryptidAddress)).to.equal(
         -nrInstructions * lamportsToTransfer
       ); // the amount transferred
+
       expect(balances.for(key.publicKey)).to.equal(
         -FEE * (setupTransactions.length + 1)
       ); // fees only
+
       // expect(balances.for(recipient)).to.equal(nrInstructions * lamportsToTransfer); // the amount received
       // TODO: Why does this fail with "AssertionError: expected 457561 to equal 460000" Where do the lamports go?
     });

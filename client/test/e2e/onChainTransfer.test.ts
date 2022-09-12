@@ -1,6 +1,5 @@
 import {
   Connection,
-  FeeCalculator,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -30,6 +29,8 @@ import { AssignableBuffer } from '../../src/lib/solana/solanaBorsh';
 
 const ACCOUNT_SIZE = 10000;
 
+const FEES_PER_SIGNATURE = 0;
+
 describe('on-chain transfer', function () {
   this.timeout(20_000);
 
@@ -40,7 +41,6 @@ describe('on-chain transfer', function () {
   let cryptidAccount: PublicKey;
   let cryptidSigner: PublicKey;
   let recipient: PublicKey;
-  let feeCalculator: FeeCalculator;
   let balances: Balances;
 
   before(async () => {
@@ -53,8 +53,6 @@ describe('on-chain transfer', function () {
     cryptidSigner = await deriveCryptidAccountSigner(cryptidAccount).then(
       ([val]) => val
     );
-
-    feeCalculator = (await connection.getRecentBlockhash()).feeCalculator;
 
     [didPDAKey] = await Promise.all([
       didToPDA(did),
@@ -122,9 +120,11 @@ describe('on-chain transfer', function () {
     await balances.recordAfter();
 
     expect(balances.for(key.publicKey)).to.equal(
-      -feeCalculator.lamportsPerSignature
+      -0
     );
+
     expect(balances.for(cryptidSigner)).to.equal(-rent);
+
     expect(balances.for(recipient)).to.equal(0);
 
     const expand = await createExpand(
@@ -161,9 +161,11 @@ describe('on-chain transfer', function () {
     await balances.recordAfter();
 
     expect(balances.for(key.publicKey)).to.equal(
-      -feeCalculator.lamportsPerSignature
+      -FEES_PER_SIGNATURE
     );
+
     expect(balances.for(cryptidSigner)).to.equal(0);
+
     expect(balances.for(recipient)).to.equal(0);
 
     // expand with data
@@ -195,9 +197,11 @@ describe('on-chain transfer', function () {
     await balances.recordAfter();
 
     expect(balances.for(key.publicKey)).to.equal(
-      -feeCalculator.lamportsPerSignature
+      -FEES_PER_SIGNATURE
     );
+
     expect(balances.for(cryptidSigner)).to.equal(0);
+
     expect(balances.for(recipient)).to.equal(0);
 
     const execute = await createExecute(
@@ -218,7 +222,7 @@ describe('on-chain transfer', function () {
     await balances.recordAfter();
 
     expect(balances.for(key.publicKey)).to.equal(
-      -feeCalculator.lamportsPerSignature + LAMPORTS_PER_SOL
+      -FEES_PER_SIGNATURE + LAMPORTS_PER_SOL
     );
     expect(balances.for(cryptidSigner)).to.equal(-2 * LAMPORTS_PER_SOL + rent); // calculate rent
     expect(balances.for(recipient)).to.equal(LAMPORTS_PER_SOL);
