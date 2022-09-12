@@ -26,7 +26,7 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL * 0.01;
 
-const FEE = 10000;
+const FEE = 5000;
 
 describe('transfers', function () {
   this.timeout(20_000);
@@ -81,7 +81,7 @@ describe('transfers', function () {
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it('should be able to setup and execute a large tx', async () => {
+    it.only('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);
