@@ -14,7 +14,7 @@ export type PayerOption = 'DID_PAYS' | 'SIGNER_PAYS';
 export type CryptidOptions = {
   // The index of the cryptid account - default 0
   // Cryptid allows multiple accounts per DID, all derivable via an index field.
-  accountIndex: number
+  accountIndex?: number
   connection: Connection;
   confirmOptions?: ConfirmOptions;
   waitForConfirmation?: boolean;

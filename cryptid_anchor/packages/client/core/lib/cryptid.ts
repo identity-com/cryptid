@@ -9,6 +9,7 @@ import BN from "bn.js";
 import {Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 import {uniqBy} from "ramda";
+import {didToPDA} from "./did";
 
 // Creates a reference to an account, that is passed as part of cryptid instruction data for each account.
 const toTransactionAccountMeta = (publicKeyIndex: number, isWritable: boolean = false, isSigner: boolean = false): TransactionAccountMeta => ({
@@ -83,6 +84,9 @@ export const getCryptidAccountAddress = (didAccount: PublicKey, index: number = 
     ],
     CRYPTID_PROGRAM
 );
+
+export const getCryptidAccountAddressFromDID = (did: string, index: number = 0): Promise<[PublicKey, number]> =>
+    didToPDA(did).then(didAccount => getCryptidAccountAddress(didAccount, index));
 
 export const createCryptidAccount = async (
     program: Program<Cryptid>,
