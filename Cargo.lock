@@ -3126,7 +3126,7 @@ dependencies = [
 [[package]]
 name = "sol-did"
 version = "3.0.0"
-source = "git+https://github.com/identity-com/sol-did?rev=a21dbfa2f48c6bd07d695670fcb9ef5481311afa#a21dbfa2f48c6bd07d695670fcb9ef5481311afa"
+source = "git+https://github.com/identity-com/sol-did?rev=5c45bdd29d8c1f6b96d1f331b102bdbd627908bf#5c45bdd29d8c1f6b96d1f331b102bdbd627908bf"
 dependencies = [
  "anchor-lang",
  "bitflags",
