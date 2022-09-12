@@ -81,7 +81,7 @@ describe('transfers', function () {
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
 
-    it('should be able to setup and execute a large tx', async () => {
+    it.only('should be able to setup and execute a large tx', async () => {
       console.log(`cryptid address: ${cryptidAddress.toBase58()}`);
       console.log(`signer key: ${key.publicKey.toBase58()}`);
       console.log(`recipient: ${recipient.toBase58()}`);
@@ -115,7 +115,7 @@ describe('transfers', function () {
       ); // the amount transferred
 
       expect(balances.for(key.publicKey)).to.equal(
-        -FEE * (setupTransactions.length + 1)
+        -5000 * (setupTransactions.length + 1)
       ); // fees only
 
       // expect(balances.for(recipient)).to.equal(nrInstructions * lamportsToTransfer); // the amount received

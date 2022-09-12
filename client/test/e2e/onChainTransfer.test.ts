@@ -119,9 +119,7 @@ describe('on-chain transfer', function () {
 
     await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(
-      -0
-    );
+    expect(balances.for(key.publicKey)).to.equal(FEES_PER_SIGNATURE);
 
     expect(balances.for(cryptidSigner)).to.equal(-rent);
 
@@ -160,9 +158,7 @@ describe('on-chain transfer', function () {
     await sendAndConfirmTransaction(connection, expandTransaction, [key]);
     await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(
-      -FEES_PER_SIGNATURE
-    );
+    expect(balances.for(key.publicKey)).to.equal(FEES_PER_SIGNATURE);
 
     expect(balances.for(cryptidSigner)).to.equal(0);
 
@@ -196,9 +192,7 @@ describe('on-chain transfer', function () {
     await sendAndConfirmTransaction(connection, expandDataTransaction, [key]);
     await balances.recordAfter();
 
-    expect(balances.for(key.publicKey)).to.equal(
-      -FEES_PER_SIGNATURE
-    );
+    expect(balances.for(key.publicKey)).to.equal(FEES_PER_SIGNATURE);
 
     expect(balances.for(cryptidSigner)).to.equal(0);
 
