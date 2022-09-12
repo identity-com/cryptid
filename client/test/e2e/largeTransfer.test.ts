@@ -115,6 +115,7 @@ describe('transfers', function () {
       ); // the amount transferred
 
       expect(balances.for(key.publicKey)).to.equal(
+        //TODO: Why the -5000?!?
         -5000 * (setupTransactions.length + 1)
       ); // fees only
 
