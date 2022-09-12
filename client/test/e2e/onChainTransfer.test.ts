@@ -28,7 +28,7 @@ import InstructionOperation, {
 } from '../../src/lib/solana/model/InstructionOperation';
 import { AssignableBuffer } from '../../src/lib/solana/solanaBorsh';
 
-const ACCOUNT_SIZE = 10000;
+const ACCOUNT_SIZE = 15000;
 
 describe('on-chain transfer', function () {
   this.timeout(20_000);

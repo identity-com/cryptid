@@ -26,7 +26,7 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL * 0.01;
 
-const FEE = 0;
+const FEE = 10000;
 
 describe('transfers', function () {
   this.timeout(20_000);
