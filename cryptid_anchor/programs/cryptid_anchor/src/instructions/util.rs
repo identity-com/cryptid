@@ -13,7 +13,7 @@ pub trait AllAccounts<'a, 'b, 'c, 'info> {
 
 pub fn resolve_by_index<'c, 'info>(
     indexes: &[u8],
-    accounts: Vec<&'c AccountInfo<'info>>,
+    accounts: &Vec<&'c AccountInfo<'info>>,
 ) -> Result<Vec<&'c AccountInfo<'info>>> {
     let mut resolved_accounts = Vec::new();
     for i in indexes {

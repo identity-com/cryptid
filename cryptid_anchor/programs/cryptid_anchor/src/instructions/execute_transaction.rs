@@ -1,19 +1,29 @@
-use crate::error::CryptidError;
 use crate::instructions::util::*;
+use crate::state::cryptid_account::CryptidAccount;
 use crate::state::transaction_account::TransactionAccount;
-use crate::util::seeder::*;
+use crate::util::cpi::*;
 use crate::util::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_compute_units;
-use anchor_lang::solana_program::program::invoke_signed;
 use sol_did::state::DidAccount;
 
 #[derive(Accounts)]
+#[instruction(
+/// A vector of the number of extras for each signer, signer count is the length
+controller_chain: Vec<u8>,
+/// The bump seed for the Cryptid signer
+bump: u8,
+/// Additional flags
+flags: u8,
+)]
 pub struct ExecuteTransaction<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
-    #[account(mut)]
-    pub cryptid_account: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account.index.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub cryptid_account: Account<'info, CryptidAccount>, // TODO use new macro that allows generative accounts
     /// The DID on the Cryptid instance
     pub did: Account<'info, DidAccount>,
     /// The program for the DID
@@ -55,7 +65,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 
     fn get_accounts_by_indexes(&self, indexes: &[u8]) -> Result<Vec<&AccountInfo<'info>>> {
         let accounts = self.all_accounts();
-        resolve_by_index(indexes, accounts)
+        resolve_by_index(indexes, &accounts)
     }
 }
 
@@ -63,8 +73,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 pub fn execute_transaction<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
     controller_chain: Vec<u8>,
-    middleware_account: Option<Pubkey>,
-    cryptid_account_bump: u8,
+    bump: u8,
     flags: u8,
 ) -> Result<()> {
     let debug = ExecuteFlags::from_bits(flags)
@@ -74,25 +83,13 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
-    let instructions = &ctx.accounts.transaction_account.instructions;
-
-    // passing middleware here ensures that the middleware account passed in the instruction parameters
-    // is the same as the one that was used to generate the cryptid account, while allowing the account
-    // to remain stateless
-    // TODO do we care about stateless cryptid (i.e. generative) in this case? Is it simpler just to
-    // create a cryptid account and add the middleware account to it as a property?
-    let seeder = Box::new(GenerativeCryptidSeeder {
-        did_program: *ctx.accounts.did_program.key,
-        did: ctx.accounts.did.key(),
-        additional_seeds: middleware_account
-            .map_or(vec![], |middleware| vec![middleware.to_bytes().to_vec()]),
-        bump: cryptid_account_bump,
-    });
-
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
-    // sol_did does that
+    // sol_did does that.
     let controlling_did_accounts = ctx.get_accounts_by_indexes(controller_chain.as_slice())?;
+
+    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
+    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
         ctx.accounts.signer.to_account_info().key,
@@ -100,90 +97,22 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     )?;
 
     // verify that the transaction has been passed by the middleware
-    verify_middleware(&ctx.accounts.transaction_account, &middleware_account)?;
+    verify_middleware(
+        &ctx.accounts.transaction_account,
+        &ctx.accounts.cryptid_account.middleware,
+    )?;
 
-    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
-    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
-    let all_accounts_ref_vec = ctx.all_accounts();
-    let all_keys_vec = all_accounts_ref_vec
-        .iter()
-        .map(|a| *a.key)
-        .collect::<Vec<_>>();
-
-    // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instruction
-    // TODO - if we want direct-execute to support multisig, we need to support more signers here
-    // If we dont need direct-execute to support multisig, then we still need to verify that the cryptid account
-    // does not have a key threshold > 1, and if so, reject the tx (because direct-execute would only have one key)
-    // For now, we just go ahead and execute the instruction, ignoring key_threshold
-
-    // Generate and Execute instructions
-    for (index, instruction_data) in instructions.iter().enumerate() {
-        if debug {
-            msg!(
-                "Executing instruction {} program {} accounts {:?}",
-                index,
-                instruction_data.program_id,
-                instruction_data
-                    .accounts
-                    .iter()
-                    .map(|a| a.key)
-                    .collect::<Vec<_>>()
-            );
-        }
-        let solana_instruction = instruction_data.clone().into_instruction(&all_keys_vec[..]);
-        let account_indexes = instruction_data
-            .accounts
-            .iter()
-            .map(|a| a.key)
-            .collect::<Vec<_>>();
-        let account_infos = ctx
-            .get_accounts_by_indexes(account_indexes.as_slice())?
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>();
-
-        let seeds = seeder.seeds();
-
-        msg!(
-            "Remaining compute units for sub-instruction `{}` of {}",
-            index,
-            instructions.len()
-        );
-        sol_log_compute_units();
-
-        // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
-        let is_signed_by_cryptid = solana_instruction
-            .accounts
-            .iter()
-            .any(|meta| meta.pubkey.eq(ctx.accounts.cryptid_account.key));
-        let sub_instruction_result = if is_signed_by_cryptid {
-            if debug {
-                msg!("Invoking signed with seeds: {:?}", seeds);
-            }
-
-            // Ohhh kay - time to try to turn Vec<Vec<u8>> into &[&[u8]]
-            // TODO: do it better (presumably by changing the type of `seeds`)
-            let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
-
-            invoke_signed(
-                &solana_instruction,
-                account_infos.as_slice(),
-                &[&seeds_slices_vec[..]],
-            )
-            .map_err(|_| error!(CryptidError::SubInstructionError))
-        } else {
-            msg!("Invoking without signature");
-            Ok(())
-            // TODO
-            // invoke_variable_size(instruction);
-        };
-
-        // If sub-instruction errored log the index and error
-        if let Err(ref error) = sub_instruction_result {
-            msg!("Error in sub-instruction `{}`: {:?}", index, error);
-            return sub_instruction_result;
-        }
-    }
+    // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
+    CPI::execute_instructions(
+        &ctx.accounts.transaction_account.instructions,
+        &ctx.all_accounts(),
+        &ctx.accounts.did_program.key(),
+        &ctx.accounts.did.key(),
+        &ctx.accounts.cryptid_account,
+        &ctx.accounts.cryptid_account.to_account_info(),
+        bump,
+        debug,
+    )?;
 
     Ok(())
 }

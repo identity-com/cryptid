@@ -9,6 +9,8 @@ import {
 } from "./constants";
 import {InstructionData, TransactionAccountMeta} from "./types";
 import BN from "bn.js";
+import {Program} from "@project-serum/anchor";
+import {Cryptid} from "@identity.com/cryptid-idl";
 
 export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
     pubkey: publicKey,
@@ -44,25 +46,18 @@ export const cryptidTransferInstruction = (amount: number):InstructionData => (
                 0 // Sender: the cryptid account - index 0 as passed into the instruction.
                 , true, true),
             toTransactionAccountMeta(
-                4, // The recipient - index 0 in remainingAccounts = 0 overall.
+                4, // The recipient - index 0 in remainingAccounts = 4 overall.
                 true, false)
         ],
         data: transferInstructionData(amount),
     });
 
-export const deriveCryptidAccountAddress = (didAccount: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
-    [anchor.utils.bytes.utf8.encode("cryptid_account"),
-        DID_SOL_PROGRAM.toBuffer(),
-        didAccount.toBuffer()],
-    CRYPTID_PROGRAM
-);
-
-export const deriveCryptidAccountAddressWithMiddleware = (didAccount: PublicKey, middlewareAccount: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
     [
         anchor.utils.bytes.utf8.encode("cryptid_account"),
         DID_SOL_PROGRAM.toBuffer(),
         didAccount.toBuffer(),
-        middlewareAccount.toBuffer(),
+        new BN(index).toArrayLike(Buffer, "le", 4)
     ],
     CRYPTID_PROGRAM
 );
@@ -101,3 +96,25 @@ export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (transact
     ],
     TIME_DELAY_MIDDLEWARE_PROGRAM
 );
+
+export const createCryptidAccount = async (
+    program: Program<Cryptid>,
+    did: PublicKey,
+    middlewareAccount?: PublicKey,
+    index: number = 0,
+): Promise<[PublicKey, number]> => {
+    const [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(did, index);
+
+    await program.methods.create(
+        middlewareAccount || null,  // anchor requires null instead of undefined
+        index,
+        cryptidBump
+    ).accounts({
+        cryptidAccount,
+        didProgram: DID_SOL_PROGRAM,
+        did,
+        authority: program.provider.publicKey
+    }).rpc({skipPreflight: true});
+
+    return [cryptidAccount, cryptidBump]
+}

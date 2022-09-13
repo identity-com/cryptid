@@ -3,9 +3,7 @@ import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {
     cryptidTransferInstruction,
-    deriveCryptidAccountAddressWithMiddleware,
-    deriveCheckRecipientMiddlewareAccountAddress,
-    toAccountMeta
+    toAccountMeta, createCryptidAccount, deriveCheckRecipientMiddlewareAccountAddress
 } from "../util/cryptid";
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
@@ -57,7 +55,6 @@ describe("Middleware: checkRecipient", () => {
         // execute the Cryptid transaction
         program.methods.executeTransaction(
             Buffer.from([]),  // no controller chain
-            middlewareAccount,
             cryptidBump,
             0
         ).accounts({
@@ -96,8 +93,8 @@ describe("Middleware: checkRecipient", () => {
         }).rpc({skipPreflight: true});
     })
 
-    before('Set up generative Cryptid Account with middleware', async () => {
-        [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddressWithMiddleware(didAccount, middlewareAccount);
+    before('Set up Cryptid Account with middleware', async () => {
+        [cryptidAccount, cryptidBump] = await createCryptidAccount(program, didAccount, middlewareAccount);
 
         if (!process.env.QUIET) {
             console.log("Accounts", {
