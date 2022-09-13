@@ -4,6 +4,7 @@ import { build, Cryptid } from '../../src';
 
 import {
   Connection,
+  FeeCalculator,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -26,8 +27,6 @@ chai.use(chaiAsPromised);
 // needs to be less than AIRDROP_LAMPORTS
 const lamportsToTransfer = LAMPORTS_PER_SOL * 0.01;
 
-const FEE = 5000;
-
 describe('transfers', function () {
   this.timeout(20_000);
   let connection: Connection;
@@ -40,6 +39,8 @@ describe('transfers', function () {
   let cryptid: Cryptid;
   let balances: Balances;
 
+  let feeCalculator: FeeCalculator;
+
   before(async () => {
     connection = new Connection('http://localhost:8899', 'confirmed');
     key = Keypair.generate();
@@ -49,6 +50,8 @@ describe('transfers', function () {
     cryptid = build(did, key, { connection, waitForConfirmation: true });
 
     cryptidAddress = await cryptid.address();
+
+    feeCalculator = (await connection.getRecentBlockhash()).feeCalculator;
 
     await Promise.all([
       airdrop(connection, cryptidAddress, LAMPORTS_PER_SOL), // the main funds for the cryptid account
@@ -76,7 +79,7 @@ describe('transfers', function () {
       await sendAndConfirmTransaction(connection, tx, [key]);
       await balances.recordAfter();
       expect(balances.for(key.publicKey)).to.equal(
-        -(60 * lamportsToTransfer + FEE)
+        -(60 * lamportsToTransfer + feeCalculator.lamportsPerSignature)
       ); // fees only
       expect(balances.for(recipient)).to.equal(60 * lamportsToTransfer); // fees only
     });
@@ -114,7 +117,7 @@ describe('transfers', function () {
         -nrInstructions * lamportsToTransfer
       ); // the amount transferred
       expect(balances.for(key.publicKey)).to.equal(
-        -FEE * (setupTransactions.length + 1)
+        -feeCalculator.lamportsPerSignature * (setupTransactions.length + 1)
       ); // fees only
       // expect(balances.for(recipient)).to.equal(nrInstructions * lamportsToTransfer); // the amount received
       // TODO: Why does this fail with "AssertionError: expected 457561 to equal 460000" Where do the lamports go?
