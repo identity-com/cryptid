@@ -333,6 +333,17 @@ export type CryptidAnchor = {
               "This is used to prevent replay attacks TODO: Do we need it?"
             ],
             "type": "u8"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "The transaction state, to prevent replay attacks",
+              "in case an executed transaction account is not immediately",
+              "garbage-collected by the runtime"
+            ],
+            "type": {
+              "defined": "TransactionState"
+            }
           }
         ]
       }
@@ -465,58 +476,53 @@ export type CryptidAnchor = {
     },
     {
       "code": 6003,
+      "name": "WrongCryptidAccount",
+      "msg": "Wrong Cryptid account program"
+    },
+    {
+      "code": 6004,
       "name": "SubInstructionError",
       "msg": "Error in sub-instruction"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidTransactionState",
       "msg": "Invalid transaction state"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "AccountMismatch",
       "msg": "An account in the transaction accounts did not match what was expected"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "KeyCannotChangeTransaction",
       "msg": "Key is not a proposer for the transaction"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6011,
-      "name": "MiddlewareDidNotApprove",
-      "msg": "The required middleware did not approve the transaction."
-    },
-    {
       "code": 6012,
-      "name": "UnexpectedMiddleware",
-      "msg": "A middleware approved the transaction that was not registered on the cryptid account."
-    },
-    {
-      "code": 6013,
       "name": "IncorrectMiddleware",
-      "msg": "A different middleware approved the transaction to the one registered on the cryptid account."
+      "msg": "The expected middleware did not approve the transaction."
     }
   ]
 };
@@ -856,6 +862,17 @@ export const IDL: CryptidAnchor = {
               "This is used to prevent replay attacks TODO: Do we need it?"
             ],
             "type": "u8"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "The transaction state, to prevent replay attacks",
+              "in case an executed transaction account is not immediately",
+              "garbage-collected by the runtime"
+            ],
+            "type": {
+              "defined": "TransactionState"
+            }
           }
         ]
       }
@@ -988,58 +1005,53 @@ export const IDL: CryptidAnchor = {
     },
     {
       "code": 6003,
+      "name": "WrongCryptidAccount",
+      "msg": "Wrong Cryptid account program"
+    },
+    {
+      "code": 6004,
       "name": "SubInstructionError",
       "msg": "Error in sub-instruction"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidTransactionState",
       "msg": "Invalid transaction state"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "AccountMismatch",
       "msg": "An account in the transaction accounts did not match what was expected"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "KeyCannotChangeTransaction",
       "msg": "Key is not a proposer for the transaction"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6011,
-      "name": "MiddlewareDidNotApprove",
-      "msg": "The required middleware did not approve the transaction."
-    },
-    {
       "code": 6012,
-      "name": "UnexpectedMiddleware",
-      "msg": "A middleware approved the transaction that was not registered on the cryptid account."
-    },
-    {
-      "code": 6013,
       "name": "IncorrectMiddleware",
-      "msg": "A different middleware approved the transaction to the one registered on the cryptid account."
+      "msg": "The expected middleware did not approve the transaction."
     }
   ]
 };

@@ -1,10 +1,16 @@
+use crate::error::CryptidError;
 use crate::state::transaction_account::TransactionAccount;
+use crate::state::transaction_state::TransactionState;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct ApproveExecution<'info> {
     pub middleware_account: Signer<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        // ensure the transaction is not approved until it is ready to be approved, and is not executed
+        constraint = transaction_account.state == TransactionState::Ready @ CryptidError::InvalidTransactionState,
+    )]
     pub transaction_account: Account<'info, TransactionAccount>,
 }
 

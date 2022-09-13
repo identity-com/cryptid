@@ -1,6 +1,8 @@
+use crate::error::CryptidError;
 use crate::instructions::util::*;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::state::transaction_account::TransactionAccount;
+use crate::state::transaction_state::TransactionState;
 use crate::util::cpi::*;
 use crate::util::*;
 use anchor_lang::prelude::*;
@@ -37,9 +39,11 @@ pub struct ExecuteTransaction<'info> {
     #[account(
         mut,
         close = destination,
-        has_one = cryptid_account,
-        // TODO Middleware readiness
-        // constraint = transaction_account.approved_middleware == *cryptid_account.middleware,
+        has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
+        // safeguard to prevent double-spends in the case where the account is not closed for some reason
+        constraint = transaction_account.state != TransactionState::Executed @ CryptidError::InvalidTransactionState,
+        // the transaction account must have been approved by the middleware on the cryptid account, if present
+        constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
 }
@@ -83,6 +87,8 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
+    ctx.accounts.transaction_account.state = TransactionState::Executed;
+
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that.
@@ -94,12 +100,6 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         &ctx.accounts.did,
         ctx.accounts.signer.to_account_info().key,
         controlling_did_accounts,
-    )?;
-
-    // verify that the transaction has been passed by the middleware
-    verify_middleware(
-        &ctx.accounts.transaction_account,
-        &ctx.accounts.cryptid_account.middleware,
     )?;
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
