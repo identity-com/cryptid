@@ -5,7 +5,7 @@ members = [
     "programs/middleware/check_pass",
     "programs/middleware/time_delay"
 ]
-types = "packages/client/idl/"
+types = "packages/client/idl/src"
 
 [features]
 seeds = false

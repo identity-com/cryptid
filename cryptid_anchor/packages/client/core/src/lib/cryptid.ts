@@ -45,10 +45,7 @@ export const toInstructionData = (accounts: PublicKey[]) => (instruction: Transa
 // if any of the instructions require them.
 // Note, the cryptid account is not a signer of any instructions, since the program "signs".
 const accountMetaReducer = (cryptidAccount: CryptidAccount) => (accumulator: { [k: string]: AccountMeta }, { pubkey, isSigner, isWritable }: AccountMeta):{ [k: string]: AccountMeta } => {
-    const isCryptidAccountMeta = (accountMeta: AccountMeta) => {
-        console.log("FOUND CRYPTID ACCOUNT META?", accountMeta.pubkey.equals(cryptidAccount.address));
-        return accountMeta.pubkey.equals(cryptidAccount.address);
-    };
+    const isCryptidAccountMeta = (accountMeta: AccountMeta) => accountMeta.pubkey.equals(cryptidAccount.address);
 
     const mergeAccountMetas = (existingAccountMeta: AccountMeta | undefined, newAccountMeta: AccountMeta):AccountMeta => {
         const mergedAccountMeta = existingAccountMeta ? {

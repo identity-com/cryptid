@@ -85,6 +85,6 @@ export interface Cryptid {
 
   send(
       transaction: Transaction,
-      confirmOptions: ConfirmOptions
+      confirmOptions?: ConfirmOptions
   ): Promise<TransactionSignature>
 }

@@ -76,7 +76,7 @@ export abstract class AbstractCryptid implements Cryptid {
    */
   async send(
     transaction: Transaction,
-    confirmOptions: ConfirmOptions
+    confirmOptions: ConfirmOptions = {}
   ): Promise<TransactionSignature> {
     console.log("Signatures")
     transaction.signatures.map((sig) => {
