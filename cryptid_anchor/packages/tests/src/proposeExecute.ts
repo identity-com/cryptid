@@ -4,14 +4,14 @@ import chaiAsPromised from "chai-as-promised";
 import {
     createCryptidAccount,
     cryptidTransferInstruction,
-    deriveCryptidAccountAddress,
+    deriveCryptidAccountAddress, makeTransfer,
     toAccountMeta
 } from "./util/cryptid";
 import {initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
-import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {web3} from "@project-serum/anchor";
-import {InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {build, Cryptid, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -29,7 +29,13 @@ describe("proposeExecute", () => {
     let cryptidBump: number;
 
     const recipient = Keypair.generate();
+
+    let cryptid:Cryptid;
+
+    // use this when testing directly against anchor
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
+    // use this when testing against the cryptid client
+    const makeTransaction = () => makeTransfer(cryptidAccount, recipient.publicKey);
 
     const propose = async (transactionAccount: Keypair, instruction: InstructionData = transferInstructionData) =>
         program.methods.proposeTransaction(
@@ -77,6 +83,7 @@ describe("proposeExecute", () => {
     // For now, Propose/Execute requires non-generative accounts, so we can check for the presence of a registered middleware
     before('Set up a Cryptid Account', async () => {
         [cryptidAccount, cryptidBump] = await createCryptidAccount(program, didAccount)//, middlewareAccount, ++cryptidIndex);
+        cryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, authority, {connection: provider.connection});
 
         await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     })
@@ -94,6 +101,30 @@ describe("proposeExecute", () => {
 
         // execute the Cryptid transaction
         await execute(transactionAccount);
+
+        currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+
+    it("can propose and execute a transfer using the Cryptid client", async () => {
+        const previousBalance = await balanceOf(cryptidAccount);
+
+        console.log({
+            cryptidAccount: cryptidAccount.toString(),
+            recipient: recipient.publicKey.toString(),
+            authority: authority.publicKey.toString(),
+        })
+
+        // send the propose tx
+        const [proposeTransaction, transactionAccountAddress] = await cryptid.propose(makeTransaction());
+        await cryptid.send(proposeTransaction, { skipPreflight: true });
+
+        let currentBalance = await balanceOf(cryptidAccount);
+        expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
+
+        // send the execute tx
+        const [executeTransaction] = await cryptid.execute(transactionAccountAddress);
+        await cryptid.send(executeTransaction, { skipPreflight: true });
 
         currentBalance = await balanceOf(cryptidAccount);
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

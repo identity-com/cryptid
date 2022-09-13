@@ -43,7 +43,7 @@ export class CryptidTransaction {
         // ... remaining accounts
         //
         // * These accounts are omitted from the Propose Transaction Accounts but included in the execute instructions
-        const namedAccountList = [cryptidAccount.address,
+        const namedAccounts = [cryptidAccount.address,
             cryptidAccount.didAccount,
             DID_SOL_PROGRAM,
             // This key is added in place of the signer (aka authority),
@@ -53,11 +53,11 @@ export class CryptidTransaction {
             // TODO: This is not the case for DirectExecute, so we could optimise here.
             NULL_KEY];
         const availableInstructionAccounts = uniqueKeys([
-            ...namedAccountList,
+            ...namedAccounts,
             ...accountMetas.map(a => a.pubkey)
         ]);
         const instructions = solanaInstructions.map(toInstructionData(availableInstructionAccounts));
-        const filteredAccountMetas = accountMetas.filter(a => !namedAccountList.map(account => account.toBase58()).includes(a.pubkey.toBase58()));
+        const filteredAccountMetas = accountMetas.filter(a => !namedAccounts.map(account => account.toBase58()).includes(a.pubkey.toBase58()));
 
         console.log("availableInstructionAccounts", availableInstructionAccounts.map(a => a.toString()));
         console.log("instructions", instructions);
@@ -78,22 +78,37 @@ export class CryptidTransaction {
         authority: PublicKey,
         transactionAccount: TransactionAccount
     ): CryptidTransaction {
+        console.log("transactionAccount", JSON.stringify(transactionAccount, null, 2));
+        console.log("transactionAccount.instructions", transactionAccount.instructions);
+        console.log("transactionAccount.accounts", transactionAccount.accounts);
+
         // TODO remove typecasting in this function
         const instructions = transactionAccount.instructions as InstructionData[];
-        const accounts = transactionAccount.accounts;
+        const namedAccounts = [
+            cryptidAccount.address,
+            cryptidAccount.didAccount,
+            DID_SOL_PROGRAM,
+            authority
+        ]
+        const remainingAccounts = transactionAccount.accounts;
+        const allAccounts = [...namedAccounts, ...remainingAccounts];
+        console.log("allAccounts", allAccounts.map(a => a.toString()));
         const accountMetas = transactionAccountMetasToAccountMetas(
             instructions.flatMap(i =>
-                (i.accounts as TransactionAccountMeta[])
+                ([...i.accounts as TransactionAccountMeta[], { key: i.programId, meta: 0}])
             ),
-            accounts,
+            allAccounts,
             cryptidAccount
         );
+        console.log("accountMetas", accountMetas.map(a => ({pubkey: a.pubkey.toString(), isSigner: a.isSigner, isWritable: a.isWritable})));
+        const filteredAccountMetas = accountMetas.filter(a => !namedAccounts.map(account => account.toBase58()).includes(a.pubkey.toBase58()));
+        console.log("filteredAccountMetas", filteredAccountMetas.map(a => ({pubkey: a.pubkey.toString(), isSigner: a.isSigner, isWritable: a.isWritable})));
 
         return new CryptidTransaction(
             cryptidAccount,
             authority,
             instructions,
-            accountMetas
+            filteredAccountMetas
         )
     }
 

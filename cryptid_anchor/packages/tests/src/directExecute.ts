@@ -2,7 +2,7 @@ import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction} from "@solana/web3.js";
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
-import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} from "./util/cryptid";
+import {cryptidTransferInstruction, deriveCryptidAccountAddress, makeTransfer, toAccountMeta} from "./util/cryptid";
 import {addKeyToDID, initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
 import {build, Cryptid, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
@@ -26,13 +26,7 @@ describe("directExecute", () => {
     // use this when testing directly against anchor
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
     // use this when testing against the cryptid client
-    const makeTransaction = (recipient: PublicKey) =>
-        // A transaction that sends 1 SOL to the recipient
-        new Transaction().add(SystemProgram.transfer({
-        fromPubkey: cryptidAccount,
-        toPubkey: recipient,
-        lamports: LAMPORTS_PER_SOL
-    }))
+    const makeTransaction = (recipient: PublicKey) => makeTransfer(cryptidAccount, recipient);
 
     const directExecute = (recipient: Keypair, instructionData: InstructionData = transferInstructionData) => program.methods.directExecute(
         Buffer.from([]),  // no controller chain
@@ -110,14 +104,6 @@ describe("directExecute", () => {
         await fund(bogusSigner.publicKey);
 
         const bogusCryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, bogusSigner, {connection: provider.connection});
-
-        console.log({
-            cryptidAccount: cryptidAccount.toString(),
-            recipient: recipient.publicKey.toString(),
-            authority: authority.publicKey.toString(),
-            bogusSigner: bogusSigner.publicKey.toString(),
-        })
-
         const signedTransaction = await bogusCryptid.sign(makeTransaction(recipient.publicKey));
         const shouldFail = bogusCryptid.send(signedTransaction, { skipPreflight: true });
 

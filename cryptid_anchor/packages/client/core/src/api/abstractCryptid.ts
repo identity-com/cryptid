@@ -54,12 +54,24 @@ export abstract class AbstractCryptid implements Cryptid {
     const service = await this.service();
 
     const [proposeTransaction, transactionAccountAddress] = await service.propose(transaction);
+    // TODO fix - broken because it tries to load transactionAccountAddress
     const executeTransaction = await service.execute(transactionAccountAddress);
 
     return {
         setupTransactions: [proposeTransaction],
         executeTransaction
     }
+  }
+
+  async propose(transaction: Transaction): Promise<[Transaction, PublicKey]> {
+    return this.service()
+        .then(service => service.propose(transaction))
+  }
+
+  async execute(transactionAccountAddress: PublicKey): Promise<Transaction[]> {
+    return this.service()
+        .then(service => service.execute(transactionAccountAddress))
+        .then(transaction => [transaction])
   }
 
   // TODO reinstate
@@ -84,7 +96,14 @@ export abstract class AbstractCryptid implements Cryptid {
       console.log(`Pubkey: ${sig.publicKey.toString()}`);
     });
     // This cast is ok, as it is created as an AnchorProvider in the service constructor
-    return this.service().then(service => (service.program.provider as AnchorProvider).sendAndConfirm(transaction, [], confirmOptions));
+    const service = await this.service();
+    const connection = service.program.provider.connection;
+    const txSig = await connection.sendRawTransaction(transaction.serialize(), confirmOptions);
+    //(service.program.provider as AnchorProvider).sendAndConfirm(transaction, [], confirmOptions));
+    const blockhash = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({ signature: txSig, ...blockhash });
+
+    return txSig
   }
 
   /**

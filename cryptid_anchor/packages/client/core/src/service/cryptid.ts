@@ -49,7 +49,18 @@ export class CryptidService {
             .signers(
                 // The only signer in a proposal (other than an authority on the DID) is the transaction account
                 [transactionAccountAddress]
-            ).transaction();
+            ).transaction().then(async t => {
+                // TODO clean up
+                // 1. should not be in a closure
+                // 2. signing here happens at a different layer (service layer) to the directExecute (should be the same layer)
+                // 3. duplicating the signing and blockhash stuff
+                // 4. provider casting
+                const {blockhash} = await this.program.provider.connection.getLatestBlockhash();
+                t.recentBlockhash = blockhash;
+                t.feePayer = this.authorityKey;
+                t.partialSign(transactionAccountAddress)
+                return (this.program.provider as AnchorProvider).wallet.signTransaction(t);
+            });
 
         return [proposeTransaction, transactionAccountAddress.publicKey];
     }
@@ -65,7 +76,17 @@ export class CryptidService {
             transactionAccount
         );
         return cryptidTransaction.execute(this.program, transactionAccountAddress)
-            .signers([...signers]).transaction();
+            .signers([...signers]).transaction().then(async t => {
+                // TODO clean up
+                // 1. should not be in a closure
+                // 2. signing here happens at a different layer (service layer) to the directExecute (should be the same layer)
+                // 3. duplicating the signing and blockhash stuff
+                // 4. provider casting
+                const {blockhash} = await this.program.provider.connection.getLatestBlockhash();
+                t.recentBlockhash = blockhash;
+                t.feePayer = this.authorityKey;
+                return (this.program.provider as AnchorProvider).wallet.signTransaction(t);
+            });
     }
 
     public async directExecute(transaction: Transaction): Promise<Transaction> {

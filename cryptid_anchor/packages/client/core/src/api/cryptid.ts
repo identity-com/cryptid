@@ -61,6 +61,9 @@ export interface Cryptid {
     executeTransaction: Transaction;
   }>;
 
+  propose(transaction: Transaction): Promise<[Transaction, PublicKey]>;
+  execute(transactionAccountAddress: PublicKey): Promise<Transaction[]>;
+
   // TODO Reinstate
   // cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;
 

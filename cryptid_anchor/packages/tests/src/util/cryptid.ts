@@ -1,4 +1,4 @@
-import {AccountMeta, PublicKey, SystemProgram} from "@solana/web3.js";
+import {AccountMeta, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {
@@ -118,3 +118,12 @@ export const createCryptidAccount = async (
 
     return [cryptidAccount, cryptidBump]
 }
+
+// use this when testing against the cryptid client
+export const makeTransfer = (from: PublicKey, to: PublicKey) =>
+    // A transaction that sends 1 SOL to the recipient
+    new Transaction().add(SystemProgram.transfer({
+        fromPubkey: from,
+        toPubkey: to,
+        lamports: LAMPORTS_PER_SOL
+    }))
