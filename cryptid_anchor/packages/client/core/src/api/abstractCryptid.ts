@@ -101,7 +101,10 @@ export abstract class AbstractCryptid implements Cryptid {
     const txSig = await connection.sendRawTransaction(transaction.serialize(), confirmOptions);
     //(service.program.provider as AnchorProvider).sendAndConfirm(transaction, [], confirmOptions));
     const blockhash = await connection.getLatestBlockhash();
-    await connection.confirmTransaction({ signature: txSig, ...blockhash });
+    const result = await connection.confirmTransaction({ signature: txSig, ...blockhash });
+
+    // TODO clean up
+    if (result.value.err) throw new Error('Transaction failed: ' + result.value.err);
 
     return txSig
   }

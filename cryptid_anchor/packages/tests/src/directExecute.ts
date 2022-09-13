@@ -97,7 +97,7 @@ describe("directExecute", () => {
         return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
     });
 
-    it("rejects the transfer if the signer is not a valid signer on the DID", async () => {
+    it.only("rejects the transfer if the signer is not a valid signer on the DID", async () => {
         const recipient = Keypair.generate();
         const bogusSigner = Keypair.generate();
         // fund the bogus signer, otherwise the tx fails due to lack of funds, not did signing issues
