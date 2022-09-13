@@ -1,7 +1,5 @@
-import { PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import { Cryptid, CryptidOptions } from './cryptid';
 import { AbstractCryptid } from './abstractCryptid';
-import { NonEmptyArray } from '../types/lang';
 import {Wallet} from "../types/crypto";
 
 export class ControlledCryptid extends AbstractCryptid {

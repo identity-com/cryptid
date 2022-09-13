@@ -2,7 +2,7 @@ import {Command} from '@oclif/core'
 import * as Flags from '../lib/flags'
 import {Config} from '../service/config'
 import {build, resolveDIDOrAlias} from '../service/cryptid'
-import {Cryptid} from '@identity.com/cryptid-core'
+import {Cryptid} from 'packages/client/core/src'
 import {Connection} from '@solana/web3.js'
 
 export default abstract class Base extends Command {

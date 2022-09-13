@@ -10,6 +10,7 @@ import {Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 import {uniqBy} from "ramda";
 import {didToPDA} from "./did";
+import {CryptidAccount} from "./CryptidAccount";
 
 // Creates a reference to an account, that is passed as part of cryptid instruction data for each account.
 const toTransactionAccountMeta = (publicKeyIndex: number, isWritable: boolean = false, isSigner: boolean = false): TransactionAccountMeta => ({
@@ -40,38 +41,57 @@ export const toInstructionData = (accounts: PublicKey[]) => (instruction: Transa
     }
 }
 
-const mergeAccountMetas = (existingAccountMeta: AccountMeta | undefined, newAccountMeta: AccountMeta):AccountMeta =>
-    existingAccountMeta ? {
-        pubkey: newAccountMeta.pubkey,
-        isSigner: existingAccountMeta.isSigner || newAccountMeta.isSigner,
-        isWritable: existingAccountMeta.isWritable || newAccountMeta.isWritable
-    } : newAccountMeta
+// Given a set of accountMetas from a set of instructions, combine them, setting the signer and writable flags to true,
+// if any of the instructions require them.
+// Note, the cryptid account is not a signer of any instructions, since the program "signs".
+const accountMetaReducer = (cryptidAccount: CryptidAccount) => (accumulator: { [k: string]: AccountMeta }, { pubkey, isSigner, isWritable }: AccountMeta):{ [k: string]: AccountMeta } => {
+    const isCryptidAccountMeta = (accountMeta: AccountMeta) => {
+        console.log("FOUND CRYPTID ACCOUNT META?", accountMeta.pubkey.equals(cryptidAccount.address));
+        return accountMeta.pubkey.equals(cryptidAccount.address);
+    };
 
-const accountMetaReducer = (accumulator: { [k: string]: AccountMeta }, { pubkey, isSigner, isWritable }: AccountMeta):{ [k: string]: AccountMeta } => ({
-    ...accumulator,
-    [pubkey.toBase58()]: mergeAccountMetas(accumulator[pubkey.toBase58()], { pubkey, isSigner, isWritable })
-});
+    const mergeAccountMetas = (existingAccountMeta: AccountMeta | undefined, newAccountMeta: AccountMeta):AccountMeta => {
+        const mergedAccountMeta = existingAccountMeta ? {
+            pubkey: newAccountMeta.pubkey,
+            isSigner: existingAccountMeta.isSigner || newAccountMeta.isSigner,
+            isWritable: existingAccountMeta.isWritable || newAccountMeta.isWritable
+        } : newAccountMeta;
+
+        // if the key is the cryptid account, do not set it as a signer, as it will be "signed" by the
+        // cryptid program
+        if (isCryptidAccountMeta(mergedAccountMeta)) {
+            mergedAccountMeta.isSigner = false;
+        }
+        return mergedAccountMeta;
+    }
+
+    return ({
+        ...accumulator,
+        [pubkey.toBase58()]: mergeAccountMetas(accumulator[pubkey.toBase58()], {pubkey, isSigner, isWritable})
+    });
+};
 
 // Extract all account public keys from the instructions, remove duplicates, and return them as an array
-export const extractAccountMetas = (instructions: TransactionInstruction[]):AccountMeta[] =>
-    Array.from(
-        Object.values(
-            instructions
-                .flatMap(instruction => instruction.keys)
-                .reduce(accountMetaReducer, {})
-        )
+export const extractAccountMetas = (instructions: TransactionInstruction[], cryptidAccount: CryptidAccount):AccountMeta[] =>
+    Object.values(
+        instructions
+            .flatMap(instruction => [...instruction.keys, toAccountMeta(instruction.programId, false, false)])
+            .reduce(accountMetaReducer(cryptidAccount), {})
     )
+
+export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
+    pubkey: publicKey,
+    isWritable,
+    isSigner,
+})
 
 // Convert TransactionAccountMetas, with an array of accounts, into Solana Account Metas
 // TODO encapsulate in CryptidTransaction perhaps?
 export const transactionAccountMetasToAccountMetas =
-    (transactionAccountMetas: TransactionAccountMeta[], accounts: PublicKey[]):AccountMeta[] =>
-        Array.from(
+    (transactionAccountMetas: TransactionAccountMeta[], accounts: PublicKey[], cryptidAccount: CryptidAccount):AccountMeta[] =>
             Object.values(
-        transactionAccountMetas.map(tam => fromTransactionAccountMeta(tam, accounts[tam.key])).reduce(accountMetaReducer, {})
+        transactionAccountMetas.map(tam => fromTransactionAccountMeta(tam, accounts[tam.key])).reduce(accountMetaReducer(cryptidAccount), {})
             )
-        )
-
 
 export const uniqueKeys = uniqBy<PublicKey, string>(k => k.toBase58())
 

@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 /// The data for an on-chain Cryptid Account
 #[account]
+#[derive(Default)]
 pub struct CryptidAccount {
     /// The middleware, if any, used by this cryptid account
     pub middleware: Option<Pubkey>,

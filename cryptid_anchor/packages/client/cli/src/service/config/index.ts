@@ -8,7 +8,7 @@ import {
   Connection,
   Keypair,
 } from '@solana/web3.js'
-import {ExtendedCluster} from '@identity.com/cryptid-core'
+import {ExtendedCluster} from 'packages/client/core/src'
 import {omit} from 'ramda'
 
 const DEFAULT_CONFIG_FILE = path.join(

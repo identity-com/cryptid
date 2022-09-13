@@ -1,6 +1,6 @@
 import {PublicKey} from "@solana/web3.js";
-import {deriveCryptidAccountAddress} from "@identity.com/cryptid-program-tests/util/cryptid";
 import {didToPDA} from "./did";
+import {getCryptidAccountAddress} from "./cryptid";
 
 export class CryptidAccount {
     constructor(
@@ -18,7 +18,7 @@ export class CryptidAccount {
 
     static async build(did: string, index: number = 0) {
         const didAccount = await didToPDA(did);
-        const [address, bump] = await deriveCryptidAccountAddress(didAccount, index);
+        const [address, bump] = await getCryptidAccountAddress(didAccount, index);
 
         return new CryptidAccount(address, bump, index, did, didAccount);
     }

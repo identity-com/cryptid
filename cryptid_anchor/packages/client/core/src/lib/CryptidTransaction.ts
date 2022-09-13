@@ -1,12 +1,24 @@
 import {InstructionData, TransactionAccount, TransactionAccountMeta} from "../types";
-import {AccountMeta, PublicKey, TransactionInstruction} from "@solana/web3.js";
-import {extractAccountMetas, toInstructionData, transactionAccountMetasToAccountMetas, uniqueKeys} from "./cryptid";
-import {Program} from "@project-serum/anchor";
+import {AccountMeta, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {
+    extractAccountMetas,
+    toAccountMeta,
+    toInstructionData,
+    transactionAccountMetasToAccountMetas,
+    uniqueKeys
+} from "./cryptid";
+import {Accounts, Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {CryptidAccount} from "./CryptidAccount";
 
-const NULL_KEY = new PublicKey("00000000000000000000000000000000")
+// Used to replace the current signer
+// so that the InstructionData are required to reference the signer in a separate position in the array,
+// and not index 3. This is because the signer is not known at creation time.
+// TODO - PublicKey.default uses the default key 11111111111111111111111111111111 which is the same as the system program.
+// This is unsuitable as it may be referenced in the instructions somewhere. So we generate a "single use" key here.
+// It feels hacky - is there a better alternative?
+const NULL_KEY = Keypair.generate().publicKey // PublicKey.default;
 
 export class CryptidTransaction {
     constructor(
@@ -21,7 +33,7 @@ export class CryptidTransaction {
         authority: PublicKey,
         solanaInstructions: TransactionInstruction[]
     ):CryptidTransaction {
-        const accountMetas = extractAccountMetas(solanaInstructions);
+        const accountMetas = extractAccountMetas(solanaInstructions, cryptidAccount);
         // The accounts available to the instructions are in the following order:
         // Execute Transaction Accounts:
         // 0 - cryptid account
@@ -31,24 +43,33 @@ export class CryptidTransaction {
         // ... remaining accounts
         //
         // * These accounts are omitted from the Propose Transaction Accounts but included in the execute instructions
-        const availableInstructionAccounts = uniqueKeys([
-            cryptidAccount.address,
+        const namedAccountList = [cryptidAccount.address,
             cryptidAccount.didAccount,
             DID_SOL_PROGRAM,
-            // This key is added in place of the signer,
+            // This key is added in place of the signer (aka authority),
             // so that the InstructionData are required to reference the signer in a separate position in the array,
-            // and not index 3. This is because the signer is not known at creation time.
+            // and not index 3. This is because the signer at execute time is not known at creation time,
+            // and may be different to the authority here.
             // TODO: This is not the case for DirectExecute, so we could optimise here.
-            NULL_KEY,
+            NULL_KEY];
+        const availableInstructionAccounts = uniqueKeys([
+            ...namedAccountList,
             ...accountMetas.map(a => a.pubkey)
         ]);
         const instructions = solanaInstructions.map(toInstructionData(availableInstructionAccounts));
+        const filteredAccountMetas = accountMetas.filter(a => !namedAccountList.map(account => account.toBase58()).includes(a.pubkey.toBase58()));
+
+        console.log("availableInstructionAccounts", availableInstructionAccounts.map(a => a.toString()));
+        console.log("instructions", instructions);
+        console.log("accountMetas", accountMetas.map(a => ({pubkey: a.pubkey.toString(), isSigner: a.isSigner, isWritable: a.isWritable})));
+        console.log("filteredAccountMetas", filteredAccountMetas.map(a => ({pubkey: a.pubkey.toString(), isSigner: a.isSigner, isWritable: a.isWritable})));
+        console.log("original accountMetas", solanaInstructions.flatMap(i => i.keys).map(a => ({pubkey: a.pubkey.toString(), isSigner: a.isSigner, isWritable: a.isWritable})));
 
         return new CryptidTransaction(
             cryptidAccount,
             authority,
             instructions,
-            accountMetas
+            filteredAccountMetas
         )
     }
 
@@ -64,7 +85,8 @@ export class CryptidTransaction {
             instructions.flatMap(i =>
                 (i.accounts as TransactionAccountMeta[])
             ),
-            accounts
+            accounts,
+            cryptidAccount
         );
 
         return new CryptidTransaction(
@@ -74,6 +96,7 @@ export class CryptidTransaction {
             accountMetas
         )
     }
+
 
     // TODO move transactionAccountAddress into constructor?
     propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
@@ -118,8 +141,8 @@ export class CryptidTransaction {
             this.cryptidAccount.index
         ).accounts({
                 cryptidAccount: this.cryptidAccount.address,
-                didProgram: DID_SOL_PROGRAM,
                 did: this.cryptidAccount.didAccount,
+                didProgram: DID_SOL_PROGRAM,
                 signer: this.authority,
             }
         ).remainingAccounts(

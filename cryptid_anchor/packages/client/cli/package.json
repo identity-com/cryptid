@@ -1,15 +1,15 @@
 {
-  "name": "cli",
+  "name": "@identity.com/cryptid-cli",
   "version": "0.0.0",
   "description": "Cryptid CLI",
   "author": "dankelleher @dankelleher",
   "bin": {
     "cryptid": "./bin/run"
   },
-  "homepage": "https://github.com/dankelleher/hello-world",
+  "homepage": "https://github.com/identity-com/cryptid",
   "license": "MIT",
   "main": "dist/index.js",
-  "repository": "dankelleher/hello-world",
+  "repository": "identity-com/cryptid",
   "files": [
     "/bin",
     "/dist",
@@ -21,7 +21,7 @@
     "@oclif/core": "^1.13.10",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1",
-    "@solana/spl-token": "^0.3.4",
+    "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.60.0",
     "did-resolver": "^4.0.0",
     "ramda": "^0.28.0",
@@ -47,7 +47,7 @@
   "oclif": {
     "bin": "cryptid",
     "dirname": "cryptid",
-    "commands": "./dist/commands",
+    "commands": "src/commands",
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
@@ -60,7 +60,7 @@
     }
   },
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "shx rm -rf dist && tsc -b ../../../tsconfig.json",
     "lint": "eslint . --ext .ts --config .eslintrc",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "yarn lint",
@@ -71,7 +71,7 @@
   "engines": {
     "node": ">=12.0.0"
   },
-  "bugs": "https://github.com/dankelleher/hello-world/issues",
+  "bugs": "https://github.com/identity-com/cryptid/issues",
   "keywords": [
     "oclif"
   ],

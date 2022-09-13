@@ -1,9 +1,9 @@
 import {Flags} from '@oclif/core'
 import {PublicKey, Transaction} from '@solana/web3.js'
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  Token,
-  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddress,
 } from '@solana/spl-token'
 import * as flags from '../../lib/flags'
 import Base from '../base'
@@ -13,9 +13,7 @@ export const getAssociatedTokenAccount = async (
   mint: PublicKey,
   owner: PublicKey,
 ): Promise<PublicKey> =>
-  Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress(
     mint,
     owner,
     true,
@@ -26,7 +24,7 @@ export default class TokenTransfer extends Base {
 
   static flags = {
     ...flags.common,
-    mint: Flags.build<PublicKey>({
+    mint: Flags.custom<PublicKey>({
       char: 'm',
       description: 'The SPL-Token mint(base58)',
       required: true,
@@ -89,9 +87,7 @@ export default class TokenTransfer extends Base {
       if (!recipientATAAccount) {
         this.log('Creating a token account for ' + to)
         const createATAInstruction =
-          Token.createAssociatedTokenAccountInstruction(
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-            TOKEN_PROGRAM_ID,
+          createAssociatedTokenAccountInstruction(
             flags.mint as PublicKey,
             recipientAssociatedTokenAccount,
             to,
@@ -102,12 +98,10 @@ export default class TokenTransfer extends Base {
       }
     }
 
-    const transferInstruction = Token.createTransferInstruction(
-      TOKEN_PROGRAM_ID,
+    const transferInstruction = createTransferInstruction(
       senderAssociatedTokenAccount,
       recipientAssociatedTokenAccount,
       cryptidAddress,
-      [],
       args.amount,
     )
     instructions.push(transferInstruction)

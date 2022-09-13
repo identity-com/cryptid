@@ -1,5 +1,5 @@
 import { Wallet } from '../types/crypto';
-import { PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
+import {ConfirmOptions, PublicKey, Transaction, TransactionSignature} from '@solana/web3.js';
 import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
 import { DIDDocument } from 'did-resolver';
 import {DidSolIdentifier, DidSolService} from '@identity.com/sol-did-client';
@@ -8,6 +8,7 @@ import {didService} from "../lib/did";
 import {CryptidService} from "../service/cryptid";
 import {CryptidAccount} from "../lib/CryptidAccount";
 import {TransactionAccount} from "../types";
+import {AnchorProvider} from "@project-serum/anchor";
 
 export abstract class AbstractCryptid implements Cryptid {
   protected options: CryptidOptions;
@@ -37,9 +38,13 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   async sign(transaction: Transaction): Promise<Transaction> {
-    return this.service().then(service => service.directExecute(
-        transaction.instructions
-    ))
+    const cryptidService = await this.service();
+    const cryptidTx = await cryptidService.directExecute(transaction);
+    // TODO why do we need this, if we are adding the wallet to the anchor provider?
+    // Anchor should be signing the transaction for us already
+    cryptidTx.recentBlockhash = await this.options.connection.getLatestBlockhash().then(blockhash => blockhash.blockhash);
+    cryptidTx.feePayer = this.wallet.publicKey;
+    return this.wallet.signTransaction(cryptidTx);
   }
 
   async signLarge(transaction: Transaction): Promise<{
@@ -48,7 +53,7 @@ export abstract class AbstractCryptid implements Cryptid {
   }> {
     const service = await this.service();
 
-    const [proposeTransaction, transactionAccountAddress] = await service.propose(transaction.instructions);
+    const [proposeTransaction, transactionAccountAddress] = await service.propose(transaction);
     const executeTransaction = await service.execute(transactionAccountAddress);
 
     return {
@@ -66,18 +71,20 @@ export abstract class AbstractCryptid implements Cryptid {
    * operations, such as addKey, addController etc. It contains no
    * cryptid-specific functionality so is not appropriate to expose to the interface itself
    * @param transaction
+   * @param confirmOptions
    * @private
    */
-  protected async send(
-    transaction: Transaction
+  async send(
+    transaction: Transaction,
+    confirmOptions: ConfirmOptions
   ): Promise<TransactionSignature> {
-    const signature = await this.options.connection.sendRawTransaction(
-      transaction.serialize()
-    );
-    if (this.options.waitForConfirmation)
-      await this.options.connection.confirmTransaction(signature);
-
-    return signature;
+    console.log("Signatures")
+    transaction.signatures.map((sig) => {
+      console.log(`Signature: ${sig.signature?.toString('base64')}`);
+      console.log(`Pubkey: ${sig.publicKey.toString()}`);
+    });
+    // This cast is ok, as it is created as an AnchorProvider in the service constructor
+    return this.service().then(service => (service.program.provider as AnchorProvider).sendAndConfirm(transaction, [], confirmOptions));
   }
 
   /**

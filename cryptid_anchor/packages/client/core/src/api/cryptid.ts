@@ -82,4 +82,9 @@ export interface Cryptid {
   as(did: string): Cryptid;
 
   additionalKeys(): Promise<PublicKey[]>;
+
+  send(
+      transaction: Transaction,
+      confirmOptions: ConfirmOptions
+  ): Promise<TransactionSignature>
 }

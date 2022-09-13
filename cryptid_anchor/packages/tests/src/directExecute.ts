@@ -1,14 +1,14 @@
 import * as anchor from "@project-serum/anchor";
 import {AnchorProvider, Program} from "@project-serum/anchor";
-import {CryptidAnchor} from "../../target/types/cryptid_anchor";
-import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram} from "@solana/web3.js";
+import {CryptidAnchor} from "../../../target/types/cryptid_anchor";
+import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction} from "@solana/web3.js";
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, toAccountMeta} from "./util/cryptid";
 import {addKeyToDID, initializeDIDAccount} from "./util/did";
-import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
-import {InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {fund, createTestContext, balanceOf, confirm} from "./util/anchorUtils";
+import {build, Cryptid, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -23,6 +23,8 @@ describe("directExecute", () => {
     let didAccount: PublicKey;
     let cryptidAccount: PublicKey;
     let cryptidBump: number;
+
+    let cryptid:Cryptid;
 
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
 
@@ -49,6 +51,7 @@ describe("directExecute", () => {
 
     before('Set up generative Cryptid Account', async () => {
         [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
+        cryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, authority, {connection: provider.connection});
 
         await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     })
@@ -56,9 +59,28 @@ describe("directExecute", () => {
     it("can transfer through Cryptid", async () => {
         const recipient = Keypair.generate();
 
+        // A transaction that sends 1 SOL to the recipient
+        const { blockhash: recentBlockhash } = await provider.connection.getLatestBlockhash();
+        const transaction = new Transaction({ recentBlockhash }).add(SystemProgram.transfer({
+            fromPubkey: cryptidAccount,
+            toPubkey: recipient.publicKey,
+            lamports: LAMPORTS_PER_SOL
+        }))
+
+        console.log({
+            cryptidAccount: cryptidAccount.toString(),
+            recipient: recipient.publicKey.toString(),
+            authority: authority.publicKey.toString(),
+        })
+
         const previousBalance = await balanceOf(cryptidAccount);
 
-        await directExecute(recipient);
+        const signedTransaction = await cryptid.sign(transaction);
+
+        console.log("Sending...")
+        await cryptid.send(signedTransaction, { skipPreflight: true });
+
+        // await directExecute(recipient);
 
         const currentBalance = await balanceOf(cryptidAccount);
 

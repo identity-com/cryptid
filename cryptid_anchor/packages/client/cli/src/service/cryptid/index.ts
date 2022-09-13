@@ -1,4 +1,4 @@
-import {build as buildCryptid, Cryptid, util} from '@identity.com/cryptid-core'
+import {build as buildCryptid, Cryptid, util} from 'packages/client/core/src'
 import {Config} from '../config'
 import {VerificationMethod} from 'did-resolver'
 import {PublicKey, SystemProgram, Transaction} from '@solana/web3.js'

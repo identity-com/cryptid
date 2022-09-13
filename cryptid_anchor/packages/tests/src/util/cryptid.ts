@@ -7,10 +7,10 @@ import {
     CRYPTID_PROGRAM,
     TIME_DELAY_MIDDLEWARE_PROGRAM
 } from "./constants";
-import {InstructionData, TransactionAccountMeta} from "../../client/core";
+import {InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
 import BN from "bn.js";
 import {Program} from "@project-serum/anchor";
-import {Cryptid} from "../../client/idl";
+import {Cryptid} from "@identity.com/cryptid-idl";
 
 export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
     pubkey: publicKey,

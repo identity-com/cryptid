@@ -1,7 +1,7 @@
 import {Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
-import {AnchorProvider, Program, Provider} from "@project-serum/anchor";
+import {AnchorProvider, Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { Cryptid, CheckPass, CheckRecipient, TimeDelay } from "../../client/idl";
+import { Cryptid, CheckPass, CheckRecipient, TimeDelay } from "../../../client/idl/src";
 
 const envProvider = anchor.AnchorProvider.env();
 const envProgram = anchor.workspace.CryptidAnchor as Program<Cryptid>;
@@ -20,13 +20,15 @@ if (!process.env.QUIET) {
 // The exported Anchor wallet type is messed up at the moment, so we define it indirectly here
 export type Wallet = AnchorProvider['wallet'];
 
-export const fund = async (publicKey: PublicKey, amount: number = LAMPORTS_PER_SOL) => {
+export const confirm = async (txSig: string) => {
     const blockhash = await envProvider.connection.getLatestBlockhash();
-    const tx = await envProvider.connection.requestAirdrop(publicKey, amount);
-    // wait for the airdrop
     await envProvider.connection.confirmTransaction({
-        ...blockhash, signature: tx
+        ...blockhash, signature: txSig
     }, 'confirmed');
+}
+
+export const fund = async (publicKey: PublicKey, amount: number = LAMPORTS_PER_SOL) => {
+    await envProvider.connection.requestAirdrop(publicKey, amount).then(confirm);
 }
 
 export const balanceOf = (publicKey: PublicKey):Promise<number> => envProvider.connection.getAccountInfo(publicKey).then(a => a ? a.lamports : 0);

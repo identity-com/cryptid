@@ -4,6 +4,8 @@
   "scripts": {
     "build": "tsc"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
     "@identity.com/cryptid-idl": "1.0.0",
     "@identity.com/sol-did-client": "^3.0.1-beta1",

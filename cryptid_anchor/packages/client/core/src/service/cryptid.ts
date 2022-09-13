@@ -1,4 +1,4 @@
-import {ConfirmOptions, Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {ConfirmOptions, Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
 import {Wallet} from "../types/crypto";
 import {AnchorProvider, Program} from "@project-serum/anchor";
 import {Cryptid, CryptidIDL} from "@identity.com/cryptid-idl";
@@ -8,7 +8,7 @@ import {CryptidTransaction} from "../lib/CryptidTransaction";
 import {CryptidAccount} from "../lib/CryptidAccount";
 
 export class CryptidService {
-    private program: Program<Cryptid>;
+    readonly program: Program<Cryptid>;
     private authorityKey: PublicKey;
 
     constructor(authority: Wallet, readonly account: CryptidAccount, connection: Connection, opts: ConfirmOptions = {}) {
@@ -38,21 +38,20 @@ export class CryptidService {
         ]));
     }
 
-    public async propose(instructions: TransactionInstruction[]): Promise<[Transaction, PublicKey]> {
+    public async propose(transaction: Transaction): Promise<[Transaction, PublicKey]> {
         const transactionAccountAddress = Keypair.generate();
         const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
             this.account,
             this.authorityKey,
-            instructions
+            transaction.instructions
         );
-        // TODO expose ability to return instruction?
-        const transaction = await cryptidTransaction.propose(this.program, transactionAccountAddress.publicKey)
+        const proposeTransaction = await cryptidTransaction.propose(this.program, transactionAccountAddress.publicKey)
             .signers(
                 // The only signer in a proposal (other than an authority on the DID) is the transaction account
                 [transactionAccountAddress]
             ).transaction();
 
-        return [transaction, transactionAccountAddress.publicKey];
+        return [proposeTransaction, transactionAccountAddress.publicKey];
     }
 
     public async execute(transactionAccountAddress: PublicKey, signers: Keypair[] = []): Promise<Transaction> {
@@ -65,23 +64,16 @@ export class CryptidService {
             this.authorityKey,
             transactionAccount
         );
-        // TODO expose ability to return instruction?
         return cryptidTransaction.execute(this.program, transactionAccountAddress)
             .signers([...signers]).transaction();
     }
 
-    public async directExecute(instructions: TransactionInstruction[]): Promise<Transaction> {
-        const transactionAccountAddress = Keypair.generate();
+    public async directExecute(transaction: Transaction): Promise<Transaction> {
         const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
             this.account,
             this.authorityKey,
-            instructions
+            transaction.instructions,
         );
-        // TODO expose ability to return instruction?
-        return cryptidTransaction.directExecute(this.program)
-            .signers(
-                // The only signer in a proposal (other than an authority on the DID) is the transaction account
-                [transactionAccountAddress]
-            ).transaction();
+        return cryptidTransaction.directExecute(this.program).transaction();
     }
 }

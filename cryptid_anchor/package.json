@@ -1,10 +1,13 @@
 {
     "private": true,
+    "scripts": {
+        "test": "yarn workspace @identity.com/cryptid-core build && anchor test"
+    },
     "workspaces": [
-        "packages/client/cli",
-        "packages/client/core",
         "packages/client/idl",
         "packages/client/middleware/createRecipient",
+        "packages/client/core",
+        "packages/client/cli",
         "packages/tests"
     ]
 }
