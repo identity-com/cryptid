@@ -70,7 +70,7 @@ describe('on-chain transfer', function () {
     console.log('SystemProgram: ', SystemProgram.programId.toBase58());
   });
 
-  it('should transfer from cryptid to signer and random address', async () => {
+  it.skip('should transfer from cryptid to signer and random address', async () => {
     const transactionSeed = 'transaction';
 
     const transferData = SystemProgram.transfer({
