@@ -4,7 +4,7 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { DIDDocument, ServiceEndpoint } from 'did-resolver';
+import { DIDDocument } from 'did-resolver';
 import { Signer } from '../types/crypto';
 import { NonEmptyArray } from '../types/lang';
 
@@ -55,43 +55,6 @@ export interface Cryptid {
   }>;
 
   cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;
-
-  /**
-   * Adds a key to your the Crytid account
-   * @param publicKey The public key to add
-   * @param alias A unique alias for that key
-   */
-  addKey(publicKey: PublicKey, alias: string): Promise<TransactionSignature>;
-
-  /**
-   * Removes a key from the account
-   * @param alias The alias of the key to remove
-   */
-  removeKey(alias: string): Promise<TransactionSignature>;
-
-  /**
-   * Adds a service to the Cryptid account instance
-   * @param service The service to add
-   */
-  addService(service: ServiceEndpoint): Promise<TransactionSignature>;
-
-  /**
-   * Removes a service form the Cryptid account
-   * @param alias The alias of the service to remove
-   */
-  removeService(alias: string): Promise<TransactionSignature>;
-
-  /**
-   * Adds a controller to the Cryptid account
-   * @param did The DID of the controller to add
-   */
-  addController(did: string): Promise<TransactionSignature>;
-
-  /**
-   * Removes a controller from the Cryptis account
-   * @param did The DID of the controller to remove
-   */
-  removeController(did: string): Promise<TransactionSignature>;
 
   /**
    * Retrieves the DID document for this Cryptid account

@@ -15,6 +15,8 @@ import { publicKeyToDid } from '../../../../../src/lib/solana/util';
 //   normalizeSigner,
 // } from '../../../../../src/lib/util';
 import { stubGetBlockhash } from '../../../../utils/lang';
+import { largeExecute } from '../../../../../src/lib/solana/transactions/largeExecute';
+import { normalizeSigner } from '../../../../../src/lib/util';
 // import { largeExecute } from "../../../../../src/lib/solana/transactions/largeExecute";
 
 chai.use(chaiSubset);
@@ -45,23 +47,23 @@ describe('transactions/largeExecute', () => {
 
   it('should create and sign a largeExecute transaction', async () => {
     const txToWrap = await makeSimpleTransaction();
-    // const { setupTransactions, executeTransaction } = await largeExecute(
-    //   txToWrap,
-    //   did,
-    //   payer.publicKey,
-    //   [normalizeSigner(payer)]
-    // );
-    // expect(setupTransactions).to.have.lengthOf(1);
-    //
-    // expect(setupTransactions[0].signatures).to.have.length(1);
-    // expect(
-    //   setupTransactions[0].signatures[0].publicKey.toString()
-    // ).to.equal(payer.publicKey.toString());
-    //
-    // expect(executeTransaction.signatures).to.have.length(1);
-    // expect(
-    //   executeTransaction.signatures[0].publicKey.toString()
-    // ).to.equal(payer.publicKey.toString());
+    const { setupTransactions, executeTransaction } = await largeExecute(
+      txToWrap,
+      did,
+      payer.publicKey,
+      [normalizeSigner(payer)]
+    );
+    expect(setupTransactions).to.have.lengthOf(1);
+    
+    expect(setupTransactions[0].signatures).to.have.length(1);
+    expect(
+      setupTransactions[0].signatures[0].publicKey.toString()
+    ).to.equal(payer.publicKey.toString());
+    
+    expect(executeTransaction.signatures).to.have.length(1);
+    expect(
+      executeTransaction.signatures[0].publicKey.toString()
+    ).to.equal(payer.publicKey.toString());
     expect(did).to.not.be.undefined
     expect(txToWrap).to.not.be.undefined
   });

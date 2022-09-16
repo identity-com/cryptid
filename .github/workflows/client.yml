@@ -49,7 +49,7 @@ jobs:
       matrix:
         node: ['16.x']
         os: [ubuntu-latest]
-        solana: ['v1.9.2']
+        solana: ['v1.10.25']
         rust: ['1.59']
 
     steps:

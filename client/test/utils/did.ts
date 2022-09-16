@@ -1,12 +1,11 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { publicKeyToDid } from '../../src/lib/solana/util';
 import { DIDDocument, ServiceEndpoint, VerificationMethod } from 'did-resolver';
-import { DIDComponent } from '../../src/lib/solana/transactions/did/util';
 import chai from 'chai';
 import { pluck } from 'ramda';
 import { randomUUID } from 'crypto';
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
-import * as SolDid from '@identity.com/sol-did-client';
+import { DidSolIdentifier } from '@identity.com/sol-did-client';
+// import * as SolDid from '@identity.com/sol-did-client';
 import { dummyDIDAccountInfo } from './solana';
 import * as Sinon from 'sinon';
 import Assertion = Chai.Assertion;
@@ -49,23 +48,6 @@ export const expectDocumentNotToIncludeKey = (
   return expect(keysInDocument(document)).not.to.include(newKey.toString());
 };
 
-export const serviceAlias = (component: DIDComponent): string =>
-  component.id.substring(component.id.indexOf('#') + 1);
-const servicesInDocument = (document: DIDDocument): string[] =>
-  (document.service || []).map(serviceAlias);
-
-export const expectDocumentToIncludeService = (
-  document: DIDDocument,
-  service: string
-): Assertion => expect(servicesInDocument(document)).to.include(service);
-
-export const expectDocumentNotToIncludeService = (
-  document: DIDDocument,
-  service: string
-): Assertion => {
-  return expect(servicesInDocument(document)).not.to.include(service);
-};
-
 export const expectDocumentToIncludeController = (
   document: DIDDocument,
   controller: string
@@ -86,10 +68,11 @@ export const stubResolveDID =
     key: Keypair,
     registered: boolean
   ): Promise<DIDDocument> => {
-    const decentralizedIdentifier = DecentralizedIdentifier.parse(did);
-    const pdaAddress = await decentralizedIdentifier.pdaSolanaPubkey();
+    const decentralizedIdentifier = DidSolIdentifier.parse(did);
+    const [pdaAddress] = await decentralizedIdentifier.dataAccount();
     const document = didDocument(key.publicKey);
-    sandbox.stub(SolDid, 'resolve').withArgs(did).resolves(document);
+    // TODO: Reenable stub
+    // sandbox.stub(SolDid, 'resolve').withArgs(did).resolves(document);
 
     // we need both for this test (stub SolDid and Connection) as the code resolves the doc
     // and checks if the DID is registered as separate operations. This could be optimised later.

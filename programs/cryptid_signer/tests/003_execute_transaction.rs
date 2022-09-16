@@ -35,7 +35,8 @@ async fn execute_transaction_test() {
         "Return Account: `{}`",
         return_account.pubkey()
     );
-    let return_data = (0..program_values.gen_range(1, 10))
+    let operation: u8 = program_values.gen_range(1, 10);
+    let return_data = (0..operation)
         .map(|_| program_values.gen())
         .collect::<Vec<u8>>();
     trace!(target: LOG_TARGET, "Return data: `{:?}`", return_data);

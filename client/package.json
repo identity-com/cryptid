@@ -21,7 +21,7 @@
     "analyze": "size-limit --why",
     "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
     "test-e2e-pattern": "mocha test/e2e",
-    "start-validator": "solana-test-validator --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ../target/deploy/cryptid_signer.so --bpf-program idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM ../programs/cryptid_signer/tests/fixtures/sol_did_1.0.0.so --reset"
+    "start-validator": "solana-test-validator --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ../target/deploy/cryptid_signer.so --bpf-program didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc ../programs/cryptid_signer/tests/fixtures/sol_did_2.0.0.so --bpf-program idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM ../programs/cryptid_signer/tests/fixtures/sol_did_1.0.0.so --account 78CJ7rLRbMg1eLKudJqmQp1wzPu1NEo9qRJhMXQKoNe7 ../programs/cryptid_signer/tests/fixtures/sol_did_2.0.0_idl-account.json --reset"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
@@ -32,7 +32,7 @@
     ],
     "all": true,
     "check-coverage": true,
-    "branches": 74,
+    "branches": 72,
     "lines": 87,
     "functions": 85,
     "statements": 88
@@ -92,8 +92,8 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@identity.com/sol-did-client": "^2.0.0",
-    "@solana/web3.js": "^1.27.0",
+    "@identity.com/sol-did-client": "^3.0.1-beta1",
+    "@solana/web3.js": "1.60.0",
     "@types/ramda": "^0.28.0",
     "borsh": "^0.6.0",
     "did-resolver": "^3.1.0",

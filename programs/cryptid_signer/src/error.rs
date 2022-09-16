@@ -62,4 +62,13 @@ pub enum CryptidSignerError {
         /// The key that tried to change the transaction
         key: SigningKeyData,
     },
+    /// Non-signing key marked as a signer
+    #[error_msg(
+        "The key `{}` was passed as a SigningKey but is not a signer of the transaction",
+        key
+    )]
+    KeyMustBeSigner {
+        /// The key that pretended to be a signer
+        key: Pubkey,
+    },
 }

@@ -12,12 +12,12 @@ use cryptid_signer::state::{
 use cryptid_signer::{GenerativeCryptidSeeder, TransactionSeeder};
 use log::*;
 use num_traits::ToPrimitive;
-use sol_did::solana_program::clock::UnixTimestamp;
-use sol_did::solana_program::pubkey::Pubkey;
 use solana_generator::{build_instruction, PDAGenerator, SolanaAccountMeta, SolanaInstruction};
 use solana_program_test::BanksClient;
 use solana_sdk::account::Account;
+use solana_sdk::clock::UnixTimestamp;
 use solana_sdk::hash::Hash;
+use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::{Keypair, Signature, Signer, SignerError};
 use solana_sdk::transaction::Transaction;
 use std::iter::{empty, once};
@@ -61,9 +61,10 @@ impl OnChainTransaction {
         data_size: usize,
         program_values: &mut ProgramValues<impl RngCore>,
     ) -> InstructionData {
+        let operation: u8 = program_values.gen_range(1, 10);
         InstructionData {
             program_id: program_values.gen_range(0, self.accounts.len()) as u8,
-            accounts: (0..program_values.gen_range(1, 10))
+            accounts: (0..operation)
                 .map(|_| TransactionAccountMeta {
                     key: program_values.gen_range(0, self.accounts.len()) as u8,
                     meta: AccountMeta::new(program_values.gen(), program_values.gen()),
@@ -132,8 +133,9 @@ impl OnChainTransaction {
                 _ => unreachable!(),
             }
         } else {
-            let operation = program_values.gen_range(0, 8);
-            match operation {
+            let operation8: u8 = program_values.gen_range(0, 8);
+            let operation4: u8 = program_values.gen_range(0, 4);
+            match operation8 {
                 0 => InstructionOperation::Push(
                     self.random_instruction(program_values.gen_range(0, 10), program_values),
                 ),
@@ -147,7 +149,7 @@ impl OnChainTransaction {
                 },
                 3 => InstructionOperation::AddAccounts {
                     index: program_values.gen_range(0, self.instructions.len() as u8),
-                    accounts: (0..program_values.gen_range(0, 4))
+                    accounts: (0..operation4)
                         .map(|_| TransactionAccountMeta {
                             key: program_values.gen_range(0, self.accounts.len() as u8),
                             meta: AccountMeta::new(program_values.gen(), program_values.gen()),
@@ -402,7 +404,7 @@ pub async fn create_program_values(
 
     let did: ClonableKeypair = Keypair::generate(&mut rng).into();
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
-    let did_pda = sol_did::state::get_sol_address_with_seed(&did.pubkey()).0;
+    let did_pda = sol_did::derive_did_account(&did.pubkey()).0;
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
     let did_program = sol_did::id();
     trace!(target: LOG_TARGET, "did_program: {}", did_program);
@@ -465,7 +467,7 @@ pub async fn propose_transaction(
     transaction_seed: String,
     overrides: ProposeOverrides,
 ) -> Vec<(SigningKeyBuild, UnixTimestamp)> {
-    let did_pda = sol_did::state::get_sol_address_with_seed(&program_values.did.pubkey()).0;
+    let did_pda = sol_did::derive_did_account(&program_values.did.pubkey()).0;
     let account_size = overrides.size.unwrap_or_else(|| {
         on_chain_transaction
             .calculate_size()

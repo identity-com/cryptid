@@ -48,8 +48,8 @@ describe('SimpleCryptid', () => {
   context('controller', () => {
     it('should return a new controlledCryptid interface when called with as()', async () => {
       const newController = 'did:sol:controller';
-      const updatedCrypid = await controlledCryptid.as(newController);
-      expect(updatedCrypid.did).to.equal(newController);
+      const updatedCryptid = await controlledCryptid.as(newController);
+      expect(updatedCryptid.did).to.equal(newController);
       // existing interface still has previous did as controller.
       expect(controlledCryptid.did).to.equal(did(controllerKeypair));
     });

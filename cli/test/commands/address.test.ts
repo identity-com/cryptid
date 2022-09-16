@@ -6,7 +6,7 @@ describe("address", () => {
     .command(["address"])
     .it("shows the address", (ctx) => {
       expect(ctx.stdout).to.contain(
-        "EUxLMi2Km3s9wxygRbAR3KKRBoQQZV1p8HAqyu3Dok8k"
+        "Entaq3Kbeq8bYJDBTpYwvV5advNMr3x4JZoB6two59z8\n"
       );
     });
 });

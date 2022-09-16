@@ -11,7 +11,7 @@
     "build": "cargo build",
     "test-programs": "cargo build-bpf && start-server-and-test start-validator http://localhost:8899/health test-programs:inner",
     "test-programs:inner": "cargo test && cargo test-bpf && yarn workspace programs test",
-    "start-validator": "solana-test-validator --reset --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ./target/deploy/cryptid_signer.so --bpf-program idDa4XeCjVwKcprVAo812coUQbovSZ4kDGJf2sPaBnM ./programs/cryptid_signer/tests/fixtures/sol_did_1.0.0.so",
+    "start-validator": "solana-test-validator --reset --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ./target/deploy/cryptid_signer.so --bpf-program didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc ./programs/cryptid_signer/tests/fixtures/sol_did_2.0.0.so",
     "start": "cd .. && yarn workspace @identity.com/cryptid-wallet start"
   },
   "cypress-cucumber-preprocessor": {

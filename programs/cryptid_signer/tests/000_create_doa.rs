@@ -30,7 +30,7 @@ async fn create_cryptid() {
     );
     let did = Keypair::generate(&mut rng);
     trace!(target: LOG_TARGET, "did: {}", did.pubkey());
-    let did_pda = sol_did::state::get_sol_address_with_seed(&did.pubkey()).0;
+    let did_pda = sol_did::derive_did_account(&did.pubkey()).0;
     trace!(target: LOG_TARGET, "did_pda: {}", did_pda);
     let did_program = sol_did_id();
     trace!(target: LOG_TARGET, "did_program: {}", did_program);
