@@ -10,7 +10,7 @@ import {
 import {Accounts, Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CryptidAccount} from "./CryptidAccount";
+import {CryptidAccountDetails} from "./CryptidAccountDetails";
 
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
@@ -22,14 +22,14 @@ const NULL_KEY = Keypair.generate().publicKey // PublicKey.default;
 
 export class CryptidTransaction {
     constructor(
-        readonly cryptidAccount: CryptidAccount,
+        readonly cryptidAccount: CryptidAccountDetails,
         readonly authority: PublicKey,
         readonly instructions: InstructionData[],
         readonly accountMetas: AccountMeta[]
     ) {}
 
     static fromSolanaInstructions(
-        cryptidAccount: CryptidAccount,
+        cryptidAccount: CryptidAccountDetails,
         authority: PublicKey,
         solanaInstructions: TransactionInstruction[]
     ):CryptidTransaction {
@@ -74,7 +74,7 @@ export class CryptidTransaction {
     }
 
     static fromTransactionAccount(
-        cryptidAccount: CryptidAccount,
+        cryptidAccount: CryptidAccountDetails,
         authority: PublicKey,
         transactionAccount: TransactionAccount
     ): CryptidTransaction {

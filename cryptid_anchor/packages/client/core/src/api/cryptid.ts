@@ -20,6 +20,9 @@ export type CryptidOptions = {
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
 };
+export type FindAllOptions = {
+  connection: Connection;
+}
 
 export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
   accountIndex: 0,

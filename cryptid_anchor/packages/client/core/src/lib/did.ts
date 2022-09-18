@@ -12,4 +12,5 @@ export const didToPublicKey = (did: string): PublicKey =>
     DidSolIdentifier.parse(did).authority;
 
 export const didToPDA = (did: string): Promise<PublicKey> =>
+    // TODO make dataAccount synchronous
     DidSolIdentifier.parse(did).dataAccount().then(dataAccount => dataAccount[0]);

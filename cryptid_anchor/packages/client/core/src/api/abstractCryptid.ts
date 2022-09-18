@@ -6,14 +6,17 @@ import {DidSolIdentifier, DidSolService} from '@identity.com/sol-did-client';
 import { NonEmptyArray } from '../types/lang';
 import {didService} from "../lib/did";
 import {CryptidService} from "../service/cryptid";
-import {CryptidAccount} from "../lib/CryptidAccount";
+import {CryptidAccountDetails} from "../lib/CryptidAccountDetails";
 import {TransactionAccount} from "../types";
 import {AnchorProvider} from "@project-serum/anchor";
 
 export abstract class AbstractCryptid implements Cryptid {
+  protected details: CryptidAccountDetails;
   protected options: CryptidOptions;
 
-  protected constructor(readonly did: string, options: CryptidOptions) {
+  protected constructor(details: CryptidAccountDetails, options: CryptidOptions) {
+    this.details = details;
+
     // combine default options and user-specified options
     // note - if nested options are added, this may need to be changed to a deep merge
     this.options = {
@@ -29,17 +32,20 @@ export abstract class AbstractCryptid implements Cryptid {
   }
 
   protected async service(): Promise<CryptidService> {
-    const account = await CryptidAccount.build(this.did, this.options.accountIndex)
-    return new CryptidService(this.wallet, account, this.options.connection, this.options.confirmOptions);
+    return new CryptidService(this.wallet, this.options.connection, this.options.confirmOptions);
+  }
+
+  get did(): string {
+    return this.details.ownerDID;
   }
 
   async address(): Promise<PublicKey> {
-    return CryptidAccount.build(this.did, this.options.accountIndex).then(account => account.address);
+    return this.details.address;
   }
 
   async sign(transaction: Transaction): Promise<Transaction> {
     const cryptidService = await this.service();
-    const cryptidTx = await cryptidService.directExecute(transaction);
+    const cryptidTx = await cryptidService.directExecute(this.details, transaction);
     // TODO why do we need this, if we are adding the wallet to the anchor provider?
     // Anchor should be signing the transaction for us already
     cryptidTx.recentBlockhash = await this.options.connection.getLatestBlockhash().then(blockhash => blockhash.blockhash);
@@ -53,9 +59,9 @@ export abstract class AbstractCryptid implements Cryptid {
   }> {
     const service = await this.service();
 
-    const [proposeTransaction, transactionAccountAddress] = await service.propose(transaction);
+    const [proposeTransaction, transactionAccountAddress] = await service.propose(this.details, transaction);
     // TODO fix - broken because it tries to load transactionAccountAddress
-    const executeTransaction = await service.execute(transactionAccountAddress);
+    const executeTransaction = await service.execute(this.details, transactionAccountAddress);
 
     return {
         setupTransactions: [proposeTransaction],
@@ -65,12 +71,12 @@ export abstract class AbstractCryptid implements Cryptid {
 
   async propose(transaction: Transaction): Promise<[Transaction, PublicKey]> {
     return this.service()
-        .then(service => service.propose(transaction))
+        .then(service => service.propose(this.details, transaction))
   }
 
   async execute(transactionAccountAddress: PublicKey): Promise<Transaction[]> {
     return this.service()
-        .then(service => service.execute(transactionAccountAddress))
+        .then(service => service.execute(this.details, transactionAccountAddress))
         .then(transaction => [transaction])
   }
 
@@ -151,6 +157,6 @@ export abstract class AbstractCryptid implements Cryptid {
 
   async listPendingTx(): Promise<[PublicKey, TransactionAccount][]> {
     return this.service()
-        .then(service => service.listPendingTransactions())
+        .then(service => service.listPendingTransactions(this.details))
   }
 }

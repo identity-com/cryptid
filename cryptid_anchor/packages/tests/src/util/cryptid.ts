@@ -52,7 +52,7 @@ export const cryptidTransferInstruction = (amount: number):InstructionData => (
         data: transferInstructionData(amount),
     });
 
-export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("cryptid_account"),
         DID_SOL_PROGRAM.toBuffer(),
@@ -62,7 +62,7 @@ export const deriveCryptidAccountAddress = (didAccount: PublicKey, index: number
     CRYPTID_PROGRAM
 );
 
-export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKey, nonce: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKey, nonce: number): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("check_recipient"),
         authority.toBuffer(),
@@ -71,7 +71,7 @@ export const deriveCheckRecipientMiddlewareAccountAddress = (authority: PublicKe
     CHECK_RECIPIENT_MIDDLEWARE_PROGRAM
 );
 
-export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, gatekeeperNetwork: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, gatekeeperNetwork: PublicKey): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("check_pass"),
         authority.toBuffer(),
@@ -80,7 +80,7 @@ export const deriveCheckPassMiddlewareAccountAddress = (authority: PublicKey, ga
     CHECK_PASS_MIDDLEWARE_PROGRAM
 );
 
-export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, seconds: number): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, seconds: number): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("time_delay"),
         authority.toBuffer(),
@@ -89,7 +89,7 @@ export const deriveTimeDelayMiddlewareAccountAddress = (authority: PublicKey, se
     TIME_DELAY_MIDDLEWARE_PROGRAM
 );
 
-export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (transaction_account: PublicKey): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (transaction_account: PublicKey): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("time_delay_creation_time"),
         transaction_account.toBuffer()
@@ -103,7 +103,7 @@ export const createCryptidAccount = async (
     middlewareAccount?: PublicKey,
     index: number = 0,
 ): Promise<[PublicKey, number]> => {
-    const [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(did, index);
+    const [cryptidAccount, cryptidBump] = deriveCryptidAccountAddress(did, index);
 
     await program.methods.create(
         middlewareAccount || null,  // anchor requires null instead of undefined

@@ -93,7 +93,7 @@ describe("directExecute", () => {
         // execute the Cryptid transaction
         const shouldFail = directExecute(recipient, instructionDataWithInvalidAccountIndex);
 
-        // TODO expose the actual error from the program
+        // TODO expose the error from the program
         return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
     });
 

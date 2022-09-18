@@ -26,5 +26,11 @@ export const toWallet = (keypair: Keypair): Wallet => ({
     signAllTransactions: defaultSignAllCallback(keypair),
 });
 
+export const noSignWallet = (): Wallet => ({
+    publicKey: Keypair.generate().publicKey,
+    signTransaction: () => Promise.reject(new Error('Not defined')),
+    signAllTransactions: () => Promise.reject(new Error('Not defined')),
+});
+
 export const normalizeSigner = (keypairOrWallet: Keypair | Wallet): Wallet =>
     isKeypair(keypairOrWallet) ? toWallet(keypairOrWallet) : keypairOrWallet;

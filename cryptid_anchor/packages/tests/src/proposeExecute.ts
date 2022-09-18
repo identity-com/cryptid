@@ -4,7 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import {
     createCryptidAccount,
     cryptidTransferInstruction,
-    deriveCryptidAccountAddress, makeTransfer,
+    makeTransfer,
     toAccountMeta
 } from "./util/cryptid";
 import {initializeDIDAccount} from "./util/did";

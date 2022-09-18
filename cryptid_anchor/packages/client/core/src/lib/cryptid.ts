@@ -10,7 +10,7 @@ import {Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 import {uniqBy} from "ramda";
 import {didToPDA} from "./did";
-import {CryptidAccount} from "./CryptidAccount";
+import {CryptidAccountDetails} from "./CryptidAccountDetails";
 
 // Creates a reference to an account, that is passed as part of cryptid instruction data for each account.
 const toTransactionAccountMeta = (publicKeyIndex: number, isWritable: boolean = false, isSigner: boolean = false): TransactionAccountMeta => ({
@@ -44,7 +44,7 @@ export const toInstructionData = (accounts: PublicKey[]) => (instruction: Transa
 // Given a set of accountMetas from a set of instructions, combine them, setting the signer and writable flags to true,
 // if any of the instructions require them.
 // Note, the cryptid account is not a signer of any instructions, since the program "signs".
-const accountMetaReducer = (cryptidAccount: CryptidAccount) => (accumulator: { [k: string]: AccountMeta }, { pubkey, isSigner, isWritable }: AccountMeta):{ [k: string]: AccountMeta } => {
+const accountMetaReducer = (cryptidAccount: CryptidAccountDetails) => (accumulator: { [k: string]: AccountMeta }, { pubkey, isSigner, isWritable }: AccountMeta):{ [k: string]: AccountMeta } => {
     const isCryptidAccountMeta = (accountMeta: AccountMeta) => accountMeta.pubkey.equals(cryptidAccount.address);
 
     const mergeAccountMetas = (existingAccountMeta: AccountMeta | undefined, newAccountMeta: AccountMeta):AccountMeta => {
@@ -69,7 +69,7 @@ const accountMetaReducer = (cryptidAccount: CryptidAccount) => (accumulator: { [
 };
 
 // Extract all account public keys from the instructions, remove duplicates, and return them as an array
-export const extractAccountMetas = (instructions: TransactionInstruction[], cryptidAccount: CryptidAccount):AccountMeta[] =>
+export const extractAccountMetas = (instructions: TransactionInstruction[], cryptidAccount: CryptidAccountDetails):AccountMeta[] =>
     Object.values(
         instructions
             .flatMap(instruction => [...instruction.keys, toAccountMeta(instruction.programId, false, false)])
@@ -85,14 +85,14 @@ export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false,
 // Convert TransactionAccountMetas, with an array of accounts, into Solana Account Metas
 // TODO encapsulate in CryptidTransaction perhaps?
 export const transactionAccountMetasToAccountMetas =
-    (transactionAccountMetas: TransactionAccountMeta[], accounts: PublicKey[], cryptidAccount: CryptidAccount):AccountMeta[] =>
+    (transactionAccountMetas: TransactionAccountMeta[], accounts: PublicKey[], cryptidAccount: CryptidAccountDetails):AccountMeta[] =>
             Object.values(
         transactionAccountMetas.map(tam => fromTransactionAccountMeta(tam, accounts[tam.key])).reduce(accountMetaReducer(cryptidAccount), {})
             )
 
 export const uniqueKeys = uniqBy<PublicKey, string>(k => k.toBase58())
 
-export const getCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): Promise<[PublicKey, number]> => PublicKey.findProgramAddress(
+export const getCryptidAccountAddress = (didAccount: PublicKey, index: number = 0): [PublicKey, number] => PublicKey.findProgramAddressSync(
     [
         anchor.utils.bytes.utf8.encode("cryptid_account"),
         DID_SOL_PROGRAM.toBuffer(),
