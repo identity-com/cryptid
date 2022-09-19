@@ -134,7 +134,7 @@ export class CryptidTransaction {
         return program.methods.executeTransaction(
             Buffer.from([]),  // TODO, support controller chain,
             this.cryptidAccount.bump,
-            this.cryptidAccount.index
+            0
         ).accounts({
                 cryptidAccount: this.cryptidAccount.address,
                 didProgram: DID_SOL_PROGRAM,

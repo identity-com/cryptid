@@ -8,8 +8,7 @@ import {
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CRYPTID_PROGRAM} from "../util/constants";
-import {InstructionData} from "@identity.com/cryptid-core";
+import {CryptidClient, InstructionData, CRYPTID_PROGRAM} from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -32,6 +31,8 @@ describe("Middleware: checkRecipient", () => {
 
     let recipient = Keypair.generate();
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
+
+    let cryptid: CryptidClient;
 
     const propose = async (transactionAccount: Keypair, instruction: InstructionData = transferInstructionData) =>
         program.methods.proposeTransaction(

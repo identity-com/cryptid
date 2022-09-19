@@ -4,12 +4,12 @@ import chaiAsPromised from "chai-as-promised";
 import {
     cryptidTransferInstruction,
     deriveCheckPassMiddlewareAccountAddress,
-    toAccountMeta, createCryptidAccount,
+    toAccountMeta, createCryptidAccount, makeTransfer,
 } from "../util/cryptid";
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf} from "../util/anchorUtils";
-import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CRYPTID_PROGRAM, GATEWAY_PROGRAM} from "../util/constants";
+import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {GATEWAY_PROGRAM} from "../util/constants";
 import {
     addGatekeeper,
     getExpireFeatureAddress,
@@ -19,7 +19,7 @@ import {
 import {GatekeeperService} from "@identity.com/solana-gatekeeper-lib";
 import {getGatewayTokenAddressForOwnerAndGatekeeperNetwork} from "@identity.com/solana-gateway-ts";
 import {beforeEach} from "mocha";
-import {InstructionData} from "@identity.com/cryptid-core";
+import {CRYPTID_PROGRAM, CryptidClient, InstructionData, Cryptid, CheckPassMiddleware} from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -29,6 +29,7 @@ describe("Middleware: checkPass", () => {
         program,
         provider,
         authority,
+        keypair,
         middleware: {
             checkPass: checkPassMiddlewareProgram,
         }
@@ -61,7 +62,7 @@ describe("Middleware: checkPass", () => {
     const getGatewayToken = (owner: PublicKey) => gatekeeperService.findGatewayTokenForOwner(owner)
 
     const setUpMiddleware = async (expireGatewayTokenOnUse: boolean) => {
-        [middlewareAccount, middlewareBump] = await deriveCheckPassMiddlewareAccountAddress(authority.publicKey, gatekeeperNetwork.publicKey);
+        [middlewareAccount, middlewareBump] = deriveCheckPassMiddlewareAccountAddress(authority.publicKey, gatekeeperNetwork.publicKey);
 
         await checkPassMiddlewareProgram.methods.create(gatekeeperNetwork.publicKey, middlewareBump, expireGatewayTokenOnUse).accounts({
             middlewareAccount,
@@ -146,6 +147,68 @@ describe("Middleware: checkPass", () => {
             gatekeeperService = await addGatekeeper(provider, gatekeeperNetwork, gatekeeper);
         }
     );
+
+    context('with the cryptid client', () => {
+        let cryptid: CryptidClient;
+        const makeTransaction = () => makeTransfer(cryptid.address(), recipient.publicKey);
+
+        beforeEach('Set up middleware PDA', async () => {
+            [middlewareAccount, middlewareBump] = deriveCheckPassMiddlewareAccountAddress(authority.publicKey, gatekeeperNetwork.publicKey);
+            const transaction = await new CheckPassMiddleware().createMiddleware({
+                authority,
+                connection: provider.connection,
+                expirePassOnUse: false,
+                keyAlias: 'cold',
+                opts: {},
+                gatekeeperNetwork: gatekeeperNetwork.publicKey
+            });
+
+            await provider.sendAndConfirm(transaction, [keypair]);
+        });
+        beforeEach('Set up Cryptid Account with middleware', async () => {
+            const middleware = [{
+                programId: checkPassMiddlewareProgram.programId,
+                address: middlewareAccount
+            }]
+
+            cryptid = await Cryptid.createFromDID(
+                DID_SOL_PREFIX + ':' + authority.publicKey,
+                authority,
+                middleware,
+                {connection: provider.connection, accountIndex: ++cryptidIndex }
+            )
+
+            await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
+        });
+
+        it("blocks a transfer with no gateway token", async () => {
+            // no gateway token exists for the authority
+            // propose a tx, which fails to pass through the middleware
+            const [proposeTransaction] = await cryptid.propose(makeTransaction());
+            const shouldFail = cryptid.send(proposeTransaction, { skipPreflight: true });
+
+            // TODO expose the error message
+            return expect(shouldFail).to.be.rejected;
+        });
+
+        it("allows a transfer if the authority has a valid gateway token", async () => {
+            const previousBalance = await balanceOf(cryptid.address());
+
+            // issue a gateway token to the authority
+            await createGatewayToken(authority.publicKey);
+
+            // send the propose tx (executing the middleware)
+            const [proposeTransaction, transactionAccountAddress] = await cryptid.propose(makeTransaction());
+            await cryptid.send(proposeTransaction, { skipPreflight: true });
+
+            // send the execute tx
+            const [executeTransaction] = await cryptid.execute(transactionAccountAddress);
+            await cryptid.send(executeTransaction, { skipPreflight: true });
+
+            const currentBalance = await balanceOf(cryptid.address());
+            expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+        });
+    });
 
     context('with a non-expiring gateway token', () => {
         beforeEach('Set up middleware PDA', () => setUpMiddleware(false));

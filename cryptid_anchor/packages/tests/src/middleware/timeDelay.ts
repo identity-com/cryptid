@@ -10,9 +10,8 @@ import {
 import {initializeDIDAccount} from "../util/did";
 import {fund, createTestContext, balanceOf, sleep} from "../util/anchorUtils";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {CRYPTID_PROGRAM} from "../util/constants";
 import BN from "bn.js";
-import {InstructionData} from "@identity.com/cryptid-core";
+import {InstructionData, CRYPTID_PROGRAM} from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;

@@ -1,6 +1,6 @@
 import { Wallet } from '../types/crypto';
 import {ConfirmOptions, PublicKey, Transaction, TransactionSignature} from '@solana/web3.js';
-import { Cryptid, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptid';
+import { CryptidClient, CryptidOptions, DEFAULT_CRYPTID_OPTIONS } from './cryptidClient';
 import { DIDDocument } from 'did-resolver';
 import {DidSolIdentifier, DidSolService} from '@identity.com/sol-did-client';
 import { NonEmptyArray } from '../types/lang';
@@ -10,7 +10,7 @@ import {CryptidAccountDetails} from "../lib/CryptidAccountDetails";
 import {TransactionAccount} from "../types";
 import {AnchorProvider} from "@project-serum/anchor";
 
-export abstract class AbstractCryptid implements Cryptid {
+export abstract class AbstractCryptidClient implements CryptidClient {
   protected details: CryptidAccountDetails;
   protected options: CryptidOptions;
 
@@ -25,7 +25,7 @@ export abstract class AbstractCryptid implements Cryptid {
     };
   }
 
-  abstract as(did: string): Cryptid;
+  abstract as(did: string): CryptidClient;
 
   document(): Promise<DIDDocument> {
     return this.didClient().then(client => client.resolve());
@@ -39,7 +39,7 @@ export abstract class AbstractCryptid implements Cryptid {
     return this.details.ownerDID;
   }
 
-  async address(): Promise<PublicKey> {
+  address(): PublicKey {
     return this.details.address;
   }
 
@@ -85,9 +85,9 @@ export abstract class AbstractCryptid implements Cryptid {
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.
-   * This is private as it is intended as a utility function for internal
+   * This is a utility function for internal
    * operations, such as addKey, addController etc. It contains no
-   * cryptid-specific functionality so is not appropriate to expose to the interface itself
+   * cryptid-specific functionality.
    * @param transaction
    * @param confirmOptions
    * @private
@@ -96,11 +96,6 @@ export abstract class AbstractCryptid implements Cryptid {
     transaction: Transaction,
     confirmOptions: ConfirmOptions = {}
   ): Promise<TransactionSignature> {
-    console.log("Signatures")
-    transaction.signatures.map((sig) => {
-      console.log(`Signature: ${sig.signature?.toString('base64')}`);
-      console.log(`Pubkey: ${sig.publicKey.toString()}`);
-    });
     // This cast is ok, as it is created as an AnchorProvider in the service constructor
     const service = await this.service();
     const connection = service.program.provider.connection;

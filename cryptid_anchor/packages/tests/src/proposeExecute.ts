@@ -2,16 +2,16 @@ import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram} from "@solana/web3.
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {
-    createCryptidAccount,
+    createCryptid,
     cryptidTransferInstruction,
     makeTransfer,
     toAccountMeta
 } from "./util/cryptid";
 import {initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
-import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {web3} from "@project-serum/anchor";
-import {build, Cryptid, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {CryptidClient, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -25,24 +25,23 @@ describe("proposeExecute", () => {
     } = createTestContext();
 
     let didAccount: PublicKey;
-    let cryptidAccount: PublicKey;
     let cryptidBump: number;
 
     const recipient = Keypair.generate();
 
-    let cryptid:Cryptid;
+    let cryptid:CryptidClient;
 
     // use this when testing directly against anchor
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
     // use this when testing against the cryptid client
-    const makeTransaction = () => makeTransfer(cryptidAccount, recipient.publicKey);
+    const makeTransaction = () => makeTransfer(cryptid.address(), recipient.publicKey);
 
     const propose = async (transactionAccount: Keypair, instruction: InstructionData = transferInstructionData) =>
         program.methods.proposeTransaction(
             [instruction],
             2,
         ).accounts({
-                cryptidAccount,
+                cryptidAccount: cryptid.address(),
                 owner: didAccount,
                 authority: authority.publicKey,
                 transactionAccount: transactionAccount.publicKey
@@ -62,7 +61,7 @@ describe("proposeExecute", () => {
             cryptidBump,
             0
         ).accounts({
-                cryptidAccount,
+                cryptidAccount: cryptid.address(),
                 didProgram: DID_SOL_PROGRAM,
                 did: didAccount,
                 signer: authority.publicKey,
@@ -82,35 +81,34 @@ describe("proposeExecute", () => {
     // TODO: Once the new anchor "default value" macro is available, switch this back to using a generative cryptid account
     // For now, Propose/Execute requires non-generative accounts, so we can check for the presence of a registered middleware
     before('Set up a Cryptid Account', async () => {
-        [cryptidAccount, cryptidBump] = await createCryptidAccount(program, didAccount)//, middlewareAccount, ++cryptidIndex);
-        cryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, authority, {connection: provider.connection});
+        cryptid = await createCryptid(authority, { connection: provider.connection });
 
-        await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
+        await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
     })
 
     it("can propose and execute a transfer through Cryptid", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         const transactionAccount = Keypair.generate();
 
         // propose the Cryptid transaction
         await propose(transactionAccount);
 
-        let currentBalance = await balanceOf(cryptidAccount);
+        let currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
 
         // execute the Cryptid transaction
         await execute(transactionAccount);
 
-        currentBalance = await balanceOf(cryptidAccount);
+        currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
     it("can propose and execute a transfer using the Cryptid client", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         console.log({
-            cryptidAccount: cryptidAccount.toString(),
+            cryptidAccount: cryptid.address().toString(),
             recipient: recipient.publicKey.toString(),
             authority: authority.publicKey.toString(),
         })
@@ -119,19 +117,19 @@ describe("proposeExecute", () => {
         const [proposeTransaction, transactionAccountAddress] = await cryptid.propose(makeTransaction());
         await cryptid.send(proposeTransaction, { skipPreflight: true });
 
-        let currentBalance = await balanceOf(cryptidAccount);
+        let currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
 
         // send the execute tx
         const [executeTransaction] = await cryptid.execute(transactionAccountAddress);
         await cryptid.send(executeTransaction, { skipPreflight: true });
 
-        currentBalance = await balanceOf(cryptidAccount);
+        currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
     it("can propose and execute in the same transaction", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         const transactionAccount = Keypair.generate();
 
@@ -140,7 +138,7 @@ describe("proposeExecute", () => {
             [transferInstructionData],
             2,
         ).accounts({
-                cryptidAccount,
+                cryptidAccount: cryptid.address(),
                 owner: didAccount,
                 authority: authority.publicKey,
                 transactionAccount: transactionAccount.publicKey
@@ -158,7 +156,7 @@ describe("proposeExecute", () => {
             cryptidBump,
             0
         ).accounts({
-                cryptidAccount,
+                cryptidAccount: cryptid.address(),
                 didProgram: DID_SOL_PROGRAM,
                 did: didAccount,
                 signer: authority.publicKey,
@@ -174,12 +172,12 @@ describe("proposeExecute", () => {
 
         await provider.sendAndConfirm(transaction, [keypair, transactionAccount]);
 
-        const currentBalance = await balanceOf(cryptidAccount);
+        const currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
     it("can reuse the same transfer account", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         const transactionAccount = Keypair.generate();
 
@@ -191,7 +189,7 @@ describe("proposeExecute", () => {
         await propose(transactionAccount);
         await execute(transactionAccount);
 
-        const currentBalance = await balanceOf(cryptidAccount);
+        const currentBalance = await balanceOf(cryptid.address());
 
         // The tx has been executed twice
         // Note - this is not a double-spend, as the tx has to be proposed twice
@@ -199,7 +197,7 @@ describe("proposeExecute", () => {
     });
 
     it("cannot re-execute the same proposed transfer", async () => {
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         const transactionAccount = Keypair.generate();
 
@@ -210,7 +208,7 @@ describe("proposeExecute", () => {
         // cannot re-execute
         const shouldFail = execute(transactionAccount);
 
-        const currentBalance = await balanceOf(cryptidAccount);
+        const currentBalance = await balanceOf(cryptid.address());
 
         // The tx has been executed once only
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL);
@@ -259,7 +257,7 @@ describe("proposeExecute", () => {
             cryptidBump,
             0
         ).accounts({
-                cryptidAccount,
+                cryptidAccount: cryptid.address(),
                 didProgram: DID_SOL_PROGRAM,
                 did: didAccount,
                 signer: bogusSigner.publicKey,   // specify the bogus signer as the cryptid signer

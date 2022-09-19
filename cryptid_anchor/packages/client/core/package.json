@@ -2,6 +2,8 @@
   "name": "@identity.com/cryptid-core",
   "version": "1.0.0",
   "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "build": "tsc"
   },
   "main": "dist/index.js",
@@ -10,9 +12,11 @@
     "@identity.com/cryptid-idl": "1.0.0",
     "@identity.com/sol-did-client": "^3.0.1-beta1",
     "@project-serum/anchor": "^0.25.0",
+    "@solana/web3.js": "^1.62.0",
     "ramda": "^0.28.0"
   },
   "devDependencies": {
-    "@types/ramda": "^0.28.15"
+    "@types/ramda": "^0.28.15",
+    "rimraf": "^3.0.2"
   }
 }

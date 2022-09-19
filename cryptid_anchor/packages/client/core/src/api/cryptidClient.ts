@@ -29,7 +29,7 @@ export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
   rentPayer: 'DID_PAYS',
 };
 
-export interface Cryptid {
+export interface CryptidClient {
   /**
    * The signing key or callback used by the Cryptid instance
    * Must be a key on the DID, or a controlling DID
@@ -78,14 +78,14 @@ export interface Cryptid {
   /**
    * Gets the Cryptid address for the account
    */
-  address(): Promise<PublicKey>;
+  address(): PublicKey;
 
   /**
    * Allows the current Cryptid instance to sign as another Cryptid account it is a controller of.
    * A new Cryptid instance is returned.
    * @param did The DID of the account to sign on behalf of.
    */
-  as(did: string): Cryptid;
+  as(did: string): CryptidClient;
 
   additionalKeys(): Promise<PublicKey[]>;
 

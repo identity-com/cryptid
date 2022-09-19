@@ -1,10 +1,8 @@
-import { Builder } from './api/builder';
+export { CryptidBuilder as Cryptid } from './api/cryptidBuilder';
 import {getCryptidAccountAddress, getCryptidAccountAddressFromDID} from './lib/cryptid';
-export { ExtendedCluster } from './types/solana';
-export { Cryptid } from './api/cryptid';
+export { CryptidClient, CryptidOptions } from './api/cryptidClient';
+export { MiddlewareRegistry } from './service/middlewareRegistry';
 export { CRYPTID_PROGRAM } from './constants';
-
-export const build = Builder.buildFromDID;
 
 export const util = {
     getCryptidAccountAddress,

@@ -3,14 +3,16 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true
   },
   "include": [
-    "src/**/*",
+    "src/*",
   ],
   "references": [
     {
-      "path": "../idl"
+      "path": "../core"
     },
+    {
+      "path": "../middleware/checkPass"
+    }
   ]
 }

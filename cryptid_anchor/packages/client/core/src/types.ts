@@ -3,6 +3,7 @@ import {Cryptid} from "@identity.com/cryptid-idl";
 
 export { ExtendedCluster } from './types/solana';
 export { Wallet } from './types/crypto';
+export { MiddlewareClient, GenericMiddlewareParams, ExecuteMiddlewareParams } from './types/middleware';
 
 export type TransactionAccountMeta = IdlTypes<Cryptid>["AbbreviatedAccountMeta"];
 export type InstructionData = IdlTypes<Cryptid>["AbbreviatedInstructionData"];

@@ -1,16 +1,23 @@
 import {AccountMeta, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
-import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
 import {
     CHECK_PASS_MIDDLEWARE_PROGRAM,
     CHECK_RECIPIENT_MIDDLEWARE_PROGRAM,
-    CRYPTID_PROGRAM,
     TIME_DELAY_MIDDLEWARE_PROGRAM
 } from "./constants";
-import {InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {
+    Cryptid as Builder,
+    CryptidClient,
+    CryptidOptions,
+    InstructionData,
+    TransactionAccountMeta,
+    CRYPTID_PROGRAM
+} from "@identity.com/cryptid";
 import BN from "bn.js";
 import {Program} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
+import {Wallet} from "./anchorUtils";
 
 export const toAccountMeta = (publicKey: PublicKey, isWritable: boolean = false, isSigner: boolean = false): AccountMeta => ({
     pubkey: publicKey,
@@ -118,6 +125,11 @@ export const createCryptidAccount = async (
 
     return [cryptidAccount, cryptidBump]
 }
+
+export const createCryptid = async (
+    authority: Wallet,
+    options: CryptidOptions
+): Promise<CryptidClient> => Builder.createFromDID(DID_SOL_PREFIX + ':' + authority.publicKey, authority, [], options);
 
 // use this when testing against the cryptid client
 export const makeTransfer = (from: PublicKey, to: PublicKey) =>

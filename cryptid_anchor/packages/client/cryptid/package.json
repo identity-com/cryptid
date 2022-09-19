@@ -1,0 +1,18 @@
+{
+  "name": "@identity.com/cryptid",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
+    "build": "tsc"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@identity.com/cryptid-core": "1.0.0",
+    "@identity.com/cryptid-middleware-check-pass": "1.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
+  }
+}

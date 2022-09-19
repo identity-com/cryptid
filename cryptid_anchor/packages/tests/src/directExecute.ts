@@ -1,11 +1,11 @@
 import {DID_SOL_PREFIX, DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
-import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction} from "@solana/web3.js";
+import {Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram} from "@solana/web3.js";
 import chai from 'chai';
 import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, makeTransfer, toAccountMeta} from "./util/cryptid";
 import {addKeyToDID, initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
-import {build, Cryptid, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {Cryptid, CryptidClient, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -21,7 +21,7 @@ describe("directExecute", () => {
     let cryptidAccount: PublicKey;
     let cryptidBump: number;
 
-    let cryptid:Cryptid;
+    let cryptid:CryptidClient;
 
     // use this when testing directly against anchor
     const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
@@ -51,7 +51,7 @@ describe("directExecute", () => {
 
     before('Set up generative Cryptid Account', async () => {
         [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(didAccount);
-        cryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, authority, {connection: provider.connection});
+        cryptid = await Cryptid.buildFromDID(DID_SOL_PREFIX + ':' + authority.publicKey, authority, {connection: provider.connection});
 
         await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     })
@@ -97,13 +97,13 @@ describe("directExecute", () => {
         return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
     });
 
-    it.only("rejects the transfer if the signer is not a valid signer on the DID", async () => {
+    it("rejects the transfer if the signer is not a valid signer on the DID", async () => {
         const recipient = Keypair.generate();
         const bogusSigner = Keypair.generate();
         // fund the bogus signer, otherwise the tx fails due to lack of funds, not did signing issues
         await fund(bogusSigner.publicKey);
 
-        const bogusCryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, bogusSigner, {connection: provider.connection});
+        const bogusCryptid = await Cryptid.buildFromDID(DID_SOL_PREFIX + ':' + authority.publicKey, bogusSigner, {connection: provider.connection});
         const signedTransaction = await bogusCryptid.sign(makeTransaction(recipient.publicKey));
         const shouldFail = bogusCryptid.send(signedTransaction, { skipPreflight: true });
 
@@ -117,7 +117,7 @@ describe("directExecute", () => {
 
         const recipient = Keypair.generate();
 
-        const secondKeyCryptid = build(DID_SOL_PREFIX + ':' + authority.publicKey, secondKey, {connection: provider.connection});
+        const secondKeyCryptid = await Cryptid.buildFromDID(DID_SOL_PREFIX + ':' + authority.publicKey, secondKey, {connection: provider.connection});
 
         // thunk to execute the Cryptid transaction
         const execute = async () => {

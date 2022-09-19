@@ -1,9 +1,17 @@
-import {AccountInfo, ConfirmOptions, Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
+import {
+    AccountInfo,
+    ConfirmOptions,
+    Connection,
+    Keypair,
+    PublicKey,
+    Transaction,
+    TransactionInstruction
+} from "@solana/web3.js";
 import {Wallet} from "../types/crypto";
 import {AnchorProvider, Program} from "@project-serum/anchor";
 import {Cryptid, CryptidIDL} from "@identity.com/cryptid-idl";
 import {CRYPTID_PROGRAM} from "../constants";
-import {CryptidAccount, TransactionAccount} from "../types";
+import {CryptidAccount, ExecuteMiddlewareParams, MiddlewareClient, TransactionAccount} from "../types";
 import {CryptidTransaction} from "../lib/CryptidTransaction";
 import {CryptidAccountDetails} from "../lib/CryptidAccountDetails";
 import {noSignWallet} from "../lib/crypto";
@@ -11,6 +19,8 @@ import {getCryptidAccountAddress} from "../lib/cryptid";
 import {range} from "ramda";
 import {didToPDA} from "../lib/did";
 import {DID_SOL_PROGRAM} from "@identity.com/sol-did-client";
+import {Middleware} from "../lib/Middleware";
+import {MiddlewareRegistry} from "./middlewareRegistry";
 
 export class CryptidService {
     readonly program: Program<Cryptid>;
@@ -20,7 +30,7 @@ export class CryptidService {
         return new CryptidService(noSignWallet(), connection, opts);
     }
 
-    constructor(authority: Wallet, connection: Connection, opts: ConfirmOptions = {}) {
+    constructor(authority: Wallet, private connection: Connection, private opts: ConfirmOptions = {}) {
         const anchorProvider = new AnchorProvider(
             connection,
             authority,
@@ -107,6 +117,27 @@ export class CryptidService {
         }).rpc();
     }
 
+    private async executeMiddlewareInstructions(account: CryptidAccountDetails, transactionAccount: PublicKey): Promise<TransactionInstruction[]> {
+        const middlewareContexts = MiddlewareRegistry.get().getMiddlewareContexts(account);
+        const executeParameters: Omit<ExecuteMiddlewareParams, 'middlewareAccount'> = {
+            authority: (this.program.provider as AnchorProvider).wallet,
+            connection: this.connection,
+            opts: this.opts,
+            transactionAccount,
+            cryptidAccountDetails: account
+
+        }
+
+        return Promise.all(
+            middlewareContexts.map(({ client, accounts }) =>
+                client.executeMiddleware({
+                    ...executeParameters,
+                    middlewareAccount: accounts.address
+                })
+            )
+        );
+    }
+
     public async propose(account: CryptidAccountDetails, transaction: Transaction): Promise<[Transaction, PublicKey]> {
         const transactionAccountAddress = Keypair.generate();
         const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
@@ -114,6 +145,9 @@ export class CryptidService {
             this.authorityKey,
             transaction.instructions
         );
+
+        const middlewareInstructions = await this.executeMiddlewareInstructions(account, transactionAccountAddress.publicKey);
+
         const proposeTransaction = await cryptidTransaction.propose(this.program, transactionAccountAddress.publicKey)
             .signers(
                 // The only signer in a proposal (other than an authority on the DID) is the transaction account
@@ -124,6 +158,9 @@ export class CryptidService {
                 // 2. signing here happens at a different layer (service layer) to the directExecute (should be the same layer)
                 // 3. duplicating the signing and blockhash stuff
                 // 4. provider casting
+
+                t.instructions.push(...middlewareInstructions);
+
                 const {blockhash} = await this.program.provider.connection.getLatestBlockhash();
                 t.recentBlockhash = blockhash;
                 t.feePayer = this.authorityKey;

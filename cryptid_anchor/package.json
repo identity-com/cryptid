@@ -1,12 +1,14 @@
 {
     "private": true,
     "scripts": {
-        "test": "yarn workspace @identity.com/cryptid-core build && anchor test"
+        "test": "yarn workspace @identity.com/cryptid build && anchor test",
+        "build": "yarn workspace @identity.com/cryptid build && anchor build"
     },
     "workspaces": [
         "packages/client/idl",
-        "packages/client/middleware/createRecipient",
+        "packages/client/middleware/checkPass",
         "packages/client/core",
+        "packages/client/cryptid",
         "packages/client/cli",
         "packages/tests"
     ]
