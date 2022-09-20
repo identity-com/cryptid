@@ -6,5 +6,5 @@ target
 node_modules
 test-ledger
 
-tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo
 dist/
