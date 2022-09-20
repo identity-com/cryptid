@@ -1,7 +1,7 @@
 {
     "private": true,
     "scripts": {
-        "test": "yarn workspace @identity.com/cryptid build && anchor test",
+        "test": "yarn workspace @identity.com/cryptid-program-tests build && anchor test",
         "build": "yarn workspace @identity.com/cryptid build && anchor build"
     },
     "workspaces": [

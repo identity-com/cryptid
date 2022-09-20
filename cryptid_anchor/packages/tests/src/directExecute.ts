@@ -5,7 +5,7 @@ import chaiAsPromised from "chai-as-promised";
 import {cryptidTransferInstruction, deriveCryptidAccountAddress, makeTransfer, toAccountMeta} from "./util/cryptid";
 import {addKeyToDID, initializeDIDAccount} from "./util/did";
 import {fund, createTestContext, balanceOf} from "./util/anchorUtils";
-import {Cryptid, CryptidClient, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid-core";
+import {Cryptid, CryptidClient, InstructionData, TransactionAccountMeta} from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
 const {expect} = chai;

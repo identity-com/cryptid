@@ -1,7 +1,7 @@
 import {Keypair, LAMPORTS_PER_SOL, PublicKey} from "@solana/web3.js";
 import {AnchorProvider, Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { Cryptid, CheckPass, CheckRecipient, TimeDelay } from "../../../client/idl/src";
+import {CheckPass, CheckRecipient, Cryptid, TimeDelay} from "@identity.com/cryptid-idl";
 
 const envProvider = anchor.AnchorProvider.env();
 const envProgram = anchor.workspace.CryptidAnchor as Program<Cryptid>;

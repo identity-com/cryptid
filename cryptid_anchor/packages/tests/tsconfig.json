@@ -9,10 +9,10 @@
   ],
   "references": [
     {
-      "path": "../idl"
+      "path": "../client/idl"
     },
     {
-      "path": "../core"
+      "path": "../client/cryptid"
     }
   ]
 }
