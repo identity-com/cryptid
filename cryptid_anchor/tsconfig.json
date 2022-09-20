@@ -1,27 +1,11 @@
 {
-  "compilerOptions": {
-    "types": ["mocha", "chai"],
-    "typeRoots": ["./node_modules/@types"],
-    "lib": ["es2015"],
-    "module": "commonjs",
-    "target": "es6",
-    "strict": true,
-    "sourceMap": true,
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "outDir": "dist"
-  },
-  "exclude": [
-    "node_modules",
-    "packages/tests/node_modules",
-    "dist"
+  "references": [
+    {
+      "path": "packages/client/cryptid"
+    },
+    {
+      "path": "packages/tests"
+    }
   ],
-  "include": [
-    "packages/**/src/*",
-  ]
+  "include": []
 }

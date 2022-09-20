@@ -1,18 +1,14 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-  },
-  "include": [
-    "src/*",
-  ],
+  "extends": "./../../tsconfig.base.module.json",
   "references": [
-    {
-      "path": "../client/idl"
-    },
-    {
-      "path": "../client/cryptid"
-    }
-  ]
+    { "path": "./../client/cryptid" },
+    { "path": "./../client/idl" }
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
 }

@@ -1,0 +1,1 @@
+yarn workspace @identity.com/cryptid-idl publish

@@ -13,6 +13,7 @@
     "@identity.com/cryptid-middleware-check-pass": "1.0.0"
   },
   "devDependencies": {
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.8.3"
   }
 }

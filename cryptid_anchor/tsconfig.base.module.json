@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "composite": true,
+    "noEmit": false, /* referenced projects may not disabled emit */
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
+    "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
+    "declaration": true,
+  }
+}

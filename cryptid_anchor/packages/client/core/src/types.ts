@@ -1,9 +1,9 @@
 import {IdlAccounts, IdlTypes} from "@project-serum/anchor";
 import {Cryptid} from "@identity.com/cryptid-idl";
 
-export { ExtendedCluster } from './types/solana';
-export { Wallet } from './types/crypto';
-export { MiddlewareClient, GenericMiddlewareParams, ExecuteMiddlewareParams } from './types/middleware';
+export type { ExtendedCluster } from './types/solana';
+export type { Wallet } from './types/crypto';
+export type { MiddlewareClient, GenericMiddlewareParams, ExecuteMiddlewareParams } from './types/middleware';
 
 export type TransactionAccountMeta = IdlTypes<Cryptid>["AbbreviatedAccountMeta"];
 export type InstructionData = IdlTypes<Cryptid>["AbbreviatedInstructionData"];

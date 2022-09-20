@@ -1,6 +1,6 @@
 export { CryptidBuilder as Cryptid } from './api/cryptidBuilder';
 import {getCryptidAccountAddress, getCryptidAccountAddressFromDID} from './lib/cryptid';
-export { CryptidClient, CryptidOptions } from './api/cryptidClient';
+export type { CryptidClient, CryptidOptions } from './api/cryptidClient';
 export { MiddlewareRegistry } from './service/middlewareRegistry';
 export { CRYPTID_PROGRAM } from './constants';
 

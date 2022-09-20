@@ -1,19 +1,14 @@
 {
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "composite": true
-  },
-  "include": [
-    "src/*",
-  ],
+  "extends": "./../../../tsconfig.base.module.json",
   "references": [
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../middleware/checkPass"
-    }
-  ]
+    { "path": "./../core" },
+    { "path": "./../middleware/checkPass" }
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
 }

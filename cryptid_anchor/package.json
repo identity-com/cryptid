@@ -1,8 +1,10 @@
 {
     "private": true,
     "scripts": {
-        "test": "yarn workspace @identity.com/cryptid-program-tests build && anchor test",
-        "build": "yarn workspace @identity.com/cryptid build && anchor build"
+        "test": "yarn build && anchor test",
+        "build": "yarn tsc --build && anchor build",
+        "prepublish": "yarn build",
+        "publish": "yarn workspace @identity.com/cryptid-idl publish"
     },
     "workspaces": [
         "packages/client/idl",
@@ -11,5 +13,11 @@
         "packages/client/cryptid",
         "packages/client/cli",
         "packages/tests"
-    ]
+    ],
+    "packageManager": "yarn@3.2.3",
+    "devDependencies": {
+        "mocha": "^10.0.0",
+        "ts-mocha": "^10.0.0",
+        "typescript": "^4.8.3"
+    }
 }
