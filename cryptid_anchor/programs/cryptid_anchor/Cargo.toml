@@ -18,5 +18,5 @@ default = []
 [dependencies]
 anchor-lang = "0.25.0"
 bitflags = "1.3.2"
-sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b0a32154aa7d2d42666865a90356e9c50616dca2", features = ["no-entrypoint"] }
+sol-did = { git = "https://github.com/identity-com/sol-did", rev = "fa0729fdb3673e67dbbb7b1cf66b05303daf05f9", features = ["no-entrypoint"] }
 num-traits = "0.2.15"

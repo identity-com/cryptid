@@ -19,5 +19,5 @@ default = []
 anchor-lang = "0.25.0"
 cryptid_anchor = { path = "../../cryptid_anchor", features = ["no-entrypoint", "cpi"] }
 num-traits = "0.2.15"
-sol-did = { git = "https://github.com/identity-com/sol-did", rev = "b0a32154aa7d2d42666865a90356e9c50616dca2", features = ["no-entrypoint"] }
+sol-did = { git = "https://github.com/identity-com/sol-did", rev = "fa0729fdb3673e67dbbb7b1cf66b05303daf05f9", features = ["no-entrypoint"] }
 solana-gateway = "0.2.0"
