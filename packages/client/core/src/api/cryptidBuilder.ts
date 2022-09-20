@@ -74,7 +74,7 @@ export class CryptidBuilder {
       const nextPage = await service.findAllAccounts(did, offset, page);
       found.push(...nextPage);
       offset += page;
-    } while (nextPage.length < page);
+    } while (nextPage.length === page);
 
     return found;
   }
