@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "programs/cryptid_anchor",
+    "programs/cryptid",
     "programs/middleware/*"
 ]
 

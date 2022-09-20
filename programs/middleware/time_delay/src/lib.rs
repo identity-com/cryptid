@@ -13,9 +13,9 @@
 extern crate core;
 
 use anchor_lang::prelude::*;
-use cryptid_anchor::cpi::accounts::ApproveExecution;
-use cryptid_anchor::program::CryptidAnchor;
-use cryptid_anchor::state::transaction_account::TransactionAccount;
+use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::program::Cryptid;
+use cryptid::state::transaction_account::TransactionAccount;
 
 declare_id!("midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk");
 
@@ -114,7 +114,7 @@ pub struct ExecuteMiddleware<'info> {
         bump = transaction_create_time_bump,
     )]
     pub transaction_create_time: Account<'info, TransactionCreationTime>,
-    pub cryptid_program: Program<'info, CryptidAnchor>,
+    pub cryptid_program: Program<'info, Cryptid>,
 }
 impl<'info> ExecuteMiddleware<'info> {
     // TODO abstract this into shared?
@@ -137,7 +137,7 @@ impl<'info> ExecuteMiddleware<'info> {
         ][..];
         let signer = &[seeds][..];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        cryptid_anchor::cpi::approve_execution(cpi_ctx)
+        cryptid::cpi::approve_execution(cpi_ctx)
     }
 }
 

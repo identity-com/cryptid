@@ -9,7 +9,7 @@ import {
 } from "@identity.com/cryptid-idl";
 
 const envProvider = anchor.AnchorProvider.env();
-const envProgram = anchor.workspace.CryptidAnchor as Program<Cryptid>;
+const envProgram = anchor.workspace.Cryptid as Program<Cryptid>;
 
 const envCheckRecipientMiddlewareProgram = anchor.workspace
   .CheckRecipient as Program<CheckRecipient>;

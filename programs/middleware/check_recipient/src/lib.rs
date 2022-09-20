@@ -1,9 +1,9 @@
 extern crate core;
 
 use anchor_lang::prelude::*;
-use cryptid_anchor::cpi::accounts::ApproveExecution;
-use cryptid_anchor::program::CryptidAnchor;
-use cryptid_anchor::state::transaction_account::TransactionAccount;
+use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::program::Cryptid;
+use cryptid::state::transaction_account::TransactionAccount;
 
 declare_id!("midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf");
 
@@ -83,7 +83,7 @@ pub struct ExecuteMiddleware<'info> {
     pub middleware_account: Account<'info, CheckRecipient>,
     #[account(mut)]
     pub transaction_account: Account<'info, TransactionAccount>,
-    pub cryptid_program: Program<'info, CryptidAnchor>,
+    pub cryptid_program: Program<'info, Cryptid>,
 }
 impl<'info> ExecuteMiddleware<'info> {
     /// The first byte of a transfer instruction is the instruction type
@@ -111,7 +111,7 @@ impl<'info> ExecuteMiddleware<'info> {
         ][..];
         let signer = &[seeds][..];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        cryptid_anchor::cpi::approve_execution(cpi_ctx)
+        cryptid::cpi::approve_execution(cpi_ctx)
     }
 }
 

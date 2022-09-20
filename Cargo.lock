@@ -391,7 +391,7 @@ name = "check_pass"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "cryptid_anchor",
+ "cryptid",
  "num-traits",
  "sol-did 3.1.0",
  "solana-gateway",
@@ -402,7 +402,7 @@ name = "check_recipient"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "cryptid_anchor",
+ "cryptid",
 ]
 
 [[package]]
@@ -492,7 +492,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
-name = "cryptid_anchor"
+name = "cryptid"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
@@ -1318,7 +1318,7 @@ name = "time_delay"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "cryptid_anchor",
+ "cryptid",
 ]
 
 [[package]]

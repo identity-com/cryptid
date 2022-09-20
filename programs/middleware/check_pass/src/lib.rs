@@ -2,9 +2,9 @@ extern crate core;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke;
-use cryptid_anchor::cpi::accounts::ApproveExecution;
-use cryptid_anchor::program::CryptidAnchor;
-use cryptid_anchor::state::transaction_account::TransactionAccount;
+use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::program::Cryptid;
+use cryptid::state::transaction_account::TransactionAccount;
 use num_traits::cast::AsPrimitive;
 use sol_did::state::DidAccount;
 use solana_gateway::instruction::expire_token;
@@ -26,7 +26,7 @@ impl Id for GatewayProgram {
 #[program]
 pub mod check_pass {
     use super::*;
-    use cryptid_anchor::instructions::util::verify_keys;
+    use cryptid::instructions::util::verify_keys;
     use solana_gateway::Gateway;
 
     pub fn create(
@@ -149,7 +149,7 @@ pub struct ExecuteMiddleware<'info> {
     /// CHECK: Constraints are checked by the gateway sdk
     #[account(mut)]
     pub gateway_token: UncheckedAccount<'info>,
-    pub cryptid_program: Program<'info, CryptidAnchor>,
+    pub cryptid_program: Program<'info, Cryptid>,
     pub gateway_program: Program<'info, GatewayProgram>,
 }
 impl<'info> ExecuteMiddleware<'info> {
@@ -173,7 +173,7 @@ impl<'info> ExecuteMiddleware<'info> {
         ][..];
         let signer = &[seeds][..];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        cryptid_anchor::cpi::approve_execution(cpi_ctx)
+        cryptid::cpi::approve_execution(cpi_ctx)
     }
 
     pub fn verify_gateway_token_state_and_gatekeeper_network(

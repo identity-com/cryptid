@@ -12,7 +12,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 
 #[program]
-pub mod cryptid_anchor {
+pub mod cryptid {
     use super::*;
     pub use instructions::ApproveExecution;
 

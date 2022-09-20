@@ -1,4 +1,4 @@
-export { CryptidAnchor as Cryptid, IDL as CryptidIDL } from "./cryptid_anchor";
+export { Cryptid as Cryptid, IDL as CryptidIDL } from "./cryptid";
 
 export { CheckPass, IDL as CheckPassIDL } from "./check_pass";
 export { CheckRecipient, IDL as CheckRecipientIDL } from "./check_recipient";
