@@ -91,6 +91,8 @@ pub fn verify_keys<'a>(
                         .collect();
                 // .map(Cow::Owned),
 
+                msg!("Checking that {} is an authority of the did.", &signing_key.signing_key.key.to_string());
+                msg!("Did Account: {} .", &did.key.to_string());
                 let signer_is_authority = sol_did::is_authority(
                     &did.to_solana_account_info(),
                     controlling_did_accounts.as_slice(),

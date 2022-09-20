@@ -24,7 +24,7 @@ pub struct DirectExecute<'info> {
         mut,
         // TODO wait until the new macro is available so we can refer to self.index
         // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account.index.to_le_bytes().as_ref()]
-        // bump
+        // bump = cryptid_account_bump
     )]
     pub cryptid_account: UncheckedAccount<'info>, // TODO use new macro that allows generative accounts and non-generative accounts
     /// The DID on the Cryptid instance
@@ -88,10 +88,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     )?;
 
     // TODO until we have the new macro that provides this default value
-    let default_cryptid_account = CryptidAccount {
-        middleware: None,
-        index: 0,
-    };
+    let default_cryptid_account = CryptidAccount::default();
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(

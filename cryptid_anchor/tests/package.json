@@ -1,7 +1,0 @@
-{
-  "name": "@identity.com/cryptid-program-tests",
-  "version": "1.0.0",
-  "dependencies": {
-    "@identity.com/cryptid-idl": "1.0.0"
-  }
-}

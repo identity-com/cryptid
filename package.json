@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "husky": "^7.0.4",
+    "eslint": "^8.23.1",
     "start-server-and-test": "^1.14.0"
   }
 }
