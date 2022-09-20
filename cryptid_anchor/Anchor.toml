@@ -12,7 +12,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-cryptid_anchor = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+cryptid_anchor = "cry484buH1TnYCcegsogRzJ1tbhjeDLZC7vjRvHzaku"
 check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"

@@ -1,6 +1,6 @@
 extern crate core;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("cry484buH1TnYCcegsogRzJ1tbhjeDLZC7vjRvHzaku");
 
 pub mod error;
 pub mod instructions;
