@@ -57,8 +57,9 @@ pub fn verify_keys<'a, 'info>(
         .into_iter()
         .cloned()
         .collect::<Vec<_>>();
-    let signer_is_authority = sol_did::is_authority(
+    let signer_is_authority = sol_did::integrations::is_authority(
         &did.to_account_info(),
+        None,
         controlling_did_accounts.as_slice(),
         signer,
         &[],
