@@ -1,21 +1,25 @@
 {
-  "private": true,
-  "workspaces": [
-    "programs",
-    "client",
-    "cli",
-    "wallet"
-  ],
-  "scripts": {
-    "test": "yarn test-programs",
-    "build": "cargo build",
-    "test-programs": "cargo build-bpf && start-server-and-test start-validator http://localhost:8899/health test-programs:inner",
-    "test-programs:inner": "cargo test && cargo test-bpf && yarn workspace programs test",
-    "start-validator": "solana-test-validator --reset --bpf-program crypt1GWL27FYSg7gEfJVzbc8KzEcTToFNmaXi9ropg ./target/deploy/cryptid_signer.so --bpf-program didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc ./programs/cryptid_signer/tests/fixtures/sol_did_2.0.0.so",
-    "prepare": "husky install"
-  },
-  "devDependencies": {
-    "husky": "^7.0.4",
-    "start-server-and-test": "^1.14.0"
-  }
+    "private": true,
+    "scripts": {
+        "test": "yarn workspace @identity.com/cryptid-program-tests build && anchor test",
+        "build": "yarn workspace @identity.com/cryptid build && anchor build",
+        "lint": "eslint . --ext .ts"
+    },
+    "workspaces": [
+        "packages/client/idl",
+        "packages/client/middleware/checkPass",
+        "packages/client/core",
+        "packages/client/cryptid",
+        "packages/client/cli",
+        "packages/tests"
+    ],
+    "devDependencies": {
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-prettier": "^4.2.1",
+        "husky": "^7.0.4",
+        "mocha": "^10.0.0",
+        "prettier": "^2.7.1",
+        "ts-mocha": "^10.0.0",
+        "typescript": "^4.8.3"
+    }
 }
