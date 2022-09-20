@@ -29,9 +29,9 @@ export class CryptidBuilder {
     return CryptidBuilder.build(details, signer, options);
   }
 
-  static async createFromDID(did: string, signer: Keypair | Wallet, middleware: Middleware[], options: CryptidOptions): Promise<CryptidClient> {
+  static createFromDID(did: string, signer: Keypair | Wallet, middleware: Middleware[], options: CryptidOptions): Promise<CryptidClient> {
     const index = options.accountIndex || 1;  // 0 is reserved for the default (generative) cryptid
-    const didAccount = await didToPDA(did);
+    const didAccount = didToPDA(did);
     const [address, bump] = getCryptidAccountAddress(didAccount, index);
     const details = new CryptidAccountDetails(address, bump, index, did, didAccount, middleware);
     return CryptidBuilder.create(details, signer, options);

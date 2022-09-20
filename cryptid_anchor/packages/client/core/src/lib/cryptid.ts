@@ -102,8 +102,8 @@ export const getCryptidAccountAddress = (didAccount: PublicKey, index: number = 
     CRYPTID_PROGRAM
 );
 
-export const getCryptidAccountAddressFromDID = (did: string, index: number = 0): Promise<[PublicKey, number]> =>
-    didToPDA(did).then(didAccount => getCryptidAccountAddress(didAccount, index));
+export const getCryptidAccountAddressFromDID = (did: string, index: number = 0): [PublicKey, number] =>
+    getCryptidAccountAddress(didToPDA(did), index);
 
 export const createCryptidAccount = async (
     program: Program<Cryptid>,
@@ -111,7 +111,7 @@ export const createCryptidAccount = async (
     middlewareAccount?: PublicKey,
     index: number = 0,
 ): Promise<[PublicKey, number]> => {
-    const [cryptidAccount, cryptidBump] = await getCryptidAccountAddress(did, index);
+    const [cryptidAccount, cryptidBump] = getCryptidAccountAddress(did, index);
 
     await program.methods.create(
         middlewareAccount || null,  // anchor requires null instead of undefined
