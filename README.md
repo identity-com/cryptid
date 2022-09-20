@@ -1,5 +1,7 @@
 # Cryptid
 
+TODO this document refers to the old cryptid codebase, which is now deprecated.
+
 Cryptid is a protocol and client-suite that brings the power of Identity to
 [Solana](https://solana.com).
 

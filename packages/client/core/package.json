@@ -1,0 +1,26 @@
+{
+  "name": "@identity.com/cryptid-core",
+  "version": "0.3.0-alpha.1",
+  "scripts": {
+    "clean": "rimraf dist",
+    "lint": "eslint src/**/*.ts",
+    "prebuild": "yarn clean",
+    "build": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@identity.com/cryptid-idl": "0.3.0-alpha.1",
+    "@identity.com/sol-did-client": "^3.1.0",
+    "@project-serum/anchor": "^0.25.0",
+    "@solana/web3.js": "^1.62.0",
+    "ramda": "^0.28.0"
+  },
+  "devDependencies": {
+    "@types/ramda": "^0.28.15",
+    "rimraf": "^3.0.2"
+  }
+}
