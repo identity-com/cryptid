@@ -34,6 +34,8 @@ describe("directExecute", () => {
 
   let cryptid: CryptidClient;
 
+  const did = DID_SOL_PREFIX + ":" + authority.publicKey;
+
   // use this when testing directly against anchor
   const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
   // use this when testing against the cryptid client
@@ -69,16 +71,25 @@ describe("directExecute", () => {
   });
 
   before("Set up generative Cryptid Account", async () => {
-    [cryptidAccount, cryptidBump] = await deriveCryptidAccountAddress(
-      didAccount
-    );
-    cryptid = await Cryptid.buildFromDID(
-      DID_SOL_PREFIX + ":" + authority.publicKey,
-      authority,
-      { connection: provider.connection }
-    );
+    [cryptidAccount, cryptidBump] = deriveCryptidAccountAddress(didAccount);
+
+    cryptid = await Cryptid.buildFromDID(did, authority, {
+      connection: provider.connection,
+    });
 
     await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
+  });
+
+  it("can retrieve and build the default cryptid account", async () => {
+    const cryptidDetails = await Cryptid.findAll(did, {
+      connection: provider.connection,
+    });
+
+    expect(cryptidDetails.length).to.equal(1);
+
+    Cryptid.build(cryptidDetails[0], authority, {
+      connection: provider.connection,
+    });
   });
 
   it("can transfer through Cryptid", async () => {
@@ -142,11 +153,9 @@ describe("directExecute", () => {
     // fund the bogus signer, otherwise the tx fails due to lack of funds, not did signing issues
     await fund(bogusSigner.publicKey);
 
-    const bogusCryptid = await Cryptid.buildFromDID(
-      DID_SOL_PREFIX + ":" + authority.publicKey,
-      bogusSigner,
-      { connection: provider.connection }
-    );
+    const bogusCryptid = await Cryptid.buildFromDID(did, bogusSigner, {
+      connection: provider.connection,
+    });
     const signedTransaction = await bogusCryptid.sign(
       makeTransaction(recipient.publicKey)
     );
@@ -164,11 +173,9 @@ describe("directExecute", () => {
 
     const recipient = Keypair.generate();
 
-    const secondKeyCryptid = await Cryptid.buildFromDID(
-      DID_SOL_PREFIX + ":" + authority.publicKey,
-      secondKey,
-      { connection: provider.connection }
-    );
+    const secondKeyCryptid = await Cryptid.buildFromDID(did, secondKey, {
+      connection: provider.connection,
+    });
 
     // thunk to execute the Cryptid transaction
     const execute = async () => {
