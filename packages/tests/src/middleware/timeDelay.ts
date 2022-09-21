@@ -237,12 +237,7 @@ describe("Middleware: timeDelay", () => {
     );
 
     // execute the Cryptid transaction
-    await execute(
-      fastCryptidAccount,
-      fastCryptidBump,
-      transactionAccount,
-      fastMiddlewareAccount
-    );
+    await execute(fastCryptidAccount, fastCryptidBump, transactionAccount);
 
     const currentBalance = await balanceOf(fastCryptidAccount);
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
