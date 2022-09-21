@@ -2,12 +2,12 @@
   "name": "@identity.com/cryptid-program-tests",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc --build",
     "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
-    "@identity.com/cryptid-idl": "0.3.0-alpha.1",
-    "@identity.com/cryptid": "0.3.0-alpha.1",
+    "@identity.com/cryptid": "0.3.0-alpha.3",
+    "@identity.com/cryptid-idl": "0.3.0-alpha.3",
     "@identity.com/sol-did-client": "^3.1.0",
     "@identity.com/solana-gatekeeper-lib": "^4.0.1",
     "@identity.com/solana-gateway-ts": "^0.8.2",
