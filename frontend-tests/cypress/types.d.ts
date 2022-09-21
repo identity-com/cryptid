@@ -1,2 +1,2 @@
-declare module '@identity.com/credential-commons';
-declare module 'awscred';
+declare module "@identity.com/credential-commons";
+declare module "awscred";

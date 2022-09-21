@@ -7,9 +7,11 @@ export const didService = (
   did: DidSolIdentifier,
   connection: Connection,
   wallet: Wallet
-): DidSolService => {
-  // TODO Add connection
-  return DidSolService.build(did, { wallet });
+) => {
+  return DidSolService.build(did, {
+    connection,
+    wallet,
+  });
 };
 
 export const didToPublicKey = (did: string): PublicKey =>
