@@ -1505,55 +1505,6 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@identity.com/cryptid-core@0.3.0-alpha.1":
-  version "0.3.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid-core/-/cryptid-core-0.3.0-alpha.1.tgz#9cf7aebbf808aa6c945f01d23b6bdca6aeb04845"
-  integrity sha512-yh4We2X/Qt/dme7OPu2zfw548jHlsIWDChEGAu7/DWxVgjEHmH/xG17Kdmlgluzet15eQdAoJ09SSQnVAEOUfQ==
-  dependencies:
-    "@identity.com/cryptid-idl" "0.3.0-alpha.1"
-    "@identity.com/sol-did-client" "^3.1.0"
-    "@project-serum/anchor" "^0.25.0"
-    "@solana/web3.js" "^1.62.0"
-    ramda "^0.28.0"
-
-"@identity.com/cryptid-core@0.3.0-alpha.2":
-  version "0.3.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid-core/-/cryptid-core-0.3.0-alpha.2.tgz#85c148e6cea941a12983f68997442e4b4e07a937"
-  integrity sha512-26MWccFAhkVKAwQgLUy9KODXHL2D0cPwLnKIItFKYJhcZxQtbSPNImhHUe7Ej3L4REpkD0QJvTZIbQNGmeIKHQ==
-  dependencies:
-    "@identity.com/cryptid-idl" "0.3.0-alpha.2"
-    "@identity.com/sol-did-client" "^3.1.0"
-    "@project-serum/anchor" "^0.25.0"
-    "@solana/web3.js" "^1.62.0"
-    ramda "^0.28.0"
-
-"@identity.com/cryptid-idl@0.3.0-alpha.1":
-  version "0.3.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid-idl/-/cryptid-idl-0.3.0-alpha.1.tgz#cf38cce3c66002a5b06cac7e38870d5ae51fb31d"
-  integrity sha512-NifPexNKpJvzP+yT9oqnRr9CuUD26K0F0jouAPTgSCQkMJuZManSDSj1c7xoAH3OnmPMN6XcekL16Mm9Wq2BKQ==
-
-"@identity.com/cryptid-idl@0.3.0-alpha.2":
-  version "0.3.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid-idl/-/cryptid-idl-0.3.0-alpha.2.tgz#bd11d6b665dd9dec633969700ae2d23107d431e5"
-  integrity sha512-yRlp1wMYnOqAgrO11xfmjBoeSg+j3PC5C1XeQICPmqeS0f9RQLjIKa2QmQZf5xElx/tZg6/djA54aGDE74w1sA==
-
-"@identity.com/cryptid-middleware-check-pass@0.3.0-alpha.1":
-  version "0.3.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid-middleware-check-pass/-/cryptid-middleware-check-pass-0.3.0-alpha.1.tgz#aea6e6455ca2949354e8c32673387497aef9b83e"
-  integrity sha512-3U0TK1DWUUxNygwoCindoMWus8R4JNQC/X0NCt/j1FNHv3uM/beT+BXEiqEy4dH5px4r9FfMTKzAVvkoNuyttg==
-  dependencies:
-    "@identity.com/cryptid-core" "0.3.0-alpha.1"
-    "@identity.com/solana-gateway-ts" "^0.8.2"
-    "@solana/web3.js" "^1.62.0"
-
-"@identity.com/cryptid@0.3.0-alpha.1":
-  version "0.3.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid/-/cryptid-0.3.0-alpha.1.tgz#e46f811ce2b09798fdc5f08a436664dd84f0e9f4"
-  integrity sha512-mg49jMpfYScSSKV+t28tQJNg1piW8Of7DW4L0Y6j5JXGw4DkgHcqdDvnzg9X8DqHIvQWD+lA2mcQiaqNqw6q7Q==
-  dependencies:
-    "@identity.com/cryptid-core" "0.3.0-alpha.1"
-    "@identity.com/cryptid-middleware-check-pass" "0.3.0-alpha.1"
-
 "@identity.com/sol-did-client-legacy@^2.0.3":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client-legacy/-/sol-did-client-legacy-2.0.3.tgz#ed8138cc3d54471119ec86369c19abc9dd4113b7"
