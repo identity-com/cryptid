@@ -227,9 +227,17 @@ describe("Middleware: checkPass", () => {
 
     it("blocks a transfer with no gateway token", async () => {
       // no gateway token exists for the authority
-      // propose a tx, which fails to pass through the middleware
-      const [proposeTransaction] = await cryptid.propose(makeTransaction());
-      const shouldFail = cryptid.send(proposeTransaction, {
+
+      // send the propose tx
+      const { proposeTransaction, transactionAccountAddress } =
+        await cryptid.propose(makeTransaction());
+      await cryptid.send(proposeTransaction, { skipPreflight: true });
+
+      // send the execute tx, which fails to pass through the middleware
+      const [executeTransaction] = await cryptid.execute(
+        transactionAccountAddress
+      );
+      const shouldFail = cryptid.send(executeTransaction, {
         skipPreflight: true,
       });
 
@@ -243,16 +251,32 @@ describe("Middleware: checkPass", () => {
       // issue a gateway token to the authority
       await createGatewayToken(authority.publicKey);
 
-      // send the propose tx (executing the middleware)
-      const [proposeTransaction, transactionAccountAddress] =
+      // send the propose tx
+      const { proposeTransaction, transactionAccountAddress } =
         await cryptid.propose(makeTransaction());
       await cryptid.send(proposeTransaction, { skipPreflight: true });
 
-      // send the execute tx
+      // send the execute tx (executing the middleware)
       const [executeTransaction] = await cryptid.execute(
         transactionAccountAddress
       );
       await cryptid.send(executeTransaction, { skipPreflight: true });
+
+      const currentBalance = await balanceOf(cryptid.address());
+      expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+
+    it("transfers in a single transaction", async () => {
+      const previousBalance = await balanceOf(cryptid.address());
+
+      // issue a gateway token to the authority
+      await createGatewayToken(authority.publicKey);
+
+      const [bigTransaction] = await cryptid.proposeAndExecute(
+        makeTransaction(),
+        true
+      );
+      await cryptid.send(bigTransaction, { skipPreflight: true });
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

@@ -12,11 +12,11 @@ import {
 } from "./cryptidClient";
 import { DIDDocument } from "did-resolver";
 import { DidSolIdentifier, DidSolService } from "@identity.com/sol-did-client";
-import { NonEmptyArray } from "../types/lang";
 import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount } from "../types";
+import { ProposalResult } from "../types/cryptid";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   protected details: CryptidAccountDetails;
@@ -58,32 +58,41 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     return this.details.address;
   }
 
-  async sign(transaction: Transaction): Promise<Transaction> {
+  async directExecute(transaction: Transaction): Promise<Transaction> {
     const cryptidService = await this.service();
     return cryptidService.directExecute(this.details, transaction);
   }
 
-  async signLarge(transaction: Transaction): Promise<{
-    setupTransactions: NonEmptyArray<Transaction>;
-    executeTransaction: Transaction;
-  }> {
+  async proposeAndExecute(
+    transaction: Transaction,
+    forceSingleTx = false
+  ): Promise<Transaction[]> {
     const service = await this.service();
 
-    const [proposeTransaction, transactionAccountAddress] =
-      await service.propose(this.details, transaction);
-    // TODO fix - broken because it tries to load transactionAccountAddress
+    // TODO this is likely temporary - we should not force the client to have to know whether
+    // the tx can fit into a single cryptid transaction or not.
+    if (forceSingleTx) {
+      const proposeExecuteTransaction =
+        await service.proposeAndExecuteTransaction(
+          this.details,
+          transaction,
+          []
+        );
+      return [proposeExecuteTransaction];
+    }
+
+    const proposalResult = await service.propose(this.details, transaction);
     const executeTransaction = await service.execute(
       this.details,
-      transactionAccountAddress
+      proposalResult.transactionAccountAddress,
+      [],
+      proposalResult.cryptidTransactionRepresentation
     );
 
-    return {
-      setupTransactions: [proposeTransaction],
-      executeTransaction,
-    };
+    return [proposalResult.proposeTransaction, executeTransaction];
   }
 
-  async propose(transaction: Transaction): Promise<[Transaction, PublicKey]> {
+  async propose(transaction: Transaction): Promise<ProposalResult> {
     return this.service().then((service) =>
       service.propose(this.details, transaction)
     );
@@ -145,26 +154,14 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     const publicKey = await this.address();
     return {
       publicKey,
-      signTransaction: (transaction: Transaction) => this.sign(transaction),
+      signTransaction: (transaction: Transaction) =>
+        this.directExecute(transaction),
       signAllTransactions: (transactions: Transaction[]) =>
-        Promise.all(transactions.map((t) => this.sign(t))),
+        Promise.all(transactions.map((t) => this.directExecute(t))),
     };
   }
 
   abstract get wallet(): Wallet;
-
-  protected async getSignerForInternalTransaction(): Promise<Wallet> {
-    switch (this.options.rentPayer) {
-      // use Cryptid to sign and send the tx, so that any rent is paid by the cryptid account
-      case "DID_PAYS":
-        return this.asWallet();
-      // use the signer key to sign and send the tx, so that any rent is paid by the signer key
-      case "SIGNER_PAYS":
-        return this.wallet;
-      default:
-        throw new Error(`Unsupported payer option: ${this.options.rentPayer}`);
-    }
-  }
 
   protected async didClient(): Promise<DidSolService> {
     const identifier = DidSolIdentifier.parse(this.did);

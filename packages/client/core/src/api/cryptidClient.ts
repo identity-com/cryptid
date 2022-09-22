@@ -7,8 +7,7 @@ import {
 } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { Wallet } from "../types/crypto";
-import { NonEmptyArray } from "../types/lang";
-import { TransactionAccount } from "../types";
+import { ProposalResult, TransactionAccount } from "../types";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -29,6 +28,17 @@ export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
   rentPayer: "DID_PAYS",
 };
 
+/**
+ * The primary client interface for interacting with Cryptid.
+ *
+ * Clients have the following options when signing a transaction:
+ *
+ * 1. directExecute: Single instruction, no middleware.
+ * 2. propose / execute: Two separate calls, middleware is executed as part of the execute call.
+ * 3. proposeAndExecute: Single call, returns an array of transactions to be passed to the chain.
+ * If forceSingleTx is set to true, this forces all instructions into a single transaction.
+ * Note: At present, there are no checks to see if it fits.
+ */
 export interface CryptidClient {
   /**
    * The signing key or callback used by the Cryptid instance
@@ -47,7 +57,7 @@ export interface CryptidClient {
    * @param transaction The transaction to sign
    * @throws RangeError if the transaction size is too large
    */
-  sign(transaction: Transaction): Promise<Transaction>;
+  directExecute(transaction: Transaction): Promise<Transaction>;
 
   /**
    * List pending large transactions that were previously not executed
@@ -58,13 +68,16 @@ export interface CryptidClient {
    * Signs a set of setup transactions followed by an execute transaction
    * that should be sent to the dapp
    * @param transaction The transaction to sign
+   * @param forceSingleTx [false] If true, forces the transaction to be signed as a single transaction
    */
-  signLarge(transaction: Transaction): Promise<{
-    setupTransactions: NonEmptyArray<Transaction>;
-    executeTransaction: Transaction;
-  }>;
+  // TODO forceSingleTx is likely temporary - we should not force the client to have to know whether
+  // the tx can fit into a single cryptid transaction or not.
+  proposeAndExecute(
+    transaction: Transaction,
+    forceSingleTx?: boolean
+  ): Promise<Transaction[]>;
 
-  propose(transaction: Transaction): Promise<[Transaction, PublicKey]>;
+  propose(transaction: Transaction): Promise<ProposalResult>;
   execute(transactionAccountAddress: PublicKey): Promise<Transaction[]>;
 
   // TODO Reinstate
