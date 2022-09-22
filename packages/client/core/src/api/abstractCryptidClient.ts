@@ -60,17 +60,7 @@ export abstract class AbstractCryptidClient implements CryptidClient {
 
   async sign(transaction: Transaction): Promise<Transaction> {
     const cryptidService = await this.service();
-    const cryptidTx = await cryptidService.directExecute(
-      this.details,
-      transaction
-    );
-    // TODO why do we need this, if we are adding the wallet to the anchor provider?
-    // Anchor should be signing the transaction for us already
-    cryptidTx.recentBlockhash = await this.options.connection
-      .getLatestBlockhash()
-      .then((blockhash) => blockhash.blockhash);
-    cryptidTx.feePayer = this.wallet.publicKey;
-    return this.wallet.signTransaction(cryptidTx);
+    return cryptidService.directExecute(this.details, transaction);
   }
 
   async signLarge(transaction: Transaction): Promise<{
@@ -139,7 +129,9 @@ export abstract class AbstractCryptidClient implements CryptidClient {
 
     // TODO clean up
     if (result.value.err)
-      throw new Error("Transaction failed: " + result.value.err);
+      throw new Error(
+        "Transaction failed: " + JSON.stringify(result.value.err)
+      );
 
     return txSig;
   }
