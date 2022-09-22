@@ -37,7 +37,7 @@ export class CryptidService {
   }
 
   constructor(
-    authority: Wallet,
+    private authority: Wallet,
     private connection: Connection,
     private opts: ConfirmOptions = {}
   ) {
@@ -150,6 +150,19 @@ export class CryptidService {
       .rpc();
   }
 
+  private async sign(
+    unsignedTransaction: Transaction,
+    signers: Keypair[]
+  ): Promise<Transaction> {
+    const { blockhash } =
+      await this.program.provider.connection.getLatestBlockhash();
+    unsignedTransaction.recentBlockhash = blockhash;
+    unsignedTransaction.feePayer = this.authorityKey;
+    if (signers.length) unsignedTransaction.partialSign(...signers);
+
+    return this.authority.signTransaction(unsignedTransaction);
+  }
+
   private async executeMiddlewareInstructions(
     account: CryptidAccountDetails,
     transactionAccount: PublicKey
@@ -192,32 +205,18 @@ export class CryptidService {
       account,
       transactionAccountAddress.publicKey
     );
-
-    const proposeTransaction = await cryptidTransaction
+    const unsignedProposeTransaction = await cryptidTransaction
       .propose(this.program, transactionAccountAddress.publicKey)
       .signers(
         // The only signer in a proposal (other than an authority on the DID) is the transaction account
         [transactionAccountAddress]
       )
-      .transaction()
-      .then(async (t) => {
-        // TODO clean up
-        // 1. should not be in a closure
-        // 2. signing here happens at a different layer (service layer) to the directExecute (should be the same layer)
-        // 3. duplicating the signing and blockhash stuff
-        // 4. provider casting
+      .postInstructions(middlewareInstructions)
+      .transaction();
 
-        t.instructions.push(...middlewareInstructions);
-
-        const { blockhash } =
-          await this.program.provider.connection.getLatestBlockhash();
-        t.recentBlockhash = blockhash;
-        t.feePayer = this.authorityKey;
-        t.partialSign(transactionAccountAddress);
-        return (this.program.provider as AnchorProvider).wallet.signTransaction(
-          t
-        );
-      });
+    const proposeTransaction = await this.sign(unsignedProposeTransaction, [
+      transactionAccountAddress,
+    ]);
 
     return [proposeTransaction, transactionAccountAddress.publicKey];
   }
@@ -239,24 +238,12 @@ export class CryptidService {
       this.authorityKey,
       transactionAccount
     );
-    return cryptidTransaction
+    const unsignedExecuteTransaction = await cryptidTransaction
       .execute(this.program, transactionAccountAddress)
       .signers([...signers])
-      .transaction()
-      .then(async (t) => {
-        // TODO clean up
-        // 1. should not be in a closure
-        // 2. signing here happens at a different layer (service layer) to the directExecute (should be the same layer)
-        // 3. duplicating the signing and blockhash stuff
-        // 4. provider casting
-        const { blockhash } =
-          await this.program.provider.connection.getLatestBlockhash();
-        t.recentBlockhash = blockhash;
-        t.feePayer = this.authorityKey;
-        return (this.program.provider as AnchorProvider).wallet.signTransaction(
-          t
-        );
-      });
+      .transaction();
+
+    return this.sign(unsignedExecuteTransaction, signers);
   }
 
   public async directExecute(
@@ -268,6 +255,9 @@ export class CryptidService {
       this.authorityKey,
       transaction.instructions
     );
-    return cryptidTransaction.directExecute(this.program).transaction();
+    const unsignedDirectExecuteTransaction = await cryptidTransaction
+      .directExecute(this.program)
+      .transaction();
+    return this.sign(unsignedDirectExecuteTransaction, []);
   }
 }
