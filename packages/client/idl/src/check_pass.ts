@@ -33,6 +33,12 @@ export type CheckPass = {
         {
           "name": "expireOnUse",
           "type": "bool"
+        },
+        {
+          "name": "failsafe",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -65,8 +71,9 @@ export type CheckPass = {
           "isSigner": true,
           "docs": [
             "An authority on the DID.",
-            "This is only needed for the expireOnUse case. In this case, the authority must be the owner",
-            "of the gateway token."
+            "This is needed for two cases:",
+            "1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.",
+            "2) the failsafe case. In this case, the authority must match the failsafe key (if present)"
           ]
         },
         {
@@ -109,10 +116,18 @@ export type CheckPass = {
         "fields": [
           {
             "name": "gatekeeperNetwork",
+            "docs": [
+              "The gatekeeper network that this middleware checks against",
+              "If the signer presents a valid gateway token, owned either by the DID that owns the transaction",
+              "or by a key on the DID that owns the transaction, then the transaction is approved."
+            ],
             "type": "publicKey"
           },
           {
             "name": "authority",
+            "docs": [
+              "The authority creating t"
+            ],
             "type": "publicKey"
           },
           {
@@ -121,7 +136,20 @@ export type CheckPass = {
           },
           {
             "name": "expireOnUse",
+            "docs": [
+              "If true, expire a gateway token after it has been used. Note, this can only be used",
+              "with gatekeeper networks that have the ExpireFeature enabled."
+            ],
             "type": "bool"
+          },
+          {
+            "name": "failsafe",
+            "docs": [
+              "A key which, if passed as the authority, bypasses the middleware check"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -181,6 +209,12 @@ export const IDL: CheckPass = {
         {
           "name": "expireOnUse",
           "type": "bool"
+        },
+        {
+          "name": "failsafe",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -213,8 +247,9 @@ export const IDL: CheckPass = {
           "isSigner": true,
           "docs": [
             "An authority on the DID.",
-            "This is only needed for the expireOnUse case. In this case, the authority must be the owner",
-            "of the gateway token."
+            "This is needed for two cases:",
+            "1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.",
+            "2) the failsafe case. In this case, the authority must match the failsafe key (if present)"
           ]
         },
         {
@@ -257,10 +292,18 @@ export const IDL: CheckPass = {
         "fields": [
           {
             "name": "gatekeeperNetwork",
+            "docs": [
+              "The gatekeeper network that this middleware checks against",
+              "If the signer presents a valid gateway token, owned either by the DID that owns the transaction",
+              "or by a key on the DID that owns the transaction, then the transaction is approved."
+            ],
             "type": "publicKey"
           },
           {
             "name": "authority",
+            "docs": [
+              "The authority creating t"
+            ],
             "type": "publicKey"
           },
           {
@@ -269,7 +312,20 @@ export const IDL: CheckPass = {
           },
           {
             "name": "expireOnUse",
+            "docs": [
+              "If true, expire a gateway token after it has been used. Note, this can only be used",
+              "with gatekeeper networks that have the ExpireFeature enabled."
+            ],
             "type": "bool"
+          },
+          {
+            "name": "failsafe",
+            "docs": [
+              "A key which, if passed as the authority, bypasses the middleware check"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }

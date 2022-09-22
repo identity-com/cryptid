@@ -13,8 +13,13 @@ import {
   createCryptidAccount,
   makeTransfer,
 } from "../util/cryptid";
-import { initializeDIDAccount } from "../util/did";
-import { fund, createTestContext, balanceOf } from "../util/anchorUtils";
+import { addKeyToDID, initializeDIDAccount } from "../util/did";
+import {
+  fund,
+  createTestContext,
+  balanceOf,
+  Wallet,
+} from "../util/anchorUtils";
 import { DID_SOL_PREFIX, DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { GATEWAY_PROGRAM } from "../util/constants";
 import {
@@ -57,6 +62,7 @@ describe("Middleware: checkPass", () => {
   let cryptidAccount: PublicKey;
   let cryptidBump: number;
   let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
+  let cryptid: CryptidClient;
 
   let middlewareAccount: PublicKey;
   let middlewareBump: number;
@@ -73,7 +79,10 @@ describe("Middleware: checkPass", () => {
   const getGatewayToken = (owner: PublicKey) =>
     gatekeeperService.findGatewayTokenForOwner(owner);
 
-  const setUpMiddleware = async (expireGatewayTokenOnUse: boolean) => {
+  const setUpMiddleware = async (
+    expireGatewayTokenOnUse: boolean,
+    failsafe?: PublicKey
+  ) => {
     [middlewareAccount, middlewareBump] =
       deriveCheckPassMiddlewareAccountAddress(
         authority.publicKey,
@@ -84,13 +93,33 @@ describe("Middleware: checkPass", () => {
       .create(
         gatekeeperNetwork.publicKey,
         middlewareBump,
-        expireGatewayTokenOnUse
+        expireGatewayTokenOnUse,
+        failsafe || null
       )
       .accounts({
         middlewareAccount,
         authority: authority.publicKey,
       })
       .rpc({ skipPreflight: true });
+  };
+
+  const setUpMiddlewareWithClient = async (failsafe?: PublicKey) => {
+    [middlewareAccount, middlewareBump] =
+      deriveCheckPassMiddlewareAccountAddress(
+        authority.publicKey,
+        gatekeeperNetwork.publicKey
+      );
+    const transaction = await new CheckPassMiddleware().createMiddleware({
+      authority,
+      connection: provider.connection,
+      expirePassOnUse: false,
+      keyAlias: "cold",
+      opts: {},
+      gatekeeperNetwork: gatekeeperNetwork.publicKey,
+      failsafe,
+    });
+
+    await provider.sendAndConfirm(transaction, [keypair]);
   };
 
   const setUpCryptid = async () => {
@@ -102,6 +131,27 @@ describe("Middleware: checkPass", () => {
     );
     await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
   };
+
+  const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
+    const middleware = [
+      {
+        programId: checkPassMiddlewareProgram.programId,
+        address: middlewareAccount,
+      },
+    ];
+
+    cryptid = await Cryptid.createFromDID(
+      DID_SOL_PREFIX + ":" + authority.publicKey,
+      signer,
+      middleware,
+      { connection: provider.connection, accountIndex: ++cryptidIndex }
+    );
+
+    await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
+  };
+
+  const makeTransaction = () =>
+    makeTransfer(cryptid.address(), recipient.publicKey);
 
   const propose = async (
     transactionAccount: Keypair,
@@ -186,10 +236,6 @@ describe("Middleware: checkPass", () => {
   });
 
   context("with the cryptid client", () => {
-    let cryptid: CryptidClient;
-    const makeTransaction = () =>
-      makeTransfer(cryptid.address(), recipient.publicKey);
-
     beforeEach("Set up middleware PDA", async () => {
       [middlewareAccount, middlewareBump] =
         deriveCheckPassMiddlewareAccountAddress(
@@ -207,23 +253,8 @@ describe("Middleware: checkPass", () => {
 
       await provider.sendAndConfirm(transaction, [keypair]);
     });
-    beforeEach("Set up Cryptid Account with middleware", async () => {
-      const middleware = [
-        {
-          programId: checkPassMiddlewareProgram.programId,
-          address: middlewareAccount,
-        },
-      ];
 
-      cryptid = await Cryptid.createFromDID(
-        DID_SOL_PREFIX + ":" + authority.publicKey,
-        authority,
-        middleware,
-        { connection: provider.connection, accountIndex: ++cryptidIndex }
-      );
-
-      await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
-    });
+    beforeEach("Set up Cryptid Account with middleware", setUpCryptidClient);
 
     it("blocks a transfer with no gateway token", async () => {
       // no gateway token exists for the authority
@@ -280,6 +311,53 @@ describe("Middleware: checkPass", () => {
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+  });
+
+  context("with a failsafe key", () => {
+    let failsafe: Keypair;
+
+    beforeEach("Set up middleware PDA with a failsafe", async () => {
+      failsafe = Keypair.generate();
+      await setUpMiddlewareWithClient(failsafe.publicKey);
+      await fund(failsafe.publicKey);
+    });
+
+    it("allows a transfer if signed by the failsafe key", async () => {
+      // add the failsafe to the did, and set up a cryptid client
+      await addKeyToDID(authority, failsafe.publicKey);
+      await setUpCryptidClient(failsafe);
+
+      const previousBalance = await balanceOf(cryptid.address());
+
+      // no gateway token exists for the authority
+      const [bigTransaction] = await cryptid.proposeAndExecute(
+        makeTransaction(),
+        true
+      );
+      await cryptid.send(bigTransaction, { skipPreflight: true });
+
+      const currentBalance = await balanceOf(cryptid.address());
+      expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+
+    it("fails a transfer if the failsafe key is not on the DID", async () => {
+      // set up a new cryptid account with the authority
+      await setUpCryptidClient();
+      // attempt to use it as the failsafe
+      cryptid = Cryptid.build(cryptid.details, failsafe, {
+        connection: provider.connection,
+      });
+
+      // no gateway token exists for the authority
+      const [bigTransaction] = await cryptid.proposeAndExecute(
+        makeTransaction(),
+        true
+      );
+      const shouldFail = cryptid.send(bigTransaction, { skipPreflight: true });
+
+      // TODO expose the error message
+      return expect(shouldFail).to.be.rejected;
     });
   });
 

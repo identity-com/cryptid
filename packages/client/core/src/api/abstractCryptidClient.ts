@@ -19,7 +19,7 @@ import { TransactionAccount } from "../types";
 import { ProposalResult } from "../types/cryptid";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
-  protected details: CryptidAccountDetails;
+  readonly details: CryptidAccountDetails;
   protected options: CryptidOptions;
 
   protected constructor(

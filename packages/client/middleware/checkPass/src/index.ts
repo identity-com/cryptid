@@ -57,6 +57,7 @@ export type CheckPassParameters = {
   gatekeeperNetwork: PublicKey;
   keyAlias: string;
   expirePassOnUse: boolean;
+  failsafe?: PublicKey;
 } & GenericMiddlewareParams;
 export class CheckPassMiddleware
   implements MiddlewareClient<CheckPassParameters>
@@ -89,7 +90,12 @@ export class CheckPassMiddleware
     );
 
     return program.methods
-      .create(params.gatekeeperNetwork, middlewareBump, params.expirePassOnUse)
+      .create(
+        params.gatekeeperNetwork,
+        middlewareBump,
+        params.expirePassOnUse,
+        params.failsafe || null
+      )
       .accounts({
         middlewareAccount,
         authority: params.authority.publicKey,

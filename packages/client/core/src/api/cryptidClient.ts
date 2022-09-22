@@ -8,6 +8,7 @@ import {
 import { DIDDocument } from "did-resolver";
 import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount } from "../types";
+import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -50,6 +51,11 @@ export interface CryptidClient {
    * The DID that owns this Cryptid instance
    */
   readonly did: string;
+
+  /**
+   * The details behind the cryptid account (address, owner, etc).
+   */
+  readonly details: CryptidAccountDetails;
 
   /**
    * Signs a transaction from the DID. Returns a meta-transaction

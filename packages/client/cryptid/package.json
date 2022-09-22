@@ -1,6 +1,6 @@
 {
   "name": "@identity.com/cryptid",
-  "version": "0.3.0-alpha.3",
+  "version": "0.3.0-alpha.4",
   "scripts": {
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
@@ -13,8 +13,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@identity.com/cryptid-core": "0.3.0-alpha.3",
-    "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.3"
+    "@identity.com/cryptid-core": "0.3.0-alpha.4",
+    "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.4"
   },
   "devDependencies": {
     "rimraf": "^3.0.2"

@@ -34,11 +34,13 @@ pub mod check_pass {
         gatekeeper_network: Pubkey,
         bump: u8,
         expire_on_use: bool,
+        failsafe: Option<Pubkey>
     ) -> Result<()> {
         ctx.accounts.middleware_account.gatekeeper_network = gatekeeper_network;
         ctx.accounts.middleware_account.authority = ctx.accounts.authority.key();
         ctx.accounts.middleware_account.bump = bump;
         ctx.accounts.middleware_account.expire_on_use = expire_on_use;
+        ctx.accounts.middleware_account.failsafe = failsafe;
         Ok(())
     }
 
@@ -46,8 +48,25 @@ pub mod check_pass {
         let did = &ctx.accounts.owner;
 
         // We check if either
-        // a) the DID is the owner of the GT or
-        // b) the owner of the GT is a signer on the DID
+        // a) the transaction is signed by the failsafe key
+        // b) the DID is the owner of the GT or
+        // c) the owner of the GT is a signer on the DID or
+
+        // check the failsafe key first because it's cheapest
+        if let Some(failsafe) = ctx.accounts.middleware_account.failsafe {
+            // the middleware account has a failsafe key set.
+            // check that it matches the failsafe key
+            // if so, short-circuit the rest of the logic.
+            if failsafe == ctx.accounts.authority.key() {
+                msg!("Failsafe key matched. Skipping DID checks.");
+                // the transaction is signed by the failsafe key - approve it
+                return ExecuteMiddleware::approve(ctx);
+            }
+        }
+
+        // WARNING - any logic added after here is skipped if the transaction is signed
+        // by the failsafe key.
+
         // TODO - this should be in the gateway SDK.
         let gateway_token_info = &ctx.accounts.gateway_token.to_account_info();
         let gateway_token = Gateway::parse_gateway_token(gateway_token_info)
@@ -105,8 +124,11 @@ pub mod check_pass {
 gatekeeper_network: Pubkey,
 /// The bump seed for the middleware signer
 bump: u8,
-/// Expire a gateway token after it has been used
-expire_on_use: bool
+/// Expire a gateway token after it has been used. Note, this can only be used
+/// with gatekeeper networks that have the ExpireFeature enabled.
+expire_on_use: bool,
+/// A key which, if passed as the authority, bypasses the middleware check
+failsafe: Option<Pubkey>
 )]
 pub struct Create<'info> {
     #[account(
@@ -137,8 +159,9 @@ pub struct ExecuteMiddleware<'info> {
     #[account()]
     pub owner: Account<'info, DidAccount>, // TODO allow generative/non-generative
     /// An authority on the DID.
-    /// This is only needed for the expireOnUse case. In this case, the authority must be the owner
-    /// of the gateway token.
+    /// This is needed for two cases:
+    /// 1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.
+    /// 2) the failsafe case. In this case, the authority must match the failsafe key (if present)
     pub authority: Signer<'info>,
     /// The gatekeeper network expire feature
     /// Used only on the expireOnUse case.
@@ -217,15 +240,23 @@ impl<'info> ExecuteMiddleware<'info> {
 
 #[account()]
 pub struct CheckPass {
+    /// The gatekeeper network that this middleware checks against
+    /// If the signer presents a valid gateway token, owned either by the DID that owns the transaction
+    /// or by a key on the DID that owns the transaction, then the transaction is approved.
     pub gatekeeper_network: Pubkey,
+    /// The authority creating t
     pub authority: Pubkey,
     pub bump: u8,
+    /// If true, expire a gateway token after it has been used. Note, this can only be used
+    /// with gatekeeper networks that have the ExpireFeature enabled.
     pub expire_on_use: bool,
+    /// A key which, if passed as the authority, bypasses the middleware check
+    pub failsafe: Option<Pubkey>,
 }
 impl CheckPass {
     pub const SEED_PREFIX: &'static [u8] = b"check_pass";
 
-    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1;
+    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1 + (1 + 32);
 }
 
 #[error_code]
