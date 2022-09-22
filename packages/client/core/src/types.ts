@@ -3,6 +3,7 @@ import { Cryptid } from "@identity.com/cryptid-idl";
 
 export { ExtendedCluster } from "./types/solana";
 export { Wallet } from "./types/crypto";
+export { ProposalResult } from "./types/cryptid";
 export {
   MiddlewareClient,
   GenericMiddlewareParams,

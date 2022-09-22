@@ -97,7 +97,7 @@ describe("directExecute", () => {
 
     const previousBalance = await balanceOf(cryptidAccount);
 
-    const signedTransaction = await cryptid.sign(
+    const signedTransaction = await cryptid.directExecute(
       makeTransaction(recipient.publicKey)
     );
     await cryptid.send(signedTransaction, { skipPreflight: true });
@@ -156,7 +156,7 @@ describe("directExecute", () => {
     const bogusCryptid = await Cryptid.buildFromDID(did, bogusSigner, {
       connection: provider.connection,
     });
-    const signedTransaction = await bogusCryptid.sign(
+    const signedTransaction = await bogusCryptid.directExecute(
       makeTransaction(recipient.publicKey)
     );
     const shouldFail = bogusCryptid.send(signedTransaction, {
@@ -179,7 +179,7 @@ describe("directExecute", () => {
 
     // thunk to execute the Cryptid transaction
     const execute = async () => {
-      const signedTransaction = await secondKeyCryptid.sign(
+      const signedTransaction = await secondKeyCryptid.directExecute(
         makeTransaction(recipient.publicKey)
       );
       await secondKeyCryptid.send(signedTransaction, { skipPreflight: true });

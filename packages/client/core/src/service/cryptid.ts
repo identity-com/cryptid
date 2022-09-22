@@ -24,6 +24,7 @@ import { range } from "ramda";
 import { didToPDA } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
+import { ProposalResult } from "../types/cryptid";
 
 export class CryptidService {
   readonly program: Program<Cryptid>;
@@ -190,42 +191,10 @@ export class CryptidService {
     );
   }
 
-  public async propose(
+  private async getCryptidTransaction(
     account: CryptidAccountDetails,
-    transaction: Transaction
-  ): Promise<[Transaction, PublicKey]> {
-    const transactionAccountAddress = Keypair.generate();
-    const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
-      account,
-      this.authorityKey,
-      transaction.instructions
-    );
-
-    const middlewareInstructions = await this.executeMiddlewareInstructions(
-      account,
-      transactionAccountAddress.publicKey
-    );
-    const unsignedProposeTransaction = await cryptidTransaction
-      .propose(this.program, transactionAccountAddress.publicKey)
-      .signers(
-        // The only signer in a proposal (other than an authority on the DID) is the transaction account
-        [transactionAccountAddress]
-      )
-      .postInstructions(middlewareInstructions)
-      .transaction();
-
-    const proposeTransaction = await this.sign(unsignedProposeTransaction, [
-      transactionAccountAddress,
-    ]);
-
-    return [proposeTransaction, transactionAccountAddress.publicKey];
-  }
-
-  public async execute(
-    account: CryptidAccountDetails,
-    transactionAccountAddress: PublicKey,
-    signers: Keypair[] = []
-  ): Promise<Transaction> {
+    transactionAccountAddress: PublicKey
+  ): Promise<CryptidTransaction> {
     const txAccount = await this.program.account.transactionAccount.fetch(
       transactionAccountAddress
     );
@@ -233,13 +202,102 @@ export class CryptidService {
     const transactionAccount: TransactionAccount =
       txAccount as unknown as TransactionAccount;
 
-    const cryptidTransaction = CryptidTransaction.fromTransactionAccount(
+    return CryptidTransaction.fromTransactionAccount(
       account,
       this.authorityKey,
       transactionAccount
     );
-    const unsignedExecuteTransaction = await cryptidTransaction
+  }
+
+  public async propose(
+    account: CryptidAccountDetails,
+    transaction: Transaction
+  ): Promise<ProposalResult> {
+    const transactionAccountKeypair = Keypair.generate();
+    const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
+      account,
+      this.authorityKey,
+      transaction.instructions
+    );
+
+    const unsignedProposeTransaction = await cryptidTransaction
+      .propose(this.program, transactionAccountKeypair.publicKey)
+      .signers(
+        // The only signer in a proposal (other than an authority on the DID) is the transaction account
+        [transactionAccountKeypair]
+      )
+      .transaction();
+
+    const proposeTransaction = await this.sign(unsignedProposeTransaction, [
+      transactionAccountKeypair,
+    ]);
+
+    return {
+      proposeTransaction: proposeTransaction,
+      transactionAccountAddress: transactionAccountKeypair.publicKey,
+      cryptidTransactionRepresentation: cryptidTransaction,
+    };
+  }
+
+  public async proposeAndExecuteTransaction(
+    account: CryptidAccountDetails,
+    transaction: Transaction,
+    signers: Keypair[] = []
+  ): Promise<Transaction> {
+    const transactionAccountKeypair = Keypair.generate();
+    const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
+      account,
+      this.authorityKey,
+      transaction.instructions
+    );
+
+    const proposeInstruction = await cryptidTransaction
+      .propose(this.program, transactionAccountKeypair.publicKey)
+      .signers(
+        // The only signer in a proposal (other than an authority on the DID) is the transaction account
+        [transactionAccountKeypair]
+      )
+      .instruction();
+
+    const middlewareInstructions = await this.executeMiddlewareInstructions(
+      account,
+      transactionAccountKeypair.publicKey
+    );
+
+    const executeInstruction = await cryptidTransaction
+      .execute(this.program, transactionAccountKeypair.publicKey)
+      .instruction();
+
+    const proposeExecuteTransaction = new Transaction().add(
+      proposeInstruction,
+      ...middlewareInstructions,
+      executeInstruction
+    );
+
+    return this.sign(proposeExecuteTransaction, [
+      transactionAccountKeypair,
+      ...signers,
+    ]);
+  }
+
+  public async execute(
+    account: CryptidAccountDetails,
+    transactionAccountAddress: PublicKey,
+    signers: Keypair[] = [],
+    cryptidTransaction?: CryptidTransaction
+  ): Promise<Transaction> {
+    const middlewareInstructions = await this.executeMiddlewareInstructions(
+      account,
+      transactionAccountAddress
+    );
+
+    const resolvedCryptidTransaction =
+      cryptidTransaction ||
+      (await this.getCryptidTransaction(account, transactionAccountAddress));
+
+    const unsignedExecuteTransaction = await resolvedCryptidTransaction
       .execute(this.program, transactionAccountAddress)
+      .preInstructions(middlewareInstructions)
       .signers([...signers])
       .transaction();
 
