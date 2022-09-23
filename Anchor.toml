@@ -26,7 +26,7 @@ wallet = "~/.config/solana/id.json"
 
 [[test.genesis]]
 address = "didso1Dpqpm4CsiCjzP766BGY89CAdD6ZBL68cRhFPc"
-program = "packages/tests/fixtures/sol_did_3.1.0.so"
+program = "packages/tests/fixtures/sol_did_3.1.1.so"
 
 [[test.genesis]]
 address = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
