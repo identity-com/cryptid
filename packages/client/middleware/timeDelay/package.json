@@ -1,5 +1,5 @@
 {
-  "name": "@identity.com/cryptid-middleware-check-pass",
+  "name": "@identity.com/cryptid-middleware-time-delay",
   "version": "0.3.0-alpha.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@identity.com/cryptid-core": "0.3.0-alpha.5",
-    "@identity.com/solana-gateway-ts": "^0.8.2",
     "@solana/web3.js": "^1.62.0",
     "bn.js": "^5.2.1"
   }

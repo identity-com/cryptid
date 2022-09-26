@@ -16,6 +16,7 @@ use anchor_lang::prelude::*;
 use cryptid::cpi::accounts::ApproveExecution;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
+use cryptid::error::CryptidError;
 
 declare_id!("midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk");
 
@@ -23,10 +24,11 @@ declare_id!("midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk");
 pub mod time_delay {
     use super::*;
 
-    pub fn create(ctx: Context<Create>, seconds: i64, bump: u8) -> Result<()> {
+    pub fn create(ctx: Context<Create>, seconds: i64, bump: u8, previous_middleware: Option<Pubkey>) -> Result<()> {
         ctx.accounts.middleware_account.authority = *ctx.accounts.authority.key;
         ctx.accounts.middleware_account.seconds = seconds;
         ctx.accounts.middleware_account.bump = bump;
+        ctx.accounts.middleware_account.previous_middleware = previous_middleware;
         Ok(())
     }
 
@@ -40,6 +42,21 @@ pub mod time_delay {
         ctx: Context<ExecuteMiddleware>,
         _transaction_create_time_bump: u8,
     ) -> Result<()> {
+        // Check the previous middleware has passed the transaction
+        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+            match ctx.accounts.transaction_account.approved_middleware {
+                None => err!(CryptidError::IncorrectMiddleware),
+                Some(approved_previous_middleware) => {
+                    require_keys_eq!(
+                        required_previous_middleware,
+                        approved_previous_middleware,
+                        CryptidError::IncorrectMiddleware
+                    );
+                    Ok(())
+                }
+            }?;
+        }
+
         let transaction_create_time = &ctx.accounts.transaction_create_time;
         let middleware_account = &ctx.accounts.middleware_account;
 
@@ -57,14 +74,21 @@ pub mod time_delay {
 /// The number of seconds that must pass before the transaction can be executed
 seconds: i64,
 /// The bump seed for the middleware signer
-bump: u8
+bump: u8,
+/// The previous middleware account, if any.
+previous_middleware: Option<Pubkey>
 )]
 pub struct Create<'info> {
     #[account(
         init,
         payer = authority,
         space = 8 + TimeDelay::MAX_SIZE,
-        seeds = [TimeDelay::SEED_PREFIX, authority.key().as_ref(), &seconds.to_le_bytes()],
+        seeds = [
+            TimeDelay::SEED_PREFIX,
+            authority.key().as_ref(),
+            &seconds.to_le_bytes(),
+            previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32])
+        ],
         bump,
     )]
     pub middleware_account: Account<'info, TimeDelay>,
@@ -85,7 +109,10 @@ pub struct RegisterTransaction<'info> {
         init,
         payer = authority,
         space = 8 + TransactionCreationTime::MAX_SIZE,
-        seeds = [TransactionCreationTime::SEED_PREFIX, transaction_account.key().as_ref()],
+        seeds = [
+            TransactionCreationTime::SEED_PREFIX,
+            transaction_account.key().as_ref(),
+        ],
         bump,
     )]
     pub transaction_create_time: Account<'info, TransactionCreationTime>,
@@ -133,6 +160,7 @@ impl<'info> ExecuteMiddleware<'info> {
             TimeDelay::SEED_PREFIX,
             authority_key.as_ref(),
             seconds.as_ref(),
+            ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];
@@ -146,11 +174,13 @@ pub struct TimeDelay {
     pub authority: Pubkey,
     pub seconds: i64, // i64 to match the UnixTimestamp type
     pub bump: u8,
+    /// The previous middleware in the chain, if any
+    pub previous_middleware: Option<Pubkey>,
 }
 impl TimeDelay {
     pub const SEED_PREFIX: &'static [u8] = b"time_delay";
 
-    pub const MAX_SIZE: usize = 32 + 8 + 1;
+    pub const MAX_SIZE: usize = 32 + 8 + 1 + (1 + 32);
 }
 
 #[account()]

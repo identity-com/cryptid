@@ -29,6 +29,12 @@ export type TimeDelay = {
         {
           "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "previousMiddleware",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -121,6 +127,15 @@ export type TimeDelay = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -178,6 +193,12 @@ export const IDL: TimeDelay = {
         {
           "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "previousMiddleware",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -270,6 +291,15 @@ export const IDL: TimeDelay = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }

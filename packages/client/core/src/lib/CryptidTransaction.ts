@@ -79,38 +79,6 @@ export class CryptidTransaction {
           .includes(a.pubkey.toBase58())
     );
 
-    console.log(
-      "availableInstructionAccounts",
-      availableInstructionAccounts.map((a) => a.toString())
-    );
-    console.log("instructions", instructions);
-    console.log(
-      "accountMetas",
-      accountMetas.map((a) => ({
-        pubkey: a.pubkey.toString(),
-        isSigner: a.isSigner,
-        isWritable: a.isWritable,
-      }))
-    );
-    console.log(
-      "filteredAccountMetas",
-      filteredAccountMetas.map((a) => ({
-        pubkey: a.pubkey.toString(),
-        isSigner: a.isSigner,
-        isWritable: a.isWritable,
-      }))
-    );
-    console.log(
-      "original accountMetas",
-      solanaInstructions
-        .flatMap((i) => i.keys)
-        .map((a) => ({
-          pubkey: a.pubkey.toString(),
-          isSigner: a.isSigner,
-          isWritable: a.isWritable,
-        }))
-    );
-
     return new CryptidTransaction(
       cryptidAccount,
       authority,
@@ -124,16 +92,6 @@ export class CryptidTransaction {
     authority: PublicKey,
     transactionAccount: TransactionAccount
   ): CryptidTransaction {
-    console.log(
-      "transactionAccount",
-      JSON.stringify(transactionAccount, null, 2)
-    );
-    console.log(
-      "transactionAccount.instructions",
-      transactionAccount.instructions
-    );
-    console.log("transactionAccount.accounts", transactionAccount.accounts);
-
     // TODO remove typecasting in this function
     const instructions = transactionAccount.instructions as InstructionData[];
     const namedAccounts = [
@@ -144,10 +102,6 @@ export class CryptidTransaction {
     ];
     const remainingAccounts = transactionAccount.accounts;
     const allAccounts = [...namedAccounts, ...remainingAccounts];
-    console.log(
-      "allAccounts",
-      allAccounts.map((a) => a.toString())
-    );
     const accountMetas = transactionAccountMetasToAccountMetas(
       instructions.flatMap((i) => [
         ...(i.accounts as TransactionAccountMeta[]),
@@ -156,27 +110,11 @@ export class CryptidTransaction {
       allAccounts,
       cryptidAccount
     );
-    console.log(
-      "accountMetas",
-      accountMetas.map((a) => ({
-        pubkey: a.pubkey.toString(),
-        isSigner: a.isSigner,
-        isWritable: a.isWritable,
-      }))
-    );
     const filteredAccountMetas = accountMetas.filter(
       (a) =>
         !namedAccounts
           .map((account) => account.toBase58())
           .includes(a.pubkey.toBase58())
-    );
-    console.log(
-      "filteredAccountMetas",
-      filteredAccountMetas.map((a) => ({
-        pubkey: a.pubkey.toString(),
-        isSigner: a.isSigner,
-        isWritable: a.isWritable,
-      }))
     );
 
     return new CryptidTransaction(
