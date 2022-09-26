@@ -1,6 +1,6 @@
 {
   "name": "@identity.com/cryptid",
-  "version": "0.3.0-alpha.5",
+  "version": "0.3.0-alpha.6",
   "scripts": {
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
@@ -13,9 +13,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@identity.com/cryptid-core": "0.3.0-alpha.5",
-    "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.5",
-    "@identity.com/cryptid-middleware-time-delay": "0.3.0-alpha.5"
+    "@identity.com/cryptid-core": "0.3.0-alpha.6",
+    "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.6",
+    "@identity.com/cryptid-middleware-time-delay": "0.3.0-alpha.6"
   },
   "devDependencies": {
     "rimraf": "^3.0.2"

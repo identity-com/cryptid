@@ -4,7 +4,7 @@ echo Updating to version $1
 set -u
 set -e
 
-#yarn build
+yarn build
 
 echo Publishing cryptid-idl@$1
 (cd packages/client/idl && yarn publish --tag alpha --new-version $1 --no-git-tag-version)
@@ -29,8 +29,7 @@ echo Publishing cryptid-middleware-time-delay@$1
 
 echo Publishing cryptid@$1
 (cd packages/client/cryptid \
-  && yarn add @identity.com/cryptid-core@$1 @identity.com/cryptid-middleware-check-pass@$1 \
-  && yarn add @identity.com/cryptid-core@$1 @identity.com/cryptid-middleware-itme-delay@$1 \
+  && yarn add @identity.com/cryptid-core@$1 @identity.com/cryptid-middleware-check-pass@$1 @identity.com/cryptid-middleware-time-delay@$1 \
   && yarn publish --tag alpha --new-version $1 --no-git-tag-version \
 )
 
