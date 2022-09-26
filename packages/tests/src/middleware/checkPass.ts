@@ -86,7 +86,8 @@ describe("Middleware: checkPass", () => {
     [middlewareAccount, middlewareBump] =
       deriveCheckPassMiddlewareAccountAddress(
         authority.publicKey,
-        gatekeeperNetwork.publicKey
+        gatekeeperNetwork.publicKey,
+        failsafe
       );
 
     await checkPassMiddlewareProgram.methods
@@ -107,7 +108,8 @@ describe("Middleware: checkPass", () => {
     [middlewareAccount, middlewareBump] =
       deriveCheckPassMiddlewareAccountAddress(
         authority.publicKey,
-        gatekeeperNetwork.publicKey
+        gatekeeperNetwork.publicKey,
+        failsafe
       );
     const transaction = await new CheckPassMiddleware().createMiddleware({
       authority,

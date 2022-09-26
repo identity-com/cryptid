@@ -37,13 +37,15 @@ const expireFeature = new NetworkFeature({
 
 const deriveMiddlewareAccountAddress = (
   authority: PublicKey,
-  gatekeeperNetwork: PublicKey
+  gatekeeperNetwork: PublicKey,
+  failsafe?: PublicKey
 ): [PublicKey, number] =>
   PublicKey.findProgramAddressSync(
     [
       anchor.utils.bytes.utf8.encode("check_pass"),
       authority.toBuffer(),
       gatekeeperNetwork.toBuffer(),
+      failsafe?.toBuffer() || Buffer.alloc(32),
     ],
     CHECK_PASS_MIDDLEWARE_PROGRAM_ID
   );
@@ -86,7 +88,8 @@ export class CheckPassMiddleware
 
     const [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
       params.authority.publicKey,
-      params.gatekeeperNetwork
+      params.gatekeeperNetwork,
+      params.failsafe
     );
 
     return program.methods

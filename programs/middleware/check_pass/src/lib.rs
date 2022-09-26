@@ -5,11 +5,14 @@ use anchor_lang::solana_program::program::invoke;
 use cryptid::cpi::accounts::ApproveExecution;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
+use cryptid::error::CryptidError;
 use num_traits::cast::AsPrimitive;
 use sol_did::state::DidAccount;
-use solana_gateway::instruction::expire_token;
-use solana_gateway::state::GatewayToken;
-use solana_gateway::Gateway;
+use solana_gateway::{
+    instruction::expire_token,
+    state::GatewayToken,
+    Gateway
+};
 use std::str::FromStr;
 
 declare_id!("midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo");
@@ -135,7 +138,7 @@ pub struct Create<'info> {
     init,
     payer = authority,
     space = 8 + CheckPass::MAX_SIZE,
-    seeds = [CheckPass::SEED_PREFIX, authority.key().as_ref(), gatekeeper_network.key().as_ref()],
+    seeds = [CheckPass::SEED_PREFIX, authority.key().as_ref(), gatekeeper_network.key().as_ref(), failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32])],
     bump,
     )]
     pub middleware_account: Account<'info, CheckPass>,
@@ -192,6 +195,7 @@ impl<'info> ExecuteMiddleware<'info> {
             CheckPass::SEED_PREFIX,
             authority_key.as_ref(),
             gatekeeper_network_key.as_ref(),
+            ctx.accounts.middleware_account.failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];
