@@ -4,7 +4,7 @@ echo Updating to version $1
 set -u
 set -e
 
-yarn build
+#yarn build
 
 echo Publishing cryptid-idl@$1
 (cd packages/client/idl && yarn publish --tag alpha --new-version $1 --no-git-tag-version)

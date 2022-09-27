@@ -13,8 +13,6 @@ import BN from "bn.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { TimeDelay, TimeDelayIDL } from "@identity.com/cryptid-idl";
 import * as anchor from "@project-serum/anchor";
-import { deriveTimeDelayTransactionStateMiddlewareAccountAddress } from "@identity.com/cryptid-program-tests/dist/util/cryptid";
-import { TIME_DELAY_MIDDLEWARE_PROGRAM } from "@identity.com/cryptid-program-tests/dist/util/constants";
 
 export const TIME_DELAY_MIDDLEWARE_PROGRAM_ID = new PublicKey(
   "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
@@ -43,7 +41,7 @@ export const deriveTransactionStateMiddlewareAccountAddress = (
       anchor.utils.bytes.utf8.encode("time_delay_creation_time"),
       transaction_account.toBuffer(),
     ],
-    TIME_DELAY_MIDDLEWARE_PROGRAM
+    TIME_DELAY_MIDDLEWARE_PROGRAM_ID
   );
 
 export type TimeDelayParameters = {
@@ -99,9 +97,8 @@ export class TimeDelayMiddleware
     const program = TimeDelayMiddleware.getProgram(params);
 
     const [transactionStateAddress] =
-      await deriveTimeDelayTransactionStateMiddlewareAccountAddress(
-        params.transactionAccount
-      );
+      deriveTransactionStateMiddlewareAccountAddress(params.transactionAccount);
+
     const registerInstruction = await program.methods
       .registerTransaction()
       .accounts({
@@ -121,9 +118,7 @@ export class TimeDelayMiddleware
     const program = TimeDelayMiddleware.getProgram(params);
 
     const [transactionStateAddress, transactionStateBump] =
-      await deriveTimeDelayTransactionStateMiddlewareAccountAddress(
-        params.transactionAccount
-      );
+      deriveTransactionStateMiddlewareAccountAddress(params.transactionAccount);
 
     return program.methods
       .executeMiddleware(transactionStateBump)

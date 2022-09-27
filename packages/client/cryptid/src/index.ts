@@ -1,7 +1,17 @@
 import { MiddlewareRegistry } from "@identity.com/cryptid-core";
 
 export * from "@identity.com/cryptid-core";
-export * from "@identity.com/cryptid-middleware-check-pass";
+export {
+  CHECK_PASS_MIDDLEWARE_PROGRAM_ID,
+  CheckPassMiddleware,
+  CheckPassParameters,
+} from "@identity.com/cryptid-middleware-check-pass";
+export {
+  TIME_DELAY_MIDDLEWARE_PROGRAM_ID,
+  TimeDelayMiddleware,
+  TimeDelayParameters,
+} from "@identity.com/cryptid-middleware-time-delay";
+
 import {
   CheckPassMiddleware,
   CHECK_PASS_MIDDLEWARE_PROGRAM_ID,
