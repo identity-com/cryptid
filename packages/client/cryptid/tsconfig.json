@@ -17,6 +17,9 @@
     },
     {
       "path": "../middleware/timeDelay"
+    },
+    {
+      "path": "../middleware/checkRecipient"
     }
   ]
 }

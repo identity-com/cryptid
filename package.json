@@ -9,6 +9,7 @@
         "packages/client/idl",
         "packages/client/middleware/checkPass",
         "packages/client/middleware/timeDelay",
+        "packages/client/middleware/checkRecipient",
         "packages/client/core",
         "packages/client/cryptid",
         "packages/client/cli",

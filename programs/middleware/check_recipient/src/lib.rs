@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 use cryptid::cpi::accounts::ApproveExecution;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
+use cryptid::error::CryptidError;
 
 declare_id!("midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf");
 
@@ -11,15 +12,30 @@ declare_id!("midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf");
 pub mod check_recipient {
     use super::*;
 
-    pub fn create(ctx: Context<Create>, recipient: Pubkey, nonce: u8, bump: u8) -> Result<()> {
+    pub fn create(ctx: Context<Create>, recipient: Pubkey, bump: u8, previous_middleware: Option<Pubkey>) -> Result<()> {
         ctx.accounts.middleware_account.recipient = recipient;
         ctx.accounts.middleware_account.authority = *ctx.accounts.authority.key;
-        ctx.accounts.middleware_account.nonce = nonce;
         ctx.accounts.middleware_account.bump = bump;
+        ctx.accounts.middleware_account.previous_middleware = previous_middleware;
         Ok(())
     }
 
     pub fn execute_middleware(ctx: Context<ExecuteMiddleware>) -> Result<()> {
+        // Check the previous middleware has passed the transaction
+        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+            match ctx.accounts.transaction_account.approved_middleware {
+                None => err!(CryptidError::IncorrectMiddleware),
+                Some(approved_previous_middleware) => {
+                    require_keys_eq!(
+                        required_previous_middleware,
+                        approved_previous_middleware,
+                        CryptidError::IncorrectMiddleware
+                    );
+                    Ok(())
+                }
+            }?;
+        }
+
         let transaction_account = &ctx.accounts.transaction_account;
 
         // there can only be one instruction
@@ -58,17 +74,22 @@ pub mod check_recipient {
 #[instruction(
 /// The recipient that the middleware will allow transactions to be sent to
 recipient: Pubkey,
-/// The nonce for the middleware signer
-nonce: u8,
 /// The bump seed for the middleware signer
-bump: u8
+bump: u8,
+/// The previous middleware account, if any.
+previous_middleware: Option<Pubkey>
 )]
 pub struct Create<'info> {
     #[account(
         init,
         payer = authority,
         space = 8 + CheckRecipient::MAX_SIZE,
-        seeds = [CheckRecipient::SEED_PREFIX, authority.key().as_ref(), nonce.to_le_bytes().as_ref()],
+        seeds = [
+            CheckRecipient::SEED_PREFIX,
+            authority.key().as_ref(),
+            recipient.as_ref(),
+            previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32])
+        ],
         bump,
     )]
     pub middleware_account: Account<'info, CheckRecipient>,
@@ -101,12 +122,14 @@ impl<'info> ExecuteMiddleware<'info> {
         // define seeds inline here rather than extract to a function
         // in order to avoid having to convert Vec<Vec<u8>> to &[&[u8]]
         let authority_key = ctx.accounts.middleware_account.authority.key();
-        let nonce = ctx.accounts.middleware_account.nonce.to_le_bytes();
+        let recipient = ctx.accounts.middleware_account.recipient.key();
+        let previous_middleware = ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]);
         let bump = ctx.accounts.middleware_account.bump.to_le_bytes();
         let seeds = &[
             CheckRecipient::SEED_PREFIX,
             authority_key.as_ref(),
-            nonce.as_ref(),
+            recipient.as_ref(),
+            previous_middleware,
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];
@@ -119,13 +142,14 @@ impl<'info> ExecuteMiddleware<'info> {
 pub struct CheckRecipient {
     pub recipient: Pubkey,
     pub authority: Pubkey,
-    pub nonce: u8,
     pub bump: u8,
+    /// The previous middleware in the chain, if any
+    pub previous_middleware: Option<Pubkey>,
 }
 impl CheckRecipient {
     pub const SEED_PREFIX: &'static [u8] = b"check_recipient";
 
-    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1;
+    pub const MAX_SIZE: usize = 32 + 32 + 1 + (1 + 32);
 }
 
 #[error_code]

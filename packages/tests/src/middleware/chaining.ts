@@ -243,7 +243,7 @@ describe("Middleware chaining", () => {
     return expect(shouldFail).to.be.rejected;
   });
 
-  it.only("fails if a middleware is skipped", async () => {
+  it("fails if a middleware is skipped", async () => {
     // issue a gateway token to the authority
     await createGatewayToken(authority.publicKey);
 
