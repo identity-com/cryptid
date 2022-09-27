@@ -27,12 +27,14 @@ export type CheckRecipient = {
           "type": "publicKey"
         },
         {
-          "name": "nonce",
+          "name": "bump",
           "type": "u8"
         },
         {
-          "name": "bump",
-          "type": "u8"
+          "name": "previousMiddleware",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -73,12 +75,17 @@ export type CheckRecipient = {
             "type": "publicKey"
           },
           {
-            "name": "nonce",
+            "name": "bump",
             "type": "u8"
           },
           {
-            "name": "bump",
-            "type": "u8"
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -137,12 +144,14 @@ export const IDL: CheckRecipient = {
           "type": "publicKey"
         },
         {
-          "name": "nonce",
+          "name": "bump",
           "type": "u8"
         },
         {
-          "name": "bump",
-          "type": "u8"
+          "name": "previousMiddleware",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -183,12 +192,17 @@ export const IDL: CheckRecipient = {
             "type": "publicKey"
           },
           {
-            "name": "nonce",
+            "name": "bump",
             "type": "u8"
           },
           {
-            "name": "bump",
-            "type": "u8"
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }

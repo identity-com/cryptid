@@ -11,6 +11,11 @@ export {
   TimeDelayMiddleware,
   TimeDelayParameters,
 } from "@identity.com/cryptid-middleware-time-delay";
+export {
+  CHECK_RECIPIENT_MIDDLEWARE_PROGRAM_ID,
+  CheckRecipientMiddleware,
+  CheckRecipientParameters,
+} from "@identity.com/cryptid-middleware-check-recipient";
 
 import {
   CheckPassMiddleware,
@@ -22,6 +27,11 @@ import {
   TIME_DELAY_MIDDLEWARE_PROGRAM_ID,
 } from "@identity.com/cryptid-middleware-time-delay";
 
+import {
+  CheckRecipientMiddleware,
+  CHECK_RECIPIENT_MIDDLEWARE_PROGRAM_ID,
+} from "@identity.com/cryptid-middleware-check-recipient";
+
 MiddlewareRegistry.get().register(
   CHECK_PASS_MIDDLEWARE_PROGRAM_ID,
   new CheckPassMiddleware()
@@ -30,4 +40,9 @@ MiddlewareRegistry.get().register(
 MiddlewareRegistry.get().register(
   TIME_DELAY_MIDDLEWARE_PROGRAM_ID,
   new TimeDelayMiddleware()
+);
+
+MiddlewareRegistry.get().register(
+  CHECK_RECIPIENT_MIDDLEWARE_PROGRAM_ID,
+  new CheckRecipientMiddleware()
 );

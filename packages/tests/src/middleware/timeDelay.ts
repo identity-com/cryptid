@@ -2,13 +2,7 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { makeTransfer } from "../util/cryptid";
-import {
-  fund,
-  createTestContext,
-  balanceOf,
-  sleep,
-  Wallet,
-} from "../util/anchorUtils";
+import { fund, createTestContext, balanceOf, sleep } from "../util/anchorUtils";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
 import { Cryptid } from "@identity.com/cryptid";
 import {
@@ -78,37 +72,34 @@ describe("Middleware: timeDelay", () => {
     await provider.sendAndConfirm(fastMiddlewareTx, [keypair]);
   });
 
-  before(
-    "Set up Cryptid Account with middleware",
-    async (signer: Wallet | Keypair = authority) => {
-      slowCryptid = await Cryptid.createFromDID(
-        DID_SOL_PREFIX + ":" + authority.publicKey,
-        signer,
-        [
-          {
-            programId: timeDelayMiddlewareProgram.programId,
-            address: slowMiddlewareAccount,
-          },
-        ],
-        { connection: provider.connection, accountIndex: ++cryptidIndex }
-      );
+  before("Set up Cryptid Account with middleware", async () => {
+    slowCryptid = await Cryptid.createFromDID(
+      DID_SOL_PREFIX + ":" + authority.publicKey,
+      authority,
+      [
+        {
+          programId: timeDelayMiddlewareProgram.programId,
+          address: slowMiddlewareAccount,
+        },
+      ],
+      { connection: provider.connection, accountIndex: ++cryptidIndex }
+    );
 
-      fastCryptid = await Cryptid.createFromDID(
-        DID_SOL_PREFIX + ":" + authority.publicKey,
-        signer,
-        [
-          {
-            programId: timeDelayMiddlewareProgram.programId,
-            address: fastMiddlewareAccount,
-          },
-        ],
-        { connection: provider.connection, accountIndex: ++cryptidIndex }
-      );
+    fastCryptid = await Cryptid.createFromDID(
+      DID_SOL_PREFIX + ":" + authority.publicKey,
+      authority,
+      [
+        {
+          programId: timeDelayMiddlewareProgram.programId,
+          address: fastMiddlewareAccount,
+        },
+      ],
+      { connection: provider.connection, accountIndex: ++cryptidIndex }
+    );
 
-      await fund(slowCryptid.address(), 20 * LAMPORTS_PER_SOL);
-      await fund(fastCryptid.address(), 20 * LAMPORTS_PER_SOL);
-    }
-  );
+    await fund(slowCryptid.address(), 20 * LAMPORTS_PER_SOL);
+    await fund(fastCryptid.address(), 20 * LAMPORTS_PER_SOL);
+  });
 
   it("cannot immediately execute a transfer", async () => {
     // propose the Cryptid transaction
