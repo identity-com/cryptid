@@ -118,12 +118,6 @@ describe("proposeExecute", () => {
   it("can propose and execute a transfer using the Cryptid client", async () => {
     const previousBalance = await balanceOf(cryptid.address());
 
-    console.log({
-      cryptidAccount: cryptid.address().toString(),
-      recipient: recipient.publicKey.toString(),
-      authority: authority.publicKey.toString(),
-    });
-
     // send the propose tx
     const { proposeTransaction, transactionAccountAddress } =
       await cryptid.propose(makeTransaction());
@@ -193,12 +187,6 @@ describe("proposeExecute", () => {
 
   it("can propose and execute in the same transaction using the cryptid client", async () => {
     const previousBalance = await balanceOf(cryptid.address());
-
-    console.log({
-      cryptidAccount: cryptid.address().toString(),
-      recipient: recipient.publicKey.toString(),
-      authority: authority.publicKey.toString(),
-    });
 
     const [bigTransaction] = await cryptid.proposeAndExecute(
       makeTransaction(),

@@ -8,7 +8,6 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {
   cryptidTransferInstruction,
-  deriveCheckPassMiddlewareAccountAddress,
   toAccountMeta,
   createCryptidAccount,
   makeTransfer,
@@ -38,6 +37,7 @@ import {
   Cryptid,
   CheckPassMiddleware,
 } from "@identity.com/cryptid";
+import { deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-pass";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -83,19 +83,19 @@ describe("Middleware: checkPass", () => {
     expireGatewayTokenOnUse: boolean,
     failsafe?: PublicKey
   ) => {
-    [middlewareAccount, middlewareBump] =
-      deriveCheckPassMiddlewareAccountAddress(
-        authority.publicKey,
-        gatekeeperNetwork.publicKey,
-        failsafe
-      );
+    [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+      authority.publicKey,
+      gatekeeperNetwork.publicKey,
+      failsafe
+    );
 
     await checkPassMiddlewareProgram.methods
       .create(
         gatekeeperNetwork.publicKey,
         middlewareBump,
         expireGatewayTokenOnUse,
-        failsafe || null
+        failsafe || null,
+        null
       )
       .accounts({
         middlewareAccount,
@@ -105,12 +105,11 @@ describe("Middleware: checkPass", () => {
   };
 
   const setUpMiddlewareWithClient = async (failsafe?: PublicKey) => {
-    [middlewareAccount, middlewareBump] =
-      deriveCheckPassMiddlewareAccountAddress(
-        authority.publicKey,
-        gatekeeperNetwork.publicKey,
-        failsafe
-      );
+    [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+      authority.publicKey,
+      gatekeeperNetwork.publicKey,
+      failsafe
+    );
     const transaction = await new CheckPassMiddleware().createMiddleware({
       authority,
       connection: provider.connection,
@@ -121,7 +120,9 @@ describe("Middleware: checkPass", () => {
       failsafe,
     });
 
-    await provider.sendAndConfirm(transaction, [keypair]);
+    await provider.sendAndConfirm(transaction, [keypair], {
+      skipPreflight: true,
+    });
   };
 
   const setUpCryptid = async () => {
@@ -239,11 +240,10 @@ describe("Middleware: checkPass", () => {
 
   context("with the cryptid client", () => {
     beforeEach("Set up middleware PDA", async () => {
-      [middlewareAccount, middlewareBump] =
-        deriveCheckPassMiddlewareAccountAddress(
-          authority.publicKey,
-          gatekeeperNetwork.publicKey
-        );
+      [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+        authority.publicKey,
+        gatekeeperNetwork.publicKey
+      );
       const transaction = await new CheckPassMiddleware().createMiddleware({
         authority,
         connection: provider.connection,

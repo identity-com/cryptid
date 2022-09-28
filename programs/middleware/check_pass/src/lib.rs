@@ -37,18 +37,34 @@ pub mod check_pass {
         gatekeeper_network: Pubkey,
         bump: u8,
         expire_on_use: bool,
-        failsafe: Option<Pubkey>
+        failsafe: Option<Pubkey>,
+        previous_middleware: Option<Pubkey>
     ) -> Result<()> {
         ctx.accounts.middleware_account.gatekeeper_network = gatekeeper_network;
         ctx.accounts.middleware_account.authority = ctx.accounts.authority.key();
         ctx.accounts.middleware_account.bump = bump;
         ctx.accounts.middleware_account.expire_on_use = expire_on_use;
         ctx.accounts.middleware_account.failsafe = failsafe;
+        ctx.accounts.middleware_account.previous_middleware = previous_middleware;
+
         Ok(())
     }
 
     pub fn execute_middleware(ctx: Context<ExecuteMiddleware>) -> Result<()> {
-        let did = &ctx.accounts.owner;
+        // Check the previous middleware has passed the transaction
+        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+            match ctx.accounts.transaction_account.approved_middleware {
+                None => err!(CryptidError::IncorrectMiddleware),
+                Some(approved_previous_middleware) => {
+                    require_keys_eq!(
+                        required_previous_middleware,
+                        approved_previous_middleware,
+                        CryptidError::IncorrectMiddleware
+                    );
+                    Ok(())
+                }
+            }?;
+        }
 
         // We check if either
         // a) the transaction is signed by the failsafe key
@@ -70,6 +86,7 @@ pub mod check_pass {
         // WARNING - any logic added after here is skipped if the transaction is signed
         // by the failsafe key.
 
+        let did = &ctx.accounts.owner;
         // TODO - this should be in the gateway SDK.
         let gateway_token_info = &ctx.accounts.gateway_token.to_account_info();
         let gateway_token = Gateway::parse_gateway_token(gateway_token_info)
@@ -131,14 +148,22 @@ bump: u8,
 /// with gatekeeper networks that have the ExpireFeature enabled.
 expire_on_use: bool,
 /// A key which, if passed as the authority, bypasses the middleware check
-failsafe: Option<Pubkey>
+failsafe: Option<Pubkey>,
+/// The previous middleware account, if any.
+previous_middleware: Option<Pubkey>
 )]
 pub struct Create<'info> {
     #[account(
     init,
     payer = authority,
     space = 8 + CheckPass::MAX_SIZE,
-    seeds = [CheckPass::SEED_PREFIX, authority.key().as_ref(), gatekeeper_network.key().as_ref(), failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32])],
+    seeds = [
+        CheckPass::SEED_PREFIX,
+        authority.key().as_ref(),
+        gatekeeper_network.key().as_ref(),
+        failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32]),
+        previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32])
+    ],
     bump,
     )]
     pub middleware_account: Account<'info, CheckPass>,
@@ -196,6 +221,7 @@ impl<'info> ExecuteMiddleware<'info> {
             authority_key.as_ref(),
             gatekeeper_network_key.as_ref(),
             ctx.accounts.middleware_account.failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32]),
+            ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];
@@ -256,11 +282,13 @@ pub struct CheckPass {
     pub expire_on_use: bool,
     /// A key which, if passed as the authority, bypasses the middleware check
     pub failsafe: Option<Pubkey>,
+    /// The previous middleware in the chain, if any
+    pub previous_middleware: Option<Pubkey>,
 }
 impl CheckPass {
     pub const SEED_PREFIX: &'static [u8] = b"check_pass";
 
-    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1 + (1 + 32);
+    pub const MAX_SIZE: usize = 32 + 32 + 1 + 1 + (1 + 32) + (1 + 32);
 }
 
 #[error_code]

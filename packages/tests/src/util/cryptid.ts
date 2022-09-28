@@ -109,17 +109,18 @@ export const deriveCheckRecipientMiddlewareAccountAddress = (
 export const deriveCheckPassMiddlewareAccountAddress = (
   authority: PublicKey,
   gatekeeperNetwork: PublicKey,
-  failsafe?: PublicKey
-): [PublicKey, number] =>
-  PublicKey.findProgramAddressSync(
-    [
-      anchor.utils.bytes.utf8.encode("check_pass"),
-      authority.toBuffer(),
-      gatekeeperNetwork.toBuffer(),
-      failsafe?.toBuffer() || Buffer.alloc(32),
-    ],
-    CHECK_PASS_MIDDLEWARE_PROGRAM
-  );
+  failsafe?: PublicKey,
+  previousMiddlewareAccount?: PublicKey
+): [PublicKey, number] => {
+  const seeds = [
+    anchor.utils.bytes.utf8.encode("check_pass"),
+    authority.toBuffer(),
+    gatekeeperNetwork.toBuffer(),
+    failsafe?.toBuffer() || Buffer.alloc(32),
+    previousMiddlewareAccount?.toBuffer() || Buffer.alloc(32),
+  ];
+  return PublicKey.findProgramAddressSync(seeds, CHECK_PASS_MIDDLEWARE_PROGRAM);
+};
 
 export const deriveTimeDelayMiddlewareAccountAddress = (
   authority: PublicKey,

@@ -39,6 +39,12 @@ export type CheckPass = {
           "type": {
             "option": "publicKey"
           }
+        },
+        {
+          "name": "previousMiddleware",
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
@@ -150,6 +156,15 @@ export type CheckPass = {
             "type": {
               "option": "publicKey"
             }
+          },
+          {
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -212,6 +227,12 @@ export const IDL: CheckPass = {
         },
         {
           "name": "failsafe",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "previousMiddleware",
           "type": {
             "option": "publicKey"
           }
@@ -322,6 +343,15 @@ export const IDL: CheckPass = {
             "name": "failsafe",
             "docs": [
               "A key which, if passed as the authority, bypasses the middleware check"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "previousMiddleware",
+            "docs": [
+              "The previous middleware in the chain, if any"
             ],
             "type": {
               "option": "publicKey"

@@ -35,20 +35,24 @@ const expireFeature = new NetworkFeature({
   userTokenExpiry: new UserTokenExpiry({}),
 });
 
-const deriveMiddlewareAccountAddress = (
+export const deriveMiddlewareAccountAddress = (
   authority: PublicKey,
   gatekeeperNetwork: PublicKey,
-  failsafe?: PublicKey
-): [PublicKey, number] =>
-  PublicKey.findProgramAddressSync(
-    [
-      anchor.utils.bytes.utf8.encode("check_pass"),
-      authority.toBuffer(),
-      gatekeeperNetwork.toBuffer(),
-      failsafe?.toBuffer() || Buffer.alloc(32),
-    ],
+  failsafe?: PublicKey,
+  previousMiddlewareAccount?: PublicKey
+): [PublicKey, number] => {
+  const seeds = [
+    anchor.utils.bytes.utf8.encode("check_pass"),
+    authority.toBuffer(),
+    gatekeeperNetwork.toBuffer(),
+    failsafe?.toBuffer() || Buffer.alloc(32),
+    previousMiddlewareAccount?.toBuffer() || Buffer.alloc(32),
+  ];
+  return PublicKey.findProgramAddressSync(
+    seeds,
     CHECK_PASS_MIDDLEWARE_PROGRAM_ID
   );
+};
 
 const getExpireFeatureAddress = (
   gatekeeperNetwork: PublicKey
@@ -89,7 +93,8 @@ export class CheckPassMiddleware
     const [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
       params.authority.publicKey,
       params.gatekeeperNetwork,
-      params.failsafe
+      params.failsafe,
+      params.previousMiddleware
     );
 
     return program.methods
@@ -97,7 +102,8 @@ export class CheckPassMiddleware
         params.gatekeeperNetwork,
         middlewareBump,
         params.expirePassOnUse,
-        params.failsafe || null
+        params.failsafe || null,
+        params.previousMiddleware || null
       )
       .accounts({
         middlewareAccount,
@@ -106,9 +112,13 @@ export class CheckPassMiddleware
       .transaction();
   }
 
-  public async executeMiddleware(
+  public async onPropose(): Promise<TransactionInstruction[]> {
+    return [];
+  }
+
+  public async onExecute(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction> {
+  ): Promise<TransactionInstruction[]> {
     const program = CheckPassMiddleware.getProgram(params);
 
     const middlewareAccount = await program.account.checkPass.fetch(
@@ -135,6 +145,7 @@ export class CheckPassMiddleware
         cryptidProgram: CRYPTID_PROGRAM,
         gatewayProgram: GATEWAY_PROGRAM,
       })
-      .instruction();
+      .instruction()
+      .then(Array.of);
   }
 }

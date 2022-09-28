@@ -12,6 +12,7 @@ export type GenericMiddlewareParams = {
   authority: Wallet;
   connection: Connection;
   opts: ConfirmOptions;
+  previousMiddleware?: PublicKey;
 };
 
 export type ExecuteMiddlewareParams = GenericMiddlewareParams & {
@@ -25,7 +26,6 @@ export type ExecuteMiddlewareParams = GenericMiddlewareParams & {
 
 export interface MiddlewareClient<C extends GenericMiddlewareParams> {
   createMiddleware(params: C): Promise<Transaction>;
-  executeMiddleware(
-    params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction>;
+  onPropose(params: ExecuteMiddlewareParams): Promise<TransactionInstruction[]>;
+  onExecute(params: ExecuteMiddlewareParams): Promise<TransactionInstruction[]>;
 }
