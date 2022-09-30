@@ -47,7 +47,7 @@ export class CryptidBuilder {
     middleware: Middleware[],
     options: CryptidOptions
   ): Promise<CryptidClient> {
-    const index = options.accountIndex || 1; // 0 is reserved for the default (generative) cryptid
+    const index = options.accountIndex === undefined ? 1 : options.accountIndex; // 0 is reserved for the default (generative) cryptid
     const didAccount = didToPDA(did);
     const [address, bump] = getCryptidAccountAddress(didAccount, index);
     const details = new CryptidAccountDetails(

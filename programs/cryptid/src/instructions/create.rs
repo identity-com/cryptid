@@ -3,6 +3,7 @@ use crate::state::cryptid_account::CryptidAccount;
 use crate::util::*;
 use anchor_lang::prelude::*;
 use sol_did::state::DidAccount;
+use crate::error::CryptidError;
 
 #[derive(Accounts)]
 #[instruction(
@@ -38,6 +39,7 @@ pub fn create(
     index: u32,
     _bump: u8,
 ) -> Result<()> {
+    require_gt!(index, 0, CryptidError::CreatingWithZeroIndex);
     ctx.accounts.cryptid_account.middleware = middleware;
     ctx.accounts.cryptid_account.index = index;
 
