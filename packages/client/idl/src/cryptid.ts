@@ -73,7 +73,7 @@ export type Cryptid = {
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The DID on the Cryptid instance"
+            "The DID of the Cryptid instance"
           ]
         },
         {
@@ -182,7 +182,7 @@ export type Cryptid = {
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The DID on the Cryptid instance"
+            "The DID of the Cryptid instance"
           ]
         },
         {
@@ -607,7 +607,7 @@ export const IDL: Cryptid = {
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The DID on the Cryptid instance"
+            "The DID of the Cryptid instance"
           ]
         },
         {
@@ -716,7 +716,7 @@ export const IDL: Cryptid = {
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The DID on the Cryptid instance"
+            "The DID of the Cryptid instance"
           ]
         },
         {

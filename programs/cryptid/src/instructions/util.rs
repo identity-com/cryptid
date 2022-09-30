@@ -2,7 +2,6 @@ use crate::error::CryptidError;
 use anchor_lang::prelude::*;
 use bitflags::bitflags;
 use num_traits::cast::ToPrimitive;
-use sol_did::state::DidAccount;
 
 /// A trait that extracts all accounts from an anchor instruction context, combining
 pub trait AllAccounts<'a, 'b, 'c, 'info> {
@@ -48,17 +47,17 @@ impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> f
 /// Verifies that the signer has the permission to sign for the DID
 /// If the controller-chain is empty, it expects the signer to be a key on the did itself
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
-pub fn verify_keys<'a, 'info>(
-    did: &Account<'a, DidAccount>,
+pub fn verify_keys<'info1, 'info2>(
+    did: &AccountInfo<'info1>,
     signer: &Pubkey,
-    controlling_did_accounts: Vec<&AccountInfo<'info>>,
+    controlling_did_accounts: Vec<&AccountInfo<'info2>>,
 ) -> Result<()> {
     let controlling_did_accounts = controlling_did_accounts
         .into_iter()
         .cloned()
         .collect::<Vec<_>>();
     let signer_is_authority = sol_did::integrations::is_authority(
-        &did.to_account_info(),
+        did,
         None,
         controlling_did_accounts.as_slice(),
         signer,

@@ -34,3 +34,8 @@ export const initializeDIDAccount = async (
   await didSolService.initialize(10_000).rpc();
   return did.dataAccount()[0];
 };
+
+export const getDidAccount = async (authority: Wallet): Promise<PublicKey> => {
+  const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
+  return did.dataAccount()[0];
+};

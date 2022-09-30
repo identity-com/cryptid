@@ -3,7 +3,6 @@ use crate::instructions::util::*;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::util::*;
 use anchor_lang::prelude::*;
-use sol_did::state::DidAccount;
 
 #[derive(Accounts)]
 #[instruction(
@@ -26,7 +25,8 @@ pub struct Create<'info> {
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     /// The DID of the Cryptid instance
-    pub did: Account<'info, DidAccount>,
+    /// CHECK: DID Account can be generative or not
+    pub did: UncheckedAccount<'info>,
     /// The signer of the transaction. Must be a DID authority.
     #[account(mut)]
     pub authority: Signer<'info>,
