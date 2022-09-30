@@ -33,7 +33,9 @@ pub enum CryptidError {
     #[msg("Signer is not authorised to sign for this Cryptid account")]
     KeyMustBeSigner,
     /// Attempt to create a Cryptid account with index zero, reserved for the default account.
-    #[msg("Attempt to create a Cryptid account with index zero, reserved for the default account.")]
+    #[msg(
+        "Attempt to create a Cryptid account with index zero, reserved for the default account."
+    )]
     CreatingWithZeroIndex,
     /// Indexer went out of possible range
     #[msg("Index out of range.")]

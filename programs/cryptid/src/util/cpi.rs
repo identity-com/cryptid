@@ -25,6 +25,8 @@ pub fn is_transfer(solana_instruction: &Instruction) -> bool {
 
 pub struct CPI {}
 impl CPI {
+    // TODO remove once the account macro is added and we have reduced the amount of arguments
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_instructions(
         instructions: &Vec<AbbreviatedInstructionData>,
         accounts: &Vec<&AccountInfo>,

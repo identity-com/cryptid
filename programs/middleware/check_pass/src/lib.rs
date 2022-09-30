@@ -3,16 +3,12 @@ extern crate core;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke;
 use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::error::CryptidError;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
-use cryptid::error::CryptidError;
 use num_traits::cast::AsPrimitive;
 use sol_did::state::DidAccount;
-use solana_gateway::{
-    instruction::expire_token,
-    state::GatewayToken,
-    Gateway
-};
+use solana_gateway::{instruction::expire_token, state::GatewayToken, Gateway};
 use std::str::FromStr;
 
 declare_id!("midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo");
@@ -38,7 +34,7 @@ pub mod check_pass {
         bump: u8,
         expire_on_use: bool,
         failsafe: Option<Pubkey>,
-        previous_middleware: Option<Pubkey>
+        previous_middleware: Option<Pubkey>,
     ) -> Result<()> {
         ctx.accounts.middleware_account.gatekeeper_network = gatekeeper_network;
         ctx.accounts.middleware_account.authority = ctx.accounts.authority.key();
@@ -52,7 +48,9 @@ pub mod check_pass {
 
     pub fn execute_middleware(ctx: Context<ExecuteMiddleware>) -> Result<()> {
         // Check the previous middleware has passed the transaction
-        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+        if let Some(required_previous_middleware) =
+            ctx.accounts.middleware_account.previous_middleware
+        {
             match ctx.accounts.transaction_account.approved_middleware {
                 None => err!(CryptidError::IncorrectMiddleware),
                 Some(approved_previous_middleware) => {
@@ -220,8 +218,18 @@ impl<'info> ExecuteMiddleware<'info> {
             CheckPass::SEED_PREFIX,
             authority_key.as_ref(),
             gatekeeper_network_key.as_ref(),
-            ctx.accounts.middleware_account.failsafe.as_ref().map(|f| f.as_ref()).unwrap_or(&[0u8; 32]),
-            ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]),
+            ctx.accounts
+                .middleware_account
+                .failsafe
+                .as_ref()
+                .map(|f| f.as_ref())
+                .unwrap_or(&[0u8; 32]),
+            ctx.accounts
+                .middleware_account
+                .previous_middleware
+                .as_ref()
+                .map(|p| p.as_ref())
+                .unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];

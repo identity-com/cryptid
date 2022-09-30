@@ -14,9 +14,9 @@ extern crate core;
 
 use anchor_lang::prelude::*;
 use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::error::CryptidError;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
-use cryptid::error::CryptidError;
 
 declare_id!("midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk");
 
@@ -24,7 +24,12 @@ declare_id!("midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk");
 pub mod time_delay {
     use super::*;
 
-    pub fn create(ctx: Context<Create>, seconds: i64, bump: u8, previous_middleware: Option<Pubkey>) -> Result<()> {
+    pub fn create(
+        ctx: Context<Create>,
+        seconds: i64,
+        bump: u8,
+        previous_middleware: Option<Pubkey>,
+    ) -> Result<()> {
         ctx.accounts.middleware_account.authority = *ctx.accounts.authority.key;
         ctx.accounts.middleware_account.seconds = seconds;
         ctx.accounts.middleware_account.bump = bump;
@@ -43,7 +48,9 @@ pub mod time_delay {
         _transaction_create_time_bump: u8,
     ) -> Result<()> {
         // Check the previous middleware has passed the transaction
-        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+        if let Some(required_previous_middleware) =
+            ctx.accounts.middleware_account.previous_middleware
+        {
             match ctx.accounts.transaction_account.approved_middleware {
                 None => err!(CryptidError::IncorrectMiddleware),
                 Some(approved_previous_middleware) => {
@@ -160,7 +167,12 @@ impl<'info> ExecuteMiddleware<'info> {
             TimeDelay::SEED_PREFIX,
             authority_key.as_ref(),
             seconds.as_ref(),
-            ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]),
+            ctx.accounts
+                .middleware_account
+                .previous_middleware
+                .as_ref()
+                .map(|p| p.as_ref())
+                .unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];

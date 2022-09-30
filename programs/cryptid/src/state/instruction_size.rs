@@ -2,7 +2,7 @@ use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use anchor_lang::prelude::*;
 
 /// A helper struct for calculating [`InstructionData`] size
-#[derive(Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, PartialEq)]
+#[derive(Clone, Copy, Debug, AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
 pub struct InstructionSize {
     /// The number of accounts in the instruction
     pub accounts: u8,
