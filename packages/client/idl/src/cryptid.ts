@@ -506,21 +506,26 @@ export type Cryptid = {
     },
     {
       "code": 6009,
+      "name": "CreatingWithZeroIndex",
+      "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
+    },
+    {
+      "code": 6010,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     }
@@ -1035,21 +1040,26 @@ export const IDL: Cryptid = {
     },
     {
       "code": 6009,
+      "name": "CreatingWithZeroIndex",
+      "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
+    },
+    {
+      "code": 6010,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     }
