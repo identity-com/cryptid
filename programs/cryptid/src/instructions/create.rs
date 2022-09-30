@@ -1,9 +1,9 @@
+use crate::error::CryptidError;
 use crate::instructions::util::*;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::util::*;
 use anchor_lang::prelude::*;
 use sol_did::state::DidAccount;
-use crate::error::CryptidError;
 
 #[derive(Accounts)]
 #[instruction(

@@ -2,9 +2,9 @@ extern crate core;
 
 use anchor_lang::prelude::*;
 use cryptid::cpi::accounts::ApproveExecution;
+use cryptid::error::CryptidError;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
-use cryptid::error::CryptidError;
 
 declare_id!("midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf");
 
@@ -12,7 +12,12 @@ declare_id!("midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf");
 pub mod check_recipient {
     use super::*;
 
-    pub fn create(ctx: Context<Create>, recipient: Pubkey, bump: u8, previous_middleware: Option<Pubkey>) -> Result<()> {
+    pub fn create(
+        ctx: Context<Create>,
+        recipient: Pubkey,
+        bump: u8,
+        previous_middleware: Option<Pubkey>,
+    ) -> Result<()> {
         ctx.accounts.middleware_account.recipient = recipient;
         ctx.accounts.middleware_account.authority = *ctx.accounts.authority.key;
         ctx.accounts.middleware_account.bump = bump;
@@ -22,7 +27,9 @@ pub mod check_recipient {
 
     pub fn execute_middleware(ctx: Context<ExecuteMiddleware>) -> Result<()> {
         // Check the previous middleware has passed the transaction
-        if let Some(required_previous_middleware) = ctx.accounts.middleware_account.previous_middleware {
+        if let Some(required_previous_middleware) =
+            ctx.accounts.middleware_account.previous_middleware
+        {
             match ctx.accounts.transaction_account.approved_middleware {
                 None => err!(CryptidError::IncorrectMiddleware),
                 Some(approved_previous_middleware) => {
@@ -123,7 +130,13 @@ impl<'info> ExecuteMiddleware<'info> {
         // in order to avoid having to convert Vec<Vec<u8>> to &[&[u8]]
         let authority_key = ctx.accounts.middleware_account.authority.key();
         let recipient = ctx.accounts.middleware_account.recipient.key();
-        let previous_middleware = ctx.accounts.middleware_account.previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32]);
+        let previous_middleware = ctx
+            .accounts
+            .middleware_account
+            .previous_middleware
+            .as_ref()
+            .map(|p| p.as_ref())
+            .unwrap_or(&[0u8; 32]);
         let bump = ctx.accounts.middleware_account.bump.to_le_bytes();
         let seeds = &[
             CheckRecipient::SEED_PREFIX,
