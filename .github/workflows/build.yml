@@ -28,6 +28,17 @@ jobs:
         with:
           node-version: '16'
 
+      - name: Cache node dependencies
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: install node_modules
+        run: |
+          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+          yarn --frozen-lockfile
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -76,6 +87,11 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: install node_modules
+        run: |
+          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+          yarn --frozen-lockfile
 
       - name: Run lint
         run: yarn lint
