@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - anchor_rewrite
-      - feature/IDCOM-2080__CI
   pull_request:
 
 env:
@@ -87,11 +86,6 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: install node_modules
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          yarn --frozen-lockfile
 
       - name: Run lint
         run: yarn lint
