@@ -25,7 +25,7 @@ pub struct ExecuteTransaction<'info> {
         bump
     )]
     pub cryptid_account: Account<'info, CryptidAccount>, // TODO use new macro that allows generative accounts
-    /// The DID of the Cryptid instance
+    /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not
     pub did: UncheckedAccount<'info>,
     /// The program for the DID

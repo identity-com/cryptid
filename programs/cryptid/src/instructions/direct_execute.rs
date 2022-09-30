@@ -26,7 +26,7 @@ pub struct DirectExecute<'info> {
         // bump = cryptid_account_bump
     )]
     pub cryptid_account: UncheckedAccount<'info>, // TODO use new macro that allows generative accounts and non-generative accounts
-    /// The DID of the Cryptid instance
+    /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not
     pub did: UncheckedAccount<'info>,
     /// The program for the DID

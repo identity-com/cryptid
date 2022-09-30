@@ -24,7 +24,7 @@ pub struct Create<'info> {
     pub cryptid_account: Account<'info, CryptidAccount>,
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
-    /// The DID of the Cryptid instance
+    /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not
     pub did: UncheckedAccount<'info>,
     /// The signer of the transaction. Must be a DID authority.
