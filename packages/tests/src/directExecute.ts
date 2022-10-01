@@ -13,8 +13,8 @@ import {
   makeTransfer,
   toAccountMeta,
 } from "./util/cryptid";
-import { addKeyToDID, getDidAccount, initializeDIDAccount } from "./util/did";
-import { fund, createTestContext, balanceOf, Wallet } from "./util/anchorUtils";
+import { addKeyToDID, didTestCases, DidTestType } from "./util/did";
+import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import {
   Cryptid,
   CryptidClient,
@@ -25,20 +25,8 @@ import {
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-const testCases = [
-  {
-    name: "generative",
-    beforeFn: async (authority: Wallet) => await getDidAccount(authority),
-  },
-  {
-    name: "non-generative",
-    beforeFn: async (authority: Wallet) =>
-      await initializeDIDAccount(authority),
-  },
-];
-
-testCases.forEach(({ name, beforeFn }) => {
-  describe(`directExecute (${name})`, () => {
+didTestCases.forEach(({ type, beforeFn }) => {
+  describe(`directExecute (${type})`, () => {
     const { program, authority, provider } = createTestContext();
 
     let didAccount: PublicKey;
@@ -181,8 +169,8 @@ testCases.forEach(({ name, beforeFn }) => {
       return expect(shouldFail).to.be.rejected;
     });
 
-    // Test-case for the non-generative DID case only.
-    if (name === "non-generative") {
+    // Test-case for the initialized DID case only.
+    if (type === DidTestType.Initialized) {
       it("can transfer through Cryptid with a second key on the DID", async () => {
         const secondKey = Keypair.generate();
         await fund(secondKey.publicKey);

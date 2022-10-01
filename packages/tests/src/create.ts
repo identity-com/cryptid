@@ -2,29 +2,17 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { createCryptid } from "./util/cryptid";
-import { getDidAccount, initializeDIDAccount } from "./util/did";
-import { fund, createTestContext, Wallet } from "./util/anchorUtils";
+import { didTestCases } from "./util/did";
+import { fund, createTestContext } from "./util/anchorUtils";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-const testCases = [
-  {
-    name: "generative",
-    beforeFn: async (authority: Wallet) => await getDidAccount(authority),
-  },
-  {
-    name: "non-generative",
-    beforeFn: async (authority: Wallet) =>
-      await initializeDIDAccount(authority),
-  },
-];
-
-testCases.forEach(({ name, beforeFn }) => {
-  describe(`create (${name})`, () => {
+didTestCases.forEach(({ type, beforeFn }) => {
+  describe(`create (${type})`, () => {
     const { authority, provider } = createTestContext();
 
-    before(`Set up ${name} DID account`, async () => {
+    before(`Set up ${type} account`, async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
       await beforeFn(authority);
     });

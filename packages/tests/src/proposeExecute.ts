@@ -12,8 +12,8 @@ import {
   makeTransfer,
   toAccountMeta,
 } from "./util/cryptid";
-import { getDidAccount, initializeDIDAccount } from "./util/did";
-import { fund, createTestContext, balanceOf, Wallet } from "./util/anchorUtils";
+import { didTestCases } from "./util/did";
+import { fund, createTestContext, balanceOf } from "./util/anchorUtils";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { web3 } from "@project-serum/anchor";
 import {
@@ -25,20 +25,8 @@ import {
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-const testCases = [
-  {
-    name: "generative",
-    beforeFn: async (authority: Wallet) => await getDidAccount(authority),
-  },
-  {
-    name: "non-generative",
-    beforeFn: async (authority: Wallet) =>
-      await initializeDIDAccount(authority),
-  },
-];
-
-testCases.forEach(({ name, beforeFn }) => {
-  describe(`proposeExecute (${name})`, () => {
+didTestCases.forEach(({ type, beforeFn }) => {
+  describe(`proposeExecute (${type})`, () => {
     const { program, provider, authority, keypair } = createTestContext();
 
     let didAccount: PublicKey;
