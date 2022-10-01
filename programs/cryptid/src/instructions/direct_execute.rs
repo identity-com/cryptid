@@ -4,7 +4,6 @@ use crate::state::cryptid_account::CryptidAccount;
 use crate::util::cpi::CPI;
 use crate::util::*;
 use anchor_lang::prelude::*;
-use sol_did::state::DidAccount;
 
 #[derive(Accounts)]
 #[instruction(
@@ -28,7 +27,8 @@ pub struct DirectExecute<'info> {
     )]
     pub cryptid_account: UncheckedAccount<'info>, // TODO use new macro that allows generative accounts and non-generative accounts
     /// The DID on the Cryptid instance
-    pub did: Account<'info, DidAccount>,
+    /// CHECK: DID Account can be generative or not
+    pub did: UncheckedAccount<'info>,
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction

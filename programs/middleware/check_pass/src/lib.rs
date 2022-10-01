@@ -7,7 +7,6 @@ use cryptid::error::CryptidError;
 use cryptid::program::Cryptid;
 use cryptid::state::transaction_account::TransactionAccount;
 use num_traits::cast::AsPrimitive;
-use sol_did::state::DidAccount;
 use solana_gateway::{instruction::expire_token, state::GatewayToken, Gateway};
 use std::str::FromStr;
 
@@ -182,8 +181,9 @@ pub struct ExecuteMiddleware<'info> {
     /// The owner of the Cryptid instance, typically a DID account
     /// Passed here so that the DID document can be parsed.
     /// The gateway token can be on any key provably owned by the DID.
+    /// CHECK: DID Account can be generative or not
     #[account()]
-    pub owner: Account<'info, DidAccount>, // TODO allow generative/non-generative
+    pub owner: UncheckedAccount<'info>,
     /// An authority on the DID.
     /// This is needed for two cases:
     /// 1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.
