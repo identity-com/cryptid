@@ -90,13 +90,12 @@ jobs:
       - name: Build programs
         uses: actions-rs/cargo@v1
         with:
-          command: yarn anchor build
+          command: yarn anchor build -v
 
       - name: Deploy programs
         run: |
           echo "$SOLANA_AUTHORITY" > ~/.config/solana/id.json
-          solana config set --url devnet
-          solana program deploy target/deploy/cryptid.so --program-id CRYPTID_PROGRAM_ID
-          solana program deploy target/deploy/check_recipient.so --program-id MIDDLEWARE_CHECK_RECIPIENT
-          solana program deploy target/deploy/check_pass.so --program-id MIDDLEWARE_CHECK_PASS
-          solana program deploy target/deploy/time_delay.so --program-id MIDDLEWARE_TIME_DELAY
+          anchor upgrade target/verifiable/cryptid.so --program-id CRYPTID_PROGRAM_ID --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/check_recipient.so --program-id MIDDLEWARE_CHECK_RECIPIENT --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/check_pass.so --program-id MIDDLEWARE_CHECK_PASS --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/time_delay.so --program-id MIDDLEWARE_TIME_DELAY --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
