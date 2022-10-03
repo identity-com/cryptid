@@ -12,7 +12,13 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-cryptid = "cry484buH1TnYCcegsogRzJ1tbhjeDLZC7vjRvHzaku"
+cryptid = "cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs"
+check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
+check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
+time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
+
+[programs.mainnet]
+cryptid = "cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs"
 check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"

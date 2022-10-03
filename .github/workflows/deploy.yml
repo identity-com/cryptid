@@ -10,7 +10,7 @@ on:
 
 env:
   solana_version: stable
-  CRYPTID_PROGRAM_ID: cry484buH1TnYCcegsogRzJ1tbhjeDLZC7vjRvHzaku
+  CRYPTID_PROGRAM_ID: cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs
   MIDDLEWARE_CHECK_RECIPIENT: midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf
   MIDDLEWARE_CHECK_PASS: midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo
   MIDDLEWARE_TIME_DELAY: midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk
@@ -90,13 +90,17 @@ jobs:
       - name: Build programs
         uses: actions-rs/cargo@v1
         with:
-          command: yarn anchor build
+          command: yarn anchor build -v
 
       - name: Deploy programs
         run: |
           echo "$SOLANA_AUTHORITY" > ~/.config/solana/id.json
-          solana config set --url devnet
-          solana program deploy target/deploy/cryptid.so --program-id CRYPTID_PROGRAM_ID
-          solana program deploy target/deploy/check_recipient.so --program-id MIDDLEWARE_CHECK_RECIPIENT
-          solana program deploy target/deploy/check_pass.so --program-id MIDDLEWARE_CHECK_PASS
-          solana program deploy target/deploy/time_delay.so --program-id MIDDLEWARE_TIME_DELAY
+          solana airdrop -u d 2 ~/.config/solana/id.json
+          anchor upgrade target/verifiable/cryptid.so --program-id CRYPTID_PROGRAM_ID --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor idl upgrade --filepath target/idl/cryptid.json CRYPTID_PROGRAM_ID --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/check_recipient.so --program-id MIDDLEWARE_CHECK_RECIPIENT --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor idl upgrade --filepath target/idl/check_recipient.json MIDDLEWARE_CHECK_RECIPIENT --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/check_pass.so --program-id MIDDLEWARE_CHECK_PASS --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor idl upgrade --filepath target/idl/check_pass.json MIDDLEWARE_CHECK_PASS --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor upgrade target/verifiable/time_delay.so --program-id MIDDLEWARE_TIME_DELAY --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+          anchor idl upgrade --filepath target/idl/time_delay.json MIDDLEWARE_TIME_DELAY --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
