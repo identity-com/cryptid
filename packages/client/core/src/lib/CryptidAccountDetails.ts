@@ -20,20 +20,20 @@ export class CryptidAccountDetails {
     readonly middlewares: Middleware[]
   ) {}
 
-  static async defaultAccount(did: string): Promise<CryptidAccountDetails> {
-    const didAccount = await didToPDA(did);
+  static defaultAccount(did: string): CryptidAccountDetails {
+    const didAccount = didToPDA(did);
     const [address, bump] = getCryptidAccountAddress(didAccount, 0);
 
     return new CryptidAccountDetails(address, bump, 0, did, didAccount, []);
   }
 
-  static async fromAccounts<M>(
+  static fromAccounts<M>(
     did: string,
     address: PublicKey,
     cryptidAccount: CryptidAccount,
     middlewareAccounts: [PublicKey, AccountInfo<M>][]
-  ): Promise<CryptidAccountDetails> {
-    const didAccount = await didToPDA(did);
+  ): CryptidAccountDetails {
+    const didAccount = didToPDA(did);
     // TODO optimise? this is literally just to recalculate the bump
     // NOTE: the bump is needed when making transactions.
     // It is not stored on the cryptid account, as that does not work with the generative case.

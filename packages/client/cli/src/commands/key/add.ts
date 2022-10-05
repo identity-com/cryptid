@@ -1,6 +1,7 @@
 import { getKeys } from "../../service/cryptid";
 import { PublicKey } from "@solana/web3.js";
 import Base from "../base";
+import { addKeyToDID } from "../../service/did";
 
 export default class AddKey extends Base {
   static description = "Add a cryptid key";
@@ -8,11 +9,11 @@ export default class AddKey extends Base {
   static args = [
     {
       name: "key",
-      required: false,
+      required: true,
       parse: async (address: string): Promise<PublicKey> =>
         new PublicKey(address),
     },
-    { name: "alias" },
+    { name: "alias", required: true },
   ];
 
   static flags = Base.flags;
@@ -20,8 +21,13 @@ export default class AddKey extends Base {
   async run(): Promise<void> {
     const { args } = await this.parse(AddKey);
 
-    this.log("TODO!!!" + args);
-    // await this.cryptid.addKey(args.key, args.alias)
+    await addKeyToDID(
+      this.cryptid.wallet,
+      args.key,
+      args.alias,
+      this.cryptidConfig.config.cluster,
+      this.cryptidConfig.connection
+    );
     this.log("Added");
 
     const keys = await getKeys(this.cryptid);

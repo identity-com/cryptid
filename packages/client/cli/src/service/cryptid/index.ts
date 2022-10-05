@@ -1,13 +1,17 @@
-import { build as buildCryptid, Cryptid, util } from "packages/client/core/src";
 import { Config } from "../config";
 import { VerificationMethod } from "did-resolver";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { getOwnedTokenAccounts, safeParsePubkey } from "../../lib/solana";
+import { Cryptid, CryptidClient } from "@identity.com/cryptid";
+import { util } from "@identity.com/cryptid-core";
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 
-export const build = (config: Config, asDid: string | undefined): Cryptid => {
-  const cryptid = buildCryptid(config.did, config.keypair, {
+export const build = (
+  config: Config,
+  asDid: string | undefined
+): CryptidClient => {
+  const cryptid = Cryptid.buildFromDID(config.did, config.keypair, {
     connection: config.connection,
   });
 
@@ -17,7 +21,7 @@ export const build = (config: Config, asDid: string | undefined): Cryptid => {
 };
 
 export const balance = async (
-  cryptid: Cryptid,
+  cryptid: CryptidClient,
   config: Config
 ): Promise<number> => {
   const address = await cryptid.address();
@@ -46,7 +50,7 @@ const makeTransferTransaction = async (
 };
 
 export const airdrop = async (
-  cryptid: Cryptid,
+  cryptid: CryptidClient,
   config: Config,
   amount: number,
   log: (message?: string, ...args: string[]) => void
@@ -97,7 +101,7 @@ export const airdrop = async (
 };
 
 export const transfer = async (
-  cryptid: Cryptid,
+  cryptid: CryptidClient,
   config: Config,
   recipient: PublicKey,
   amount: number
@@ -105,7 +109,7 @@ export const transfer = async (
   const address = await cryptid.address();
   const tx = await makeTransferTransaction(config, address, recipient, amount);
 
-  const signedTx = await cryptid.sign(tx);
+  const signedTx = await cryptid.directExecute(tx);
   const txSignature = await config.connection.sendRawTransaction(
     signedTx.serialize()
   );
@@ -113,7 +117,7 @@ export const transfer = async (
   return txSignature;
 };
 
-export const getKeys = async (cryptid: Cryptid): Promise<string[]> => {
+export const getKeys = async (cryptid: CryptidClient): Promise<string[]> => {
   const doc = await cryptid.document();
   return (doc.verificationMethod || [])
     .map((verificationMethod: VerificationMethod) => ({
@@ -128,16 +132,15 @@ export const getKeys = async (cryptid: Cryptid): Promise<string[]> => {
     );
 };
 
-export const getControllers = async (cryptid: Cryptid): Promise<string[]> => {
+export const getControllers = async (
+  cryptid: CryptidClient
+): Promise<string[]> => {
   const doc = await cryptid.document();
   return (doc.controller || []) as string[];
 };
 
-export const getRecipientAddressForDid = async (
-  did: string,
-  index = 0
-): Promise<PublicKey> =>
-  util.getCryptidAccountAddressFromDID(did, index).then(([address]) => address);
+export const getRecipientAddressForDid = (did: string, index = 0): PublicKey =>
+  util.getCryptidAccountAddressFromDID(did, index)[0];
 
 export const resolveDIDOrAlias = (
   aliasOrDid: string | undefined,
@@ -172,7 +175,7 @@ export type TokenDetails = {
   decimals: number;
 };
 export const getTokenAccounts = async (
-  cryptid: Cryptid,
+  cryptid: CryptidClient,
   config: Config
 ): Promise<TokenDetails[]> => {
   const address = await cryptid.address();

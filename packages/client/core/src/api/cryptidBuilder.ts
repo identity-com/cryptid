@@ -18,12 +18,12 @@ export class CryptidBuilder {
     return new SimpleCryptidClient(details, normalizeSigner(signer), options);
   }
 
-  static async buildFromDID(
+  static buildFromDID(
     did: string,
     signer: Keypair | Wallet,
     options: CryptidOptions
-  ): Promise<CryptidClient> {
-    const details = await CryptidAccountDetails.defaultAccount(did);
+  ): CryptidClient {
+    const details = CryptidAccountDetails.defaultAccount(did);
     return CryptidBuilder.build(details, signer, options);
   }
 

@@ -17,8 +17,7 @@ export class ControlledCryptidClient extends AbstractCryptidClient {
     private controllerCryptid: CryptidClient,
     options: CryptidOptions
   ) {
-    // TODO fix when CryptidAccountDetails.defaultAccount is non-async
-    const details = {} as CryptidAccountDetails; // await CryptidAccountDetails.defaultAccount(controlledDid);
+    const details = CryptidAccountDetails.defaultAccount(controlledDid);
     super(details, options);
     // TODO discover and store controller chain
   }

@@ -41,7 +41,7 @@ export default class TokenTransfer extends Base {
     },
     {
       name: "amount",
-      description: "The amount in lamports to transfer",
+      description: "The amount of tokens to transfer",
       required: true,
     },
   ];
@@ -105,7 +105,7 @@ export default class TokenTransfer extends Base {
       feePayer: cryptidAddress,
     }).add(...instructions);
 
-    const signedTx = await this.cryptid.sign(tx);
+    const signedTx = await this.cryptid.directExecute(tx);
     console.log(
       signedTx.signatures.map((s) => ({
         publicKey: s.publicKey.toString(),

@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {
         "test": "yarn workspace @identity.com/cryptid-program-tests build && anchor test",
-        "build": "yarn workspace @identity.com/cryptid build && anchor build",
+        "build": "anchor build && yarn workspace @identity.com/cryptid build --force",
         "lint": "eslint . --ext .ts"
     },
     "workspaces": [
