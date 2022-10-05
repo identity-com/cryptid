@@ -46,4 +46,5 @@ echo Publishing cryptid@$1
 
 (cd packages/client/cli \
   && yarn add @identity.com/cryptid@$1 --no-git-tag-version \
+  && yarn publish --tag alpha --new-version $1 --no-git-tag-version \
 )

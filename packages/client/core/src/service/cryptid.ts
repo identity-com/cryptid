@@ -84,18 +84,14 @@ export class CryptidService {
     page = 20
   ): Promise<CryptidAccountDetails[]> {
     // By convention, the first account is the generative case
-    const defaultAccountDetails = await CryptidAccountDetails.defaultAccount(
-      did
-    );
+    const defaultAccountDetails = CryptidAccountDetails.defaultAccount(did);
 
     // do not do a lookup for index 0, as it is the default account
     const adaptedOffset = offset === 0 ? offset + 1 : offset;
 
-    const didAccount = await didToPDA(did);
-    const addresses = await Promise.all(
-      range(adaptedOffset, offset + page).map(
-        (index) => getCryptidAccountAddress(didAccount, index)[0]
-      )
+    const didAccount = didToPDA(did);
+    const addresses = range(adaptedOffset, offset + page).map(
+      (index) => getCryptidAccountAddress(didAccount, index)[0]
     );
 
     const rawAccounts = await this.program.account.cryptidAccount.fetchMultiple(

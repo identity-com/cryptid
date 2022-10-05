@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
 import { Config as ConfigService } from "../service/config";
-import { ExtendedCluster } from "packages/client/core/src";
+import { ExtendedCluster } from "@identity.com/cryptid";
 
 export default class Init extends Command {
   static description = "Initialise the cryptid library";

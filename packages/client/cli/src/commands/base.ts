@@ -2,17 +2,17 @@ import { Command } from "@oclif/core";
 import * as Flags from "../lib/flags";
 import { Config } from "../service/config";
 import { build, resolveDIDOrAlias } from "../service/cryptid";
-import { Cryptid } from "packages/client/core/src";
 import { Connection } from "@solana/web3.js";
+import { CryptidClient } from "@identity.com/cryptid";
 
 export default abstract class Base extends Command {
-  private _cryptid: Cryptid | undefined;
+  private _cryptid: CryptidClient | undefined;
 
   private _config: Config | undefined;
 
   static flags = Flags.common;
 
-  get cryptid(): Cryptid {
+  get cryptid(): CryptidClient {
     if (!this._cryptid)
       throw new Error("Cannot retrieve cryptid before init()");
     return this._cryptid;

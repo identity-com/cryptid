@@ -1,5 +1,6 @@
 import { getKeys } from "../../service/cryptid";
 import Base from "../base";
+import { removeKeyFromDID } from "../../service/did";
 
 export default class RemoveKey extends Base {
   static description = "Remove a cryptid key";
@@ -11,11 +12,16 @@ export default class RemoveKey extends Base {
   async run(): Promise<void> {
     const { args } = await this.parse(RemoveKey);
 
-    this.log("TODO!!!" + args);
-    // await this.cryptid.removeKey(args.alias)
-    this.log("Removed");
+    await removeKeyFromDID(
+      this.cryptid.wallet,
+      args.alias,
+      this.cryptidConfig.config.cluster,
+      this.cryptidConfig.connection
+    );
+    this.log(`Removed ${args.alias}`);
 
     const keys = await getKeys(this.cryptid);
+    this.log("Remaining keys:");
     this.log(keys.join("\n"));
   }
 }
