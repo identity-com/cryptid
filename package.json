@@ -3,7 +3,8 @@
     "scripts": {
         "test": "yarn workspace @identity.com/cryptid-program-tests build && anchor test",
         "build": "anchor build && yarn workspace @identity.com/cryptid-cli build --force",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --ext .ts",
+        "anchor": "anchor"
     },
     "workspaces": [
         "packages/client/idl",
