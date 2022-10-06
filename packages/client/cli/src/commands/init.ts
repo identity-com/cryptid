@@ -13,7 +13,7 @@ export default class Init extends Command {
       default: false,
     }),
     path: Flags.string({
-      char: "p",
+      char: "c",
       description: "Configuration path",
       required: false,
       default: process.env.CRYPTID_CONFIG,

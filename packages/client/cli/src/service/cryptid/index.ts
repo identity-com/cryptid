@@ -2,18 +2,30 @@ import { Config } from "../config";
 import { VerificationMethod } from "did-resolver";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { getOwnedTokenAccounts, safeParsePubkey } from "../../lib/solana";
-import { Cryptid, CryptidClient } from "@identity.com/cryptid";
+import {
+  Cryptid,
+  CryptidAccountDetails,
+  CryptidClient,
+} from "@identity.com/cryptid";
 import { util } from "@identity.com/cryptid-core";
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 
-export const build = (
+export const build = async (
   config: Config,
   asDid: string | undefined
-): CryptidClient => {
-  const cryptid = Cryptid.buildFromDID(config.did, config.keypair, {
+): Promise<CryptidClient> => {
+  const allCryptidAccountDetails = await Cryptid.findAll(config.did, {
     connection: config.connection,
   });
+
+  const cryptid = Cryptid.build(
+    allCryptidAccountDetails[config.index],
+    config.keypair,
+    {
+      connection: config.connection,
+    }
+  );
 
   if (asDid) return cryptid.as(asDid);
 
@@ -35,7 +47,7 @@ const makeTransferTransaction = async (
   amount: number
 ): Promise<Transaction> => {
   const { blockhash: recentBlockhash } =
-    await config.connection.getRecentBlockhash();
+    await config.connection.getLatestBlockhash();
 
   return new Transaction({
     recentBlockhash,
@@ -72,7 +84,11 @@ export const airdrop = async (
   );
   // To avoid rate limiting, airdrop into the key address, then transfer most of it to cryptid
   const airdropTx = await config.connection.requestAirdrop(key, amount);
-  await config.connection.confirmTransaction(airdropTx);
+  const blockhash = await config.connection.getLatestBlockhash();
+  await config.connection.confirmTransaction({
+    signature: airdropTx,
+    ...blockhash,
+  });
 
   keyBalance = await config.connection.getBalance(key);
   cryptidBalance = await config.connection.getBalance(cryptidAddress);
@@ -100,21 +116,40 @@ export const airdrop = async (
   );
 };
 
+const signCryptidTransaction = (
+  cryptid: CryptidClient,
+  transaction: Transaction
+): Promise<Transaction[]> => {
+  if (cryptid.details.middlewares.length) {
+    return cryptid.proposeAndExecute(transaction);
+  } else {
+    return cryptid.directExecute(transaction).then((tx) => [tx]);
+  }
+};
+
+export const signAndSendCryptidTransaction = async (
+  cryptid: CryptidClient,
+  transaction: Transaction
+): Promise<string[]> => {
+  const signedTransactions = await signCryptidTransaction(cryptid, transaction);
+  return signedTransactions.reduce(
+    (promise, tx) =>
+      // send the tx strictly after the previous one, and add the signature to the array
+      promise.then((sigs) => cryptid.send(tx).then((sig) => [...sigs, sig])),
+    Promise.resolve<string[]>([])
+  );
+};
+
 export const transfer = async (
   cryptid: CryptidClient,
   config: Config,
   recipient: PublicKey,
   amount: number
-): Promise<string> => {
+): Promise<string[]> => {
   const address = await cryptid.address();
   const tx = await makeTransferTransaction(config, address, recipient, amount);
 
-  const signedTx = await cryptid.directExecute(tx);
-  const txSignature = await config.connection.sendRawTransaction(
-    signedTx.serialize()
-  );
-  await config.connection.confirmTransaction(txSignature);
-  return txSignature;
+  return signAndSendCryptidTransaction(cryptid, tx);
 };
 
 export const getKeys = async (cryptid: CryptidClient): Promise<string[]> => {
@@ -190,4 +225,11 @@ export const getTokenAccounts = async (
     balance: account.data.parsed.info.tokenAmount.amount,
     decimals: account.data.parsed.info.tokenAmount.decimals,
   }));
+};
+
+export const listAccounts = (
+  cryptid: CryptidClient,
+  config: Config
+): Promise<CryptidAccountDetails[]> => {
+  return Cryptid.findAll(cryptid.did, { connection: config.connection });
 };

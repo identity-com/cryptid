@@ -1,4 +1,9 @@
-import { CryptidClient, CryptidOptions, FindAllOptions } from "./cryptidClient";
+import {
+  BuildOptions,
+  CryptidClient,
+  CryptidOptions,
+  FindAllOptions,
+} from "./cryptidClient";
 import { Wallet } from "../types/crypto";
 import { Keypair } from "@solana/web3.js";
 import { SimpleCryptidClient } from "./simpleCryptidClient";
@@ -21,9 +26,14 @@ export class CryptidBuilder {
   static buildFromDID(
     did: string,
     signer: Keypair | Wallet,
-    options: CryptidOptions
+    options: BuildOptions
   ): CryptidClient {
-    const details = CryptidAccountDetails.defaultAccount(did);
+    const details = CryptidAccountDetails.from(
+      did,
+      options.accountIndex,
+      options.middlewares
+    );
+
     return CryptidBuilder.build(details, signer, options);
   }
 

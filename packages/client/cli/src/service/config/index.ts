@@ -26,7 +26,11 @@ type ConfigFile = {
   did: string;
   keyFile: string;
   cluster: ExtendedCluster;
-  aliases: { [key: string]: string }; // Record<string, string>
+  aliases: { [key: string]: string };
+  index: number;
+};
+const defaultConfigValues: Partial<ConfigFile> = {
+  index: 0,
 };
 
 const loadKeyFile = (keyFile: string): Keypair => {
@@ -44,7 +48,10 @@ export class Config {
       throw new Error(`No config at ${configPath}. Have you run cryptid init?`);
 
     const configFileString = fs.readFileSync(configPath, { encoding: "utf-8" });
-    this.config = yaml.parse(configFileString);
+    this.config = {
+      ...defaultConfigValues,
+      ...yaml.parse(configFileString),
+    };
 
     const clusterUrl =
       this.config.cluster === "localnet"
@@ -66,6 +73,7 @@ export class Config {
       keyFile: keyPath,
       cluster,
       aliases: {},
+      index: 0,
     };
 
     if (fs.existsSync(configPath)) {
@@ -129,5 +137,9 @@ export class Config {
 
   get keypair(): Keypair {
     return loadKeyFile(this.config.keyFile);
+  }
+
+  get index(): number {
+    return this.config.index;
   }
 }

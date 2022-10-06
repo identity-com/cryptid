@@ -29,13 +29,18 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid`](#cryptid)
+* [`cryptid [DID]`](#cryptid-did)
+* [`cryptid accounts`](#cryptid-accounts)
+* [`cryptid accounts set INDEX`](#cryptid-accounts-set-index)
 * [`cryptid address`](#cryptid-address)
 * [`cryptid airdrop [AMOUNT]`](#cryptid-airdrop-amount)
 * [`cryptid alias [NAME] [DID]`](#cryptid-alias-name-did)
 * [`cryptid balance`](#cryptid-balance)
 * [`cryptid base`](#cryptid-base)
-* [`cryptid config [SUBCOMMAND] [KEY] [VALUE]`](#cryptid-config-subcommand-key-value)
+* [`cryptid config`](#cryptid-config)
+* [`cryptid config set [KEY] [VALUE]`](#cryptid-config-set-key-value)
+* [`cryptid config show`](#cryptid-config-show)
+* [`cryptid controller [DID]`](#cryptid-controller-did)
 * [`cryptid controller show [DID]`](#cryptid-controller-show-did)
 * [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
@@ -52,18 +57,19 @@ USAGE
 * [`cryptid plugins:uninstall PLUGIN...`](#cryptid-pluginsuninstall-plugin-1)
 * [`cryptid plugins:uninstall PLUGIN...`](#cryptid-pluginsuninstall-plugin-2)
 * [`cryptid plugins update`](#cryptid-plugins-update)
+* [`cryptid show`](#cryptid-show)
 * [`cryptid token balance MINT`](#cryptid-token-balance-mint)
 * [`cryptid token show`](#cryptid-token-show)
 * [`cryptid token transfer TO AMOUNT`](#cryptid-token-transfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
-## `cryptid`
+## `cryptid [DID]`
 
-List keys attached to the cryptid account
+Show the controllers of a cryptid account
 
 ```
 USAGE
-  $ cryptid [-h] [-c <value>] [-s <value>]
+  $ cryptid [DID] [-h] [-c <value>] [-s <value>]
 
 FLAGS
   -c, --config=<value>  Path to config file
@@ -71,10 +77,49 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 
 DESCRIPTION
-  List keys attached to the cryptid account
+  Show the controllers of a cryptid account
 
 ALIASES
   $ cryptid
+```
+
+## `cryptid accounts`
+
+Show Cryptid accounts
+
+```
+USAGE
+  $ cryptid accounts [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Show Cryptid accounts
+
+ALIASES
+  $ cryptid show
+```
+
+_See code: [dist/commands/accounts/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/accounts/index.ts)_
+
+## `cryptid accounts set INDEX`
+
+Set a Cryptid configuration value
+
+```
+USAGE
+  $ cryptid accounts set [INDEX] [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Set a Cryptid configuration value
 ```
 
 ## `cryptid address`
@@ -168,13 +213,13 @@ FLAGS
 
 _See code: [dist/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/base.ts)_
 
-## `cryptid config [SUBCOMMAND] [KEY] [VALUE]`
+## `cryptid config`
 
-Manage Cryptid configuration
+Show Cryptid configuration
 
 ```
 USAGE
-  $ cryptid config [SUBCOMMAND] [KEY] [VALUE] [-h] [-c <value>] [-s <value>]
+  $ cryptid config [-h] [-c <value>] [-s <value>]
 
 FLAGS
   -c, --config=<value>  Path to config file
@@ -182,10 +227,69 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 
 DESCRIPTION
-  Manage Cryptid configuration
+  Show Cryptid configuration
+
+ALIASES
+  $ cryptid show
 ```
 
-_See code: [dist/commands/config.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/config.ts)_
+_See code: [dist/commands/config/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/config/index.ts)_
+
+## `cryptid config set [KEY] [VALUE]`
+
+Set a Cryptid configuration value
+
+```
+USAGE
+  $ cryptid config set [KEY] [VALUE] [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Set a Cryptid configuration value
+```
+
+## `cryptid config show`
+
+Show Cryptid configuration
+
+```
+USAGE
+  $ cryptid config show [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Show Cryptid configuration
+```
+
+## `cryptid controller [DID]`
+
+Show the controllers of a cryptid account
+
+```
+USAGE
+  $ cryptid controller [DID] [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Show the controllers of a cryptid account
+
+ALIASES
+  $ cryptid show
+```
+
+_See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/controller/index.ts)_
 
 ## `cryptid controller show [DID]`
 
@@ -202,6 +306,9 @@ FLAGS
 
 DESCRIPTION
   Show the controllers of a cryptid account
+
+ALIASES
+  $ cryptid
 ```
 
 ## `cryptid document`
@@ -249,13 +356,13 @@ Initialise the cryptid library
 
 ```
 USAGE
-  $ cryptid init [-h] [-o] [-p <value>] [-k <value>] [-z <value>]
+  $ cryptid init [-h] [-o] [-c <value>] [-k <value>] [-z <value>]
 
 FLAGS
+  -c, --path=<value>     Configuration path
   -h, --help             Show CLI help.
   -k, --key=<value>      Path to a solana keypair
   -o, --overwrite        Overwrite existing configuration
-  -p, --path=<value>     Configuration path
   -z, --cluster=<value>  Cluster
 
 DESCRIPTION
@@ -546,6 +653,26 @@ FLAGS
 
 DESCRIPTION
   Update installed plugins.
+```
+
+## `cryptid show`
+
+Show Cryptid accounts
+
+```
+USAGE
+  $ cryptid show [-h] [-c <value>] [-s <value>]
+
+FLAGS
+  -c, --config=<value>  Path to config file
+  -h, --help            Show CLI help.
+  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
+
+DESCRIPTION
+  Show Cryptid accounts
+
+ALIASES
+  $ cryptid show
 ```
 
 ## `cryptid token balance MINT`

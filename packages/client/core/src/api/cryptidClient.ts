@@ -9,6 +9,7 @@ import { DIDDocument } from "did-resolver";
 import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
+import { Middleware } from "../lib/Middleware";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -22,6 +23,9 @@ export type CryptidOptions = {
 };
 export type FindAllOptions = {
   connection: Connection;
+};
+export type BuildOptions = CryptidOptions & {
+  middlewares?: Middleware[];
 };
 
 export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
