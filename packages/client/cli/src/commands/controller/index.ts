@@ -8,6 +8,8 @@ export default class ShowController extends Base {
 
   static flags = Base.flags;
 
+  static aliases = ["show"];
+
   async run(): Promise<void> {
     const controllers = await getControllers(this.cryptid);
     this.log(controllers.join("\n"));

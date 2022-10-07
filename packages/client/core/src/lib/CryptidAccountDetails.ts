@@ -21,10 +21,24 @@ export class CryptidAccountDetails {
   ) {}
 
   static defaultAccount(did: string): CryptidAccountDetails {
-    const didAccount = didToPDA(did);
-    const [address, bump] = getCryptidAccountAddress(didAccount, 0);
+    return CryptidAccountDetails.from(did);
+  }
 
-    return new CryptidAccountDetails(address, bump, 0, did, didAccount, []);
+  static from(
+    did: string,
+    index = 0,
+    middlewares: Middleware[] = []
+  ): CryptidAccountDetails {
+    const didAccount = didToPDA(did);
+    const [address, bump] = getCryptidAccountAddress(didAccount, index);
+    return new CryptidAccountDetails(
+      address,
+      bump,
+      index,
+      did,
+      didAccount,
+      middlewares
+    );
   }
 
   static fromAccounts<M>(

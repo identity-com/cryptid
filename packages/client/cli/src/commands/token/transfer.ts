@@ -7,7 +7,10 @@ import {
 } from "@solana/spl-token";
 import * as flags from "../../lib/flags";
 import Base from "../base";
-import { resolveRecipient } from "../../service/cryptid";
+import {
+  resolveRecipient,
+  signAndSendCryptidTransaction,
+} from "../../service/cryptid";
 
 export const getAssociatedTokenAccount = async (
   mint: PublicKey,
@@ -105,25 +108,12 @@ export default class TokenTransfer extends Base {
       feePayer: cryptidAddress,
     }).add(...instructions);
 
-    const signedTx = await this.cryptid.directExecute(tx);
-    console.log(
-      signedTx.signatures.map((s) => ({
-        publicKey: s.publicKey.toString(),
-        signature: s.signature,
-      }))
-    );
-    console.log(
-      signedTx.instructions[0].keys.map((k) => ({
-        ...k,
-        pubkey: k.pubkey.toString(),
-      }))
-    );
-    const txSignature = await this.connection.sendRawTransaction(
-      signedTx.serialize()
-    );
+    const txSignatures = await signAndSendCryptidTransaction(this.cryptid, tx);
 
-    this.log(
-      `Transaction sent: https://explorer.identity.com/tx/${txSignature}`
-    );
+    txSignatures.forEach((signature) => {
+      this.log(
+        `Transaction sent: https://explorer.identity.com/tx/${signature}`
+      );
+    });
   }
 }

@@ -26,15 +26,17 @@ export default class Transfer extends Base {
 
     this.log(`${args.to} resolved to ${to}`);
 
-    const txSignature = await transfer(
+    const txSignatures = await transfer(
       this.cryptid,
       this.cryptidConfig,
       to,
       args.amount
     );
 
-    this.log(
-      `Transaction sent: https://explorer.identity.com/tx/${txSignature}`
-    );
+    txSignatures.forEach((signature) => {
+      this.log(
+        `Transaction sent: https://explorer.identity.com/tx/${signature}`
+      );
+    });
   }
 }
