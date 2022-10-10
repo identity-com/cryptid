@@ -59,13 +59,14 @@ describe("Middleware: checkPass", () => {
   let expireFeatureAccount: PublicKey;
 
   let didAccount: PublicKey;
+  let didAccountBump: number;
   let cryptidAccount: PublicKey;
   let cryptidBump: number;
   let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
   let cryptid: CryptidClient;
 
   let middlewareAccount: PublicKey;
-  let middlewareBump: number;
+  // let middlewareBump: number;
 
   const recipient = Keypair.generate();
   const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
@@ -83,7 +84,7 @@ describe("Middleware: checkPass", () => {
     expireGatewayTokenOnUse: boolean,
     failsafe?: PublicKey
   ) => {
-    [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+    [middlewareAccount] = deriveMiddlewareAccountAddress(
       authority.publicKey,
       gatekeeperNetwork.publicKey,
       failsafe
@@ -92,7 +93,6 @@ describe("Middleware: checkPass", () => {
     await checkPassMiddlewareProgram.methods
       .create(
         gatekeeperNetwork.publicKey,
-        middlewareBump,
         expireGatewayTokenOnUse,
         failsafe || null,
         null
@@ -105,7 +105,7 @@ describe("Middleware: checkPass", () => {
   };
 
   const setUpMiddlewareWithClient = async (failsafe?: PublicKey) => {
-    [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+    [middlewareAccount] = deriveMiddlewareAccountAddress(
       authority.publicKey,
       gatekeeperNetwork.publicKey,
       failsafe
@@ -129,6 +129,7 @@ describe("Middleware: checkPass", () => {
     [cryptidAccount, cryptidBump] = await createCryptidAccount(
       program,
       didAccount,
+      didAccountBump,
       middlewareAccount,
       ++cryptidIndex
     );
@@ -181,6 +182,7 @@ describe("Middleware: checkPass", () => {
       .executeTransaction(
         Buffer.from([]), // no controller chain
         cryptidBump,
+        didAccountBump,
         0
       )
       .accounts({
@@ -215,7 +217,7 @@ describe("Middleware: checkPass", () => {
 
   before("Set up DID account", async () => {
     await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-    didAccount = await initializeDIDAccount(authority);
+    [didAccount, didAccountBump] = await initializeDIDAccount(authority);
   });
 
   before("Fund the gatekeeper", () => fund(gatekeeper.publicKey));
@@ -240,7 +242,7 @@ describe("Middleware: checkPass", () => {
 
   context("with the cryptid client", () => {
     beforeEach("Set up middleware PDA", async () => {
-      [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+      [middlewareAccount] = deriveMiddlewareAccountAddress(
         authority.publicKey,
         gatekeeperNetwork.publicKey
       );

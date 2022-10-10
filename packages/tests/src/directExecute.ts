@@ -30,6 +30,8 @@ didTestCases.forEach(({ type, beforeFn }) => {
     const { program, authority, provider } = createTestContext();
 
     let didAccount: PublicKey;
+    let didAccountBump: number;
+
     let cryptidAccount: PublicKey;
     let cryptidBump: number;
 
@@ -53,6 +55,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
           Buffer.from([]), // no controller chain
           [instructionData],
           cryptidBump,
+          didAccountBump,
           0
         )
         .accounts({
@@ -69,7 +72,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
 
     before("Set up DID account", async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-      didAccount = await beforeFn(authority);
+      [didAccount, didAccountBump] = await beforeFn(authority);
     });
 
     before("Set up generative Cryptid Account", async () => {

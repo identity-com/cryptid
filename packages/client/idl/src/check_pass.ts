@@ -27,10 +27,6 @@ export type CheckPass = {
           "type": "publicKey"
         },
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "expireOnUse",
           "type": "bool"
         },
@@ -216,10 +212,6 @@ export const IDL: CheckPass = {
         {
           "name": "gatekeeperNetwork",
           "type": "publicKey"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         },
         {
           "name": "expireOnUse",

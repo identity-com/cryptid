@@ -89,7 +89,7 @@ export class CryptidService {
     // do not do a lookup for index 0, as it is the default account
     const adaptedOffset = offset === 0 ? offset + 1 : offset;
 
-    const didAccount = didToPDA(did);
+    const didAccount = didToPDA(did)[0];
     const addresses = range(adaptedOffset, offset + page).map(
       (index) => getCryptidAccountAddress(didAccount, index)[0]
     );
@@ -137,7 +137,11 @@ export class CryptidService {
         ? details.middlewares[details.middlewares.length - 1]
         : undefined;
     return this.program.methods
-      .create(lastMiddleware?.address || null, details.index, details.bump)
+      .create(
+        lastMiddleware?.address || null,
+        details.index,
+        details.didAccountBump
+      )
       .accounts({
         cryptidAccount: details.address,
         didProgram: DID_SOL_PROGRAM,

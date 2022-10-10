@@ -52,7 +52,7 @@ export type Cryptid = {
           "type": "u32"
         },
         {
-          "name": "bump",
+          "name": "didAccountBump",
           "type": "u8"
         }
       ]
@@ -108,6 +108,10 @@ export type Cryptid = {
         },
         {
           "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "didAccountBump",
           "type": "u8"
         },
         {
@@ -222,6 +226,10 @@ export type Cryptid = {
         },
         {
           "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "didAccountBump",
           "type": "u8"
         },
         {
@@ -586,7 +594,7 @@ export const IDL: Cryptid = {
           "type": "u32"
         },
         {
-          "name": "bump",
+          "name": "didAccountBump",
           "type": "u8"
         }
       ]
@@ -642,6 +650,10 @@ export const IDL: Cryptid = {
         },
         {
           "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "didAccountBump",
           "type": "u8"
         },
         {
@@ -756,6 +768,10 @@ export const IDL: Cryptid = {
         },
         {
           "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "didAccountBump",
           "type": "u8"
         },
         {

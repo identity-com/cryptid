@@ -90,7 +90,7 @@ export class CheckPassMiddleware
   ): Promise<Transaction> {
     const program = CheckPassMiddleware.getProgram(params);
 
-    const [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+    const [middlewareAccount] = deriveMiddlewareAccountAddress(
       params.authority.publicKey,
       params.gatekeeperNetwork,
       params.failsafe,
@@ -100,7 +100,6 @@ export class CheckPassMiddleware
     return program.methods
       .create(
         params.gatekeeperNetwork,
-        middlewareBump,
         params.expirePassOnUse,
         params.failsafe || null,
         params.previousMiddleware || null

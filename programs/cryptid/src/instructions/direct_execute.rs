@@ -13,6 +13,8 @@ controller_chain: Vec<u8>,
 instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
 cryptid_account_bump: u8,
+/// The bump seed for the Did Account
+did_account_bump: u8,
 /// Additional flags
 flags: u8,
 )]
@@ -65,6 +67,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     controller_chain: Vec<u8>,
     instructions: Vec<AbbreviatedInstructionData>,
     cryptid_account_bump: u8,
+    did_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
     let debug = ExecuteFlags::from_bits(flags)
@@ -83,6 +86,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
+        Some(did_account_bump),
         ctx.accounts.signer.to_account_info().key,
         controlling_did_accounts,
     )?;

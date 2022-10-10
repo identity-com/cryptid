@@ -12,7 +12,9 @@ use anchor_lang::prelude::*;
 /// A vector of the number of extras for each signer, signer count is the length
 controller_chain: Vec<u8>,
 /// The bump seed for the Cryptid signer
-bump: u8,
+cryptid_account_bump: u8,
+/// The bump seed for the Did Account
+did_account_bump: u8,
 /// Additional flags
 flags: u8,
 )]
@@ -77,7 +79,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 pub fn execute_transaction<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
     controller_chain: Vec<u8>,
-    bump: u8,
+    cryptid_account_bump: u8,
+    did_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
     let debug = ExecuteFlags::from_bits(flags)
@@ -98,6 +101,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
+        Some(did_account_bump),
         ctx.accounts.signer.to_account_info().key,
         controlling_did_accounts,
     )?;
@@ -110,7 +114,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         &ctx.accounts.did.key(),
         &ctx.accounts.cryptid_account,
         &ctx.accounts.cryptid_account.to_account_info(),
-        bump,
+        cryptid_account_bump,
         debug,
     )?;
 

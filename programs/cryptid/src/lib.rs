@@ -20,9 +20,9 @@ pub mod cryptid {
         ctx: Context<Create>,
         middleware: Option<Pubkey>,
         index: u32,
-        bump: u8,
+        did_account_bump: u8,
     ) -> Result<()> {
-        instructions::create(ctx, middleware, index, bump)
+        instructions::create(ctx, middleware, index, did_account_bump)
     }
 
     pub fn direct_execute<'a, 'b, 'c, 'info>(
@@ -30,6 +30,7 @@ pub mod cryptid {
         controller_chain: Vec<u8>,
         instructions: Vec<AbbreviatedInstructionData>,
         cryptid_account_bump: u8,
+        did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
         instructions::direct_execute(
@@ -37,6 +38,7 @@ pub mod cryptid {
             controller_chain,
             instructions,
             cryptid_account_bump,
+            did_account_bump,
             flags,
         )
     }
@@ -53,9 +55,16 @@ pub mod cryptid {
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
         controller_chain: Vec<u8>,
         cryptid_account_bump: u8,
+        did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
-        instructions::execute_transaction(ctx, controller_chain, cryptid_account_bump, flags)
+        instructions::execute_transaction(
+            ctx,
+            controller_chain,
+            cryptid_account_bump,
+            did_account_bump,
+            flags,
+        )
     }
 
     pub fn approve_execution<'a, 'b, 'c, 'info>(

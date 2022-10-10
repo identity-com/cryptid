@@ -30,6 +30,8 @@ didTestCases.forEach(({ type, beforeFn }) => {
     const { program, provider, authority, keypair } = createTestContext();
 
     let didAccount: PublicKey;
+    let didAccountBump: number;
+
     let cryptidBump: number;
 
     const recipient = Keypair.generate();
@@ -68,6 +70,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .executeTransaction(
           Buffer.from([]), // no controller chain,
           cryptidBump,
+          didAccountBump,
           0
         )
         .accounts({
@@ -86,7 +89,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
 
     before("Set up DID account", async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-      didAccount = await beforeFn(authority);
+      [didAccount, didAccountBump] = await beforeFn(authority);
     });
 
     // TODO: Once the new anchor "default value" macro is available, switch this back to using a generative cryptid account
@@ -163,6 +166,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .executeTransaction(
           Buffer.from([]), // no controller chain
           cryptidBump,
+          didAccountBump,
           0
         )
         .accounts({
@@ -286,6 +290,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .executeTransaction(
           Buffer.from([]), // no controller chain
           cryptidBump,
+          didAccountBump,
           0
         )
         .accounts({

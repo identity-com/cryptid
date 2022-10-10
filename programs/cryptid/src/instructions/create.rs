@@ -10,8 +10,8 @@ use anchor_lang::prelude::*;
 middleware: Option<Pubkey>,
 /// The index of this cryptid account - allows multiple cryptid accounts per DID
 index: u32,
-/// The bump seed for the cryptid account
-bump: u8,
+/// The bump seed for the Did Account
+did_account_bump: u8,
 )]
 pub struct Create<'info> {
     #[account(
@@ -19,7 +19,7 @@ pub struct Create<'info> {
     payer = authority,
     space = 8 + CryptidAccount::MAX_SIZE,
     seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), index.to_le_bytes().as_ref()],
-    bump
+    bump,
     )]
     pub cryptid_account: Account<'info, CryptidAccount>,
     /// The program for the DID
@@ -37,7 +37,7 @@ pub fn create(
     ctx: Context<Create>,
     middleware: Option<Pubkey>,
     index: u32,
-    _bump: u8,
+    did_account_bump: u8,
 ) -> Result<()> {
     require_gt!(index, 0, CryptidError::CreatingWithZeroIndex);
     ctx.accounts.cryptid_account.middleware = middleware;
@@ -52,6 +52,7 @@ pub fn create(
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
+        Some(did_account_bump),
         ctx.accounts.authority.to_account_info().key,
         controlling_did_accounts,
     )?;

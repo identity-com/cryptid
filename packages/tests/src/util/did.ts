@@ -25,19 +25,21 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
 
 export const initializeDIDAccount = async (
   authority: Wallet
-): Promise<PublicKey> => {
+): Promise<[PublicKey, number]> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
   const didSolService = await DidSolService.build(did, {
     wallet: authority,
   });
 
   await didSolService.initialize(10_000).rpc();
-  return did.dataAccount()[0];
+  return did.dataAccount();
 };
 
-export const getDidAccount = async (authority: Wallet): Promise<PublicKey> => {
+export const getDidAccount = async (
+  authority: Wallet
+): Promise<[PublicKey, number]> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
-  return did.dataAccount()[0];
+  return did.dataAccount();
 };
 
 export enum DidTestType {
