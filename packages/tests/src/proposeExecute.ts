@@ -124,18 +124,22 @@ didTestCases.forEach(({ type, beforeFn }) => {
       const previousBalance = await balanceOf(cryptid.address());
 
       // send the propose tx
-      const { proposeTransaction, transactionAccountAddress } =
-        await cryptid.propose(makeTransaction());
-      await cryptid.send(proposeTransaction, { skipPreflight: true });
+      const { proposeTransaction, transactionAccount } = await cryptid.propose(
+        makeTransaction()
+      );
+
+      await cryptid.send(proposeTransaction, [transactionAccount], {
+        skipPreflight: true,
+      });
 
       let currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
 
       // send the execute tx
       const [executeTransaction] = await cryptid.execute(
-        transactionAccountAddress
+        transactionAccount.publicKey
       );
-      await cryptid.send(executeTransaction, { skipPreflight: true });
+      await cryptid.send(executeTransaction, [], { skipPreflight: true });
 
       currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -194,11 +198,11 @@ didTestCases.forEach(({ type, beforeFn }) => {
     it("can propose and execute in the same transaction using the cryptid client", async () => {
       const previousBalance = await balanceOf(cryptid.address());
 
-      const [bigTransaction] = await cryptid.proposeAndExecute(
-        makeTransaction(),
-        true
-      );
-      await cryptid.send(bigTransaction, { skipPreflight: true });
+      const { proposeExecuteTransactions, transactionAccount } =
+        await cryptid.proposeAndExecute(makeTransaction(), true);
+      await cryptid.send(proposeExecuteTransactions[0], [transactionAccount], {
+        skipPreflight: true,
+      });
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

@@ -55,8 +55,9 @@ didTestCases.forEach(({ type, beforeFn }) => {
           Buffer.from([]), // no controller chain
           [instructionData],
           cryptidBump,
+          0, // index
           didAccountBump,
-          0
+          0 // flags
         )
         .accounts({
           cryptidAccount,
@@ -68,7 +69,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
           toAccountMeta(recipient.publicKey, true, false),
           toAccountMeta(SystemProgram.programId),
         ])
-        .rpc({ skipPreflight: true });
+        .rpc();
 
     before("Set up DID account", async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
@@ -105,7 +106,8 @@ didTestCases.forEach(({ type, beforeFn }) => {
       const signedTransaction = await cryptid.directExecute(
         makeTransaction(recipient.publicKey)
       );
-      await cryptid.send(signedTransaction, { skipPreflight: true });
+
+      await cryptid.send(signedTransaction, [], { skipPreflight: true });
 
       const currentBalance = await balanceOf(cryptidAccount);
 
@@ -129,7 +131,9 @@ didTestCases.forEach(({ type, beforeFn }) => {
         instructionDataWithUnauthorisedSigner
       );
 
-      return expect(shouldFail).to.be.rejectedWith(/MissingRequiredSignature/);
+      return expect(shouldFail).to.be.rejectedWith(
+        "missing required signature for instruction"
+      );
     });
 
     it("rejects the transfer if the recipient account index is invalid", async () => {
@@ -148,8 +152,9 @@ didTestCases.forEach(({ type, beforeFn }) => {
         instructionDataWithInvalidAccountIndex
       );
 
-      // TODO expose the error from the program
-      return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
+      return expect(shouldFail).to.be.rejectedWith(
+        "Program failed to complete"
+      );
     });
 
     it("rejects the transfer if the signer is not a valid signer on the DID", async () => {
@@ -164,12 +169,31 @@ didTestCases.forEach(({ type, beforeFn }) => {
       const signedTransaction = await bogusCryptid.directExecute(
         makeTransaction(recipient.publicKey)
       );
-      const shouldFail = bogusCryptid.send(signedTransaction, {
-        skipPreflight: true,
+      const shouldFail = bogusCryptid.send(signedTransaction);
+
+      return expect(shouldFail).to.be.rejectedWith(
+        "Error Code: KeyMustBeSigner"
+      );
+    });
+
+    it("can use direct-execute on non-zero index cryptid accounts", async () => {
+      const recipient = Keypair.generate();
+
+      const cryptidNonZeroIndex = await Cryptid.buildFromDID(did, authority, {
+        accountIndex: 1,
+        connection: provider.connection,
       });
 
-      // TODO expose the error from the program
-      return expect(shouldFail).to.be.rejected;
+      await fund(cryptidNonZeroIndex.address(), 3 * LAMPORTS_PER_SOL);
+
+      const signedTransaction = await cryptidNonZeroIndex.directExecute(
+        makeTransfer(cryptidNonZeroIndex.address(), recipient.publicKey)
+      );
+
+      await cryptidNonZeroIndex.send(signedTransaction);
+
+      const previousBalance = await balanceOf(cryptidNonZeroIndex.address());
+      expect(previousBalance).to.equal(2 * LAMPORTS_PER_SOL);
     });
 
     // Test-case for the initialized DID case only.
@@ -189,7 +213,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
           const signedTransaction = await secondKeyCryptid.directExecute(
             makeTransaction(recipient.publicKey)
           );
-          await secondKeyCryptid.send(signedTransaction, {
+          await secondKeyCryptid.send(signedTransaction, [], {
             skipPreflight: true,
           });
         };

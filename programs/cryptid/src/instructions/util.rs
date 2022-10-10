@@ -68,7 +68,7 @@ pub fn verify_keys<'info1, 'info2>(
     )
     .map_err(|error| -> CryptidError {
         msg!("Error executing is_authority: {}", error);
-        CryptidError::KeyCannotChangeTransaction
+        CryptidError::KeyMustBeSigner
     })?;
 
     if !signer_is_authority {

@@ -170,8 +170,9 @@ export class CryptidTransaction {
         Buffer.from([]), // TODO, support controller chain,
         this.instructions,
         this.cryptidAccount.bump,
+        this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
-        this.cryptidAccount.index // TODO FIX: That is the flag, not the index.
+        0
       )
       .accounts({
         cryptidAccount: this.cryptidAccount.address,

@@ -13,6 +13,8 @@ controller_chain: Vec<u8>,
 instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
 cryptid_account_bump: u8,
+/// CryptidAccountIndex
+cryptid_account_index: u32,
 /// The bump seed for the Did Account
 did_account_bump: u8,
 /// Additional flags
@@ -20,14 +22,9 @@ flags: u8,
 )]
 pub struct DirectExecute<'info> {
     /// The Cryptid instance to execute with
-    /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
-    #[account(
-        mut,
-        // TODO wait until the new macro is available so we can refer to self.index
-        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account.index.to_le_bytes().as_ref()]
-        // bump = cryptid_account_bump
-    )]
-    pub cryptid_account: UncheckedAccount<'info>, // TODO use new macro that allows generative accounts and non-generative accounts
+    /// CHECK: Cryptid Account can be generative and non-generative
+    #[account(mut)]
+    pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not
     pub did: UncheckedAccount<'info>,
@@ -67,6 +64,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     controller_chain: Vec<u8>,
     instructions: Vec<AbbreviatedInstructionData>,
     cryptid_account_bump: u8,
+    cryptid_account_index: u32,
     did_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
@@ -91,8 +89,13 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         controlling_did_accounts,
     )?;
 
-    // TODO until we have the new macro that provides this default value
-    let default_cryptid_account = CryptidAccount::default();
+    let cryptid_account = CryptidAccount::try_from(
+        &ctx.accounts.cryptid_account,
+        &ctx.accounts.did_program.key(),
+        &ctx.accounts.did.key(),
+        cryptid_account_index,
+        cryptid_account_bump,
+    )?;
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(
@@ -100,7 +103,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         &ctx.all_accounts(),
         &ctx.accounts.did_program.key(),
         &ctx.accounts.did.key(),
-        &default_cryptid_account,
+        &cryptid_account,
         &ctx.accounts.cryptid_account.to_account_info(),
         cryptid_account_bump,
         debug,

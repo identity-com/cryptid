@@ -103,14 +103,16 @@ describe("Middleware: timeDelay", () => {
 
   it("cannot immediately execute a transfer", async () => {
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
+    const { proposeTransaction, transactionAccount } =
       await slowCryptid.propose(makeTransaction(slowCryptid));
 
-    await slowCryptid.send(proposeTransaction, { skipPreflight: true });
+    await slowCryptid.send(proposeTransaction, [transactionAccount], {
+      skipPreflight: true,
+    });
 
     // send the execute tx, which fails to pass through the middleware
     const [executeTransaction] = await slowCryptid.execute(
-      transactionAccountAddress
+      transactionAccount.publicKey
     );
     const shouldFail = slowCryptid.send(executeTransaction, {
       skipPreflight: true,
@@ -124,18 +126,20 @@ describe("Middleware: timeDelay", () => {
     const previousBalance = await balanceOf(fastCryptid.address());
 
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
+    const { proposeTransaction, transactionAccount } =
       await fastCryptid.propose(makeTransaction(fastCryptid));
-    await fastCryptid.send(proposeTransaction, { skipPreflight: true });
+    await fastCryptid.send(proposeTransaction, [transactionAccount], {
+      skipPreflight: true,
+    });
 
     // wait for the transaction to be ready
     await sleep(2000);
 
     // execute the Cryptid transaction (passing the middleware)
     const [executeTransaction] = await fastCryptid.execute(
-      transactionAccountAddress
+      transactionAccount.publicKey
     );
-    await fastCryptid.send(executeTransaction, {
+    await fastCryptid.send(executeTransaction, [], {
       skipPreflight: true,
     });
 

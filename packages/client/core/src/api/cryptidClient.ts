@@ -2,6 +2,7 @@ import {
   ConfirmOptions,
   Connection,
   PublicKey,
+  Signer,
   Transaction,
   TransactionSignature,
 } from "@solana/web3.js";
@@ -10,6 +11,7 @@ import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
+import { ProposeExecuteArrayResult } from "../types/cryptid";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -85,7 +87,7 @@ export interface CryptidClient {
   proposeAndExecute(
     transaction: Transaction,
     forceSingleTx?: boolean
-  ): Promise<Transaction[]>;
+  ): Promise<ProposeExecuteArrayResult>;
 
   propose(transaction: Transaction): Promise<ProposalResult>;
   execute(transactionAccountAddress: PublicKey): Promise<Transaction[]>;
@@ -114,6 +116,7 @@ export interface CryptidClient {
 
   send(
     transaction: Transaction,
+    signers?: Signer[],
     confirmOptions?: ConfirmOptions
   ): Promise<TransactionSignature>;
 }

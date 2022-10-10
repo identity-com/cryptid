@@ -8,7 +8,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { Wallet } from "../types/crypto";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, parseIdlErrors, Program } from "@project-serum/anchor";
 import { Cryptid, CryptidIDL } from "@identity.com/cryptid-idl";
 import { CRYPTID_PROGRAM } from "../constants";
 import {
@@ -24,10 +24,12 @@ import { range } from "ramda";
 import { didToPDA } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
-import { ProposalResult } from "../types/cryptid";
+import { ProposeExecuteResult, ProposalResult } from "../types/cryptid";
 
 export class CryptidService {
   readonly program: Program<Cryptid>;
+  readonly provider: AnchorProvider;
+  readonly idlErrors: Map<number, string>;
   private authorityKey: PublicKey;
 
   static permissionless(
@@ -42,14 +44,15 @@ export class CryptidService {
     private connection: Connection,
     private opts: ConfirmOptions = {}
   ) {
-    const anchorProvider = new AnchorProvider(connection, authority, opts);
+    this.provider = new AnchorProvider(connection, authority, opts);
+    this.idlErrors = parseIdlErrors(CryptidIDL);
 
     this.authorityKey = authority.publicKey;
 
     this.program = new Program<Cryptid>(
       CryptidIDL,
       CRYPTID_PROGRAM,
-      anchorProvider
+      this.provider
     );
   }
 
@@ -151,19 +154,6 @@ export class CryptidService {
       .rpc();
   }
 
-  private async sign(
-    unsignedTransaction: Transaction,
-    signers: Keypair[]
-  ): Promise<Transaction> {
-    const { blockhash } =
-      await this.program.provider.connection.getLatestBlockhash();
-    unsignedTransaction.recentBlockhash = blockhash;
-    unsignedTransaction.feePayer = this.authorityKey;
-    if (signers.length) unsignedTransaction.partialSign(...signers);
-
-    return this.authority.signTransaction(unsignedTransaction);
-  }
-
   private async executeMiddlewareInstructions(
     account: CryptidAccountDetails,
     transactionAccount: PublicKey,
@@ -238,22 +228,22 @@ export class CryptidService {
       .postInstructions(middlewareInstructions)
       .transaction();
 
-    const proposeTransaction = await this.sign(unsignedProposeTransaction, [
-      transactionAccountKeypair,
-    ]);
+    // don't sign
+    // const proposeTransaction = await this.sign(unsignedProposeTransaction, [
+    //   transactionAccountKeypair,
+    // ]);
 
     return {
-      proposeTransaction: proposeTransaction,
-      transactionAccountAddress: transactionAccountKeypair.publicKey,
+      proposeTransaction: unsignedProposeTransaction,
+      transactionAccount: transactionAccountKeypair,
       cryptidTransactionRepresentation: cryptidTransaction,
     };
   }
 
   public async proposeAndExecuteTransaction(
     account: CryptidAccountDetails,
-    transaction: Transaction,
-    signers: Keypair[] = []
-  ): Promise<Transaction> {
+    transaction: Transaction
+  ): Promise<ProposeExecuteResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -293,10 +283,10 @@ export class CryptidService {
       executeInstruction
     );
 
-    return this.sign(proposeExecuteTransaction, [
-      transactionAccountKeypair,
-      ...signers,
-    ]);
+    return {
+      proposeExecuteTransaction,
+      transactionAccount: transactionAccountKeypair,
+    };
   }
 
   public async execute(
@@ -315,13 +305,11 @@ export class CryptidService {
       cryptidTransaction ||
       (await this.getCryptidTransaction(account, transactionAccountAddress));
 
-    const unsignedExecuteTransaction = await resolvedCryptidTransaction
+    return resolvedCryptidTransaction
       .execute(this.program, transactionAccountAddress)
       .preInstructions(middlewareInstructions)
       .signers([...signers])
       .transaction();
-
-    return this.sign(unsignedExecuteTransaction, signers);
   }
 
   public async directExecute(
@@ -333,9 +321,8 @@ export class CryptidService {
       this.authorityKey,
       transaction.instructions
     );
-    const unsignedDirectExecuteTransaction = await cryptidTransaction
+    return await cryptidTransaction
       .directExecute(this.program)
       .transaction();
-    return this.sign(unsignedDirectExecuteTransaction, []);
   }
 }

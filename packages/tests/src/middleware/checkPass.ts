@@ -264,15 +264,18 @@ describe("Middleware: checkPass", () => {
       // no gateway token exists for the authority
 
       // send the propose tx
-      const { proposeTransaction, transactionAccountAddress } =
-        await cryptid.propose(makeTransaction());
-      await cryptid.send(proposeTransaction, { skipPreflight: true });
+      const { proposeTransaction, transactionAccount } = await cryptid.propose(
+        makeTransaction()
+      );
+      await cryptid.send(proposeTransaction, [transactionAccount], {
+        skipPreflight: true,
+      });
 
       // send the execute tx, which fails to pass through the middleware
       const [executeTransaction] = await cryptid.execute(
-        transactionAccountAddress
+        transactionAccount.publicKey
       );
-      const shouldFail = cryptid.send(executeTransaction, {
+      const shouldFail = cryptid.send(executeTransaction, [], {
         skipPreflight: true,
       });
 
@@ -287,15 +290,18 @@ describe("Middleware: checkPass", () => {
       await createGatewayToken(authority.publicKey);
 
       // send the propose tx
-      const { proposeTransaction, transactionAccountAddress } =
-        await cryptid.propose(makeTransaction());
-      await cryptid.send(proposeTransaction, { skipPreflight: true });
+      const { proposeTransaction, transactionAccount } = await cryptid.propose(
+        makeTransaction()
+      );
+      await cryptid.send(proposeTransaction, [transactionAccount], {
+        skipPreflight: true,
+      });
 
       // send the execute tx (executing the middleware)
       const [executeTransaction] = await cryptid.execute(
-        transactionAccountAddress
+        transactionAccount.publicKey
       );
-      await cryptid.send(executeTransaction, { skipPreflight: true });
+      await cryptid.send(executeTransaction, [], { skipPreflight: true });
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -307,11 +313,12 @@ describe("Middleware: checkPass", () => {
       // issue a gateway token to the authority
       await createGatewayToken(authority.publicKey);
 
-      const [bigTransaction] = await cryptid.proposeAndExecute(
-        makeTransaction(),
-        true
-      );
-      await cryptid.send(bigTransaction, { skipPreflight: true });
+      const { proposeExecuteTransactions, transactionAccount } =
+        await cryptid.proposeAndExecute(makeTransaction(), true);
+      expect(proposeExecuteTransactions.length).to.equal(1);
+      await cryptid.send(proposeExecuteTransactions[0], [transactionAccount], {
+        skipPreflight: true,
+      });
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -335,11 +342,13 @@ describe("Middleware: checkPass", () => {
       const previousBalance = await balanceOf(cryptid.address());
 
       // no gateway token exists for the authority
-      const [bigTransaction] = await cryptid.proposeAndExecute(
-        makeTransaction(),
-        true
-      );
-      await cryptid.send(bigTransaction, { skipPreflight: true });
+      const { proposeExecuteTransactions, transactionAccount } =
+        await cryptid.proposeAndExecute(makeTransaction(), true);
+      expect(proposeExecuteTransactions.length).to.equal(1);
+
+      await cryptid.send(proposeExecuteTransactions[0], [transactionAccount], {
+        skipPreflight: true,
+      });
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -354,11 +363,15 @@ describe("Middleware: checkPass", () => {
       });
 
       // no gateway token exists for the authority
-      const [bigTransaction] = await cryptid.proposeAndExecute(
-        makeTransaction(),
-        true
+      const { proposeExecuteTransactions, transactionAccount } =
+        await cryptid.proposeAndExecute(makeTransaction(), true);
+      expect(proposeExecuteTransactions.length).to.equal(1);
+
+      const shouldFail = cryptid.send(
+        proposeExecuteTransactions[0],
+        [transactionAccount],
+        { skipPreflight: true }
       );
-      const shouldFail = cryptid.send(bigTransaction, { skipPreflight: true });
 
       // TODO expose the error message
       return expect(shouldFail).to.be.rejected;

@@ -75,17 +75,20 @@ describe("Middleware: checkRecipient", () => {
     console.log("creating");
 
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
-      await cryptid.propose(makeTransaction());
+    const { proposeTransaction, transactionAccount } = await cryptid.propose(
+      makeTransaction()
+    );
 
     console.log("sending");
-    await cryptid.send(proposeTransaction, { skipPreflight: true });
+    await cryptid.send(proposeTransaction, [transactionAccount], {
+      skipPreflight: true,
+    });
 
     // send the execute tx
     const [executeTransaction] = await cryptid.execute(
-      transactionAccountAddress
+      transactionAccount.publicKey
     );
-    await cryptid.send(executeTransaction, {
+    await cryptid.send(executeTransaction, [], {
       skipPreflight: true,
     });
 
@@ -103,17 +106,21 @@ describe("Middleware: checkRecipient", () => {
       { connection: provider.connection }
     );
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
+    const { proposeTransaction, transactionAccount } =
       await cryptidWithoutMiddleware.propose(makeTransaction());
-    await cryptidWithoutMiddleware.send(proposeTransaction, {
-      skipPreflight: true,
-    });
+    await cryptidWithoutMiddleware.send(
+      proposeTransaction,
+      [transactionAccount],
+      {
+        skipPreflight: true,
+      }
+    );
 
     // send the execute tx - this will fail since the middeware was not used
     const [executeTransaction] = await cryptidWithoutMiddleware.execute(
-      transactionAccountAddress
+      transactionAccount.publicKey
     );
-    const shouldFail = cryptidWithoutMiddleware.send(executeTransaction, {
+    const shouldFail = cryptidWithoutMiddleware.send(executeTransaction, [], {
       skipPreflight: true,
     });
 
@@ -127,8 +134,10 @@ describe("Middleware: checkRecipient", () => {
 
     // propose the Cryptid transaction. Since the checkRecipient middleware
     // executes on propose, this tx will fail
-    const { proposeTransaction } = await cryptid.propose(makeTransaction());
-    const shouldFail = cryptid.send(proposeTransaction, {
+    const { proposeTransaction, transactionAccount } = await cryptid.propose(
+      makeTransaction()
+    );
+    const shouldFail = cryptid.send(proposeTransaction, [transactionAccount], {
       skipPreflight: true,
     });
 

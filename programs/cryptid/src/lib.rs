@@ -30,6 +30,7 @@ pub mod cryptid {
         controller_chain: Vec<u8>,
         instructions: Vec<AbbreviatedInstructionData>,
         cryptid_account_bump: u8,
+        cryptid_account_index: u32,
         did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
@@ -38,6 +39,7 @@ pub mod cryptid {
             controller_chain,
             instructions,
             cryptid_account_bump,
+            cryptid_account_index,
             did_account_bump,
             flags,
         )

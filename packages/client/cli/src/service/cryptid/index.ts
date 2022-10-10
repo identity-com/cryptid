@@ -1,6 +1,6 @@
 import { Config } from "../config";
 import { VerificationMethod } from "did-resolver";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, Signer, SystemProgram, Transaction } from "@solana/web3.js";
 import { getOwnedTokenAccounts, safeParsePubkey } from "../../lib/solana";
 import {
   Cryptid,
@@ -116,14 +116,16 @@ export const airdrop = async (
   );
 };
 
-const signCryptidTransaction = (
+const createCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
-): Promise<Transaction[]> => {
+): Promise<[Transaction[], Signer[]]> => {
   if (cryptid.details.middlewares.length) {
-    return cryptid.proposeAndExecute(transaction);
+    const { proposeExecuteTransactions, transactionAccount } =
+      await cryptid.proposeAndExecute(transaction);
+    return [proposeExecuteTransactions, [transactionAccount]];
   } else {
-    return cryptid.directExecute(transaction).then((tx) => [tx]);
+    return [await cryptid.directExecute(transaction).then((tx) => [tx]), []];
   }
 };
 
@@ -131,11 +133,16 @@ export const signAndSendCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
 ): Promise<string[]> => {
-  const signedTransactions = await signCryptidTransaction(cryptid, transaction);
+  const [signedTransactions, signers] = await createCryptidTransaction(
+    cryptid,
+    transaction
+  );
   return signedTransactions.reduce(
     (promise, tx) =>
       // send the tx strictly after the previous one, and add the signature to the array
-      promise.then((sigs) => cryptid.send(tx).then((sig) => [...sigs, sig])),
+      promise.then((sigs) =>
+        cryptid.send(tx, signers).then((sig) => [...sigs, sig])
+      ),
     Promise.resolve<string[]>([])
   );
 };
