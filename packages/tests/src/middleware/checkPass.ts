@@ -165,7 +165,7 @@ describe("Middleware: checkPass", () => {
       .proposeTransaction([instruction], 2)
       .accounts({
         cryptidAccount,
-        owner: didAccount,
+        did: didAccount,
         authority: authority.publicKey,
         transactionAccount: transactionAccount.publicKey,
       })
@@ -206,7 +206,7 @@ describe("Middleware: checkPass", () => {
       .accounts({
         middlewareAccount,
         transactionAccount: transactionAccount.publicKey,
-        owner: didAccount,
+        did: didAccount,
         authority: authority.publicKey,
         expireFeatureAccount,
         gatewayToken,

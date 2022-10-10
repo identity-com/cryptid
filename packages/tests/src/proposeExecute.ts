@@ -53,7 +53,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .proposeTransaction([instruction], 2)
         .accounts({
           cryptidAccount: cryptid.address(),
-          owner: didAccount,
+          did: didAccount,
           authority: authority.publicKey,
           transactionAccount: transactionAccount.publicKey,
         })
@@ -155,7 +155,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .proposeTransaction([transferInstructionData], 2)
         .accounts({
           cryptidAccount: cryptid.address(),
-          owner: didAccount,
+          did: didAccount,
           authority: authority.publicKey,
           transactionAccount: transactionAccount.publicKey,
         })

@@ -133,7 +133,7 @@ export class CryptidTransaction {
       .proposeTransaction(this.instructions, this.accountMetas.length)
       .accounts({
         cryptidAccount: this.cryptidAccount.address,
-        owner: this.cryptidAccount.didAccount,
+        did: this.cryptidAccount.didAccount,
         authority: this.authority,
         transactionAccount: transactionAccountAddress,
       })

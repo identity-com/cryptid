@@ -12,13 +12,13 @@ num_accounts: u8
 )]
 pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
-    /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
+    /// CHECK: Cryptid Account can be generative and non-generative
     #[account()]
-    pub cryptid_account: UncheckedAccount<'info>, // TODO allow generative/non-generative
-    /// The owner of the Cryptid instance, typically a DID account
+    pub cryptid_account: UncheckedAccount<'info>,
+    /// The did account owner of the Cryptid instance
     /// CHECK: Unchecked to allow generative DID accounts.
     #[account()]
-    pub owner: UncheckedAccount<'info>, // TODO allow generative/non-generative
+    pub did: UncheckedAccount<'info>,
     #[account(mut)]
     authority: Signer<'info>,
     #[account(
@@ -40,7 +40,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
     instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
-    ctx.accounts.transaction_account.owner = *ctx.accounts.owner.key;
+    ctx.accounts.transaction_account.did = *ctx.accounts.did.key;
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
     ctx.accounts.transaction_account.approved_middleware = None;

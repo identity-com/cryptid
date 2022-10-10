@@ -136,11 +136,11 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The owner of the Cryptid instance, typically a DID account"
+            "The did account owner of the Cryptid instance"
           ]
         },
         {
@@ -303,7 +303,7 @@ export type Cryptid = {
             "type": "publicKey"
           },
           {
-            "name": "owner",
+            "name": "did",
             "docs": [
               "The owner of the cryptid account (Typically a DID account)"
             ],
@@ -677,11 +677,11 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The owner of the Cryptid instance, typically a DID account"
+            "The did account owner of the Cryptid instance"
           ]
         },
         {
@@ -844,7 +844,7 @@ export const IDL: Cryptid = {
             "type": "publicKey"
           },
           {
-            "name": "owner",
+            "name": "did",
             "docs": [
               "The owner of the cryptid account (Typically a DID account)"
             ],

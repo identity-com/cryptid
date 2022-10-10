@@ -82,7 +82,7 @@ pub mod check_pass {
         // WARNING - any logic added after here is skipped if the transaction is signed
         // by the failsafe key.
 
-        let did = &ctx.accounts.owner;
+        let did = &ctx.accounts.did;
         // TODO - this should be in the gateway SDK.
         let gateway_token_info = &ctx.accounts.gateway_token.to_account_info();
         let gateway_token = Gateway::parse_gateway_token(gateway_token_info)
@@ -177,7 +177,7 @@ pub struct ExecuteMiddleware<'info> {
     pub middleware_account: Account<'info, CheckPass>,
     #[account(
         mut,
-        has_one = owner,
+        has_one = did,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
     /// The owner of the Cryptid instance, typically a DID account
@@ -185,7 +185,7 @@ pub struct ExecuteMiddleware<'info> {
     /// The gateway token can be on any key provably owned by the DID.
     /// CHECK: DID Account can be generative or not
     #[account()]
-    pub owner: UncheckedAccount<'info>,
+    pub did: UncheckedAccount<'info>,
     /// An authority on the DID.
     /// This is needed for two cases:
     /// 1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.

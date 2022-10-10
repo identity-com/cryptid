@@ -58,7 +58,7 @@ export type CheckPass = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -245,7 +245,7 @@ export const IDL: CheckPass = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [

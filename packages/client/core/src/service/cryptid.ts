@@ -321,8 +321,6 @@ export class CryptidService {
       this.authorityKey,
       transaction.instructions
     );
-    return await cryptidTransaction
-      .directExecute(this.program)
-      .transaction();
+    return await cryptidTransaction.directExecute(this.program).transaction();
   }
 }

@@ -137,7 +137,7 @@ export class CheckPassMiddleware
       .accounts({
         middlewareAccount: params.middlewareAccount,
         transactionAccount: params.transactionAccount,
-        owner: params.cryptidAccountDetails.didAccount,
+        did: params.cryptidAccountDetails.didAccount,
         authority: params.authority.publicKey,
         expireFeatureAccount,
         gatewayToken,
