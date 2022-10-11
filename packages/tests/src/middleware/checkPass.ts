@@ -147,9 +147,15 @@ describe("Middleware: checkPass", () => {
     instruction: InstructionData = transferInstructionData
   ) =>
     program.methods
-      .proposeTransaction([instruction], 2)
+      .proposeTransaction(
+        Buffer.from([]), // no controller chain,
+        cryptid.details.didAccountBump,
+        [instruction],
+        2
+      )
       .accounts({
         cryptidAccount: cryptid.address(),
+        didProgram: DID_SOL_PROGRAM,
         did: didAccount,
         authority: authority.publicKey,
         transactionAccount: transactionAccount.publicKey,

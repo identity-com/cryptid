@@ -47,10 +47,12 @@ pub mod cryptid {
 
     pub fn propose_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
+        controller_chain: Vec<u8>,
+        did_account_bump: u8,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
-        instructions::propose_transaction(ctx, instructions)
+        instructions::propose_transaction(ctx, controller_chain, did_account_bump, instructions)
     }
 
     pub fn execute_transaction<'a, 'b, 'c, 'info>(

@@ -48,9 +48,15 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         instruction: InstructionData = transferInstructionData
       ) =>
         program.methods
-          .proposeTransaction([instruction], 2)
+          .proposeTransaction(
+            Buffer.from([]), // no controller chain,
+            cryptid.details.didAccountBump,
+            [instruction],
+            2
+          )
           .accounts({
             cryptidAccount: cryptid.address(),
+            didProgram: DID_SOL_PROGRAM,
             did: didAccount,
             authority: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
@@ -148,9 +154,15 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
 
         // propose the Cryptid transaction
         const proposeIx = await program.methods
-          .proposeTransaction([transferInstructionData], 2)
+          .proposeTransaction(
+            Buffer.from([]), // no controller chain,
+            cryptid.details.didAccountBump,
+            [transferInstructionData],
+            2
+          )
           .accounts({
             cryptidAccount: cryptid.address(),
+            didProgram: DID_SOL_PROGRAM,
             did: didAccount,
             authority: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
@@ -293,10 +305,45 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
       });
 
+      it("rejects the propose if the signer is not a valid signer on the DID", async () => {
+        const transactionAccount = Keypair.generate();
+
+        const bogusSigner = Keypair.generate();
+        await fund(bogusSigner.publicKey);
+
+        // propose the Cryptid transaction
+        const shouldFail = program.methods
+          .proposeTransaction(
+            Buffer.from([]), // no controller chain,
+            cryptid.details.didAccountBump,
+            [transferInstructionData],
+            2
+          )
+          .accounts({
+            cryptidAccount: cryptid.address(),
+            didProgram: DID_SOL_PROGRAM,
+            did: didAccount,
+            authority: bogusSigner.publicKey,  // specify the bogus signer as the authority
+            transactionAccount: transactionAccount.publicKey,
+          })
+          .remainingAccounts([
+            toAccountMeta(recipient.publicKey, true, false),
+            toAccountMeta(SystemProgram.programId),
+          ])
+          .signers([transactionAccount, bogusSigner])
+          .rpc(); // skip preflight so we see validator logs on error
+
+        return expect(shouldFail).to.be.rejectedWith(
+          "Error Code: KeyMustBeSigner"
+        );
+      });
+
       it("rejects the transfer if the signer is not a valid signer on the DID", async () => {
         const transactionAccount = Keypair.generate();
 
         const bogusSigner = Keypair.generate();
+        // TODO: Why does it not need to be funded?
+        // await fund(bogusSigner.publicKey);
 
         await propose(transactionAccount);
         // execute the Cryptid transaction
@@ -323,10 +370,11 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
           .signers(
             [bogusSigner] // sign with the bogus signer
           )
-          .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+          .rpc(); // skip preflight so we see validator logs on error
 
-        // TODO expose the error from the program
-        return expect(shouldFail).to.be.rejected;
+        return expect(shouldFail).to.be.rejectedWith(
+          "Error Code: KeyMustBeSigner"
+        );
       });
     });
   });

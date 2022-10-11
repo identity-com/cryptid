@@ -144,6 +144,14 @@ export type Cryptid = {
           ]
         },
         {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -160,6 +168,14 @@ export type Cryptid = {
         }
       ],
       "args": [
+        {
+          "name": "controllerChain",
+          "type": "bytes"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
         {
           "name": "instructions",
           "type": {
@@ -689,6 +705,14 @@ export const IDL: Cryptid = {
           ]
         },
         {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
           "name": "authority",
           "isMut": true,
           "isSigner": true
@@ -705,6 +729,14 @@ export const IDL: Cryptid = {
         }
       ],
       "args": [
+        {
+          "name": "controllerChain",
+          "type": "bytes"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
         {
           "name": "instructions",
           "type": {
