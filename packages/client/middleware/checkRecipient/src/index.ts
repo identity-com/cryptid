@@ -2,6 +2,7 @@ import {
   CRYPTID_PROGRAM,
   ExecuteMiddlewareParams,
   GenericMiddlewareParams,
+  MiddlewareResult,
   MiddlewareClient,
 } from "@identity.com/cryptid-core";
 import {
@@ -105,7 +106,7 @@ export class CheckRecipientMiddleware
 
   public async onPropose(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const program = CheckRecipientMiddleware.getProgram(params);
 
     if (
@@ -114,7 +115,7 @@ export class CheckRecipientMiddleware
         params.middlewareAccount
       )
     ) {
-      return [];
+      return { instructions: [], signers: [] };
     }
 
     // If there is no previous middleware
@@ -126,12 +127,12 @@ export class CheckRecipientMiddleware
       params
     );
 
-    return [executeInstruction];
+    return { instructions: [executeInstruction], signers: [] };
   }
 
   public async onExecute(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const program = CheckRecipientMiddleware.getProgram(params);
 
     if (
@@ -149,9 +150,9 @@ export class CheckRecipientMiddleware
         params
       );
 
-      return [executeInstruction];
+      return { instructions: [executeInstruction], signers: [] };
     }
 
-    return [];
+    return { instructions: [], signers: [] };
   }
 }

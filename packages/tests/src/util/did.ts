@@ -25,34 +25,36 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
 
 export const initializeDIDAccount = async (
   authority: Wallet
-): Promise<PublicKey> => {
+): Promise<[PublicKey, number]> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
   const didSolService = await DidSolService.build(did, {
     wallet: authority,
   });
 
   await didSolService.initialize(10_000).rpc();
-  return did.dataAccount()[0];
+  return did.dataAccount();
 };
 
-export const getDidAccount = async (authority: Wallet): Promise<PublicKey> => {
+export const getDidAccount = async (
+  authority: Wallet
+): Promise<[PublicKey, number]> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
-  return did.dataAccount()[0];
+  return did.dataAccount();
 };
 
-export enum DidTestType {
-  Generative = "generative DID",
-  Initialized = "initialized DID",
+export enum TestType {
+  Generative = "generative",
+  Initialized = "non-generative",
 }
 
 export const didTestCases = [
   {
-    type: DidTestType.Generative,
-    beforeFn: async (authority: Wallet) => await getDidAccount(authority),
+    didType: TestType.Generative,
+    getDidAccount: async (authority: Wallet) => await getDidAccount(authority),
   },
   {
-    type: DidTestType.Initialized,
-    beforeFn: async (authority: Wallet) =>
+    didType: TestType.Initialized,
+    getDidAccount: async (authority: Wallet) =>
       await initializeDIDAccount(authority),
   },
 ];

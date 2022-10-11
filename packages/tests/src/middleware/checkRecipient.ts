@@ -75,19 +75,17 @@ describe("Middleware: checkRecipient", () => {
     console.log("creating");
 
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
+    const { proposeTransaction, transactionAccount, proposeSigners } =
       await cryptid.propose(makeTransaction());
 
     console.log("sending");
-    await cryptid.send(proposeTransaction, { skipPreflight: true });
+    await cryptid.send(proposeTransaction, proposeSigners);
 
     // send the execute tx
-    const [executeTransaction] = await cryptid.execute(
-      transactionAccountAddress
+    const { executeTransactions, executeSigners } = await cryptid.execute(
+      transactionAccount
     );
-    await cryptid.send(executeTransaction, {
-      skipPreflight: true,
-    });
+    await cryptid.send(executeTransactions[0], executeSigners);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -103,22 +101,19 @@ describe("Middleware: checkRecipient", () => {
       { connection: provider.connection }
     );
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccountAddress } =
+    const { proposeTransaction, transactionAccount, proposeSigners } =
       await cryptidWithoutMiddleware.propose(makeTransaction());
-    await cryptidWithoutMiddleware.send(proposeTransaction, {
-      skipPreflight: true,
-    });
+    await cryptidWithoutMiddleware.send(proposeTransaction, proposeSigners);
 
     // send the execute tx - this will fail since the middeware was not used
-    const [executeTransaction] = await cryptidWithoutMiddleware.execute(
-      transactionAccountAddress
+    const { executeTransactions, executeSigners } = await cryptid.execute(
+      transactionAccount
     );
-    const shouldFail = cryptidWithoutMiddleware.send(executeTransaction, {
-      skipPreflight: true,
-    });
+    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
 
-    // TODO expose the error message
-    return expect(shouldFail).to.be.rejected;
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: IncorrectMiddleware"
+    );
   });
 
   it("blocks a transfer to a different recipient", async () => {
@@ -127,12 +122,13 @@ describe("Middleware: checkRecipient", () => {
 
     // propose the Cryptid transaction. Since the checkRecipient middleware
     // executes on propose, this tx will fail
-    const { proposeTransaction } = await cryptid.propose(makeTransaction());
-    const shouldFail = cryptid.send(proposeTransaction, {
-      skipPreflight: true,
-    });
+    const { proposeTransaction, proposeSigners } = await cryptid.propose(
+      makeTransaction()
+    );
+    const shouldFail = cryptid.send(proposeTransaction, proposeSigners);
 
-    // TODO expose the error message
-    return expect(shouldFail).to.be.rejected;
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: InvalidRecipient."
+    );
   });
 });

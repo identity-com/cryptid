@@ -30,14 +30,13 @@ pub mod check_pass {
     pub fn create(
         ctx: Context<Create>,
         gatekeeper_network: Pubkey,
-        bump: u8,
         expire_on_use: bool,
         failsafe: Option<Pubkey>,
         previous_middleware: Option<Pubkey>,
     ) -> Result<()> {
         ctx.accounts.middleware_account.gatekeeper_network = gatekeeper_network;
         ctx.accounts.middleware_account.authority = ctx.accounts.authority.key();
-        ctx.accounts.middleware_account.bump = bump;
+        ctx.accounts.middleware_account.bump = *ctx.bumps.get("middleware_account").unwrap();
         ctx.accounts.middleware_account.expire_on_use = expire_on_use;
         ctx.accounts.middleware_account.failsafe = failsafe;
         ctx.accounts.middleware_account.previous_middleware = previous_middleware;
@@ -83,7 +82,7 @@ pub mod check_pass {
         // WARNING - any logic added after here is skipped if the transaction is signed
         // by the failsafe key.
 
-        let did = &ctx.accounts.owner;
+        let did = &ctx.accounts.did;
         // TODO - this should be in the gateway SDK.
         let gateway_token_info = &ctx.accounts.gateway_token.to_account_info();
         let gateway_token = Gateway::parse_gateway_token(gateway_token_info)
@@ -99,8 +98,13 @@ pub mod check_pass {
                     // The owner wallet is not the DID, so we check if the DID is a signer on the owner wallet
                     // TODO support controller relationships?
                     let controlling_did_accounts = vec![];
-                    verify_keys(did, &gateway_token.owner_wallet, controlling_did_accounts)
-                        .map_err(|_| -> ErrorCode { ErrorCode::InvalidPassAuthority })?;
+                    verify_keys(
+                        did,
+                        None,
+                        &gateway_token.owner_wallet,
+                        controlling_did_accounts,
+                    )
+                    .map_err(|_| -> ErrorCode { ErrorCode::InvalidPassAuthority })?;
                 }
             }
             Some(owner_did) => {
@@ -139,8 +143,6 @@ pub mod check_pass {
 #[instruction(
 /// The gatekeeper_network that passes must belong to
 gatekeeper_network: Pubkey,
-/// The bump seed for the middleware signer
-bump: u8,
 /// Expire a gateway token after it has been used. Note, this can only be used
 /// with gatekeeper networks that have the ExpireFeature enabled.
 expire_on_use: bool,
@@ -175,7 +177,7 @@ pub struct ExecuteMiddleware<'info> {
     pub middleware_account: Account<'info, CheckPass>,
     #[account(
         mut,
-        has_one = owner,
+        has_one = did,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
     /// The owner of the Cryptid instance, typically a DID account
@@ -183,7 +185,7 @@ pub struct ExecuteMiddleware<'info> {
     /// The gateway token can be on any key provably owned by the DID.
     /// CHECK: DID Account can be generative or not
     #[account()]
-    pub owner: UncheckedAccount<'info>,
+    pub did: UncheckedAccount<'info>,
     /// An authority on the DID.
     /// This is needed for two cases:
     /// 1) the expireOnUse case. In this case, the authority must be the owner of the gateway token.

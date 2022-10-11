@@ -3,12 +3,9 @@ import {
   ExecuteMiddlewareParams,
   GenericMiddlewareParams,
   MiddlewareClient,
+  MiddlewareResult,
 } from "@identity.com/cryptid-core";
-import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { CheckPass, CheckPassIDL } from "@identity.com/cryptid-idl";
 import * as anchor from "@project-serum/anchor";
@@ -90,7 +87,7 @@ export class CheckPassMiddleware
   ): Promise<Transaction> {
     const program = CheckPassMiddleware.getProgram(params);
 
-    const [middlewareAccount, middlewareBump] = deriveMiddlewareAccountAddress(
+    const [middlewareAccount] = deriveMiddlewareAccountAddress(
       params.authority.publicKey,
       params.gatekeeperNetwork,
       params.failsafe,
@@ -100,7 +97,6 @@ export class CheckPassMiddleware
     return program.methods
       .create(
         params.gatekeeperNetwork,
-        middlewareBump,
         params.expirePassOnUse,
         params.failsafe || null,
         params.previousMiddleware || null
@@ -112,13 +108,13 @@ export class CheckPassMiddleware
       .transaction();
   }
 
-  public async onPropose(): Promise<TransactionInstruction[]> {
-    return [];
+  public async onPropose(): Promise<MiddlewareResult> {
+    return { instructions: [], signers: [] };
   }
 
   public async onExecute(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const program = CheckPassMiddleware.getProgram(params);
 
     const middlewareAccount = await program.account.checkPass.fetch(
@@ -133,12 +129,12 @@ export class CheckPassMiddleware
         middlewareAccount.gatekeeperNetwork
       );
 
-    return program.methods
+    const instructions = await program.methods
       .executeMiddleware()
       .accounts({
         middlewareAccount: params.middlewareAccount,
         transactionAccount: params.transactionAccount,
-        owner: params.cryptidAccountDetails.didAccount,
+        did: params.cryptidAccountDetails.didAccount,
         authority: params.authority.publicKey,
         expireFeatureAccount,
         gatewayToken,
@@ -147,5 +143,7 @@ export class CheckPassMiddleware
       })
       .instruction()
       .then(Array.of);
+
+    return { instructions, signers: [] };
   }
 }

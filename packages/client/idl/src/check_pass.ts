@@ -27,10 +27,6 @@ export type CheckPass = {
           "type": "publicKey"
         },
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "expireOnUse",
           "type": "bool"
         },
@@ -62,7 +58,7 @@ export type CheckPass = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -218,10 +214,6 @@ export const IDL: CheckPass = {
           "type": "publicKey"
         },
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "expireOnUse",
           "type": "bool"
         },
@@ -253,7 +245,7 @@ export const IDL: CheckPass = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [

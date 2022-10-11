@@ -130,10 +130,18 @@ export class CryptidTransaction {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
-      .proposeTransaction(this.instructions, this.accountMetas.length)
+      .proposeTransaction(
+        Buffer.from([]), // TODO, support controller chain,
+        this.cryptidAccount.bump,
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump,
+        this.instructions,
+        this.accountMetas.length
+      )
       .accounts({
         cryptidAccount: this.cryptidAccount.address,
-        owner: this.cryptidAccount.didAccount,
+        didProgram: DID_SOL_PROGRAM,
+        did: this.cryptidAccount.didAccount,
         authority: this.authority,
         transactionAccount: transactionAccountAddress,
       })
@@ -148,6 +156,8 @@ export class CryptidTransaction {
       .executeTransaction(
         Buffer.from([]), // TODO, support controller chain,
         this.cryptidAccount.bump,
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump,
         0
       )
       .accounts({
@@ -169,7 +179,9 @@ export class CryptidTransaction {
         Buffer.from([]), // TODO, support controller chain,
         this.instructions,
         this.cryptidAccount.bump,
-        this.cryptidAccount.index
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump,
+        0
       )
       .accounts({
         cryptidAccount: this.cryptidAccount.address,

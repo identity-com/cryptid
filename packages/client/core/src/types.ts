@@ -3,11 +3,16 @@ import { Cryptid } from "@identity.com/cryptid-idl";
 
 export { ExtendedCluster } from "./types/solana";
 export { Wallet } from "./types/crypto";
-export { ProposalResult } from "./types/cryptid";
+export {
+  ProposalResult,
+  ExecuteResult,
+  ExecuteArrayResult,
+} from "./types/cryptid";
 export {
   MiddlewareClient,
   GenericMiddlewareParams,
   ExecuteMiddlewareParams,
+  MiddlewareResult,
 } from "./types/middleware";
 
 export type TransactionAccountMeta =

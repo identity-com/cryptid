@@ -8,13 +8,13 @@ import { fund, createTestContext } from "./util/anchorUtils";
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-didTestCases.forEach(({ type, beforeFn }) => {
-  describe(`create (${type})`, () => {
+didTestCases.forEach(({ didType, getDidAccount }) => {
+  describe(`create (${didType})`, () => {
     const { authority, provider } = createTestContext();
 
-    before(`Set up ${type} account`, async () => {
+    before(`Set up ${didType} account`, async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-      await beforeFn(authority);
+      await getDidAccount(authority);
     });
 
     it("cannot create a zero index cryptid account", async () => {

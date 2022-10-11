@@ -2,6 +2,7 @@ import {
   ConfirmOptions,
   Connection,
   PublicKey,
+  Signer,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -24,8 +25,13 @@ export type ExecuteMiddlewareParams = GenericMiddlewareParams & {
   cryptidAccountDetails: CryptidAccountDetails;
 };
 
+export type MiddlewareResult = {
+  instructions: TransactionInstruction[];
+  signers: Signer[];
+};
+
 export interface MiddlewareClient<C extends GenericMiddlewareParams> {
   createMiddleware(params: C): Promise<Transaction>;
-  onPropose(params: ExecuteMiddlewareParams): Promise<TransactionInstruction[]>;
-  onExecute(params: ExecuteMiddlewareParams): Promise<TransactionInstruction[]>;
+  onPropose(params: ExecuteMiddlewareParams): Promise<MiddlewareResult>;
+  onExecute(params: ExecuteMiddlewareParams): Promise<MiddlewareResult>;
 }
