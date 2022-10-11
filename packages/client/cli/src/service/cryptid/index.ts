@@ -1,6 +1,6 @@
 import { Config } from "../config";
 import { VerificationMethod } from "did-resolver";
-import { PublicKey, Signer, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { getOwnedTokenAccounts, safeParsePubkey } from "../../lib/solana";
 import {
   Cryptid,
@@ -8,6 +8,7 @@ import {
   CryptidClient,
 } from "@identity.com/cryptid";
 import { util } from "@identity.com/cryptid-core";
+import { ExecuteArrayResult } from "@identity.com/cryptid-core/dist/types/cryptid";
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 
@@ -119,13 +120,16 @@ export const airdrop = async (
 const createCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
-): Promise<[Transaction[], Signer[]]> => {
+): Promise<ExecuteArrayResult> => {
   if (cryptid.details.middlewares.length) {
-    const { proposeExecuteTransactions, signers } =
-      await cryptid.proposeAndExecute(transaction);
-    return [proposeExecuteTransactions, signers];
+    return cryptid.proposeAndExecute(transaction);
   } else {
-    return [await cryptid.directExecute(transaction).then((tx) => [tx]), []];
+    return {
+      executeTransactions: await cryptid
+        .directExecute(transaction)
+        .then((tx) => [tx]),
+      executeSigners: [],
+    };
   }
 };
 
@@ -133,15 +137,13 @@ export const signAndSendCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
 ): Promise<string[]> => {
-  const [signedTransactions, signers] = await createCryptidTransaction(
-    cryptid,
-    transaction
-  );
-  return signedTransactions.reduce(
+  const { executeTransactions, executeSigners } =
+    await createCryptidTransaction(cryptid, transaction);
+  return executeTransactions.reduce(
     (promise, tx) =>
       // send the tx strictly after the previous one, and add the signature to the array
       promise.then((sigs) =>
-        cryptid.send(tx, signers).then((sig) => [...sigs, sig])
+        cryptid.send(tx, executeSigners).then((sig) => [...sigs, sig])
       ),
     Promise.resolve<string[]>([])
   );

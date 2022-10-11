@@ -5,7 +5,6 @@ import {
   Keypair,
   PublicKey,
   Transaction,
-  TransactionInstruction,
 } from "@solana/web3.js";
 import { Wallet } from "../types/crypto";
 import { AnchorProvider, parseIdlErrors, Program } from "@project-serum/anchor";
@@ -24,7 +23,8 @@ import { range } from "ramda";
 import { didToPDA } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
-import { ProposeExecuteResult, ProposalResult } from "../types/cryptid";
+import { ExecuteResult, ProposalResult } from "../types/cryptid";
+import { MiddlewareResult } from "../types/middleware";
 
 export class CryptidService {
   readonly program: Program<Cryptid>;
@@ -158,7 +158,7 @@ export class CryptidService {
     account: CryptidAccountDetails,
     transactionAccount: PublicKey,
     stage: "Propose" | "Execute"
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const middlewareContexts =
       MiddlewareRegistry.get().getMiddlewareContexts(account);
     const executeParameters: Omit<
@@ -181,7 +181,16 @@ export class CryptidService {
           middlewareAccount: accounts.address,
         })
       )
-    ).then((instructions) => instructions.flat());
+    ).then((results) =>
+      // Flatten into single MiddlewareResult
+      results.reduce(
+        (acc, currentValue) => ({
+          instructions: acc.instructions.concat(currentValue.instructions),
+          signers: acc.signers.concat(currentValue.signers),
+        }),
+        { instructions: [], signers: [] }
+      )
+    );
   }
 
   private async getCryptidTransaction(
@@ -213,7 +222,7 @@ export class CryptidService {
       transaction.instructions
     );
 
-    const middlewareInstructions = await this.executeMiddlewareInstructions(
+    const middlewareResult = await this.executeMiddlewareInstructions(
       account,
       transactionAccountKeypair.publicKey,
       "Propose"
@@ -225,13 +234,14 @@ export class CryptidService {
         // The only signer in a proposal (other than an authority on the DID) is the transaction account
         [transactionAccountKeypair]
       )
-      .postInstructions(middlewareInstructions)
+      .postInstructions(middlewareResult.instructions)
+      .signers(middlewareResult.signers)
       .transaction();
 
     return {
       proposeTransaction: unsignedProposeTransaction,
       transactionAccount: transactionAccountKeypair.publicKey,
-      signers: [transactionAccountKeypair],
+      proposeSigners: [transactionAccountKeypair, ...middlewareResult.signers],
       cryptidTransactionRepresentation: cryptidTransaction,
     };
   }
@@ -239,7 +249,7 @@ export class CryptidService {
   public async proposeAndExecuteTransaction(
     account: CryptidAccountDetails,
     transaction: Transaction
-  ): Promise<ProposeExecuteResult> {
+  ): Promise<ExecuteResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -255,33 +265,39 @@ export class CryptidService {
       )
       .instruction();
 
-    const middlewareProposeInstructions =
-      await this.executeMiddlewareInstructions(
-        account,
-        transactionAccountKeypair.publicKey,
-        "Propose"
-      );
-    const middlewareExecuteInstructions =
-      await this.executeMiddlewareInstructions(
-        account,
-        transactionAccountKeypair.publicKey,
-        "Execute"
-      );
+    const middlewareProposeResults = await this.executeMiddlewareInstructions(
+      account,
+      transactionAccountKeypair.publicKey,
+      "Propose"
+    );
+    const middlewareExecuteResults = await this.executeMiddlewareInstructions(
+      account,
+      transactionAccountKeypair.publicKey,
+      "Execute"
+    );
 
     const executeInstruction = await cryptidTransaction
       .execute(this.program, transactionAccountKeypair.publicKey)
+      .signers([
+        ...middlewareProposeResults.signers,
+        ...middlewareExecuteResults.signers,
+      ])
       .instruction();
 
-    const proposeExecuteTransaction = new Transaction().add(
+    const executeTransaction = new Transaction().add(
       proposeInstruction,
-      ...middlewareProposeInstructions,
-      ...middlewareExecuteInstructions,
+      ...middlewareProposeResults.instructions,
+      ...middlewareExecuteResults.instructions,
       executeInstruction
     );
 
     return {
-      proposeExecuteTransaction,
-      signers: [transactionAccountKeypair],
+      executeTransaction,
+      executeSigners: [
+        transactionAccountKeypair,
+        ...middlewareProposeResults.signers,
+        ...middlewareExecuteResults.signers,
+      ],
     };
   }
 
@@ -289,8 +305,8 @@ export class CryptidService {
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
     cryptidTransaction?: CryptidTransaction
-  ): Promise<Transaction> {
-    const middlewareInstructions = await this.executeMiddlewareInstructions(
+  ): Promise<ExecuteResult> {
+    const middlewareResult = await this.executeMiddlewareInstructions(
       account,
       transactionAccountAddress,
       "Execute"
@@ -300,10 +316,16 @@ export class CryptidService {
       cryptidTransaction ||
       (await this.getCryptidTransaction(account, transactionAccountAddress));
 
-    return resolvedCryptidTransaction
+    const executeTransaction = await resolvedCryptidTransaction
       .execute(this.program, transactionAccountAddress)
-      .preInstructions(middlewareInstructions)
+      .preInstructions(middlewareResult.instructions)
+      .signers(middlewareResult.signers)
       .transaction();
+
+    return {
+      executeTransaction,
+      executeSigners: [...middlewareResult.signers],
+    };
   }
 
   public async directExecute(

@@ -3,12 +3,9 @@ import {
   ExecuteMiddlewareParams,
   GenericMiddlewareParams,
   MiddlewareClient,
+  MiddlewareResult,
 } from "@identity.com/cryptid-core";
-import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { TimeDelay, TimeDelayIDL } from "@identity.com/cryptid-idl";
@@ -93,7 +90,7 @@ export class TimeDelayMiddleware
 
   public async onPropose(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const program = TimeDelayMiddleware.getProgram(params);
 
     const [transactionStateAddress] =
@@ -109,18 +106,18 @@ export class TimeDelayMiddleware
       })
       .instruction();
 
-    return [registerInstruction];
+    return { instructions: [registerInstruction], signers: [] };
   }
 
   public async onExecute(
     params: ExecuteMiddlewareParams
-  ): Promise<TransactionInstruction[]> {
+  ): Promise<MiddlewareResult> {
     const program = TimeDelayMiddleware.getProgram(params);
 
     const [transactionStateAddress, transactionStateBump] =
       deriveTransactionStateMiddlewareAccountAddress(params.transactionAccount);
 
-    return program.methods
+    const instructions = await program.methods
       .executeMiddleware(transactionStateBump)
       .accounts({
         middlewareAccount: params.middlewareAccount,
@@ -131,5 +128,7 @@ export class TimeDelayMiddleware
       })
       .instruction()
       .then(Array.of);
+
+    return { instructions, signers: [] };
   }
 }

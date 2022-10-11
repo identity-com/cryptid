@@ -17,7 +17,7 @@ import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount } from "../types";
-import { ProposalResult, ProposeExecuteArrayResult } from "../types/cryptid";
+import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
@@ -68,35 +68,38 @@ export abstract class AbstractCryptidClient implements CryptidClient {
   async proposeAndExecute(
     transaction: Transaction,
     forceSingleTx = false
-  ): Promise<ProposeExecuteArrayResult> {
+  ): Promise<ExecuteArrayResult> {
     const service = await this.service();
 
     // TODO this is likely temporary - we should not force the client to have to know whether
     // the tx can fit into a single cryptid transaction or not.
     if (forceSingleTx) {
-      const proposeExecuteTransaction =
-        await service.proposeAndExecuteTransaction(this.details, transaction);
+      const executeResult = await service.proposeAndExecuteTransaction(
+        this.details,
+        transaction
+      );
       return {
-        proposeExecuteTransactions: [
-          proposeExecuteTransaction.proposeExecuteTransaction,
-        ],
-        signers: proposeExecuteTransaction.signers,
+        executeTransactions: [executeResult.executeTransaction],
+        executeSigners: executeResult.executeSigners,
       };
     }
 
     const proposalResult = await service.propose(this.details, transaction);
-    const executeTransaction = await service.execute(
+    const executeResult = await service.execute(
       this.details,
       proposalResult.transactionAccount,
       proposalResult.cryptidTransactionRepresentation
     );
 
     return {
-      proposeExecuteTransactions: [
+      executeTransactions: [
         proposalResult.proposeTransaction,
-        executeTransaction,
+        executeResult.executeTransaction,
       ],
-      signers: proposalResult.signers,
+      executeSigners: [
+        ...proposalResult.proposeSigners,
+        ...executeResult.executeSigners,
+      ],
     };
   }
 
@@ -106,12 +109,17 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     );
   }
 
-  async execute(transactionAccountAddress: PublicKey): Promise<Transaction[]> {
+  async execute(
+    transactionAccountAddress: PublicKey
+  ): Promise<ExecuteArrayResult> {
     return this.service()
       .then((service) =>
         service.execute(this.details, transactionAccountAddress)
       )
-      .then((transaction) => [transaction]);
+      .then((result) => ({
+        executeTransactions: [result.executeTransaction],
+        executeSigners: result.executeSigners,
+      }));
   }
 
   // TODO reinstate

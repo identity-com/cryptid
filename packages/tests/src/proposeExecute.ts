@@ -129,17 +129,19 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const previousBalance = await balanceOf(cryptid.address());
 
         // send the propose tx
-        const { proposeTransaction, transactionAccount, signers } =
+        const { proposeTransaction, transactionAccount, proposeSigners } =
           await cryptid.propose(makeTransaction());
 
-        await cryptid.send(proposeTransaction, signers);
+        await cryptid.send(proposeTransaction, proposeSigners);
 
         let currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
 
         // send the execute tx
-        const [executeTransaction] = await cryptid.execute(transactionAccount);
-        await cryptid.send(executeTransaction);
+        const { executeTransactions } = await cryptid.execute(
+          transactionAccount
+        );
+        await cryptid.send(executeTransactions[0]);
 
         currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -210,9 +212,9 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       it("can propose and execute in the same transaction using the cryptid client", async () => {
         const previousBalance = await balanceOf(cryptid.address());
 
-        const { proposeExecuteTransactions, signers } =
+        const { executeTransactions, executeSigners } =
           await cryptid.proposeAndExecute(makeTransaction(), true);
-        await cryptid.send(proposeExecuteTransactions[0], signers);
+        await cryptid.send(executeTransactions[0], executeSigners);
 
         const currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

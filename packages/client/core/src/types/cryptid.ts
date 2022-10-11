@@ -4,16 +4,16 @@ import { CryptidTransaction } from "../lib/CryptidTransaction";
 export type ProposalResult = {
   proposeTransaction: Transaction;
   transactionAccount: PublicKey;
-  signers: Signer[];
+  proposeSigners: Signer[];
   cryptidTransactionRepresentation: CryptidTransaction;
 };
 
-export type ProposeExecuteResult = {
-  proposeExecuteTransaction: Transaction;
-  signers: Signer[];
+export type ExecuteResult = {
+  executeTransaction: Transaction;
+  executeSigners: Signer[];
 };
 
-export type ProposeExecuteArrayResult = {
-  proposeExecuteTransactions: Transaction[];
-  signers: Signer[];
+export type ExecuteArrayResult = {
+  executeTransactions: Transaction[];
+  executeSigners: Signer[];
 };
