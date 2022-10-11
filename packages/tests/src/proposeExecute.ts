@@ -323,7 +323,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            authority: bogusSigner.publicKey,  // specify the bogus signer as the authority
+            authority: bogusSigner.publicKey, // specify the bogus signer as the authority
             transactionAccount: transactionAccount.publicKey,
           })
           .remainingAccounts([
