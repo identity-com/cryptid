@@ -132,6 +132,8 @@ export class CryptidTransaction {
     return program.methods
       .proposeTransaction(
         Buffer.from([]), // TODO, support controller chain,
+        this.cryptidAccount.bump,
+        this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
         this.instructions,
         this.accountMetas.length

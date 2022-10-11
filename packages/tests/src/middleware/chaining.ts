@@ -148,20 +148,13 @@ describe("Middleware chaining", () => {
     // no gateway token exists for the authority
 
     // send the propose tx
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, signers);
 
     // send the execute tx, which fails to pass through the middleware
-    const [executeTransaction] = await cryptid.execute(
-      transactionAccount.publicKey
-    );
-    const shouldFail = cryptid.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const [executeTransaction] = await cryptid.execute(transactionAccount);
+    const shouldFail = cryptid.send(executeTransaction);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -172,20 +165,13 @@ describe("Middleware chaining", () => {
     await createGatewayToken(authority.publicKey);
 
     // send the propose tx
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, signers);
 
     // send the execute tx, which fails to pass through the middleware
-    const [executeTransaction] = await cryptid.execute(
-      transactionAccount.publicKey
-    );
-    const shouldFail = cryptid.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const [executeTransaction] = await cryptid.execute(transactionAccount);
+    const shouldFail = cryptid.send(executeTransaction);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -198,21 +184,16 @@ describe("Middleware chaining", () => {
     await createGatewayToken(authority.publicKey);
 
     // send the propose tx
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, signers);
 
     // wait for the period required by the time-delay middleware
     await sleep((TIME_DELAY_SECONDS + 2) * 1000);
 
     // send the execute tx (executing the middleware)
-    const [executeTransaction] = await cryptid.execute(
-      transactionAccount.publicKey
-    );
-    await cryptid.send(executeTransaction, [], { skipPreflight: true });
+    const [executeTransaction] = await cryptid.execute(transactionAccount);
+    await cryptid.send(executeTransaction);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -223,12 +204,9 @@ describe("Middleware chaining", () => {
     await createGatewayToken(authority.publicKey);
 
     // send the propose tx
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, signers);
 
     // wait for the period required by the time-delay middleware
     await sleep((TIME_DELAY_SECONDS + 2) * 1000);
@@ -245,11 +223,9 @@ describe("Middleware chaining", () => {
     // send the execute tx, which fails to pass through the middleware because
     // the time-delay middleware expects the check-pass middleware to have been executed first
     const [executeTransaction] = await backwardsCryptid.execute(
-      transactionAccount.publicKey
+      transactionAccount
     );
-    const shouldFail = backwardsCryptid.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const shouldFail = backwardsCryptid.send(executeTransaction);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -260,10 +236,9 @@ describe("Middleware chaining", () => {
     await createGatewayToken(authority.publicKey);
 
     // send the propose tx
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
-    await cryptid.send(proposeTransaction, [transactionAccount]);
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, signers);
 
     // leave out the timedelay middleware and try to pass a tx with just the check-pass one
     const cryptidWithoutTimeDelay = await Cryptid.build(
@@ -278,7 +253,7 @@ describe("Middleware chaining", () => {
     // send the execute tx, which fails to pass through the middleware because
     // the time-delay middleware expects the check-pass middleware to have been executed first
     const [executeTransaction] = await cryptidWithoutTimeDelay.execute(
-      transactionAccount.publicKey
+      transactionAccount
     );
     const shouldFail = cryptidWithoutTimeDelay.send(executeTransaction);
 

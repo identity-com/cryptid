@@ -75,17 +75,14 @@ describe("Middleware: checkRecipient", () => {
     console.log("creating");
 
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
-      makeTransaction()
-    );
+    const { proposeTransaction, transactionAccount, signers } =
+      await cryptid.propose(makeTransaction());
 
     console.log("sending");
-    await cryptid.send(proposeTransaction, [transactionAccount]);
+    await cryptid.send(proposeTransaction, signers);
 
     // send the execute tx
-    const [executeTransaction] = await cryptid.execute(
-      transactionAccount.publicKey
-    );
+    const [executeTransaction] = await cryptid.execute(transactionAccount);
     await cryptid.send(executeTransaction);
 
     const currentBalance = await balanceOf(cryptid.address());
@@ -102,15 +99,13 @@ describe("Middleware: checkRecipient", () => {
       { connection: provider.connection }
     );
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccount } =
+    const { proposeTransaction, transactionAccount, signers } =
       await cryptidWithoutMiddleware.propose(makeTransaction());
-    await cryptidWithoutMiddleware.send(proposeTransaction, [
-      transactionAccount,
-    ]);
+    await cryptidWithoutMiddleware.send(proposeTransaction, signers);
 
     // send the execute tx - this will fail since the middeware was not used
     const [executeTransaction] = await cryptidWithoutMiddleware.execute(
-      transactionAccount.publicKey
+      transactionAccount
     );
     const shouldFail = cryptidWithoutMiddleware.send(executeTransaction);
 
@@ -125,10 +120,10 @@ describe("Middleware: checkRecipient", () => {
 
     // propose the Cryptid transaction. Since the checkRecipient middleware
     // executes on propose, this tx will fail
-    const { proposeTransaction, transactionAccount } = await cryptid.propose(
+    const { proposeTransaction, signers } = await cryptid.propose(
       makeTransaction()
     );
-    const shouldFail = cryptid.send(proposeTransaction, [transactionAccount]);
+    const shouldFail = cryptid.send(proposeTransaction, signers);
 
     return expect(shouldFail).to.be.rejectedWith(
       "Error Code: InvalidRecipient."

@@ -80,15 +80,14 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         proposeExecuteTransactions: [
           proposeExecuteTransaction.proposeExecuteTransaction,
         ],
-        transactionAccount: proposeExecuteTransaction.transactionAccount,
+        signers: proposeExecuteTransaction.signers,
       };
     }
 
     const proposalResult = await service.propose(this.details, transaction);
     const executeTransaction = await service.execute(
       this.details,
-      proposalResult.transactionAccount.publicKey,
-      [],
+      proposalResult.transactionAccount,
       proposalResult.cryptidTransactionRepresentation
     );
 
@@ -97,7 +96,7 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         proposalResult.proposeTransaction,
         executeTransaction,
       ],
-      transactionAccount: proposalResult.transactionAccount,
+      signers: proposalResult.signers,
     };
   }
 

@@ -205,9 +205,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
           const signedTransaction = await secondKeyCryptid.directExecute(
             makeTransaction(recipient.publicKey)
           );
-          await secondKeyCryptid.send(signedTransaction, [], {
-            skipPreflight: true,
-          });
+          await secondKeyCryptid.send(signedTransaction);
         };
 
         const previousBalance = await balanceOf(cryptid.address());

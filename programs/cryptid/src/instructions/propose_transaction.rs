@@ -1,5 +1,6 @@
 use crate::instructions::util::{resolve_by_index, verify_keys, AllAccounts};
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use crate::state::cryptid_account::CryptidAccount;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_account::TransactionAccount;
 use crate::state::transaction_state::TransactionState;
@@ -12,6 +13,10 @@ use anchor_lang::prelude::*;
 controller_chain: Vec<u8>,
 /// The bump seed for the Cryptid signer
 cryptid_account_bump: u8,
+/// Index of the cryptid account
+cryptid_account_index: u32,
+/// The bump seed for the Did Account
+did_account_bump: u8,
 /// The instructions to execute
 instructions: Vec<AbbreviatedInstructionData>,
 num_accounts: u8,
@@ -19,7 +24,11 @@ num_accounts: u8,
 pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: Cryptid Account can be generative and non-generative
-    #[account()]
+    #[account(
+        // TODO: Verification dones in instruction body. Move back with Anchor generator
+        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
+        // bump = cryptid_account_bump
+    )]
     pub cryptid_account: UncheckedAccount<'info>,
     /// The did account owner of the Cryptid instance
     /// CHECK: Unchecked to allow generative DID accounts.
@@ -73,6 +82,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 pub fn propose_transaction<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
     controller_chain: Vec<u8>,
+    cryptid_account_bump: u8,
+    cryptid_account_index: u32,
     did_account_bump: u8,
     instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
@@ -88,6 +99,15 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
         Some(did_account_bump),
         ctx.accounts.authority.to_account_info().key,
         controlling_did_accounts,
+    )?;
+
+    // For seed verification
+    CryptidAccount::try_from(
+        &ctx.accounts.cryptid_account,
+        &ctx.accounts.did_program.key(),
+        &ctx.accounts.did.key(),
+        cryptid_account_index,
+        cryptid_account_bump,
     )?;
 
     ctx.accounts.transaction_account.did = *ctx.accounts.did.key;

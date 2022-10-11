@@ -23,7 +23,12 @@ flags: u8,
 pub struct DirectExecute<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: Cryptid Account can be generative and non-generative
-    #[account(mut)]
+    #[account(
+        mut,
+        // TODO: Verification dones in instruction body. Move back with Anchor generator
+        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
+        // bump = cryptid_account_bump
+    )]
     pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not

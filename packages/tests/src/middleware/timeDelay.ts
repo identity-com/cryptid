@@ -103,20 +103,14 @@ describe("Middleware: timeDelay", () => {
 
   it("cannot immediately execute a transfer", async () => {
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccount } =
+    const { proposeTransaction, transactionAccount, signers } =
       await slowCryptid.propose(makeTransaction(slowCryptid));
 
-    await slowCryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    await slowCryptid.send(proposeTransaction, signers);
 
     // send the execute tx, which fails to pass through the middleware
-    const [executeTransaction] = await slowCryptid.execute(
-      transactionAccount.publicKey
-    );
-    const shouldFail = slowCryptid.send(executeTransaction, {
-      skipPreflight: true,
-    });
+    const [executeTransaction] = await slowCryptid.execute(transactionAccount);
+    const shouldFail = slowCryptid.send(executeTransaction);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -126,22 +120,16 @@ describe("Middleware: timeDelay", () => {
     const previousBalance = await balanceOf(fastCryptid.address());
 
     // propose the Cryptid transaction
-    const { proposeTransaction, transactionAccount } =
+    const { proposeTransaction, transactionAccount, signers } =
       await fastCryptid.propose(makeTransaction(fastCryptid));
-    await fastCryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    await fastCryptid.send(proposeTransaction, signers);
 
     // wait for the transaction to be ready
     await sleep(2000);
 
     // execute the Cryptid transaction (passing the middleware)
-    const [executeTransaction] = await fastCryptid.execute(
-      transactionAccount.publicKey
-    );
-    await fastCryptid.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const [executeTransaction] = await fastCryptid.execute(transactionAccount);
+    await fastCryptid.send(executeTransaction);
 
     const currentBalance = await balanceOf(fastCryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

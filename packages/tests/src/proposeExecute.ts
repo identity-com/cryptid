@@ -50,6 +50,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         program.methods
           .proposeTransaction(
             Buffer.from([]), // no controller chain,
+            cryptid.details.bump,
+            cryptid.details.index,
             cryptid.details.didAccountBump,
             [instruction],
             2
@@ -127,21 +129,17 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const previousBalance = await balanceOf(cryptid.address());
 
         // send the propose tx
-        const { proposeTransaction, transactionAccount } =
+        const { proposeTransaction, transactionAccount, signers } =
           await cryptid.propose(makeTransaction());
 
-        await cryptid.send(proposeTransaction, [transactionAccount], {
-          skipPreflight: true,
-        });
+        await cryptid.send(proposeTransaction, signers);
 
         let currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(0); // Nothing has happened yet
 
         // send the execute tx
-        const [executeTransaction] = await cryptid.execute(
-          transactionAccount.publicKey
-        );
-        await cryptid.send(executeTransaction, [], { skipPreflight: true });
+        const [executeTransaction] = await cryptid.execute(transactionAccount);
+        await cryptid.send(executeTransaction);
 
         currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -156,6 +154,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const proposeIx = await program.methods
           .proposeTransaction(
             Buffer.from([]), // no controller chain,
+            cryptid.details.bump,
+            cryptid.details.index,
             cryptid.details.didAccountBump,
             [transferInstructionData],
             2
@@ -210,15 +210,9 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       it("can propose and execute in the same transaction using the cryptid client", async () => {
         const previousBalance = await balanceOf(cryptid.address());
 
-        const { proposeExecuteTransactions, transactionAccount } =
+        const { proposeExecuteTransactions, signers } =
           await cryptid.proposeAndExecute(makeTransaction(), true);
-        await cryptid.send(
-          proposeExecuteTransactions[0],
-          [transactionAccount],
-          {
-            skipPreflight: true,
-          }
-        );
+        await cryptid.send(proposeExecuteTransactions[0], signers);
 
         const currentBalance = await balanceOf(cryptid.address());
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -315,6 +309,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const shouldFail = program.methods
           .proposeTransaction(
             Buffer.from([]), // no controller chain,
+            cryptid.details.bump,
+            cryptid.details.index,
             cryptid.details.didAccountBump,
             [transferInstructionData],
             2

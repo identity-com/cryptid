@@ -173,6 +173,14 @@ export type Cryptid = {
           "type": "bytes"
         },
         {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
           "name": "didAccountBump",
           "type": "u8"
         },
@@ -732,6 +740,14 @@ export const IDL: Cryptid = {
         {
           "name": "controllerChain",
           "type": "bytes"
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
         },
         {
           "name": "didAccountBump",

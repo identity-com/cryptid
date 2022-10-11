@@ -228,14 +228,10 @@ export class CryptidService {
       .postInstructions(middlewareInstructions)
       .transaction();
 
-    // don't sign
-    // const proposeTransaction = await this.sign(unsignedProposeTransaction, [
-    //   transactionAccountKeypair,
-    // ]);
-
     return {
       proposeTransaction: unsignedProposeTransaction,
-      transactionAccount: transactionAccountKeypair,
+      transactionAccount: transactionAccountKeypair.publicKey,
+      signers: [transactionAccountKeypair],
       cryptidTransactionRepresentation: cryptidTransaction,
     };
   }
@@ -285,14 +281,13 @@ export class CryptidService {
 
     return {
       proposeExecuteTransaction,
-      transactionAccount: transactionAccountKeypair,
+      signers: [transactionAccountKeypair],
     };
   }
 
   public async execute(
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
-    signers: Keypair[] = [],
     cryptidTransaction?: CryptidTransaction
   ): Promise<Transaction> {
     const middlewareInstructions = await this.executeMiddlewareInstructions(
@@ -308,7 +303,6 @@ export class CryptidService {
     return resolvedCryptidTransaction
       .execute(this.program, transactionAccountAddress)
       .preInstructions(middlewareInstructions)
-      .signers([...signers])
       .transaction();
   }
 

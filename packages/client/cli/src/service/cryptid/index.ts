@@ -121,9 +121,9 @@ const createCryptidTransaction = async (
   transaction: Transaction
 ): Promise<[Transaction[], Signer[]]> => {
   if (cryptid.details.middlewares.length) {
-    const { proposeExecuteTransactions, transactionAccount } =
+    const { proposeExecuteTransactions, signers } =
       await cryptid.proposeAndExecute(transaction);
-    return [proposeExecuteTransactions, [transactionAccount]];
+    return [proposeExecuteTransactions, signers];
   } else {
     return [await cryptid.directExecute(transaction).then((tx) => [tx]), []];
   }
