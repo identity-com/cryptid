@@ -1,5 +1,6 @@
 import {
   AccountMeta,
+  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
@@ -24,6 +25,7 @@ import BN from "bn.js";
 import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";
 import { Wallet } from "./anchorUtils";
+import { TestType } from "./did";
 
 export const toAccountMeta = (
   publicKey: PublicKey,
@@ -185,6 +187,35 @@ export const createCryptid = async (
     [],
     options
   );
+
+export const buildCryptid = async (
+  authority: Wallet,
+  options: CryptidOptions
+): Promise<CryptidClient> =>
+  await Builder.buildFromDID(
+    DID_SOL_PREFIX + ":" + authority.publicKey,
+    authority,
+    options
+  );
+
+export const cryptidTestCases = [
+  {
+    cryptidType: TestType.Generative,
+    getCryptidClient: async (
+      did: string,
+      authority: Wallet | Keypair,
+      options: CryptidOptions
+    ) => Builder.buildFromDID(did, authority, options),
+  },
+  {
+    cryptidType: TestType.Initialized,
+    getCryptidClient: async (
+      did: string,
+      authority: Wallet | Keypair,
+      options: CryptidOptions
+    ) => Builder.createFromDID(did, authority, [], options),
+  },
+];
 
 // use this when testing against the cryptid client
 export const makeTransfer = (from: PublicKey, to: PublicKey): Transaction =>

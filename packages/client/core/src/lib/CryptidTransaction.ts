@@ -148,6 +148,7 @@ export class CryptidTransaction {
       .executeTransaction(
         Buffer.from([]), // TODO, support controller chain,
         this.cryptidAccount.bump,
+        this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
         0
       )

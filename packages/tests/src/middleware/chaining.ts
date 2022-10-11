@@ -263,9 +263,7 @@ describe("Middleware chaining", () => {
     const { proposeTransaction, transactionAccount } = await cryptid.propose(
       makeTransaction()
     );
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    await cryptid.send(proposeTransaction, [transactionAccount]);
 
     // leave out the timedelay middleware and try to pass a tx with just the check-pass one
     const cryptidWithoutTimeDelay = await Cryptid.build(
@@ -282,11 +280,10 @@ describe("Middleware chaining", () => {
     const [executeTransaction] = await cryptidWithoutTimeDelay.execute(
       transactionAccount.publicKey
     );
-    const shouldFail = cryptidWithoutTimeDelay.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const shouldFail = cryptidWithoutTimeDelay.send(executeTransaction);
 
-    // TODO expose the error message
-    return expect(shouldFail).to.be.rejected;
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: IncorrectMiddleware"
+    );
   });
 });

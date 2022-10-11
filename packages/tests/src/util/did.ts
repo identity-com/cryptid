@@ -42,19 +42,19 @@ export const getDidAccount = async (
   return did.dataAccount();
 };
 
-export enum DidTestType {
-  Generative = "generative DID",
-  Initialized = "initialized DID",
+export enum TestType {
+  Generative = "generative",
+  Initialized = "non-generative",
 }
 
 export const didTestCases = [
   {
-    type: DidTestType.Generative,
-    beforeFn: async (authority: Wallet) => await getDidAccount(authority),
+    didType: TestType.Generative,
+    getDidAccount: async (authority: Wallet) => await getDidAccount(authority),
   },
   {
-    type: DidTestType.Initialized,
-    beforeFn: async (authority: Wallet) =>
+    didType: TestType.Initialized,
+    getDidAccount: async (authority: Wallet) =>
       await initializeDIDAccount(authority),
   },
 ];

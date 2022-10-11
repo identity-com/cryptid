@@ -13,7 +13,7 @@ controller_chain: Vec<u8>,
 instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
 cryptid_account_bump: u8,
-/// CryptidAccountIndex
+/// Index of the cryptid account
 cryptid_account_index: u32,
 /// The bump seed for the Did Account
 did_account_bump: u8,

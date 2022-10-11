@@ -80,17 +80,13 @@ describe("Middleware: checkRecipient", () => {
     );
 
     console.log("sending");
-    await cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    await cryptid.send(proposeTransaction, [transactionAccount]);
 
     // send the execute tx
     const [executeTransaction] = await cryptid.execute(
       transactionAccount.publicKey
     );
-    await cryptid.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    await cryptid.send(executeTransaction);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -108,24 +104,19 @@ describe("Middleware: checkRecipient", () => {
     // propose the Cryptid transaction
     const { proposeTransaction, transactionAccount } =
       await cryptidWithoutMiddleware.propose(makeTransaction());
-    await cryptidWithoutMiddleware.send(
-      proposeTransaction,
-      [transactionAccount],
-      {
-        skipPreflight: true,
-      }
-    );
+    await cryptidWithoutMiddleware.send(proposeTransaction, [
+      transactionAccount,
+    ]);
 
     // send the execute tx - this will fail since the middeware was not used
     const [executeTransaction] = await cryptidWithoutMiddleware.execute(
       transactionAccount.publicKey
     );
-    const shouldFail = cryptidWithoutMiddleware.send(executeTransaction, [], {
-      skipPreflight: true,
-    });
+    const shouldFail = cryptidWithoutMiddleware.send(executeTransaction);
 
-    // TODO expose the error message
-    return expect(shouldFail).to.be.rejected;
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: IncorrectMiddleware"
+    );
   });
 
   it("blocks a transfer to a different recipient", async () => {
@@ -137,11 +128,10 @@ describe("Middleware: checkRecipient", () => {
     const { proposeTransaction, transactionAccount } = await cryptid.propose(
       makeTransaction()
     );
-    const shouldFail = cryptid.send(proposeTransaction, [transactionAccount], {
-      skipPreflight: true,
-    });
+    const shouldFail = cryptid.send(proposeTransaction, [transactionAccount]);
 
-    // TODO expose the error message
-    return expect(shouldFail).to.be.rejected;
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: InvalidRecipient."
+    );
   });
 });

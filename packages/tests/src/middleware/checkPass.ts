@@ -9,7 +9,6 @@ import chaiAsPromised from "chai-as-promised";
 import {
   cryptidTransferInstruction,
   toAccountMeta,
-  createCryptidAccount,
   makeTransfer,
 } from "../util/cryptid";
 import { addKeyToDID, initializeDIDAccount } from "../util/did";
@@ -59,9 +58,6 @@ describe("Middleware: checkPass", () => {
   let expireFeatureAccount: PublicKey;
 
   let didAccount: PublicKey;
-  let didAccountBump: number;
-  let cryptidAccount: PublicKey;
-  let cryptidBump: number;
   let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
   let cryptid: CryptidClient;
 
@@ -125,17 +121,6 @@ describe("Middleware: checkPass", () => {
     });
   };
 
-  const setUpCryptid = async () => {
-    [cryptidAccount, cryptidBump] = await createCryptidAccount(
-      program,
-      didAccount,
-      didAccountBump,
-      middlewareAccount,
-      ++cryptidIndex
-    );
-    await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
-  };
-
   const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
     const middleware = [
       {
@@ -164,7 +149,7 @@ describe("Middleware: checkPass", () => {
     program.methods
       .proposeTransaction([instruction], 2)
       .accounts({
-        cryptidAccount,
+        cryptidAccount: cryptid.address(),
         did: didAccount,
         authority: authority.publicKey,
         transactionAccount: transactionAccount.publicKey,
@@ -174,19 +159,20 @@ describe("Middleware: checkPass", () => {
         toAccountMeta(SystemProgram.programId),
       ])
       .signers([transactionAccount])
-      .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+      .rpc();
 
   const execute = (transactionAccount: Keypair) =>
     // execute the Cryptid transaction
     program.methods
       .executeTransaction(
         Buffer.from([]), // no controller chain
-        cryptidBump,
-        didAccountBump,
+        cryptid.details.bump,
+        cryptid.details.index,
+        cryptid.details.didAccountBump,
         0
       )
       .accounts({
-        cryptidAccount,
+        cryptidAccount: cryptid.address(),
         didProgram: DID_SOL_PROGRAM,
         did: didAccount,
         signer: authority.publicKey,
@@ -197,7 +183,7 @@ describe("Middleware: checkPass", () => {
         toAccountMeta(recipient.publicKey, true, false),
         toAccountMeta(SystemProgram.programId),
       ])
-      .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+      .rpc();
 
   const checkPass = (transactionAccount: Keypair, gatewayToken: PublicKey) =>
     // execute the check recipient middleware, to ensure that the correct recipient is used in the tx
@@ -213,11 +199,11 @@ describe("Middleware: checkPass", () => {
         cryptidProgram: CRYPTID_PROGRAM,
         gatewayProgram: GATEWAY_PROGRAM,
       })
-      .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+      .rpc();
 
   before("Set up DID account", async () => {
     await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-    [didAccount, didAccountBump] = await initializeDIDAccount(authority);
+    [didAccount] = await initializeDIDAccount(authority);
   });
 
   before("Fund the gatekeeper", () => fund(gatekeeper.publicKey));
@@ -380,7 +366,7 @@ describe("Middleware: checkPass", () => {
 
   context("with a non-expiring gateway token", () => {
     beforeEach("Set up middleware PDA", () => setUpMiddleware(false));
-    beforeEach("Set up Cryptid Account with middleware", setUpCryptid);
+    beforeEach("Set up Cryptid Account with middleware", setUpCryptidClient);
 
     it("blocks a transfer with no gateway token", async () => {
       const transactionAccount = Keypair.generate();
@@ -397,8 +383,7 @@ describe("Middleware: checkPass", () => {
       // fails to pass through the middleware
       const shouldFail = checkPass(transactionAccount, missingGatewayToken);
 
-      // TODO expose the error message
-      return expect(shouldFail).to.be.rejected;
+      return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidPass");
     });
 
     it("blocks a transfer if the gateway token is present but invalid", async () => {
@@ -414,8 +399,7 @@ describe("Middleware: checkPass", () => {
       // fails to pass through the middleware
       const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
 
-      // TODO expose the error message
-      return expect(shouldFail).to.be.rejected;
+      return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidPass");
     });
 
     it("blocks a transfer if the gateway token is for the wrong gatekeeper network", async () => {
@@ -439,12 +423,11 @@ describe("Middleware: checkPass", () => {
       // fails to pass through the middleware
       const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
 
-      // TODO expose the error message
-      return expect(shouldFail).to.be.rejected;
+      return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidPass");
     });
 
     it("allows a transfer if the authority has a valid gateway token", async () => {
-      const previousBalance = await balanceOf(cryptidAccount);
+      const previousBalance = await balanceOf(cryptid.address());
 
       const transactionAccount = Keypair.generate();
 
@@ -460,14 +443,14 @@ describe("Middleware: checkPass", () => {
       // execute the Cryptid transaction
       await execute(transactionAccount);
 
-      const currentBalance = await balanceOf(cryptidAccount);
+      const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
 
     it("allows a transfer if the DID account has a valid gateway token", async () => {
       // the difference between this one and the previous one is that it shows that
       // the gateway token can be associated with the DID account itself rather than the authority wallet
-      const previousBalance = await balanceOf(cryptidAccount);
+      const previousBalance = await balanceOf(cryptid.address());
 
       const transactionAccount = Keypair.generate();
 
@@ -483,7 +466,7 @@ describe("Middleware: checkPass", () => {
       // execute the Cryptid transaction
       await execute(transactionAccount);
 
-      const currentBalance = await balanceOf(cryptidAccount);
+      const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
     });
   });
@@ -493,7 +476,7 @@ describe("Middleware: checkPass", () => {
     beforeEach("Set up middleware PDA", () => setUpMiddleware(true));
     beforeEach(
       "Set up generative Cryptid Account with middleware",
-      setUpCryptid
+      setUpCryptidClient
     );
 
     it("expires a gateway token after use", async () => {

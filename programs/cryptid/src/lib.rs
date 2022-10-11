@@ -57,6 +57,7 @@ pub mod cryptid {
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
         controller_chain: Vec<u8>,
         cryptid_account_bump: u8,
+        cryptid_account_index: u32,
         did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
@@ -64,6 +65,7 @@ pub mod cryptid {
             ctx,
             controller_chain,
             cryptid_account_bump,
+            cryptid_account_index,
             did_account_bump,
             flags,
         )
