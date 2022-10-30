@@ -1,12 +1,12 @@
 [package]
-name = "cryptid"
+name = "check_did"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "cryptid"
+name = "check_did"
 
 [features]
 no-entrypoint = []
@@ -17,6 +17,7 @@ default = []
 
 [dependencies]
 anchor-lang = "0.25.0"
-bitflags = "1.3.2"
-sol-did = { git = "https://github.com/identity-com/sol-did", rev = "120b7729de1cc502778fb4c3ad53d0bc8661e26d", features = ["no-entrypoint"] }
+cryptid = { path = "../../cryptid", features = ["no-entrypoint", "cpi"] }
 num-traits = "0.2.15"
+sol-did = { git = "https://github.com/identity-com/sol-did", rev = "120b7729de1cc502778fb4c3ad53d0bc8661e26d", features = ["no-entrypoint"] }
+solana-gateway = "0.2.0"

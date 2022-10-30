@@ -387,6 +387,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "check_did"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "cryptid",
+ "num-traits",
+ "sol-did 3.1.4",
+ "solana-gateway",
+]
+
+[[package]]
 name = "check_pass"
 version = "0.1.0"
 dependencies = [
@@ -498,7 +509,7 @@ dependencies = [
  "anchor-lang",
  "bitflags",
  "num-traits",
- "sol-did 3.1.0",
+ "sol-did 3.1.4",
 ]
 
 [[package]]
@@ -1155,6 +1166,21 @@ dependencies = [
 name = "sol-did"
 version = "3.1.0"
 source = "git+https://github.com/identity-com/sol-did?tag=3.1.0#267ffaf93327365351ac0cd8f53a04ba44703dc5"
+dependencies = [
+ "anchor-lang",
+ "bitflags",
+ "borsh",
+ "itertools",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "sol-did"
+version = "3.1.4"
+source = "git+https://github.com/identity-com/sol-did?rev=120b7729de1cc502778fb4c3ad53d0bc8661e26d#120b7729de1cc502778fb4c3ad53d0bc8661e26d"
 dependencies = [
  "anchor-lang",
  "bitflags",

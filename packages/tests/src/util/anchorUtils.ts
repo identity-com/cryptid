@@ -2,6 +2,7 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {
+  CheckDid,
   CheckPass,
   CheckRecipient,
   Cryptid,
@@ -15,8 +16,11 @@ const envCheckRecipientMiddlewareProgram = anchor.workspace
   .CheckRecipient as Program<CheckRecipient>;
 const envCheckPassMiddlewareProgram = anchor.workspace
   .CheckPass as Program<CheckPass>;
+const envCheckDidMiddlewareProgram = anchor.workspace
+  .CheckDid as Program<CheckDid>;
 const envTimeDelayMiddlewareProgram = anchor.workspace
   .TimeDelay as Program<TimeDelay>;
+
 
 if (!process.env.QUIET) {
   const logListener = envProvider.connection.onLogs("all", (log) =>
@@ -61,6 +65,7 @@ export type CryptidTestContext = {
   middleware: {
     checkRecipient: Program<CheckRecipient>;
     checkPass: Program<CheckPass>;
+    checkDid: Program<CheckDid>;
     timeDelay: Program<TimeDelay>;
   };
 };
@@ -91,6 +96,11 @@ export const createTestContext = (): CryptidTestContext => {
     envCheckPassMiddlewareProgram.programId,
     anchorProvider
   );
+  const checkDidMiddlewareProgram = new Program<CheckDid>(
+    envCheckDidMiddlewareProgram.idl,
+    envCheckDidMiddlewareProgram.programId,
+    anchorProvider
+  );
   const timeDelayMiddlewareProgram = new Program<TimeDelay>(
     envTimeDelayMiddlewareProgram.idl,
     envTimeDelayMiddlewareProgram.programId,
@@ -105,6 +115,7 @@ export const createTestContext = (): CryptidTestContext => {
     middleware: {
       checkRecipient: checkRecipientMiddlewareProgram,
       checkPass: checkPassMiddlewareProgram,
+      checkDid: checkDidMiddlewareProgram,
       timeDelay: timeDelayMiddlewareProgram,
     },
   };

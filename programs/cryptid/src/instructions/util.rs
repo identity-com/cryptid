@@ -2,6 +2,7 @@ use crate::error::CryptidError;
 use anchor_lang::prelude::*;
 use bitflags::bitflags;
 use num_traits::cast::ToPrimitive;
+use sol_did::state::VerificationMethodType;
 
 /// A trait that extracts all accounts from an anchor instruction context, combining
 pub trait AllAccounts<'a, 'b, 'c, 'info> {
@@ -61,9 +62,8 @@ pub fn verify_keys<'info1, 'info2>(
         did,
         did_account_bump,
         controlling_did_accounts.as_slice(),
-        signer,
-        &[],
-        None,
+        &signer.to_bytes(),
+        Some(&[VerificationMethodType::Ed25519VerificationKey2018]),
         None,
     )
     .map_err(|error| -> CryptidError {
