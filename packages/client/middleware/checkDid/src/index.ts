@@ -6,7 +6,7 @@ import {
   MiddlewareResult,
 } from "@identity.com/cryptid-core";
 import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, Program, BorshInstructionCoder } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import { Bytes, VerificationMethodType } from "@identity.com/sol-did-client";
 import { CheckDid, CheckDidIDL } from "@identity.com/cryptid-idl";
@@ -18,7 +18,7 @@ export const CHECK_DID_MIDDLEWARE_PROGRAM_ID = new PublicKey(
 export type VerificationMethodMatcher = {
   filterFragment: string | null,
   filterFlags: number | null,
-  filterTypes: VerificationMethodType[] | null,
+  filterTypes: Bytes | null,
   filterKeyData: Bytes | null,
 }
 
@@ -40,14 +40,24 @@ export type CheckDidParameters = {
 } & GenericMiddlewareParams;
 
 export const deriveMiddlewareAccountAddress = (
-  authority: PublicKey,
-  previousMiddlewareAccount?: PublicKey
+  params: CheckDidParameters
 ): [PublicKey, number] => {
+
+  const coder = new BorshInstructionCoder(CheckDidIDL);
+  const data = coder.encode("create", {
+    verificationMethodMatcher: params.verificationMethodMatcher,
+    serviceMatcher: params.serviceMatcher,
+    controllerMatcher: params.controllerMatcher,
+    previousMiddleware: params.previousMiddleware?.toBuffer() || null,
+  });
+  const encodedParams = Buffer.from(data.subarray(8))
+
   const seeds = [
     anchor.utils.bytes.utf8.encode("check_did"),
-    authority.toBuffer(),
-    previousMiddlewareAccount?.toBuffer() || Buffer.alloc(32),
+    params.authority.publicKey.toBuffer(),
+    encodedParams,
   ];
+
   return PublicKey.findProgramAddressSync(
     seeds,
     CHECK_DID_MIDDLEWARE_PROGRAM_ID
@@ -89,9 +99,10 @@ export class CheckDidMiddleware
 
 
     const [middlewareAccount] = deriveMiddlewareAccountAddress(
-      params.authority.publicKey,
-      params.previousMiddleware
+      params
     );
+
+    console.log(`middlewareAccount in: ${middlewareAccount.toBase58()}`);
 
     return program.methods
       .create(
@@ -136,10 +147,4 @@ export class CheckDidMiddleware
   }
 }
 
-// Register with MiddlwareRegistry
-
-MiddlewareRegistry.get().register(
-  CHECK_DID_MIDDLEWARE_PROGRAM_ID,
-  new CheckDidMiddleware()
-);
 

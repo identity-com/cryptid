@@ -1,25 +1,25 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { cryptidTransferInstruction, makeTransfer, toAccountMeta, } from "../util/cryptid";
+import { makeTransfer, } from "../util/cryptid";
 import { initializeDIDAccount } from "../util/did";
 import { balanceOf, createTestContext, fund, Wallet, } from "../util/anchorUtils";
-import { DID_SOL_PREFIX, DID_SOL_PROGRAM, VerificationMethodType } from "@identity.com/sol-did-client";
+import {
+  BitwiseVerificationMethodFlag,
+  DID_SOL_PREFIX,
+  DidSolIdentifier,
+  ExtendedCluster,
+  VerificationMethodType
+} from "@identity.com/sol-did-client";
 
 import { beforeEach } from "mocha";
-import { Cryptid, CRYPTID_PROGRAM, CryptidClient, InstructionData, } from "@identity.com/cryptid";
-import {
-  CheckDidMiddleware,
-  ControllerMatcher,
-  deriveMiddlewareAccountAddress,
-  ServiceMatcher,
-  VerificationMethodMatcher
-} from "@identity.com/cryptid-middleware-check-did";
+import { Cryptid, CryptidClient, } from "@identity.com/cryptid";
+import { CheckDidMiddleware, deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-did";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-describe("Middleware: CheckDid", () => {
+describe.only("Middleware: CheckDid", () => {
   const {
     program,
     provider,
@@ -28,12 +28,7 @@ describe("Middleware: CheckDid", () => {
     middleware: { checkDid: checkDidMiddlewareProgram },
   } = createTestContext();
 
-  const gatekeeper = Keypair.generate();
-  let gatekeeperNetwork: Keypair;
-  // The address of the expire-on-use feature for the gatekeeper network,
-  // if it exists.
-  let expireFeatureAccount: PublicKey;
-
+  let cluster: ExtendedCluster = "localnet";
   let didAccount: PublicKey;
   let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
   let cryptid: CryptidClient;
@@ -42,52 +37,8 @@ describe("Middleware: CheckDid", () => {
   // let middlewareBump: number;
 
   const recipient = Keypair.generate();
-  const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
+  // const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
 
-  const setUpMiddleware = async (
-    verificationMethodMatcher: VerificationMethodMatcher,
-    serviceMatcher: ServiceMatcher,
-    controllerMatcher: ControllerMatcher,
-  ) => {
-    [middlewareAccount] = deriveMiddlewareAccountAddress(
-      authority.publicKey,
-    );
-
-    await checkDidMiddlewareProgram.methods
-      .create(
-        verificationMethodMatcher,
-        serviceMatcher,
-        controllerMatcher,
-        null
-      )
-      .accounts({
-        middlewareAccount,
-        authority: authority.publicKey,
-      })
-      .rpc({ skipPreflight: true });
-  };
-
-  const setUpMiddlewareWithClient = async (
-    verificationMethodMatcher: VerificationMethodMatcher,
-    serviceMatcher: ServiceMatcher,
-    controllerMatcher: ControllerMatcher,
-  ) => {
-    [middlewareAccount] = deriveMiddlewareAccountAddress(
-      authority.publicKey,
-    );
-    const transaction = await new CheckDidMiddleware().createMiddleware({
-      connection: provider.connection,
-      opts: {},
-      authority,
-      verificationMethodMatcher,
-      serviceMatcher,
-      controllerMatcher,
-    });
-
-    await provider.sendAndConfirm(transaction, [keypair], {
-      skipPreflight: true,
-    });
-  };
 
   const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
     const middleware = [
@@ -98,7 +49,7 @@ describe("Middleware: CheckDid", () => {
     ];
 
     cryptid = await Cryptid.createFromDID(
-      DID_SOL_PREFIX + ":" + authority.publicKey,
+      DidSolIdentifier.create(authority.publicKey,cluster).toString(),
       signer,
       middleware,
       { connection: provider.connection, accountIndex: ++cryptidIndex }
@@ -110,69 +61,69 @@ describe("Middleware: CheckDid", () => {
   const makeTransaction = () =>
     makeTransfer(cryptid.address(), recipient.publicKey);
 
-  const propose = async (
-    transactionAccount: Keypair,
-    instruction: InstructionData = transferInstructionData
-  ) =>
-    program.methods
-      .proposeTransaction(
-        Buffer.from([]), // no controller chain,
-        cryptid.details.bump,
-        cryptid.details.index,
-        cryptid.details.didAccountBump,
-        [instruction],
-        2
-      )
-      .accounts({
-        cryptidAccount: cryptid.address(),
-        didProgram: DID_SOL_PROGRAM,
-        did: didAccount,
-        authority: authority.publicKey,
-        transactionAccount: transactionAccount.publicKey,
-      })
-      .remainingAccounts([
-        toAccountMeta(recipient.publicKey, true, false),
-        toAccountMeta(SystemProgram.programId),
-      ])
-      .signers([transactionAccount])
-      .rpc();
+  // const propose = async (
+  //   transactionAccount: Keypair,
+  //   instruction: InstructionData = transferInstructionData
+  // ) =>
+  //   program.methods
+  //     .proposeTransaction(
+  //       Buffer.from([]), // no controller chain,
+  //       cryptid.details.bump,
+  //       cryptid.details.index,
+  //       cryptid.details.didAccountBump,
+  //       [instruction],
+  //       2
+  //     )
+  //     .accounts({
+  //       cryptidAccount: cryptid.address(),
+  //       didProgram: DID_SOL_PROGRAM,
+  //       did: didAccount,
+  //       authority: authority.publicKey,
+  //       transactionAccount: transactionAccount.publicKey,
+  //     })
+  //     .remainingAccounts([
+  //       toAccountMeta(recipient.publicKey, true, false),
+  //       toAccountMeta(SystemProgram.programId),
+  //     ])
+  //     .signers([transactionAccount])
+  //     .rpc();
 
-  const execute = (transactionAccount: Keypair) =>
-    // execute the Cryptid transaction
-    program.methods
-      .executeTransaction(
-        Buffer.from([]), // no controller chain
-        cryptid.details.bump,
-        cryptid.details.index,
-        cryptid.details.didAccountBump,
-        0
-      )
-      .accounts({
-        cryptidAccount: cryptid.address(),
-        didProgram: DID_SOL_PROGRAM,
-        did: didAccount,
-        signer: authority.publicKey,
-        destination: authority.publicKey,
-        transactionAccount: transactionAccount.publicKey,
-      })
-      .remainingAccounts([
-        toAccountMeta(recipient.publicKey, true, false),
-        toAccountMeta(SystemProgram.programId),
-      ])
-      .rpc();
+  // const execute = (transactionAccount: Keypair) =>
+  //   // execute the Cryptid transaction
+  //   program.methods
+  //     .executeTransaction(
+  //       Buffer.from([]), // no controller chain
+  //       cryptid.details.bump,
+  //       cryptid.details.index,
+  //       cryptid.details.didAccountBump,
+  //       0
+  //     )
+  //     .accounts({
+  //       cryptidAccount: cryptid.address(),
+  //       didProgram: DID_SOL_PROGRAM,
+  //       did: didAccount,
+  //       signer: authority.publicKey,
+  //       destination: authority.publicKey,
+  //       transactionAccount: transactionAccount.publicKey,
+  //     })
+  //     .remainingAccounts([
+  //       toAccountMeta(recipient.publicKey, true, false),
+  //       toAccountMeta(SystemProgram.programId),
+  //     ])
+  //     .rpc();
 
-  const checkDid = (transactionAccount: Keypair) =>
-    // execute the check recipient middleware, to ensure that the correct recipient is used in the tx
-    checkDidMiddlewareProgram.methods
-      .executeMiddleware()
-      .accounts({
-        middlewareAccount,
-        transactionAccount: transactionAccount.publicKey,
-        did: didAccount,
-        authority: authority.publicKey,
-        cryptidProgram: CRYPTID_PROGRAM,
-      })
-      .rpc();
+  // const checkDid = (transactionAccount: Keypair) =>
+  //   // execute the check recipient middleware, to ensure that the correct recipient is used in the tx
+  //   checkDidMiddlewareProgram.methods
+  //     .executeMiddleware()
+  //     .accounts({
+  //       middlewareAccount,
+  //       transactionAccount: transactionAccount.publicKey,
+  //       did: didAccount,
+  //       authority: authority.publicKey,
+  //       cryptidProgram: CRYPTID_PROGRAM,
+  //     })
+  //     .rpc();
 
   before("Set up DID account", async () => {
     await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
@@ -181,17 +132,14 @@ describe("Middleware: CheckDid", () => {
 
 
   context("with the cryptid client", () => {
-    beforeEach("Set up middleware PDA", async () => {
-      [middlewareAccount] = deriveMiddlewareAccountAddress(
-        authority.publicKey,
-      );
-      const transaction = await new CheckDidMiddleware().createMiddleware({
+    before("Set up middleware PDA", async () => {
+      const params = {
         authority,
         verificationMethodMatcher: {
           filterFragment: null,
-          filterFlags: null,
+          filterFlags: BitwiseVerificationMethodFlag.CapabilityInvocation | BitwiseVerificationMethodFlag.OwnershipProof,
           filterKeyData: null,
-          filterTypes: [VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020],
+          filterTypes: Buffer.from([VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020]), // VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020
         },
         serviceMatcher: {
           filterFragment: null,
@@ -204,12 +152,25 @@ describe("Middleware: CheckDid", () => {
         },
         opts: {},
         connection: provider.connection,
-      });
+      };
+
+      [middlewareAccount] = deriveMiddlewareAccountAddress(
+        params,
+      );
+      console.log(`middlewareAccount: ${middlewareAccount.toBase58()}`);
+      const transaction = await new CheckDidMiddleware().createMiddleware(params);
 
       await provider.sendAndConfirm(transaction, [keypair]);
+
+      // try {
+      //   await provider.sendAndConfirm(transaction, [keypair]);
+      // } catch (e) {
+      //   console.log(e);
+      //   throw e;
+      // }
     });
 
-    beforeEach("Set up Cryptid Account with middleware", setUpCryptidClient);
+    before("Set up Cryptid Account with middleware", setUpCryptidClient);
 
     it("blocks a transfer with a wrong did.", async () => {
       // no gateway token exists for the authority
@@ -225,8 +186,9 @@ describe("Middleware: CheckDid", () => {
       );
       const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
 
-      // TODO expose the error message
-      return expect(shouldFail).to.be.rejected;
+      return expect(shouldFail).to.be.rejectedWith(
+        "Error Code: VerificationMethodMatcherError."
+      );
     });
 
     it("allows a transfer if the DID succeeds all matches.", async () => {
