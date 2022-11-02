@@ -16,6 +16,9 @@
       "path": "../middleware/checkPass"
     },
     {
+      "path": "../middleware/checkDid"
+    },
+    {
       "path": "../middleware/timeDelay"
     },
     {

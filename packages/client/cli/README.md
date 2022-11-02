@@ -20,7 +20,7 @@ $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
 $ cryptid (--version)
-@identity.com/cryptid-cli/0.3.0-alpha.10 darwin-arm64 node-v16.13.0
+@identity.com/cryptid-cli/0.3.0-alpha.11 darwin-arm64 node-v16.13.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -101,7 +101,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/accounts/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/accounts/index.ts)_
+_See code: [dist/commands/accounts/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/accounts/index.ts)_
 
 ## `cryptid accounts set INDEX`
 
@@ -137,7 +137,7 @@ DESCRIPTION
   Show the cryptid account's address
 ```
 
-_See code: [dist/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/address.ts)_
+_See code: [dist/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/address.ts)_
 
 ## `cryptid airdrop [AMOUNT]`
 
@@ -156,7 +156,7 @@ DESCRIPTION
   Airdrop funds into the cryptid account and owner key
 ```
 
-_See code: [dist/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/airdrop.ts)_
+_See code: [dist/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/airdrop.ts)_
 
 ## `cryptid alias [NAME] [DID]`
 
@@ -176,7 +176,7 @@ DESCRIPTION
   Associate a DID with an alias
 ```
 
-_See code: [dist/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/alias.ts)_
+_See code: [dist/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/alias.ts)_
 
 ## `cryptid balance`
 
@@ -195,7 +195,7 @@ DESCRIPTION
   Show the cryptid account SOL balance
 ```
 
-_See code: [dist/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/balance.ts)_
+_See code: [dist/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/balance.ts)_
 
 ## `cryptid base`
 
@@ -209,7 +209,7 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [dist/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/base.ts)_
+_See code: [dist/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/base.ts)_
 
 ## `cryptid config`
 
@@ -231,7 +231,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/config/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/config/index.ts)_
+_See code: [dist/commands/config/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/config/index.ts)_
 
 ## `cryptid config set [KEY] [VALUE]`
 
@@ -270,7 +270,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/controller/index.ts)_
+_See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/controller/index.ts)_
 
 ## `cryptid document`
 
@@ -289,7 +289,7 @@ DESCRIPTION
   Show the cryptid account's DID Document
 ```
 
-_See code: [dist/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/document.ts)_
+_See code: [dist/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/document.ts)_
 
 ## `cryptid help [COMMAND]`
 
@@ -330,7 +330,7 @@ DESCRIPTION
   Initialise the cryptid library
 ```
 
-_See code: [dist/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/init.ts)_
+_See code: [dist/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/init.ts)_
 
 ## `cryptid key add KEY ALIAS`
 
@@ -717,5 +717,5 @@ DESCRIPTION
   Send SOL to a recipient
 ```
 
-_See code: [dist/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.10/dist/commands/transfer.ts)_
+_See code: [dist/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/transfer.ts)_
 <!-- commandsstop -->

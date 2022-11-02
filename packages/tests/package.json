@@ -6,8 +6,8 @@
     "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
-    "@identity.com/cryptid": "0.3.0-alpha.10",
-    "@identity.com/cryptid-idl": "0.3.0-alpha.10",
+    "@identity.com/cryptid": "0.3.0-alpha.11",
+    "@identity.com/cryptid-idl": "0.3.0-alpha.11",
     "@identity.com/sol-did-client": "^3.1.0",
     "@identity.com/solana-gatekeeper-lib": "^4.0.1",
     "@identity.com/solana-gateway-ts": "^0.8.2",
@@ -23,6 +23,7 @@
     "typescript": "^4.3.5"
   },
   "devDependencies": {
-    "@types/chai-as-promised": "^7.1.5"
+    "@types/chai-as-promised": "^7.1.5",
+    "ethers": "^5.7.2"
   }
 }
