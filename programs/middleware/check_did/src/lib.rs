@@ -23,8 +23,6 @@ pub mod check_did {
         controller_matcher: ControllerMatcher,
         previous_middleware: Option<Pubkey>,
     ) -> Result<()> {
-        msg!("Creating new middleware {}", ctx.accounts.middleware_account.to_account_info().key().to_string());
-
         ctx.accounts.middleware_account.verification_method_matcher = verification_method_matcher;
         ctx.accounts.middleware_account.service_matcher = service_matcher;
         ctx.accounts.middleware_account.controller_matcher = controller_matcher;
