@@ -42,4 +42,4 @@ address = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs"
 program = "packages/tests/fixtures/solana_gateway_program.so"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 packages/tests/src/**/checkDid.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 packages/tests/src/**/*.ts"
