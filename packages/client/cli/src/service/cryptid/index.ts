@@ -6,9 +6,8 @@ import {
   Cryptid,
   CryptidAccountDetails,
   CryptidClient,
-} from "@identity.com/cryptid";
-import { util } from "@identity.com/cryptid-core";
-import { ExecuteArrayResult } from "@identity.com/cryptid-core/dist/types/cryptid";
+} from "@identity.com/cryptid-hh";
+import { util, ExecuteArrayResult} from "@identity.com/cryptid-core-hh";
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 

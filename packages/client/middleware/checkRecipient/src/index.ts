@@ -4,7 +4,7 @@ import {
   GenericMiddlewareParams,
   MiddlewareResult,
   MiddlewareClient,
-} from "@identity.com/cryptid-core";
+} from "@identity.com/cryptid-core-hh";
 import {
   PublicKey,
   Transaction,

@@ -5,12 +5,12 @@ import { makeTransfer } from "../util/cryptid";
 import { initializeDIDAccount } from "../util/did";
 import { fund, createTestContext, balanceOf } from "../util/anchorUtils";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
-import { Cryptid } from "@identity.com/cryptid";
+import { Cryptid } from "@identity.com/cryptid-hh";
 import {
   CheckRecipientMiddleware,
   deriveMiddlewareAccountAddress,
-} from "@identity.com/cryptid-middleware-check-recipient";
-import { CryptidClient } from "@identity.com/cryptid-core";
+} from "@identity.com/cryptid-middleware-check-recipient-hh";
+import { CryptidClient } from "@identity.com/cryptid-core-hh";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;

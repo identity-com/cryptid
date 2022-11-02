@@ -19,9 +19,9 @@ import {
   Cryptid,
   CheckPassMiddleware,
   TimeDelayMiddleware,
-} from "@identity.com/cryptid";
-import { deriveMiddlewareAccountAddress as deriveCheckPassMiddlewareAddress } from "@identity.com/cryptid-middleware-check-pass";
-import { deriveMiddlewareAccountAddress as deriveTimeDelayMiddlewareAddress } from "@identity.com/cryptid-middleware-time-delay";
+} from "@identity.com/cryptid-hh";
+import { deriveMiddlewareAccountAddress as deriveCheckPassMiddlewareAddress } from "@identity.com/cryptid-middleware-check-pass-hh";
+import { deriveMiddlewareAccountAddress as deriveTimeDelayMiddlewareAddress } from "@identity.com/cryptid-middleware-time-delay-hh";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;

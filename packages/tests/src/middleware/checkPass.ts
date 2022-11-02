@@ -35,8 +35,8 @@ import {
   InstructionData,
   Cryptid,
   CheckPassMiddleware,
-} from "@identity.com/cryptid";
-import { deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-pass";
+} from "@identity.com/cryptid-hh";
+import { deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-pass-hh";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;

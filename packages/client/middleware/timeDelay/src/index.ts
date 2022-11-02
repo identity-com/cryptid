@@ -4,7 +4,7 @@ import {
   GenericMiddlewareParams,
   MiddlewareClient,
   MiddlewareResult,
-} from "@identity.com/cryptid-core";
+} from "@identity.com/cryptid-core-hh";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";

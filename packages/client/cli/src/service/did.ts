@@ -6,7 +6,7 @@ import {
   VerificationMethodType,
   Wallet,
 } from "@identity.com/sol-did-client";
-import { ExtendedCluster } from "@identity.com/cryptid";
+import { ExtendedCluster } from "@identity.com/cryptid-hh";
 
 export const addKeyToDID = async (
   authority: Wallet,

@@ -19,7 +19,7 @@ import {
   CryptidClient,
   InstructionData,
   TransactionAccountMeta,
-} from "@identity.com/cryptid";
+} from "@identity.com/cryptid-hh";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;

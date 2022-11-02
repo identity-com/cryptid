@@ -9,7 +9,7 @@ import {
   Keypair,
 } from "@solana/web3.js";
 import { omit } from "ramda";
-import { ExtendedCluster } from "@identity.com/cryptid";
+import { ExtendedCluster } from "@identity.com/cryptid-hh";
 
 const DEFAULT_CONFIG_FILE = path.join(
   os.homedir(),

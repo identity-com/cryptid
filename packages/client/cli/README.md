@@ -16,11 +16,11 @@ oclif example Hello World CLI
 # Usage
 <!-- usage -->
 ```sh-session
-$ npm install -g @identity.com/cryptid-cli
+$ npm install -g @identity.com/cryptid-cli-hh
 $ cryptid COMMAND
 running command...
 $ cryptid (--version)
-@identity.com/cryptid-cli/0.3.0-alpha.11 darwin-arm64 node-v16.13.0
+@identity.com/cryptid-cli-hh/0.3.0-alpha.11 darwin-arm64 node-v16.13.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND

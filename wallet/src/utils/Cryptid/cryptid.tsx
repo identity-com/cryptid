@@ -6,7 +6,7 @@
  * -
  */
 import React, {FC, useCallback, useContext, useEffect, useState} from "react";
-import {build as buildCryptid, Cryptid, Signer} from "@identity.com/cryptid";
+import {build as buildCryptid, Cryptid, Signer} from "@identity.com/cryptid-hh";
 import {AccountInfo, Connection, PublicKey, Transaction, TransactionSignature} from "@solana/web3.js";
 import {DIDDocument} from "did-resolver";
 import {setInitialAccountInfo, useCluster, useConnection} from "../connection";

@@ -1,6 +1,6 @@
 import Base from "../base";
 import { listAccounts } from "../../service/cryptid";
-import { CryptidAccountDetails } from "@identity.com/cryptid";
+import { CryptidAccountDetails } from "@identity.com/cryptid-hh";
 
 const detailsToString = (
   account: CryptidAccountDetails,

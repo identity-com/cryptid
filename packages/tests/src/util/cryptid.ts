@@ -20,7 +20,7 @@ import {
   InstructionData,
   TransactionAccountMeta,
   CRYPTID_PROGRAM,
-} from "@identity.com/cryptid";
+} from "@identity.com/cryptid-hh";
 import BN from "bn.js";
 import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";

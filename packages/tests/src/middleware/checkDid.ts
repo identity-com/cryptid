@@ -19,11 +19,11 @@ import {
   ExtendedCluster,
   VerificationMethodType,
 } from "@identity.com/sol-did-client";
-import { Cryptid, CryptidClient } from "@identity.com/cryptid";
+import { Cryptid, CryptidClient } from "@identity.com/cryptid-hh";
 import {
   CheckDidMiddleware,
   deriveMiddlewareAccountAddress,
-} from "@identity.com/cryptid-middleware-check-did";
+} from "@identity.com/cryptid-middleware-check-did-hh";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;

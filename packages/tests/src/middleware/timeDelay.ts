@@ -4,12 +4,12 @@ import chaiAsPromised from "chai-as-promised";
 import { makeTransfer } from "../util/cryptid";
 import { fund, createTestContext, balanceOf, sleep } from "../util/anchorUtils";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
-import { Cryptid } from "@identity.com/cryptid";
+import { Cryptid } from "@identity.com/cryptid-hh";
 import {
   TimeDelayMiddleware,
   deriveMiddlewareAccountAddress,
-} from "@identity.com/cryptid-middleware-time-delay";
-import { CryptidClient } from "@identity.com/cryptid-core";
+} from "@identity.com/cryptid-middleware-time-delay-hh";
+import { CryptidClient } from "@identity.com/cryptid-core-hh";
 import { initializeDIDAccount } from "../util/did";
 
 chai.use(chaiAsPromised);

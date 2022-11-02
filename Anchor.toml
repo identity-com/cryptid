@@ -13,14 +13,14 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-cryptid = "cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs"
+cryptid = "hhctGcofukzbGyYDKBnh99JA93UXjDoirvTaJwBedXP"
 check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 check_did = "midb3GKX7wF1minPXeDKqGRKCK9NeR8ns9V8BQUMJDr"
 time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
 
 [programs.mainnet]
-cryptid = "cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs"
+cryptid = "hhctGcofukzbGyYDKBnh99JA93UXjDoirvTaJwBedXP"
 check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 check_did = "midb3GKX7wF1minPXeDKqGRKCK9NeR8ns9V8BQUMJDr"
