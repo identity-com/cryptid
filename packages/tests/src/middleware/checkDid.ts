@@ -16,7 +16,7 @@ import { CheckDidMiddleware, deriveMiddlewareAccountAddress } from "@identity.co
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-describe.only("Middleware: CheckDid", () => {
+describe("Middleware: CheckDid", () => {
   const {
     provider,
     authority,
