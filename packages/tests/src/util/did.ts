@@ -2,7 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import {
   BitwiseVerificationMethodFlag,
   DidSolIdentifier,
-  DidSolService, Service,
+  DidSolService,
+  Service,
   VerificationMethodType,
 } from "@identity.com/sol-did-client";
 import { CLUSTER } from "./constants";
@@ -32,7 +33,7 @@ export const addEthKeyWithOwnershipToDID = async (authority: Wallet) => {
 
   // Create a DID Wallet
   const newEthKey = EthWallet.createRandom();
-  const fragment = `eth-key${Date.now()}`
+  const fragment = `eth-key${Date.now()}`;
   const newKeyVerificationMethod = {
     flags: [BitwiseVerificationMethodFlag.CapabilityInvocation],
     fragment,
@@ -41,18 +42,16 @@ export const addEthKeyWithOwnershipToDID = async (authority: Wallet) => {
   };
 
   // Set VM
-  await didSolService
-    .addVerificationMethod(newKeyVerificationMethod)
-    .rpc();
+  await didSolService.addVerificationMethod(newKeyVerificationMethod).rpc();
 
   // Set Ownership flags
   await didSolService
-    .setVerificationMethodFlags(fragment,[
+    .setVerificationMethodFlags(fragment, [
       BitwiseVerificationMethodFlag.CapabilityInvocation,
-      BitwiseVerificationMethodFlag.OwnershipProof
+      BitwiseVerificationMethodFlag.OwnershipProof,
     ])
     .withEthSigner(newEthKey)
-    .rpc()
+    .rpc();
 };
 
 export const addServiceToDID = async (authority: Wallet, service: Service) => {
@@ -61,9 +60,8 @@ export const addServiceToDID = async (authority: Wallet, service: Service) => {
     wallet: authority,
   });
 
-  await didSolService.addService(service).rpc()
-
-}
+  await didSolService.addService(service).rpc();
+};
 
 export const initializeDIDAccount = async (
   authority: Wallet

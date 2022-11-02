@@ -1,17 +1,29 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { makeTransfer, } from "../util/cryptid";
-import { addEthKeyWithOwnershipToDID, addServiceToDID, initializeDIDAccount } from "../util/did";
-import { balanceOf, createTestContext, fund, Wallet, } from "../util/anchorUtils";
+import { makeTransfer } from "../util/cryptid";
+import {
+  addEthKeyWithOwnershipToDID,
+  addServiceToDID,
+  initializeDIDAccount,
+} from "../util/did";
+import {
+  balanceOf,
+  createTestContext,
+  fund,
+  Wallet,
+} from "../util/anchorUtils";
 import {
   BitwiseVerificationMethodFlag,
   DidSolIdentifier,
   ExtendedCluster,
-  VerificationMethodType
+  VerificationMethodType,
 } from "@identity.com/sol-did-client";
-import { Cryptid, CryptidClient, } from "@identity.com/cryptid";
-import { CheckDidMiddleware, deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-did";
+import { Cryptid, CryptidClient } from "@identity.com/cryptid";
+import {
+  CheckDidMiddleware,
+  deriveMiddlewareAccountAddress,
+} from "@identity.com/cryptid-middleware-check-did";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -24,8 +36,8 @@ describe("Middleware: CheckDid", () => {
     middleware: { checkDid: checkDidMiddlewareProgram },
   } = createTestContext();
 
-  let cluster: ExtendedCluster = "localnet";
-  let didAccount: PublicKey;
+  const cluster: ExtendedCluster = "localnet";
+  // let didAccount: PublicKey;
   let cryptidIndex = 0; // The index of the cryptid account owned by that DID - increment when creating a new account
   let cryptid: CryptidClient;
 
@@ -34,7 +46,6 @@ describe("Middleware: CheckDid", () => {
 
   const recipient = Keypair.generate();
   // const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
-
 
   const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
     const middleware = [
@@ -45,7 +56,7 @@ describe("Middleware: CheckDid", () => {
     ];
 
     cryptid = await Cryptid.createFromDID(
-      DidSolIdentifier.create(authority.publicKey,cluster).toString(),
+      DidSolIdentifier.create(authority.publicKey, cluster).toString(),
       signer,
       middleware,
       { connection: provider.connection, accountIndex: ++cryptidIndex }
@@ -59,9 +70,8 @@ describe("Middleware: CheckDid", () => {
 
   before("Set up DID account", async () => {
     await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-    [didAccount] = await initializeDIDAccount(authority);
+    await initializeDIDAccount(authority);
   });
-
 
   context("with the cryptid client and verificationMethodMatcher", () => {
     before("Set up middleware PDA", async () => {
@@ -69,14 +79,19 @@ describe("Middleware: CheckDid", () => {
         authority,
         verificationMethodMatcher: {
           filterFragment: null,
-          filterFlags: BitwiseVerificationMethodFlag.CapabilityInvocation | BitwiseVerificationMethodFlag.OwnershipProof,
+          filterFlags:
+            BitwiseVerificationMethodFlag.CapabilityInvocation |
+            BitwiseVerificationMethodFlag.OwnershipProof,
           filterKeyData: null,
-          filterTypes: Buffer.from([VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020]), // VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020
+          filterTypes: Buffer.from([
+            VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020,
+          ]), // VerificationMethodType.EcdsaSecp256k1RecoveryMethod2020
         },
         serviceMatcher: {
           filterFragment: null,
           filterServiceType: "profile-pic",
-          filterServiceEndpoint: "https://tenor.com/view/vendetta-hats-off-fat-gif-11654529"
+          filterServiceEndpoint:
+            "https://tenor.com/view/vendetta-hats-off-fat-gif-11654529",
         },
         controllerMatcher: {
           filterNativeController: null,
@@ -86,11 +101,11 @@ describe("Middleware: CheckDid", () => {
         connection: provider.connection,
       };
 
-      [middlewareAccount] = deriveMiddlewareAccountAddress(
-        params,
-      );
+      [middlewareAccount] = deriveMiddlewareAccountAddress(params);
       console.log(`middlewareAccount: ${middlewareAccount.toBase58()}`);
-      const transaction = await new CheckDidMiddleware().createMiddleware(params);
+      const transaction = await new CheckDidMiddleware().createMiddleware(
+        params
+      );
 
       await provider.sendAndConfirm(transaction, [keypair]);
     });
@@ -145,7 +160,8 @@ describe("Middleware: CheckDid", () => {
       await addServiceToDID(authority, {
         fragment: "test-service",
         serviceType: "profile-pic",
-        serviceEndpoint: "https://tenor.com/view/vendetta-hats-off-fat-gif-11654529",
+        serviceEndpoint:
+          "https://tenor.com/view/vendetta-hats-off-fat-gif-11654529",
       });
 
       // send the propose tx

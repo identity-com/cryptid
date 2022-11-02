@@ -21,7 +21,6 @@ const envCheckDidMiddlewareProgram = anchor.workspace
 const envTimeDelayMiddlewareProgram = anchor.workspace
   .TimeDelay as Program<TimeDelay>;
 
-
 if (!process.env.QUIET) {
   const logListener = envProvider.connection.onLogs("all", (log) =>
     console.log(log.logs)

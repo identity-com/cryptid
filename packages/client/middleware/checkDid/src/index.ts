@@ -16,33 +16,32 @@ export const CHECK_DID_MIDDLEWARE_PROGRAM_ID = new PublicKey(
 );
 
 export type VerificationMethodMatcher = {
-  filterFragment: string | null,
-  filterFlags: number | null,
-  filterTypes: Bytes | null,
-  filterKeyData: Bytes | null,
-}
+  filterFragment: string | null;
+  filterFlags: number | null;
+  filterTypes: Bytes | null;
+  filterKeyData: Bytes | null;
+};
 
 export type ServiceMatcher = {
-  filterFragment: string | null,
-  filterServiceType: string | null,
-  filterServiceEndpoint: string | null,
-}
+  filterFragment: string | null;
+  filterServiceType: string | null;
+  filterServiceEndpoint: string | null;
+};
 
 export type ControllerMatcher = {
-  filterNativeController: PublicKey | null,
-  filterOtherController: string | null,
-}
+  filterNativeController: PublicKey | null;
+  filterOtherController: string | null;
+};
 
 export type CheckDidParameters = {
-  verificationMethodMatcher: VerificationMethodMatcher,
-  serviceMatcher: ServiceMatcher,
-  controllerMatcher: ControllerMatcher,
+  verificationMethodMatcher: VerificationMethodMatcher;
+  serviceMatcher: ServiceMatcher;
+  controllerMatcher: ControllerMatcher;
 } & GenericMiddlewareParams;
 
 export const deriveMiddlewareAccountAddress = (
   params: CheckDidParameters
 ): [PublicKey, number] => {
-
   const seeds = [
     anchor.utils.bytes.utf8.encode("check_did"),
     params.authority.publicKey.toBuffer(),
@@ -55,15 +54,12 @@ export const deriveMiddlewareAccountAddress = (
   );
 };
 
-
-
 export class CheckDidMiddleware
   implements MiddlewareClient<CheckDidParameters>
 {
   private static getProgram(
     params: GenericMiddlewareParams
   ): Program<CheckDid> {
-
     // TODO probably move some of this to a common middleware utils lib
     const anchorProvider = new AnchorProvider(
       params.connection,
@@ -83,10 +79,7 @@ export class CheckDidMiddleware
   ): Promise<Transaction> {
     const program = CheckDidMiddleware.getProgram(params);
 
-
-    const [middlewareAccount] = deriveMiddlewareAccountAddress(
-      params
-    );
+    const [middlewareAccount] = deriveMiddlewareAccountAddress(params);
 
     console.log(`middlewareAccount in: ${middlewareAccount.toBase58()}`);
 
@@ -128,5 +121,3 @@ export class CheckDidMiddleware
     return { instructions, signers: [] };
   }
 }
-
-
