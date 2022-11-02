@@ -102,21 +102,6 @@ pub mod check_did {
     }
 }
 
-pub fn seed_from_args(
-    verification_method_matcher: &VerificationMethodMatcher,
-    service_matcher: &ServiceMatcher,
-    controller_matcher: &ControllerMatcher,
-    previous_middleware: &Option<Pubkey>
-) -> Vec<u8> {
-    let mut seed = vec![];
-    seed.extend_from_slice(verification_method_matcher.try_to_vec().unwrap().as_slice());
-    seed.extend_from_slice(service_matcher.try_to_vec().unwrap().as_slice());
-    seed.extend_from_slice(controller_matcher.try_to_vec().unwrap().as_slice());
-    seed.extend_from_slice(previous_middleware.try_to_vec().unwrap().as_slice());
-    msg!("seed: {:?}", seed);
-    seed
-}
-
 #[derive(Accounts)]
 #[instruction(
 // Matcher for Verification Methods
@@ -136,7 +121,7 @@ pub struct Create<'info> {
     seeds = [
         CheckDid::SEED_PREFIX,
         authority.key().as_ref(),
-        seed_from_args(&verification_method_matcher, &service_matcher, &controller_matcher, &previous_middleware).as_slice()
+        previous_middleware.as_ref().map(|p| p.as_ref()).unwrap_or(&[0u8; 32])
     ],
     bump,
     )]
@@ -180,17 +165,16 @@ impl<'info> ExecuteMiddleware<'info> {
         // define seeds inline here rather than extract to a function
         // in order to avoid having to convert Vec<Vec<u8>> to &[&[u8]]
         let authority_key = ctx.accounts.middleware_account.authority.key();
-        let seeds_from_args = seed_from_args(
-            &ctx.accounts.middleware_account.verification_method_matcher,
-            &ctx.accounts.middleware_account.service_matcher,
-            &ctx.accounts.middleware_account.controller_matcher,
-            &ctx.accounts.middleware_account.previous_middleware,
-        );
         let bump = ctx.accounts.middleware_account.bump.to_le_bytes();
         let seeds = &[
             CheckDid::SEED_PREFIX,
             authority_key.as_ref(),
-            seeds_from_args.as_slice(),
+            ctx.accounts
+                .middleware_account
+                .previous_middleware
+                .as_ref()
+                .map(|p| p.as_ref())
+                .unwrap_or(&[0u8; 32]),
             bump.as_ref(),
         ][..];
         let signer = &[seeds][..];

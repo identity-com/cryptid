@@ -2,13 +2,13 @@ import {
   CRYPTID_PROGRAM,
   ExecuteMiddlewareParams,
   GenericMiddlewareParams,
-  MiddlewareClient, MiddlewareRegistry,
+  MiddlewareClient,
   MiddlewareResult,
 } from "@identity.com/cryptid-core";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { AnchorProvider, Program, BorshInstructionCoder } from "@project-serum/anchor";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import { AnchorProvider, Program } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { Bytes, VerificationMethodType } from "@identity.com/sol-did-client";
+import { Bytes } from "@identity.com/sol-did-client";
 import { CheckDid, CheckDidIDL } from "@identity.com/cryptid-idl";
 
 export const CHECK_DID_MIDDLEWARE_PROGRAM_ID = new PublicKey(
@@ -43,19 +43,10 @@ export const deriveMiddlewareAccountAddress = (
   params: CheckDidParameters
 ): [PublicKey, number] => {
 
-  const coder = new BorshInstructionCoder(CheckDidIDL);
-  const data = coder.encode("create", {
-    verificationMethodMatcher: params.verificationMethodMatcher,
-    serviceMatcher: params.serviceMatcher,
-    controllerMatcher: params.controllerMatcher,
-    previousMiddleware: params.previousMiddleware?.toBuffer() || null,
-  });
-  const encodedParams = Buffer.from(data.subarray(8))
-
   const seeds = [
     anchor.utils.bytes.utf8.encode("check_did"),
     params.authority.publicKey.toBuffer(),
-    encodedParams,
+    params.previousMiddleware?.toBuffer() || Buffer.alloc(32),
   ];
 
   return PublicKey.findProgramAddressSync(
@@ -63,11 +54,6 @@ export const deriveMiddlewareAccountAddress = (
     CHECK_DID_MIDDLEWARE_PROGRAM_ID
   );
 };
-
-// const getExpireFeatureAddress = (
-//   gatekeeperNetwork: PublicKey
-// ): Promise<PublicKey> =>
-//   getFeatureAccountAddress(expireFeature, gatekeeperNetwork);
 
 
 
@@ -126,10 +112,6 @@ export class CheckDidMiddleware
     params: ExecuteMiddlewareParams
   ): Promise<MiddlewareResult> {
     const program = CheckDidMiddleware.getProgram(params);
-
-    const middlewareAccount = await program.account.checkDid.fetch(
-      params.middlewareAccount
-    );
 
     const instructions = await program.methods
       .executeMiddleware()
