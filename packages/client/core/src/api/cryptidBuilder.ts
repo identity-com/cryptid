@@ -1,15 +1,9 @@
-import {
-  BuildOptions,
-  CryptidClient,
-  CryptidOptions,
-  FindAllOptions,
-} from "./cryptidClient";
+import { CryptidClient, CryptidOptions, FindAllOptions } from "./cryptidClient";
 import { Wallet } from "../types/crypto";
 import { Keypair } from "@solana/web3.js";
 import { SimpleCryptidClient } from "./simpleCryptidClient";
 import { normalizeSigner } from "../lib/crypto";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
-import { Middleware } from "../lib/Middleware";
 import { CryptidService } from "../service/cryptid";
 import { didToPDA } from "../lib/did";
 import { getCryptidAccountAddress } from "../lib/cryptid";
@@ -23,10 +17,10 @@ export class CryptidBuilder {
     return new SimpleCryptidClient(details, normalizeSigner(signer), options);
   }
 
-  static buildFromDID(
+  static loadFromDID(
     did: string,
     signer: Keypair | Wallet,
-    options: BuildOptions
+    options: CryptidOptions
   ): CryptidClient {
     const details = CryptidAccountDetails.from(
       did,
@@ -54,7 +48,6 @@ export class CryptidBuilder {
   static createFromDID(
     did: string,
     signer: Keypair | Wallet,
-    middleware: Middleware[],
     options: CryptidOptions
   ): Promise<CryptidClient> {
     const index = options.accountIndex === undefined ? 1 : options.accountIndex; // 0 is reserved for the default (generative) cryptid
@@ -67,7 +60,7 @@ export class CryptidBuilder {
       did,
       didAccount[0],
       didAccount[1],
-      middleware
+      options.middlewares ?? []
     );
     return CryptidBuilder.create(details, signer, options);
   }
