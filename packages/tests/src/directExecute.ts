@@ -71,7 +71,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
     });
 
     before("Set up generative Cryptid Account", async () => {
-      cryptid = await Cryptid.buildFromDID(did, authority, {
+      cryptid = await Cryptid.loadFromDID(did, authority, {
         connection: provider.connection,
       });
 
@@ -155,7 +155,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       // fund the bogus signer, otherwise the tx fails due to lack of funds, not did signing issues
       await fund(bogusSigner.publicKey);
 
-      const bogusCryptid = await Cryptid.buildFromDID(did, bogusSigner, {
+      const bogusCryptid = await Cryptid.loadFromDID(did, bogusSigner, {
         connection: provider.connection,
       });
       const signedTransaction = await bogusCryptid.directExecute(
@@ -171,7 +171,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
     it("can use direct-execute on non-zero index cryptid accounts", async () => {
       const recipient = Keypair.generate();
 
-      const cryptidNonZeroIndex = await Cryptid.buildFromDID(did, authority, {
+      const cryptidNonZeroIndex = await Cryptid.loadFromDID(did, authority, {
         accountIndex: 1,
         connection: provider.connection,
       });
@@ -196,7 +196,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
 
         const recipient = Keypair.generate();
 
-        const secondKeyCryptid = await Cryptid.buildFromDID(did, secondKey, {
+        const secondKeyCryptid = await Cryptid.loadFromDID(did, secondKey, {
           connection: provider.connection,
         });
 
