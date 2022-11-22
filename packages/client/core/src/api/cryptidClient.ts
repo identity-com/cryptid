@@ -22,12 +22,10 @@ export type CryptidOptions = {
   confirmOptions?: ConfirmOptions;
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
+  middlewares?: Middleware[];
 };
 export type FindAllOptions = {
   connection: Connection;
-};
-export type BuildOptions = CryptidOptions & {
-  middlewares?: Middleware[];
 };
 
 export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {

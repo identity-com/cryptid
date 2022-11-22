@@ -184,7 +184,6 @@ export const createCryptid = async (
   Builder.createFromDID(
     DID_SOL_PREFIX + ":" + authority.publicKey,
     authority,
-    [],
     options
   );
 
@@ -192,7 +191,7 @@ export const buildCryptid = async (
   authority: Wallet,
   options: CryptidOptions
 ): Promise<CryptidClient> =>
-  await Builder.buildFromDID(
+  await Builder.loadFromDID(
     DID_SOL_PREFIX + ":" + authority.publicKey,
     authority,
     options
@@ -205,7 +204,7 @@ export const cryptidTestCases = [
       did: string,
       authority: Wallet | Keypair,
       options: CryptidOptions
-    ) => Builder.buildFromDID(did, authority, options),
+    ) => Builder.loadFromDID(did, authority, options),
   },
   {
     cryptidType: TestType.Initialized,
@@ -213,7 +212,7 @@ export const cryptidTestCases = [
       did: string,
       authority: Wallet | Keypair,
       options: CryptidOptions
-    ) => Builder.createFromDID(did, authority, [], options),
+    ) => Builder.createFromDID(did, authority, options),
   },
 ];
 
