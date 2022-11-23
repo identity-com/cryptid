@@ -132,8 +132,11 @@ describe("Middleware: checkPass", () => {
     cryptid = await Cryptid.createFromDID(
       DID_SOL_PREFIX + ":" + authority.publicKey,
       signer,
-      middleware,
-      { connection: provider.connection, accountIndex: ++cryptidIndex }
+      {
+        connection: provider.connection,
+        accountIndex: ++cryptidIndex,
+        middlewares: middleware,
+      }
     );
 
     await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
