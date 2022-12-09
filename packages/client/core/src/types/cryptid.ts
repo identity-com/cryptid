@@ -1,10 +1,21 @@
-import { AccountMeta, PublicKey, Transaction } from "@solana/web3.js";
+import { AccountMeta, PublicKey, Signer, Transaction } from "@solana/web3.js";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export type ProposalResult = {
   proposeTransaction: Transaction;
-  transactionAccountAddress: PublicKey;
+  transactionAccount: PublicKey;
+  proposeSigners: Signer[];
   cryptidTransactionRepresentation: CryptidTransaction;
+};
+
+export type ExecuteResult = {
+  executeTransaction: Transaction;
+  executeSigners: Signer[];
+};
+
+export type ExecuteArrayResult = {
+  executeTransactions: Transaction[];
+  executeSigners: Signer[];
 };
 
 export type ControllerAccountMetaInfo = [AccountMeta[], number[]];

@@ -21,9 +21,9 @@ pub mod cryptid {
         middleware: Option<Pubkey>,
         controller_chain: Vec<Pubkey>,
         index: u32,
-        bump: u8,
+        did_account_bump: u8,
     ) -> Result<()> {
-        instructions::create(ctx, middleware, controller_chain, index, bump)
+        instructions::create(ctx, middleware, controller_chain, index, did_account_bump)
     }
 
     pub fn direct_execute<'a, 'b, 'c, 'info>(
@@ -31,6 +31,8 @@ pub mod cryptid {
         controller_chain: Vec<(u8, Pubkey)>,
         instructions: Vec<AbbreviatedInstructionData>,
         cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
         instructions::direct_execute(
@@ -38,25 +40,47 @@ pub mod cryptid {
             controller_chain,
             instructions,
             cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
             flags,
         )
     }
 
     pub fn propose_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
+        controller_chain: Vec<u8>,
+        cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
-        instructions::propose_transaction(ctx, instructions)
+        instructions::propose_transaction(
+            ctx,
+            controller_chain,
+            cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
+            instructions,
+        )
     }
 
     pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
         controller_chain: Vec<(u8, Pubkey)>,
         cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
         flags: u8,
     ) -> Result<()> {
-        instructions::execute_transaction(ctx, controller_chain, cryptid_account_bump, flags)
+        instructions::execute_transaction(
+            ctx,
+            controller_chain,
+            cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
+            flags,
+        )
     }
 
     pub fn approve_execution<'a, 'b, 'c, 'info>(

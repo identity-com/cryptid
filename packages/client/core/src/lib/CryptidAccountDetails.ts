@@ -16,6 +16,8 @@ export class CryptidAccountDetails {
     readonly ownerDID: string,
     // The on-chain PDA of the DID (may be generative)
     readonly didAccount: PublicKey,
+    // The correct bump for the given didAccount
+    readonly didAccountBump: number,
     // Middlewares attached to the account
     readonly middlewares: Middleware[]
   ) {}
@@ -30,13 +32,14 @@ export class CryptidAccountDetails {
     middlewares: Middleware[] = []
   ): CryptidAccountDetails {
     const didAccount = didToPDA(did);
-    const [address, bump] = getCryptidAccountAddress(didAccount, index);
+    const [address, bump] = getCryptidAccountAddress(didAccount[0], index);
     return new CryptidAccountDetails(
       address,
       bump,
       index,
       did,
-      didAccount,
+      didAccount[0],
+      didAccount[1],
       middlewares
     );
   }
@@ -51,13 +54,17 @@ export class CryptidAccountDetails {
     // TODO optimise? this is literally just to recalculate the bump
     // NOTE: the bump is needed when making transactions.
     // It is not stored on the cryptid account, as that does not work with the generative case.
-    const [, bump] = getCryptidAccountAddress(didAccount, cryptidAccount.index);
+    const [, bump] = getCryptidAccountAddress(
+      didAccount[0],
+      cryptidAccount.index
+    );
     return new CryptidAccountDetails(
       address,
       bump,
       cryptidAccount.index,
       did,
-      didAccount,
+      didAccount[0],
+      didAccount[1],
       middlewareAccounts.map(
         ([key, accountInfo]) => new Middleware(accountInfo.owner, key)
       )

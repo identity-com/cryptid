@@ -68,7 +68,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
       await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     });
 
-    it.only("can transfer from the controlled DID, signed by an authority on the controller DID", async () => {
+    it("can transfer from the controlled DID, signed by an authority on the controller DID", async () => {
       const recipient = Keypair.generate();
 
       console.log({

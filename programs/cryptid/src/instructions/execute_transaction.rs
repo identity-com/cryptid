@@ -12,19 +12,24 @@ use anchor_lang::prelude::*;
 /// A vector of controller account indices and their associated DID authority keys (to allow for generative cases).
 controller_chain: Vec<(u8, Pubkey)>,
 /// The bump seed for the Cryptid signer
-bump: u8,
+cryptid_account_bump: u8,
+/// Index of the cryptid account
+cryptid_account_index: u32,
+/// The bump seed for the Did Account
+did_account_bump: u8,
 /// Additional flags
 flags: u8,
 )]
 pub struct ExecuteTransaction<'info> {
     /// The Cryptid instance to execute with
-    /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
+    /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
         mut,
-        seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account.index.to_le_bytes().as_ref()],
-        bump
+        // TODO: Verification dones in instruction body. Move back with Anchor generator
+        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
+        // bump = cryptid_account_bump
     )]
-    pub cryptid_account: Account<'info, CryptidAccount>, // TODO use new macro that allows generative accounts
+    pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
     /// CHECK: DID Account can be generative or not
     pub did: UncheckedAccount<'info>,
@@ -43,7 +48,8 @@ pub struct ExecuteTransaction<'info> {
         // safeguard to prevent double-spends in the case where the account is not closed for some reason
         constraint = transaction_account.state != TransactionState::Executed @ CryptidError::InvalidTransactionState,
         // the transaction account must have been approved by the middleware on the cryptid account, if present
-        constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
+        // TODO: This moved to the instruction body
+        // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
 }
@@ -77,7 +83,9 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 pub fn execute_transaction<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
     controller_chain: Vec<(u8, Pubkey)>,
-    bump: u8,
+    cryptid_account_bump: u8,
+    cryptid_account_index: u32,
+    did_account_bump: u8,
     flags: u8,
 ) -> Result<()> {
     let debug = ExecuteFlags::from_bits(flags)
@@ -102,9 +110,24 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
+        Some(did_account_bump),
         ctx.accounts.signer.to_account_info().key,
         controlling_did_accounts,
     )?;
+
+    let cryptid_account = CryptidAccount::try_from(
+        &ctx.accounts.cryptid_account,
+        &ctx.accounts.did_program.key(),
+        &ctx.accounts.did.key(),
+        cryptid_account_index,
+        cryptid_account_bump,
+    )?;
+
+    // TODO: Move back to constraint when anchor annotation for generative case is working
+    require!(
+        ctx.accounts.transaction_account.approved_middleware == cryptid_account.middleware,
+        CryptidError::IncorrectMiddleware
+    );
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(
@@ -112,9 +135,9 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         &ctx.all_accounts(),
         &ctx.accounts.did_program.key(),
         &ctx.accounts.did.key(),
-        &ctx.accounts.cryptid_account,
+        &cryptid_account,
         &ctx.accounts.cryptid_account.to_account_info(),
-        bump,
+        cryptid_account_bump,
         debug,
     )?;
 

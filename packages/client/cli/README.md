@@ -20,7 +20,7 @@ $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
 $ cryptid (--version)
-@identity.com/cryptid-cli/0.3.0-alpha.9 darwin-arm64 node-v16.15.1
+@identity.com/cryptid-cli/0.3.0-alpha.11 darwin-arm64 node-v16.13.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -29,7 +29,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid [DID]`](#cryptid-did)
+* [`cryptid`](#cryptid)
 * [`cryptid accounts`](#cryptid-accounts)
 * [`cryptid accounts set INDEX`](#cryptid-accounts-set-index)
 * [`cryptid address`](#cryptid-address)
@@ -39,9 +39,7 @@ USAGE
 * [`cryptid base`](#cryptid-base)
 * [`cryptid config`](#cryptid-config)
 * [`cryptid config set [KEY] [VALUE]`](#cryptid-config-set-key-value)
-* [`cryptid config show`](#cryptid-config-show)
 * [`cryptid controller [DID]`](#cryptid-controller-did)
-* [`cryptid controller show [DID]`](#cryptid-controller-show-did)
 * [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init`](#cryptid-init)
@@ -63,13 +61,13 @@ USAGE
 * [`cryptid token transfer TO AMOUNT`](#cryptid-token-transfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
-## `cryptid [DID]`
+## `cryptid`
 
-Show the controllers of a cryptid account
+List keys attached to the cryptid account
 
 ```
 USAGE
-  $ cryptid [DID] [-h] [-c <value>] [-s <value>]
+  $ cryptid [-h] [-c <value>] [-s <value>]
 
 FLAGS
   -c, --config=<value>  Path to config file
@@ -77,7 +75,7 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 
 DESCRIPTION
-  Show the controllers of a cryptid account
+  List keys attached to the cryptid account
 
 ALIASES
   $ cryptid
@@ -103,7 +101,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/accounts/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/accounts/index.ts)_
+_See code: [dist/commands/accounts/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/accounts/index.ts)_
 
 ## `cryptid accounts set INDEX`
 
@@ -139,7 +137,7 @@ DESCRIPTION
   Show the cryptid account's address
 ```
 
-_See code: [dist/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/address.ts)_
+_See code: [dist/commands/address.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/address.ts)_
 
 ## `cryptid airdrop [AMOUNT]`
 
@@ -158,7 +156,7 @@ DESCRIPTION
   Airdrop funds into the cryptid account and owner key
 ```
 
-_See code: [dist/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/airdrop.ts)_
+_See code: [dist/commands/airdrop.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/airdrop.ts)_
 
 ## `cryptid alias [NAME] [DID]`
 
@@ -178,7 +176,7 @@ DESCRIPTION
   Associate a DID with an alias
 ```
 
-_See code: [dist/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/alias.ts)_
+_See code: [dist/commands/alias.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/alias.ts)_
 
 ## `cryptid balance`
 
@@ -197,7 +195,7 @@ DESCRIPTION
   Show the cryptid account SOL balance
 ```
 
-_See code: [dist/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/balance.ts)_
+_See code: [dist/commands/balance.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/balance.ts)_
 
 ## `cryptid base`
 
@@ -211,7 +209,7 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 ```
 
-_See code: [dist/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/base.ts)_
+_See code: [dist/commands/base.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/base.ts)_
 
 ## `cryptid config`
 
@@ -233,7 +231,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/config/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/config/index.ts)_
+_See code: [dist/commands/config/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/config/index.ts)_
 
 ## `cryptid config set [KEY] [VALUE]`
 
@@ -250,23 +248,6 @@ FLAGS
 
 DESCRIPTION
   Set a Cryptid configuration value
-```
-
-## `cryptid config show`
-
-Show Cryptid configuration
-
-```
-USAGE
-  $ cryptid config show [-h] [-c <value>] [-s <value>]
-
-FLAGS
-  -c, --config=<value>  Path to config file
-  -h, --help            Show CLI help.
-  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
-
-DESCRIPTION
-  Show Cryptid configuration
 ```
 
 ## `cryptid controller [DID]`
@@ -289,27 +270,7 @@ ALIASES
   $ cryptid show
 ```
 
-_See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/controller/index.ts)_
-
-## `cryptid controller show [DID]`
-
-Show the controllers of a cryptid account
-
-```
-USAGE
-  $ cryptid controller show [DID] [-h] [-c <value>] [-s <value>]
-
-FLAGS
-  -c, --config=<value>  Path to config file
-  -h, --help            Show CLI help.
-  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
-
-DESCRIPTION
-  Show the controllers of a cryptid account
-
-ALIASES
-  $ cryptid
-```
+_See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/controller/index.ts)_
 
 ## `cryptid document`
 
@@ -328,7 +289,7 @@ DESCRIPTION
   Show the cryptid account's DID Document
 ```
 
-_See code: [dist/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/document.ts)_
+_See code: [dist/commands/document.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/document.ts)_
 
 ## `cryptid help [COMMAND]`
 
@@ -369,7 +330,7 @@ DESCRIPTION
   Initialise the cryptid library
 ```
 
-_See code: [dist/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/init.ts)_
+_See code: [dist/commands/init.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/init.ts)_
 
 ## `cryptid key add KEY ALIAS`
 
@@ -756,5 +717,5 @@ DESCRIPTION
   Send SOL to a recipient
 ```
 
-_See code: [dist/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.9/dist/commands/transfer.ts)_
+_See code: [dist/commands/transfer.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/transfer.ts)_
 <!-- commandsstop -->

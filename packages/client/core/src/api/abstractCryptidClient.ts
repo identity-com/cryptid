@@ -2,6 +2,7 @@ import { Wallet } from "../types/crypto";
 import {
   ConfirmOptions,
   PublicKey,
+  Signer,
   Transaction,
   TransactionSignature,
 } from "@solana/web3.js";
@@ -16,8 +17,8 @@ import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount } from "../types";
-import { ProposalResult } from "../types/cryptid";
-import { ControlledCryptidClient } from "./controlledCryptidClient";
+import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
+import { translateError } from "@project-serum/anchor";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   readonly details: CryptidAccountDetails;
@@ -72,30 +73,39 @@ export abstract class AbstractCryptidClient implements CryptidClient {
   async proposeAndExecute(
     transaction: Transaction,
     forceSingleTx = false
-  ): Promise<Transaction[]> {
+  ): Promise<ExecuteArrayResult> {
     const service = await this.service();
 
     // TODO this is likely temporary - we should not force the client to have to know whether
     // the tx can fit into a single cryptid transaction or not.
     if (forceSingleTx) {
-      const proposeExecuteTransaction =
-        await service.proposeAndExecuteTransaction(
-          this.details,
-          transaction,
-          []
-        );
-      return [proposeExecuteTransaction];
+      const executeResult = await service.proposeAndExecuteTransaction(
+        this.details,
+        transaction
+      );
+      return {
+        executeTransactions: [executeResult.executeTransaction],
+        executeSigners: executeResult.executeSigners,
+      };
     }
 
     const proposalResult = await service.propose(this.details, transaction);
-    const executeTransaction = await service.execute(
+    const executeResult = await service.execute(
       this.details,
-      proposalResult.transactionAccountAddress,
-      [],
+      proposalResult.transactionAccount,
       proposalResult.cryptidTransactionRepresentation
     );
 
-    return [proposalResult.proposeTransaction, executeTransaction];
+    return {
+      executeTransactions: [
+        proposalResult.proposeTransaction,
+        executeResult.executeTransaction,
+      ],
+      executeSigners: [
+        ...proposalResult.proposeSigners,
+        ...executeResult.executeSigners,
+      ],
+    };
   }
 
   async propose(transaction: Transaction): Promise<ProposalResult> {
@@ -104,12 +114,17 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     );
   }
 
-  async execute(transactionAccountAddress: PublicKey): Promise<Transaction[]> {
+  async execute(
+    transactionAccountAddress: PublicKey
+  ): Promise<ExecuteArrayResult> {
     return this.service()
       .then((service) =>
         service.execute(this.details, transactionAccountAddress)
       )
-      .then((transaction) => [transaction]);
+      .then((result) => ({
+        executeTransactions: [result.executeTransaction],
+        executeSigners: result.executeSigners,
+      }));
   }
 
   // TODO reinstate
@@ -120,35 +135,26 @@ export abstract class AbstractCryptidClient implements CryptidClient {
    * This is a utility function for internal
    * operations, such as addKey, addController etc. It contains no
    * cryptid-specific functionality.
-   * @param transaction
-   * @param confirmOptions
+   * @param transaction The transaction to send
+   * @param signers All signers that should sign the transaction
+   * @param confirmOptions Options for waiting for confirmation
    * @private
    */
   async send(
     transaction: Transaction,
-    confirmOptions: ConfirmOptions = {}
+    signers?: Signer[],
+    confirmOptions?: ConfirmOptions
   ): Promise<TransactionSignature> {
-    // This cast is ok, as it is created as an AnchorProvider in the service constructor
     const service = await this.service();
-    const connection = service.program.provider.connection;
-    const txSig = await connection.sendRawTransaction(
-      transaction.serialize(),
-      confirmOptions
-    );
-    //(service.program.provider as AnchorProvider).sendAndConfirm(transaction, [], confirmOptions));
-    const blockhash = await connection.getLatestBlockhash();
-    const result = await connection.confirmTransaction({
-      signature: txSig,
-      ...blockhash,
-    });
-
-    // TODO clean up
-    if (result.value.err)
-      throw new Error(
-        "Transaction failed: " + JSON.stringify(result.value.err)
+    try {
+      return await service.provider.sendAndConfirm(
+        transaction,
+        signers,
+        confirmOptions
       );
-
-    return txSig;
+    } catch (err) {
+      throw translateError(err, service.idlErrors);
+    }
   }
 
   /**

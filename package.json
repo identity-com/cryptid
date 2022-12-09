@@ -8,6 +8,7 @@
     "workspaces": [
         "packages/client/idl",
         "packages/client/middleware/checkPass",
+        "packages/client/middleware/checkDid",
         "packages/client/middleware/timeDelay",
         "packages/client/middleware/checkRecipient",
         "packages/client/core",
@@ -16,7 +17,7 @@
         "packages/tests"
     ],
     "devDependencies": {
-        "@project-serum/anchor-cli": "https://github.com/kklas/anchor-nightly/releases/download/anchor-cli-latest/anchor-cli-0.25.0-7eb8ca8.tgz",
+        "@project-serum/anchor-cli": "^0.25.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-config-react-app": "^7.0.1",
         "eslint-plugin-prettier": "^4.2.1",

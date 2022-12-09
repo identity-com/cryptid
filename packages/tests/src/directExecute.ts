@@ -9,11 +9,10 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {
   cryptidTransferInstruction,
-  deriveCryptidAccountAddress,
   makeTransfer,
   toAccountMeta,
 } from "./util/cryptid";
-import { addKeyToDID, didTestCases, DidTestType } from "./util/did";
+import { addKeyToDID, didTestCases, TestType } from "./util/did";
 import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import {
   Cryptid,
@@ -25,14 +24,11 @@ import {
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-didTestCases.forEach(({ type, beforeFn }) => {
-  describe(`directExecute (${type})`, () => {
+didTestCases.forEach(({ didType, getDidAccount }) => {
+  describe(`directExecute (${didType} DID)`, () => {
     const { program, authority, provider } = createTestContext();
 
     let didAccount: PublicKey;
-    let cryptidAccount: PublicKey;
-    let cryptidBump: number;
-
     let cryptid: CryptidClient;
 
     const did = DID_SOL_PREFIX + ":" + authority.publicKey;
@@ -42,7 +38,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
       cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
     // use this when testing against the cryptid client
     const makeTransaction = (recipient: PublicKey) =>
-      makeTransfer(cryptidAccount, recipient);
+      makeTransfer(cryptid.address(), recipient);
 
     const directExecute = (
       recipient: Keypair,
@@ -52,11 +48,13 @@ didTestCases.forEach(({ type, beforeFn }) => {
         .directExecute(
           Buffer.from([]), // no controller chain
           [instructionData],
-          cryptidBump,
-          0
+          cryptid.details.bump,
+          cryptid.details.index,
+          cryptid.details.didAccountBump,
+          0 // flags
         )
         .accounts({
-          cryptidAccount,
+          cryptidAccount: cryptid.address(),
           didProgram: DID_SOL_PROGRAM,
           did: didAccount,
           signer: authority.publicKey,
@@ -65,21 +63,19 @@ didTestCases.forEach(({ type, beforeFn }) => {
           toAccountMeta(recipient.publicKey, true, false),
           toAccountMeta(SystemProgram.programId),
         ])
-        .rpc({ skipPreflight: true });
+        .rpc();
 
     before("Set up DID account", async () => {
       await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-      didAccount = await beforeFn(authority);
+      [didAccount] = await getDidAccount(authority);
     });
 
     before("Set up generative Cryptid Account", async () => {
-      [cryptidAccount, cryptidBump] = deriveCryptidAccountAddress(didAccount);
-
       cryptid = await Cryptid.buildFromDID(did, authority, {
         connection: provider.connection,
       });
 
-      await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
+      await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
     });
 
     it("can retrieve and build the default cryptid account", async () => {
@@ -97,14 +93,15 @@ didTestCases.forEach(({ type, beforeFn }) => {
     it("can transfer through Cryptid", async () => {
       const recipient = Keypair.generate();
 
-      const previousBalance = await balanceOf(cryptidAccount);
+      const previousBalance = await balanceOf(cryptid.address());
 
       const signedTransaction = await cryptid.directExecute(
         makeTransaction(recipient.publicKey)
       );
-      await cryptid.send(signedTransaction, { skipPreflight: true });
 
-      const currentBalance = await balanceOf(cryptidAccount);
+      await cryptid.send(signedTransaction, [], { skipPreflight: true });
+
+      const currentBalance = await balanceOf(cryptid.address());
 
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
     });
@@ -126,7 +123,9 @@ didTestCases.forEach(({ type, beforeFn }) => {
         instructionDataWithUnauthorisedSigner
       );
 
-      return expect(shouldFail).to.be.rejectedWith(/MissingRequiredSignature/);
+      return expect(shouldFail).to.be.rejectedWith(
+        "missing required signature for instruction"
+      );
     });
 
     it("rejects the transfer if the recipient account index is invalid", async () => {
@@ -145,8 +144,9 @@ didTestCases.forEach(({ type, beforeFn }) => {
         instructionDataWithInvalidAccountIndex
       );
 
-      // TODO expose the error from the program
-      return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
+      return expect(shouldFail).to.be.rejectedWith(
+        "Program failed to complete"
+      );
     });
 
     it("rejects the transfer if the signer is not a valid signer on the DID", async () => {
@@ -161,16 +161,35 @@ didTestCases.forEach(({ type, beforeFn }) => {
       const signedTransaction = await bogusCryptid.directExecute(
         makeTransaction(recipient.publicKey)
       );
-      const shouldFail = bogusCryptid.send(signedTransaction, {
-        skipPreflight: true,
+      const shouldFail = bogusCryptid.send(signedTransaction);
+
+      return expect(shouldFail).to.be.rejectedWith(
+        "Error Code: KeyMustBeSigner"
+      );
+    });
+
+    it("can use direct-execute on non-zero index cryptid accounts", async () => {
+      const recipient = Keypair.generate();
+
+      const cryptidNonZeroIndex = await Cryptid.buildFromDID(did, authority, {
+        accountIndex: 1,
+        connection: provider.connection,
       });
 
-      // TODO expose the error from the program
-      return expect(shouldFail).to.be.rejected;
+      await fund(cryptidNonZeroIndex.address(), 3 * LAMPORTS_PER_SOL);
+
+      const signedTransaction = await cryptidNonZeroIndex.directExecute(
+        makeTransfer(cryptidNonZeroIndex.address(), recipient.publicKey)
+      );
+
+      await cryptidNonZeroIndex.send(signedTransaction);
+
+      const previousBalance = await balanceOf(cryptidNonZeroIndex.address());
+      expect(previousBalance).to.equal(2 * LAMPORTS_PER_SOL);
     });
 
     // Test-case for the initialized DID case only.
-    if (type === DidTestType.Initialized) {
+    if (didType === TestType.Initialized) {
       it("can transfer through Cryptid with a second key on the DID", async () => {
         const secondKey = Keypair.generate();
         await fund(secondKey.publicKey);
@@ -186,12 +205,10 @@ didTestCases.forEach(({ type, beforeFn }) => {
           const signedTransaction = await secondKeyCryptid.directExecute(
             makeTransaction(recipient.publicKey)
           );
-          await secondKeyCryptid.send(signedTransaction, {
-            skipPreflight: true,
-          });
+          await secondKeyCryptid.send(signedTransaction);
         };
 
-        const previousBalance = await balanceOf(cryptidAccount);
+        const previousBalance = await balanceOf(cryptid.address());
 
         // should fail before the key is added:
         expect(execute()).to.be.rejected;
@@ -202,7 +219,7 @@ didTestCases.forEach(({ type, beforeFn }) => {
         // should pass afterwards
         await execute();
 
-        const currentBalance = await balanceOf(cryptidAccount);
+        const currentBalance = await balanceOf(cryptid.address());
 
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
       });

@@ -12,7 +12,7 @@ pub struct TransactionAccount {
     /// The cryptid account for the transaction
     pub cryptid_account: Pubkey,
     /// The owner of the cryptid account (Typically a DID account)
-    pub owner: Pubkey,
+    pub did: Pubkey,
     /// The accounts `instructions` references (excluding the cryptid account
     pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
@@ -35,7 +35,7 @@ impl TransactionAccount {
     ) -> usize {
         DISCRIMINATOR_SIZE
             + 32 // cryptid_account
-            + 32 // owner
+            + 32 // did (owner)
             + 4 + 32 * num_accounts //accounts
             + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 1 + 32 // approved_middleware
@@ -119,7 +119,7 @@ mod test {
 
         let account = TransactionAccount {
             cryptid_account: Default::default(),
-            owner: Default::default(),
+            did: Default::default(),
             accounts: vec![Default::default()],
             instructions: vec![AbbreviatedInstructionData {
                 program_id: 0,

@@ -17,5 +17,5 @@ export const didService = (
 export const didToPublicKey = (did: string): PublicKey =>
   DidSolIdentifier.parse(did).authority;
 
-export const didToPDA = (did: string): PublicKey =>
-  DidSolIdentifier.parse(did).dataAccount()[0];
+export const didToPDA = (did: string): [PublicKey, number] =>
+  DidSolIdentifier.parse(did).dataAccount();

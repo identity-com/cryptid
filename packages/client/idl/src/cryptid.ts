@@ -58,7 +58,7 @@ export type Cryptid = {
           "type": "u32"
         },
         {
-          "name": "bump",
+          "name": "didAccountBump",
           "type": "u8"
         }
       ]
@@ -121,6 +121,14 @@ export type Cryptid = {
           "type": "u8"
         },
         {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
           "name": "flags",
           "type": "u8"
         }
@@ -138,11 +146,19 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The owner of the Cryptid instance, typically a DID account"
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
           ]
         },
         {
@@ -162,6 +178,22 @@ export type Cryptid = {
         }
       ],
       "args": [
+        {
+          "name": "controllerChain",
+          "type": "bytes"
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
         {
           "name": "instructions",
           "type": {
@@ -239,6 +271,14 @@ export type Cryptid = {
           "type": "u8"
         },
         {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
           "name": "flags",
           "type": "u8"
         }
@@ -305,7 +345,7 @@ export type Cryptid = {
             "type": "publicKey"
           },
           {
-            "name": "owner",
+            "name": "did",
             "docs": [
               "The owner of the cryptid account (Typically a DID account)"
             ],
@@ -491,7 +531,7 @@ export type Cryptid = {
     {
       "code": 6003,
       "name": "WrongCryptidAccount",
-      "msg": "Wrong Cryptid account program"
+      "msg": "A wrong Cryptid account was passed"
     },
     {
       "code": 6004,
@@ -510,36 +550,31 @@ export type Cryptid = {
     },
     {
       "code": 6007,
-      "name": "KeyCannotChangeTransaction",
-      "msg": "Key is not a proposer for the transaction"
-    },
-    {
-      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6009,
+      "code": 6008,
       "name": "CreatingWithZeroIndex",
       "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
     },
     {
-      "code": 6010,
+      "code": 6009,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6011,
+      "code": 6010,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6012,
+      "code": 6011,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6013,
+      "code": 6012,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     }
@@ -606,7 +641,7 @@ export const IDL: Cryptid = {
           "type": "u32"
         },
         {
-          "name": "bump",
+          "name": "didAccountBump",
           "type": "u8"
         }
       ]
@@ -669,6 +704,14 @@ export const IDL: Cryptid = {
           "type": "u8"
         },
         {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
           "name": "flags",
           "type": "u8"
         }
@@ -686,11 +729,19 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "owner",
+          "name": "did",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The owner of the Cryptid instance, typically a DID account"
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
           ]
         },
         {
@@ -710,6 +761,22 @@ export const IDL: Cryptid = {
         }
       ],
       "args": [
+        {
+          "name": "controllerChain",
+          "type": "bytes"
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
         {
           "name": "instructions",
           "type": {
@@ -787,6 +854,14 @@ export const IDL: Cryptid = {
           "type": "u8"
         },
         {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
           "name": "flags",
           "type": "u8"
         }
@@ -853,7 +928,7 @@ export const IDL: Cryptid = {
             "type": "publicKey"
           },
           {
-            "name": "owner",
+            "name": "did",
             "docs": [
               "The owner of the cryptid account (Typically a DID account)"
             ],
@@ -1039,7 +1114,7 @@ export const IDL: Cryptid = {
     {
       "code": 6003,
       "name": "WrongCryptidAccount",
-      "msg": "Wrong Cryptid account program"
+      "msg": "A wrong Cryptid account was passed"
     },
     {
       "code": 6004,
@@ -1058,36 +1133,31 @@ export const IDL: Cryptid = {
     },
     {
       "code": 6007,
-      "name": "KeyCannotChangeTransaction",
-      "msg": "Key is not a proposer for the transaction"
-    },
-    {
-      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6009,
+      "code": 6008,
       "name": "CreatingWithZeroIndex",
       "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
     },
     {
-      "code": 6010,
+      "code": 6009,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6011,
+      "code": 6010,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6012,
+      "code": 6011,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6013,
+      "code": 6012,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     }
