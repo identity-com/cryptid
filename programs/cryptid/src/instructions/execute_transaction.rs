@@ -101,9 +101,9 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that.
     let all_accounts = ctx.all_accounts();
-    let controlling_did_accounts = controller_chain.iter().map(|(index, pubkey)| {
-        (all_accounts[*index as usize], *pubkey)
-    })
+    let controlling_did_accounts = controller_chain
+        .iter()
+        .map(|(index, pubkey)| (all_accounts[*index as usize], *pubkey))
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)

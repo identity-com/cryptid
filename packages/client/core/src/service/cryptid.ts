@@ -23,7 +23,11 @@ import { range } from "ramda";
 import { didToPDA, didToPublicKey } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
-import { ExecuteResult, ControllerPubkeys, ProposalResult } from "../types/cryptid";
+import {
+  ExecuteResult,
+  ControllerPubkeys,
+  ProposalResult,
+} from "../types/cryptid";
 import { MiddlewareResult } from "../types/middleware";
 
 export class CryptidService {

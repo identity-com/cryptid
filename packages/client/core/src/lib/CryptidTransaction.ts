@@ -19,7 +19,7 @@ import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { CryptidAccountDetails } from "./CryptidAccountDetails";
-import {ControllerAccountMetaInfo, ControllerPubkeys} from "../types/cryptid";
+import { ControllerAccountMetaInfo, ControllerPubkeys } from "../types/cryptid";
 
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,

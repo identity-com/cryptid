@@ -1,3 +1,4 @@
+#![allow(clippy::result_large_err)]
 extern crate core;
 
 declare_id!("cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs");
@@ -48,7 +49,7 @@ pub mod cryptid {
 
     pub fn propose_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
-        controller_chain: Vec<u8>,
+        controller_chain: Vec<(u8, Pubkey)>,
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
         did_account_bump: u8,

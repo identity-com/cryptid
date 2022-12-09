@@ -50,12 +50,11 @@ pub fn create(
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
     // let controlling_did_accounts = ctx.remaining_accounts.iter().collect::<Vec<&AccountInfo>>();
-    let controlling_did_accounts = ctx.remaining_accounts
+    let controlling_did_accounts = ctx
+        .remaining_accounts
         .iter()
         .zip(controller_chain.iter())
-        .map(|(account, pubkey)| {
-            (account, *pubkey)
-        })
+        .map(|(account, pubkey)| (account, *pubkey))
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
     // At this point, anchor has verified the cryptid account and did account (but not the controller chain)

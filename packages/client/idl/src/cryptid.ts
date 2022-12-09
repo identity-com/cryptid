@@ -180,7 +180,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -763,7 +767,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",

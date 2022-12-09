@@ -84,13 +84,13 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
     let all_accounts = ctx.all_accounts();
-    let controlling_did_accounts = controller_chain.iter().map(|(index, pubkey)| {
-        (all_accounts[*index as usize], *pubkey)
-        })
+    let controlling_did_accounts = controller_chain
+        .iter()
+        .map(|(index, pubkey)| (all_accounts[*index as usize], *pubkey))
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
-        // .as_slice();
+    // .as_slice();
 
-    msg!("Controlling did accounts: {:?}" , controlling_did_accounts);
+    msg!("Controlling did accounts: {:?}", controlling_did_accounts);
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account

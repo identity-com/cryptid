@@ -393,7 +393,7 @@ dependencies = [
  "anchor-lang",
  "cryptid",
  "num-traits",
- "sol-did 3.1.4",
+ "sol-did 3.1.4 (git+https://github.com/identity-com/sol-did?rev=120b7729de1cc502778fb4c3ad53d0bc8661e26d)",
  "solana-gateway",
 ]
 
@@ -509,7 +509,7 @@ dependencies = [
  "anchor-lang",
  "bitflags",
  "num-traits",
- "sol-did 3.1.4",
+ "sol-did 3.1.4 (git+https://github.com/identity-com/sol-did?branch=feature/IDCOM-2102_controller_fixes)",
 ]
 
 [[package]]
@@ -1166,6 +1166,21 @@ dependencies = [
 name = "sol-did"
 version = "3.1.0"
 source = "git+https://github.com/identity-com/sol-did?tag=3.1.0#267ffaf93327365351ac0cd8f53a04ba44703dc5"
+dependencies = [
+ "anchor-lang",
+ "bitflags",
+ "borsh",
+ "itertools",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "sol-did"
+version = "3.1.4"
+source = "git+https://github.com/identity-com/sol-did?branch=feature/IDCOM-2102_controller_fixes#2a2e852676409b3bce429466bedd58631da1e121"
 dependencies = [
  "anchor-lang",
  "bitflags",
