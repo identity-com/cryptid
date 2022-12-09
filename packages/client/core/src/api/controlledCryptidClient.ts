@@ -1,32 +1,34 @@
-import { CryptidClient, CryptidOptions } from "./cryptidClient";
+import { CryptidClient } from "./cryptidClient";
 import { AbstractCryptidClient } from "./abstractCryptidClient";
 import { Wallet } from "../types/crypto";
-import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 
 export class ControlledCryptidClient extends AbstractCryptidClient {
   /**
-   * Create a controlled cryptid account. Controlled by the controllerCryptid
+   * Create a controlled cryptid account. Controlled by the controllerDid
    *
    * A controlled cryptid has no key - the key is provided by the controller
-   * @param controlledDid
-   * @param controllerCryptid
-   * @param options
+   * @param controllerDid
+   * @param controlledCryptid
    */
   constructor(
-    controlledDid: string,
-    private controllerCryptid: CryptidClient,
-    options: CryptidOptions
+    private controllerDid: string,
+    private controlledCryptid: CryptidClient
   ) {
-    const details = CryptidAccountDetails.defaultAccount(controlledDid);
-    super(details, options);
-    // TODO discover and store controller chain
+    super(controlledCryptid.details, controlledCryptid.options);
   }
 
   get wallet(): Wallet {
-    return this.controllerCryptid.wallet;
+    return this.controlledCryptid.wallet;
   }
 
-  as(controlledDid: string): ControlledCryptidClient {
-    return new ControlledCryptidClient(controlledDid, this, this.options);
+  controlWith(controllerDid: string): CryptidClient {
+    return new ControlledCryptidClient(controllerDid, this);
+  }
+
+  makeControllerChain(): string[] {
+    return [
+      this.controllerDid,
+      ...this.controlledCryptid.makeControllerChain(),
+    ];
   }
 }

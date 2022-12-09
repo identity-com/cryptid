@@ -50,18 +50,21 @@ impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> f
 pub fn verify_keys<'info1, 'info2>(
     did: &AccountInfo<'info1>,
     signer: &Pubkey,
-    controlling_did_accounts: Vec<&AccountInfo<'info2>>,
+    controlling_did_accounts: Vec<(&AccountInfo<'info2>, Pubkey)>,
 ) -> Result<()> {
-    let controlling_did_accounts = controlling_did_accounts
-        .into_iter()
-        .cloned()
-        .collect::<Vec<_>>();
+    // let controlling_did_accounts = controlling_did_accounts
+    //     .into_iter()
+    //     .cloned()
+    //     .collect::<Vec<_>>();
+    // let x = controlling_did_accounts
+    //     .iter()
+    //     .map(|(a, b)| (a.clone(), b))
+    //     .collect::<Vec<(AccountInfo, Pubkey)>>();
     let signer_is_authority = sol_did::integrations::is_authority(
         did,
         None,
         controlling_did_accounts.as_slice(),
-        signer,
-        &[],
+        &signer.to_bytes(),
         None,
         None,
     )

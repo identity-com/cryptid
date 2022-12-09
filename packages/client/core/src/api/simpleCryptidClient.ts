@@ -1,4 +1,4 @@
-import { CryptidOptions } from "./cryptidClient";
+import { CryptidClient, CryptidOptions } from "./cryptidClient";
 import { ControlledCryptidClient } from "./controlledCryptidClient";
 import { AbstractCryptidClient } from "./abstractCryptidClient";
 import { Wallet } from "../types/crypto";
@@ -17,7 +17,7 @@ export class SimpleCryptidClient extends AbstractCryptidClient {
     return this._wallet;
   }
 
-  as(controlledDid: string): ControlledCryptidClient {
-    return new ControlledCryptidClient(controlledDid, this, this.options);
+  controlWith(controllerDid: string): CryptidClient {
+    return new ControlledCryptidClient(controllerDid, this);
   }
 }

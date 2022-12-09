@@ -27,7 +27,7 @@ export const build = async (
     }
   );
 
-  if (asDid) return cryptid.as(asDid);
+  // if (asDid) return cryptid.as(asDid);
 
   return cryptid;
 };

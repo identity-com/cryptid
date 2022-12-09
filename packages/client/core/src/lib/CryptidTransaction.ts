@@ -19,6 +19,7 @@ import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { CryptidAccountDetails } from "./CryptidAccountDetails";
+import {ControllerAccountMetaInfo, ControllerPubkeys} from "../types/cryptid";
 
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
@@ -33,13 +34,15 @@ export class CryptidTransaction {
     readonly cryptidAccount: CryptidAccountDetails,
     readonly authority: PublicKey,
     readonly instructions: InstructionData[],
-    readonly accountMetas: AccountMeta[]
+    readonly accountMetas: AccountMeta[],
+    readonly controllerChain: ControllerAccountReference[]
   ) {}
 
   static fromSolanaInstructions(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
-    solanaInstructions: TransactionInstruction[]
+    solanaInstructions: TransactionInstruction[],
+    controllerChain: ControllerPubkeys[]
   ): CryptidTransaction {
     const accountMetas = extractAccountMetas(
       solanaInstructions,
@@ -78,19 +81,33 @@ export class CryptidTransaction {
           .map((account) => account.toBase58())
           .includes(a.pubkey.toBase58())
     );
+    const [controllersAccountMetas, controllerIndices] =
+      CryptidTransaction.controllerChainToRemainingAccounts(
+        controllerChain,
+        availableInstructionAccounts
+      );
+
+    const allAccountMetas = [
+      ...filteredAccountMetas,
+      ...controllersAccountMetas,
+    ];
+
+    console.log({ controllersAccountMetas, controllerIndices });
 
     return new CryptidTransaction(
       cryptidAccount,
       authority,
       instructions,
-      filteredAccountMetas
+      allAccountMetas,
+      controllerIndices
     );
   }
 
   static fromTransactionAccount(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
-    transactionAccount: TransactionAccount
+    transactionAccount: TransactionAccount,
+    controllerChain: ControllerPubkeys[]
   ): CryptidTransaction {
     // TODO remove typecasting in this function
     const instructions = transactionAccount.instructions as InstructionData[];
@@ -117,15 +134,62 @@ export class CryptidTransaction {
           .includes(a.pubkey.toBase58())
     );
 
+    const [controllersAccountMetas, controllerIndices] =
+      CryptidTransaction.controllerChainToRemainingAccounts(
+        controllerChain,
+        allAccounts
+      );
+
+    const allAccountMetas = [
+      ...filteredAccountMetas,
+      ...controllersAccountMetas,
+    ];
+
     return new CryptidTransaction(
       cryptidAccount,
       authority,
       instructions,
-      filteredAccountMetas
+      allAccountMetas,
+      controllerIndices
     );
   }
 
   // TODO move transactionAccountAddress into constructor?
+
+  static controllerChainToRemainingAccounts(
+    controllerChain: ControllerPubkeys[],
+    allAccounts: PublicKey[]
+  ): ControllerAccountMetaInfo {
+    const reducer = (
+      [accounts, indices]: ControllerAccountMetaInfo,
+      controller: AccountMeta
+    ): ControllerAccountMetaInfo => {
+      const index = allAccounts.findIndex(
+        (a) => a.toBase58() === controller.pubkey.toBase58()
+      );
+
+      if (index >= 0) {
+        // controller is in the list of all accounts, no need to add an accountMeta, just push the index
+        return [accounts, [...indices, index]];
+      } else {
+        // controller is new (not in the list of all accounts, add an accountMeta
+        return [
+          [...accounts, controller],
+          [...indices, allAccounts.length + accounts.length],
+        ];
+      }
+    };
+
+    const controllerAccountMetas: AccountMeta[] = controllerChain.map(
+      ([didAccount]) => ({
+        pubkey: didAccount,
+        isWritable: false,
+        isSigner: false,
+      })
+    );
+
+    return controllerAccountMetas.reduce(reducer, [[], []]);
+  }
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
@@ -146,7 +210,7 @@ export class CryptidTransaction {
   execute(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
       .executeTransaction(
-        Buffer.from([]), // TODO, support controller chain,
+        Buffer.from(this.controllerChainIndices),
         this.cryptidAccount.bump,
         0
       )
@@ -166,7 +230,7 @@ export class CryptidTransaction {
   directExecute(program: Program<Cryptid>) {
     return program.methods
       .directExecute(
-        Buffer.from([]), // TODO, support controller chain,
+        Buffer.from(this.controllerChainIndices),
         this.instructions,
         this.cryptidAccount.bump,
         this.cryptidAccount.index

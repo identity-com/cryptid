@@ -7,8 +7,8 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(
-/// A vector of the number of extras for each signer, signer count is the length
-controller_chain: Vec<u8>,
+/// A vector of controller account indices and their associated DID authority keys (to allow for generative cases).
+controller_chain: Vec<(u8, Pubkey)>,
 /// The instructions to execute
 instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
@@ -62,7 +62,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 /// Executes a transaction directly if all required keys sign
 pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
-    controller_chain: Vec<u8>,
+    controller_chain: Vec<(u8, Pubkey)>,
     instructions: Vec<AbbreviatedInstructionData>,
     cryptid_account_bump: u8,
     flags: u8,
@@ -77,7 +77,14 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    let controlling_did_accounts = ctx.get_accounts_by_indexes(controller_chain.as_slice())?;
+    let all_accounts = ctx.all_accounts();
+    let controlling_did_accounts = controller_chain.iter().map(|(index, pubkey)| {
+        (all_accounts[*index as usize], *pubkey)
+        })
+        .collect::<Vec<(&AccountInfo, Pubkey)>>();
+        // .as_slice();
+
+    msg!("Controlling did accounts: {:?}" , controlling_did_accounts);
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account

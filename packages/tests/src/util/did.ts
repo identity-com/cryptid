@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   DidSolIdentifier,
   DidSolService,
@@ -23,15 +23,27 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
   await didSolService.addVerificationMethod(newKeyVerificationMethod).rpc(); //{ skipPreflight: true, commitment: 'finalized' });
 };
 
+export const setControllersOnDid = async (
+  authority: Wallet,
+  controllers: string[]
+) => {
+  const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
+  const didSolService = DidSolService.build(did, {
+    wallet: authority,
+  });
+  await didSolService.setControllers(controllers).rpc();
+};
+
 export const initializeDIDAccount = async (
-  authority: Wallet
+  authority: Wallet,
+  payer?: Wallet
 ): Promise<PublicKey> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
   const didSolService = await DidSolService.build(did, {
     wallet: authority,
   });
 
-  await didSolService.initialize(10_000).rpc();
+  await didSolService.initialize(10_000, payer?.publicKey).rpc();
   return did.dataAccount()[0];
 };
 
@@ -50,9 +62,9 @@ export const didTestCases = [
     type: DidTestType.Generative,
     beforeFn: async (authority: Wallet) => await getDidAccount(authority),
   },
-  {
-    type: DidTestType.Initialized,
-    beforeFn: async (authority: Wallet) =>
-      await initializeDIDAccount(authority),
-  },
+  // {
+  //   type: DidTestType.Initialized,
+  //   beforeFn: async (authority: Wallet) =>
+  //     await initializeDIDAccount(authority),
+  // },
 ];

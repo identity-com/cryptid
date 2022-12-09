@@ -62,6 +62,11 @@ export interface CryptidClient {
   readonly details: CryptidAccountDetails;
 
   /**
+   * The options used when sending transactions with this cryptid account
+   */
+  readonly options: CryptidOptions;
+
+  /**
    * Signs a transaction from the DID. Returns a meta-transaction
    * that wraps the transaction into a call to the cryptid program
    * @param transaction The transaction to sign
@@ -104,11 +109,13 @@ export interface CryptidClient {
   address(): PublicKey;
 
   /**
-   * Allows the current Cryptid instance to sign as another Cryptid account it is a controller of.
+   * Allows the current Cryptid instance to be controlled by another DID
    * A new Cryptid instance is returned.
    * @param did The DID of the account to sign on behalf of.
    */
-  as(did: string): CryptidClient;
+  controlWith(did: string): CryptidClient;
+
+  makeControllerChain(): string[];
 
   additionalKeys(): Promise<PublicKey[]>;
 

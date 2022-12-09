@@ -8,6 +8,8 @@ use anchor_lang::prelude::*;
 #[instruction(
 /// Optional middleware to be associated with the cryptid account
 middleware: Option<Pubkey>,
+/// The controller chain between the authority and the did
+controller_chain: Vec<Pubkey>,
 /// The index of this cryptid account - allows multiple cryptid accounts per DID
 index: u32,
 /// The bump seed for the cryptid account
@@ -36,6 +38,7 @@ pub struct Create<'info> {
 pub fn create(
     ctx: Context<Create>,
     middleware: Option<Pubkey>,
+    controller_chain: Vec<Pubkey>,
     index: u32,
     _bump: u8,
 ) -> Result<()> {
@@ -46,7 +49,14 @@ pub fn create(
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    let controlling_did_accounts = ctx.remaining_accounts.iter().collect::<Vec<&AccountInfo>>();
+    // let controlling_did_accounts = ctx.remaining_accounts.iter().collect::<Vec<&AccountInfo>>();
+    let controlling_did_accounts = ctx.remaining_accounts
+        .iter()
+        .zip(controller_chain.iter())
+        .map(|(account, pubkey)| {
+            (account, *pubkey)
+        })
+        .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
     // At this point, anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account

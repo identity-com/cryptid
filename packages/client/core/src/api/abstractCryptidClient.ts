@@ -17,10 +17,11 @@ import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount } from "../types";
 import { ProposalResult } from "../types/cryptid";
+import { ControlledCryptidClient } from "./controlledCryptidClient";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   readonly details: CryptidAccountDetails;
-  protected options: CryptidOptions;
+  readonly options: CryptidOptions;
 
   protected constructor(
     details: CryptidAccountDetails,
@@ -36,17 +37,22 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     };
   }
 
-  abstract as(did: string): CryptidClient;
+  abstract controlWith(controllerDid: string): CryptidClient;
 
   document(): Promise<DIDDocument> {
     return this.didClient().then((client) => client.resolve());
+  }
+
+  makeControllerChain(): string[] {
+    return [];
   }
 
   protected async service(): Promise<CryptidService> {
     return new CryptidService(
       this.wallet,
       this.options.connection,
-      this.options.confirmOptions
+      this.options.confirmOptions,
+      this.makeControllerChain()
     );
   }
 

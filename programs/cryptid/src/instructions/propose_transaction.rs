@@ -12,7 +12,7 @@ num_accounts: u8
 )]
 pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
-    /// CHECK: This assumes a purely generative case until we have use-cases that require a state.
+    /// CHECK: Unchecked to allow generative cryptid accounts.
     #[account()]
     pub cryptid_account: UncheckedAccount<'info>, // TODO allow generative/non-generative
     /// The owner of the Cryptid instance, typically a DID account

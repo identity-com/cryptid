@@ -19,16 +19,17 @@ import {
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { noSignWallet } from "../lib/crypto";
-import { getCryptidAccountAddress } from "../lib/cryptid";
+import { getCryptidAccountAddress, toAccountMeta } from "../lib/cryptid";
 import { range } from "ramda";
-import { didToPDA } from "../lib/did";
+import { didToPDA, didToPublicKey } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
-import { ProposalResult } from "../types/cryptid";
+import { ControllerPubkeys, ProposalResult } from "../types/cryptid";
 
 export class CryptidService {
   readonly program: Program<Cryptid>;
   private authorityKey: PublicKey;
+  private controllerChain: ControllerPubkeys[];
 
   static permissionless(
     connection: Connection,
@@ -40,11 +41,17 @@ export class CryptidService {
   constructor(
     private authority: Wallet,
     private connection: Connection,
-    private opts: ConfirmOptions = {}
+    private opts: ConfirmOptions = {},
+    controllerChain: string[] = []
   ) {
     const anchorProvider = new AnchorProvider(connection, authority, opts);
 
     this.authorityKey = authority.publicKey;
+
+    this.controllerChain = controllerChain.map((did) => [
+      didToPDA(did),
+      didToPublicKey(did),
+    ]);
 
     this.program = new Program<Cryptid>(
       CryptidIDL,
@@ -136,15 +143,25 @@ export class CryptidService {
       details.middlewares.length > 0
         ? details.middlewares[details.middlewares.length - 1]
         : undefined;
-    return this.program.methods
-      .create(lastMiddleware?.address || null, details.index, details.bump)
-      .accounts({
-        cryptidAccount: details.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: details.didAccount,
-        authority: this.authorityKey,
-      })
-      .rpc();
+    return (
+      this.program.methods
+        .create(
+          lastMiddleware?.address || null,
+          // Pass in the controller dids (if any)
+          this.controllerChain.map((c) => c[1]),
+          details.index,
+          details.bump
+        )
+        .accounts({
+          cryptidAccount: details.address,
+          didProgram: DID_SOL_PROGRAM,
+          did: details.didAccount,
+          authority: this.authorityKey,
+        })
+        // Pass in the controller did accounts (if any)
+        .remainingAccounts(this.controllerChain.map((c) => toAccountMeta(c[0])))
+        .rpc()
+    );
   }
 
   private async sign(
@@ -204,7 +221,8 @@ export class CryptidService {
     return CryptidTransaction.fromTransactionAccount(
       account,
       this.authorityKey,
-      transactionAccount
+      transactionAccount,
+      this.controllerChain
     );
   }
 
@@ -216,7 +234,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChain
     );
 
     const middlewareInstructions = await this.executeMiddlewareInstructions(
@@ -254,7 +273,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChain
     );
 
     const proposeInstruction = await cryptidTransaction
@@ -327,7 +347,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChain
     );
     const unsignedDirectExecuteTransaction = await cryptidTransaction
       .directExecute(this.program)

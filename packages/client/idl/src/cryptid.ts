@@ -48,6 +48,12 @@ export type Cryptid = {
           }
         },
         {
+          "name": "controllerChain",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -96,7 +102,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "instructions",
@@ -218,7 +228,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -582,6 +596,12 @@ export const IDL: Cryptid = {
           }
         },
         {
+          "name": "controllerChain",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -630,7 +650,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "instructions",
@@ -752,7 +776,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "(u8,Pubkey)"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
