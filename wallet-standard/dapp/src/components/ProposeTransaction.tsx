@@ -2,10 +2,16 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Keypair, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import { FC, useCallback } from 'react';
 import { notify } from "../utils/notifications";
+import {CryptidService} from './cryptid'
 
 export const ProposeTransaction: FC = () => {
     const { connection } = useConnection();
     const { publicKey, sendTransaction } = useWallet();
+
+
+    const setupProposal = async () => {
+
+    }
 
     const onClick = useCallback(async () => {
         if (!publicKey) {
@@ -13,6 +19,15 @@ export const ProposeTransaction: FC = () => {
             console.log('error', `Send Transaction: Wallet not connected!`);
             return;
         }
+        let details;
+        let service;
+    let transaction;
+     const proposalResult = await service.propose(details, transaction);
+    const executeResult = await service.execute(
+      service.details,
+      proposalResult.transactiomAccount,
+      proposalResult.cryptidTransactionRepresentation
+    );
 
         let signature: TransactionSignature = '';
         try {
@@ -24,7 +39,7 @@ export const ProposeTransaction: FC = () => {
                 })
             );
 
-            signature = await sendTransaction(transaction, connection);
+            const proposalNativeTransaction = await sendTransaction(transaction, connection);
 
             await connection.confirmTransaction(signature, 'confirmed');
             console.log(signature);

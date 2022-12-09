@@ -54,9 +54,43 @@ export const HomeView: FC = ({ }) => {
   </div>
   
   
+  
 </div></p>}
         </div>
+        <div className='font-bold text-lg'>
+  <div className="overflow-x-auto">
+  <table className="table table-compact w-full">
+    <thead>
+      <tr>
+        <th></th> 
+        <th>Cryptid Account</th> 
+        <th>Authority</th> 
+        <th>Account Metas</th> 
+        <th>Address</th> 
+        <th>Bump</th> 
+        <th>Index</th>
+      </tr>
+    </thead> 
+    <tbody>
+  
+    </tbody> 
+    <tfoot>
+      <tr>
+        <th></th> 
+        <th>Cryptid Account</th> 
+        <th>Authority</th> 
+        <th>Account Metas</th> 
+        <th>Address</th> 
+        <th>Bump</th> 
+        <th>Index</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+  </div>
       </div>
+      
     </div>
   );
 };
