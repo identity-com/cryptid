@@ -19,7 +19,11 @@ import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { CryptidAccountDetails } from "./CryptidAccountDetails";
-import { ControllerAccountMetaInfo, ControllerPubkeys } from "../types/cryptid";
+import {
+  ControllerAccountMetaInfo,
+  ControllerAccountReference,
+  ControllerPubkeys,
+} from "../types/cryptid";
 
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
@@ -35,7 +39,7 @@ export class CryptidTransaction {
     readonly authority: PublicKey,
     readonly instructions: InstructionData[],
     readonly accountMetas: AccountMeta[],
-    readonly controllerChain: ControllerAccountReference[]
+    readonly controllerChainReferences: ControllerAccountReference[]
   ) {}
 
   static fromSolanaInstructions(
@@ -81,7 +85,7 @@ export class CryptidTransaction {
           .map((account) => account.toBase58())
           .includes(a.pubkey.toBase58())
     );
-    const [controllersAccountMetas, controllerIndices] =
+    const [controllersAccountMetas, controllerReferences] =
       CryptidTransaction.controllerChainToRemainingAccounts(
         controllerChain,
         availableInstructionAccounts
@@ -92,14 +96,12 @@ export class CryptidTransaction {
       ...controllersAccountMetas,
     ];
 
-    console.log({ controllersAccountMetas, controllerIndices });
-
     return new CryptidTransaction(
       cryptidAccount,
       authority,
       instructions,
       allAccountMetas,
-      controllerIndices
+      controllerReferences
     );
   }
 
@@ -161,32 +163,45 @@ export class CryptidTransaction {
     allAccounts: PublicKey[]
   ): ControllerAccountMetaInfo {
     const reducer = (
-      [accounts, indices]: ControllerAccountMetaInfo,
-      controller: AccountMeta
+      [accounts, references]: ControllerAccountMetaInfo,
+      [controllerAccountMeta, controllerDidAuthorityKey]: [
+        AccountMeta,
+        PublicKey
+      ]
     ): ControllerAccountMetaInfo => {
-      const index = allAccounts.findIndex(
-        (a) => a.toBase58() === controller.pubkey.toBase58()
+      const accountIndex = allAccounts.findIndex(
+        (a) => a.toBase58() === controllerAccountMeta.pubkey.toBase58()
       );
 
-      if (index >= 0) {
-        // controller is in the list of all accounts, no need to add an accountMeta, just push the index
-        return [accounts, [...indices, index]];
+      if (accountIndex >= 0) {
+        // controller is in the list of all accounts, no need to add an accountMeta, just push the reference
+        const reference: ControllerAccountReference = {
+          accountIndex,
+          authorityKey: controllerDidAuthorityKey,
+        };
+        return [accounts, [...references, reference]];
       } else {
-        // controller is new (not in the list of all accounts, add an accountMeta
+        // controller is new (not in the list of all accounts), add an accountMeta at the end
+        const reference: ControllerAccountReference = {
+          accountIndex: allAccounts.length + accounts.length,
+          authorityKey: controllerDidAuthorityKey,
+        };
         return [
-          [...accounts, controller],
-          [...indices, allAccounts.length + accounts.length],
+          [...accounts, controllerAccountMeta],
+          [...references, reference],
         ];
       }
     };
 
-    const controllerAccountMetas: AccountMeta[] = controllerChain.map(
-      ([didAccount]) => ({
-        pubkey: didAccount,
-        isWritable: false,
-        isSigner: false,
-      })
-    );
+    const controllerAccountMetas: [AccountMeta, PublicKey][] =
+      controllerChain.map(([didAccount, didAuthorityKey]) => [
+        {
+          pubkey: didAccount,
+          isWritable: false,
+          isSigner: false,
+        },
+        didAuthorityKey,
+      ]);
 
     return controllerAccountMetas.reduce(reducer, [[], []]);
   }
@@ -218,7 +233,7 @@ export class CryptidTransaction {
   execute(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
       .executeTransaction(
-        Buffer.from(this.controllerChainIndices),
+        this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
@@ -240,7 +255,7 @@ export class CryptidTransaction {
   directExecute(program: Program<Cryptid>) {
     return program.methods
       .directExecute(
-        Buffer.from(this.controllerChainIndices),
+        this.controllerChainReferences,
         this.instructions,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,

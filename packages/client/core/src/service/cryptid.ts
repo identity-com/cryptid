@@ -35,7 +35,7 @@ export class CryptidService {
   readonly provider: AnchorProvider;
   readonly idlErrors: Map<number, string>;
   private authorityKey: PublicKey;
-  private controllerChain: ControllerPubkeys[];
+  private controllerChainPubkeys: ControllerPubkeys[];
 
   static permissionless(
     connection: Connection,
@@ -55,9 +55,9 @@ export class CryptidService {
 
     this.authorityKey = authority.publicKey;
 
-    this.controllerChain = controllerChain.map((did) => [
-      didToPDA(did),
-      didToPublicKey(did),
+    this.controllerChainPubkeys = controllerChain.map((did) => [
+      didToPDA(did)[0], // the did account
+      didToPublicKey(did), // the did authority key
     ]);
 
     this.program = new Program<Cryptid>(
@@ -155,7 +155,7 @@ export class CryptidService {
         .create(
           lastMiddleware?.address || null,
           // Pass in the controller dids (if any)
-          this.controllerChain.map((c) => c[1]),
+          this.controllerChainPubkeys.map((c) => c[1]),
           details.index,
           details.didAccountBump
         )
@@ -166,7 +166,9 @@ export class CryptidService {
           authority: this.authorityKey,
         })
         // Pass in the controller did accounts (if any)
-        .remainingAccounts(this.controllerChain.map((c) => toAccountMeta(c[0])))
+        .remainingAccounts(
+          this.controllerChainPubkeys.map((c) => toAccountMeta(c[0]))
+        )
         .rpc()
     );
   }
@@ -225,7 +227,7 @@ export class CryptidService {
       account,
       this.authorityKey,
       transactionAccount,
-      this.controllerChain
+      this.controllerChainPubkeys
     );
   }
 
@@ -238,7 +240,7 @@ export class CryptidService {
       account,
       this.authorityKey,
       transaction.instructions,
-      this.controllerChain
+      this.controllerChainPubkeys
     );
 
     const middlewareResult = await this.executeMiddlewareInstructions(
@@ -274,7 +276,7 @@ export class CryptidService {
       account,
       this.authorityKey,
       transaction.instructions,
-      this.controllerChain
+      this.controllerChainPubkeys
     );
 
     const proposeInstruction = await cryptidTransaction
@@ -356,7 +358,7 @@ export class CryptidService {
       account,
       this.authorityKey,
       transaction.instructions,
-      this.controllerChain
+      this.controllerChainPubkeys
     );
     return await cryptidTransaction.directExecute(this.program).transaction();
   }

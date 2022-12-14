@@ -8,9 +8,10 @@ pub mod instructions;
 pub mod state;
 pub mod util;
 
-use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use anchor_lang::prelude::*;
 use instructions::*;
+use state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use state::did_reference::DIDReference;
 
 #[program]
 pub mod cryptid {
@@ -29,7 +30,7 @@ pub mod cryptid {
 
     pub fn direct_execute<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
-        controller_chain: Vec<(u8, Pubkey)>,
+        controller_chain: Vec<DIDReference>,
         instructions: Vec<AbbreviatedInstructionData>,
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
@@ -49,7 +50,7 @@ pub mod cryptid {
 
     pub fn propose_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
-        controller_chain: Vec<(u8, Pubkey)>,
+        controller_chain: Vec<DIDReference>,
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
         did_account_bump: u8,
@@ -68,7 +69,7 @@ pub mod cryptid {
 
     pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
-        controller_chain: Vec<(u8, Pubkey)>,
+        controller_chain: Vec<DIDReference>,
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
         did_account_bump: u8,

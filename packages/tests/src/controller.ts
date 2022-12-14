@@ -20,9 +20,9 @@ import { CLUSTER } from "./util/constants";
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-didTestCases.forEach(({ type, beforeFn }) => {
-  describe(`controller (${type})`, () => {
-    const { authority, provider } = createTestContext();
+didTestCases.forEach(({ didType, getDidAccount }) => {
+  describe(`controller (${didType})`, () => {
+    const { authority: controllerAuthority, provider } = createTestContext();
     const controlled = Keypair.generate();
 
     let controlledDidAccount: PublicKey;
@@ -30,21 +30,21 @@ didTestCases.forEach(({ type, beforeFn }) => {
 
     let cryptid: CryptidClient;
 
-    const controllerDid = DID_SOL_PREFIX + ":" + authority.publicKey;
+    const controllerDid = DID_SOL_PREFIX + ":" + controllerAuthority.publicKey;
     const controlledDid = DID_SOL_PREFIX + ":" + controlled.publicKey;
 
     const makeTransaction = (recipient: PublicKey) =>
       makeTransfer(cryptidAccount, recipient);
 
     before("Set up controllerDID account", async () => {
-      await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
-      await beforeFn(authority);
+      await fund(controllerAuthority.publicKey, 10 * LAMPORTS_PER_SOL);
+      await getDidAccount(controllerAuthority);
     });
 
     before("Set up DID accounts", async () => {
       await fund(controlled.publicKey, 10 * LAMPORTS_PER_SOL);
       const controlledWallet = toWallet(controlled);
-      controlledDidAccount = await initializeDIDAccount(controlledWallet);
+      [controlledDidAccount] = await initializeDIDAccount(controlledWallet);
 
       await setControllersOnDid(controlledWallet, [controllerDid]);
 
@@ -61,24 +61,19 @@ didTestCases.forEach(({ type, beforeFn }) => {
     before("Set up generative Cryptid Account for controlled", async () => {
       [cryptidAccount] = deriveCryptidAccountAddress(controlledDidAccount);
 
-      cryptid = await Cryptid.buildFromDID(controlledDid, authority, {
+      cryptid = await Cryptid.buildFromDID(controlledDid, controllerAuthority, {
         connection: provider.connection,
       }).controlWith(controllerDid);
 
       await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     });
 
+    it("has the same address as a non-controlled cryptid account", async () => {
+      expect(cryptid.address().toBase58()).to.equal(cryptidAccount.toBase58());
+    });
+
     it("can transfer from the controlled DID, signed by an authority on the controller DID", async () => {
       const recipient = Keypair.generate();
-
-      console.log({
-        authority: authority.publicKey.toBase58(),
-        recipient: recipient.publicKey.toBase58(),
-        controllerDid,
-        controlledDid,
-        cryptidAccount: cryptidAccount.toBase58(),
-      });
-
       const previousBalance = await balanceOf(cryptidAccount);
 
       const signedTransaction = await cryptid.directExecute(
@@ -89,6 +84,28 @@ didTestCases.forEach(({ type, beforeFn }) => {
       const currentBalance = await balanceOf(cryptidAccount);
 
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
+    });
+
+    it("cannot transfer if signed by a non-controller", async () => {
+      const notControlled = Keypair.generate();
+      const notControlledDid = DID_SOL_PREFIX + ":" + notControlled.publicKey;
+
+      const recipient = Keypair.generate();
+
+      const nonControllerCryptid = await Cryptid.buildFromDID(
+        notControlledDid,
+        controllerAuthority,
+        {
+          connection: provider.connection,
+        }
+      ).controlWith(controllerDid);
+
+      const signedTransaction = await nonControllerCryptid.directExecute(
+        makeTransfer(nonControllerCryptid.address(), recipient.publicKey)
+      );
+      const shouldFail = nonControllerCryptid.send(signedTransaction);
+
+      return expect(shouldFail).to.be.rejectedWith(/KeyMustBeSigner/);
     });
   });
 });

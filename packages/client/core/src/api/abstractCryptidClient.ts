@@ -153,6 +153,8 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         confirmOptions
       );
     } catch (err) {
+      // log on-chain errors if they exist
+      console.error((err as { logs: string[] }).logs);
       throw translateError(err, service.idlErrors);
     }
   }

@@ -162,7 +162,8 @@ export const createCryptidAccount = async (
 
   await program.methods
     .create(
-      middlewareAccount || null, // anchor requires null instead of undefined
+      middlewareAccount || null, // anchor requires null instead of undefined,
+      [], // TODO controller chain support
       index,
       didAccountBump
     )

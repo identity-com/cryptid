@@ -18,7 +18,10 @@ export type ExecuteArrayResult = {
   executeSigners: Signer[];
 };
 
-export type ControllerAccountMetaInfo = [AccountMeta[], number[]];
+export type ControllerAccountMetaInfo = [
+  AccountMeta[],
+  ControllerAccountReference[]
+];
 
 // An informative type, indicating that the number
 // should represent an index in the TransactionAccount's
@@ -29,7 +32,10 @@ export type AccountIndex = number;
 // array of accounts.
 // The public key is the authority_key of the controller DID.
 // The latter is needed in order to derive a did account in the generative case.
-export type ControllerAccountReference = [AccountIndex, PublicKey];
+export type ControllerAccountReference = {
+  accountIndex: AccountIndex;
+  authorityKey: PublicKey;
+};
 
 // A type representing a controller's DID account and DID authority.
 export type ControllerPubkeys = [PublicKey, PublicKey];
