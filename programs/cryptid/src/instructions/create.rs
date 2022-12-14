@@ -49,7 +49,6 @@ pub fn create(
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    // let controlling_did_accounts = ctx.remaining_accounts.iter().collect::<Vec<&AccountInfo>>();
     let controlling_did_accounts = ctx
         .remaining_accounts
         .iter()
