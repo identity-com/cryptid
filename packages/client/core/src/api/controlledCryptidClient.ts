@@ -27,8 +27,8 @@ export class ControlledCryptidClient extends AbstractCryptidClient {
 
   makeControllerChain(): string[] {
     return [
-      this.controllerDid,
       ...this.controlledCryptid.makeControllerChain(),
+      this.controllerDid,
     ];
   }
 }

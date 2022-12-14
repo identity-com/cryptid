@@ -1,8 +1,4 @@
-import {
-  DID_SOL_PREFIX,
-  DidSolIdentifier,
-  DidSolService,
-} from "@identity.com/sol-did-client";
+import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -15,7 +11,6 @@ import {
 import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import { Cryptid, CryptidClient } from "@identity.com/cryptid";
 import { toWallet } from "@identity.com/cryptid-core/dist/lib/crypto";
-import { CLUSTER } from "./util/constants";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -47,15 +42,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       [controlledDidAccount] = await initializeDIDAccount(controlledWallet);
 
       await setControllersOnDid(controlledWallet, [controllerDid]);
-
-      const did = DidSolIdentifier.create(controlledWallet.publicKey, CLUSTER);
-
-      // TODO remove once the tests pass
-      const didSolService = DidSolService.build(did, {
-        wallet: controlledWallet,
-      });
-      const doc = await didSolService.resolve();
-      console.log(doc);
     });
 
     before("Set up generative Cryptid Account for controlled", async () => {
@@ -106,6 +92,48 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       const shouldFail = nonControllerCryptid.send(signedTransaction);
 
       return expect(shouldFail).to.be.rejectedWith(/KeyMustBeSigner/);
+    });
+
+    it("can handle a chain of DIDs", async () => {
+      // set up a third DID, controlled by controlledDid
+      // so the did chain is:
+      // controllerDid -> controlledDid -> finalControlledDid
+      // The transaction will be signed by an authority on controllerDid
+
+      const finalControlled = Keypair.generate();
+      const finalControlledDid =
+        DID_SOL_PREFIX + ":" + finalControlled.publicKey;
+      const finalControlledWallet = toWallet(finalControlled);
+
+      await fund(finalControlled.publicKey, 10 * LAMPORTS_PER_SOL);
+      await initializeDIDAccount(finalControlledWallet);
+      await setControllersOnDid(finalControlledWallet, [controlledDid]);
+
+      // create a cryptid client for this final controlled DID
+      cryptid = await Cryptid.buildFromDID(
+        finalControlledDid,
+        controllerAuthority,
+        {
+          connection: provider.connection,
+        }
+        // define the entire chain of DIDs between controlled and controller
+      )
+        .controlWith(controlledDid)
+        .controlWith(controllerDid);
+
+      await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
+
+      const recipient = Keypair.generate();
+      const previousBalance = await balanceOf(cryptid.address());
+
+      const signedTransaction = await cryptid.directExecute(
+        makeTransfer(cryptid.address(), recipient.publicKey)
+      );
+      await cryptid.send(signedTransaction);
+
+      const currentBalance = await balanceOf(cryptid.address());
+
+      expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
     });
   });
 });

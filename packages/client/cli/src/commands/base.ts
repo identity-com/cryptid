@@ -38,9 +38,10 @@ export default abstract class Base extends Command {
     const { flags } = await this.parse(this.ctor as typeof Base);
 
     this._config = new Config(flags.config);
-    this._cryptid = await build(
-      this._config,
-      resolveDIDOrAlias(flags.as, this._config)
-    );
+    const controllerDID = resolveDIDOrAlias(flags.as, this._config);
+    const cryptid = await build(this._config);
+    this._cryptid = controllerDID
+      ? await cryptid.controlWith(controllerDID)
+      : cryptid;
   }
 }

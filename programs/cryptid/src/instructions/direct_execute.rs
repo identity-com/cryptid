@@ -91,7 +91,6 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
             )
         })
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
-    // .as_slice();
 
     msg!("Controlling did accounts: {:?}", controlling_did_accounts);
 
