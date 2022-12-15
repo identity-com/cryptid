@@ -23,6 +23,12 @@ export type CryptidOptions = {
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
 };
+// The chain of controllers, from the top (inclusive), to the one that owns the cryptid account (exclusive)
+// For example, if did:sol:alice controls did:sol:bob which controls did:sol:carol,
+// If alice is creating a cryptid account for carol, the controller chain is [did:sol:alice, did:sol:bob]
+export type CreateOptions = CryptidOptions & {
+  controllerChain?: string[];
+};
 export type FindAllOptions = {
   connection: Connection;
 };

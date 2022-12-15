@@ -20,10 +20,9 @@ import {
   InstructionData,
   TransactionAccountMeta,
   CRYPTID_PROGRAM,
+  CreateOptions,
 } from "@identity.com/cryptid";
 import BN from "bn.js";
-import { Program } from "@project-serum/anchor";
-import { Cryptid } from "@identity.com/cryptid-idl";
 import { Wallet } from "./anchorUtils";
 import { TestType } from "./did";
 
@@ -148,39 +147,9 @@ export const deriveTimeDelayTransactionStateMiddlewareAccountAddress = (
     TIME_DELAY_MIDDLEWARE_PROGRAM
   );
 
-export const createCryptidAccount = async (
-  program: Program<Cryptid>,
-  didAccount: PublicKey,
-  didAccountBump: number,
-  middlewareAccount?: PublicKey,
-  index = 0
-): Promise<[PublicKey, number]> => {
-  const [cryptidAccount, cryptidBump] = deriveCryptidAccountAddress(
-    didAccount,
-    index
-  );
-
-  await program.methods
-    .create(
-      middlewareAccount || null, // anchor requires null instead of undefined,
-      [], // TODO controller chain support
-      index,
-      didAccountBump
-    )
-    .accounts({
-      cryptidAccount,
-      didProgram: DID_SOL_PROGRAM,
-      did: didAccount,
-      authority: program.provider.publicKey,
-    })
-    .rpc({ skipPreflight: true });
-
-  return [cryptidAccount, cryptidBump];
-};
-
 export const createCryptid = async (
   authority: Wallet,
-  options: CryptidOptions
+  options: CreateOptions
 ): Promise<CryptidClient> =>
   Builder.createFromDID(
     DID_SOL_PREFIX + ":" + authority.publicKey,
@@ -213,7 +182,7 @@ export const cryptidTestCases = [
     getCryptidClient: async (
       did: string,
       authority: Wallet | Keypair,
-      options: CryptidOptions
+      options: CreateOptions
     ) => Builder.createFromDID(did, authority, [], options),
   },
 ];

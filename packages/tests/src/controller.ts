@@ -11,6 +11,7 @@ import {
 import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import { Cryptid, CryptidClient } from "@identity.com/cryptid";
 import { toWallet } from "@identity.com/cryptid-core/dist/lib/crypto";
+import { Cryptid as Builder } from "@identity.com/cryptid-core";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -54,6 +55,13 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       await fund(cryptidAccount, 20 * LAMPORTS_PER_SOL);
     });
 
+    it("can create a cryptid account via a controller authority", async () => {
+      await Builder.createFromDID(controlledDid, controllerAuthority, [], {
+        connection: provider.connection,
+        controllerChain: [controllerDid],
+      });
+    });
+
     it("has the same address as a non-controlled cryptid account", async () => {
       expect(cryptid.address().toBase58()).to.equal(cryptidAccount.toBase58());
     });
@@ -66,6 +74,24 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         makeTransaction(recipient.publicKey)
       );
       await cryptid.send(signedTransaction);
+
+      const currentBalance = await balanceOf(cryptidAccount);
+
+      expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
+    });
+
+    it("can transfer via a controller using proposeAndExecute", async () => {
+      const recipient = Keypair.generate();
+      const previousBalance = await balanceOf(cryptidAccount);
+
+      const {
+        executeTransactions: [tx],
+        executeSigners,
+      } = await cryptid.proposeAndExecute(
+        makeTransaction(recipient.publicKey),
+        true
+      );
+      await cryptid.send(tx, executeSigners);
 
       const currentBalance = await balanceOf(cryptidAccount);
 

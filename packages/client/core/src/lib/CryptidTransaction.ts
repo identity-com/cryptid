@@ -156,8 +156,6 @@ export class CryptidTransaction {
     );
   }
 
-  // TODO move transactionAccountAddress into constructor?
-
   static controllerChainToRemainingAccounts(
     controllerChain: ControllerPubkeys[],
     allAccounts: PublicKey[]
@@ -205,12 +203,14 @@ export class CryptidTransaction {
 
     return controllerAccountMetas.reduce(reducer, [[], []]);
   }
+
+  // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
       .proposeTransaction(
-        Buffer.from([]), // TODO, support controller chain,
+        this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
