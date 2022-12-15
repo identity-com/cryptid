@@ -8,8 +8,6 @@ import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { CRYPTID_PROGRAM } from "../constants";
 import { InstructionData, TransactionAccountMeta } from "../types";
 import BN from "bn.js";
-import { Program } from "@project-serum/anchor";
-import { Cryptid } from "@identity.com/cryptid-idl";
 import { uniqBy } from "ramda";
 import { didToPDA } from "./did";
 import { CryptidAccountDetails } from "./CryptidAccountDetails";
@@ -156,32 +154,3 @@ export const getCryptidAccountAddressFromDID = (
   did: string,
   index = 0
 ): [PublicKey, number] => getCryptidAccountAddress(didToPDA(did)[0], index);
-
-export const createCryptidAccount = async (
-  program: Program<Cryptid>,
-  didAccount: PublicKey,
-  didAccountBump: number,
-  middlewareAccount?: PublicKey,
-  index = 0
-): Promise<[PublicKey, number]> => {
-  const [cryptidAccount, cryptidBump] = getCryptidAccountAddress(
-    didAccount,
-    index
-  );
-
-  await program.methods
-    .create(
-      middlewareAccount || null, // anchor requires null instead of undefined
-      index,
-      didAccountBump
-    )
-    .accounts({
-      cryptidAccount,
-      didProgram: DID_SOL_PROGRAM,
-      did: didAccount,
-      authority: program.provider.publicKey,
-    })
-    .rpc({ skipPreflight: true });
-
-  return [cryptidAccount, cryptidBump];
-};

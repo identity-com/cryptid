@@ -25,6 +25,17 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
   await didSolService.addVerificationMethod(newKeyVerificationMethod).rpc(); //{ skipPreflight: true, commitment: 'finalized' });
 };
 
+export const setControllersOnDid = async (
+  authority: Wallet,
+  controllers: string[]
+) => {
+  const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
+  const didSolService = DidSolService.build(did, {
+    wallet: authority,
+  });
+  await didSolService.setControllers(controllers).rpc();
+};
+
 export const addEthKeyWithOwnershipToDID = async (authority: Wallet) => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
   const didSolService = DidSolService.build(did, {
@@ -64,14 +75,15 @@ export const addServiceToDID = async (authority: Wallet, service: Service) => {
 };
 
 export const initializeDIDAccount = async (
-  authority: Wallet
+  authority: Wallet,
+  payer?: Wallet
 ): Promise<[PublicKey, number]> => {
   const did = DidSolIdentifier.create(authority.publicKey, CLUSTER);
   const didSolService = await DidSolService.build(did, {
     wallet: authority,
   });
 
-  await didSolService.initialize(10_000).rpc();
+  await didSolService.initialize(10_000, payer?.publicKey).rpc();
   return did.dataAccount();
 };
 

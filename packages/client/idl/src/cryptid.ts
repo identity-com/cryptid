@@ -48,6 +48,12 @@ export type Cryptid = {
           }
         },
         {
+          "name": "controllerChain",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -96,7 +102,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "instructions",
@@ -170,7 +180,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -250,7 +264,11 @@ export type Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -448,6 +466,36 @@ export type Cryptid = {
               "The data for the instruction"
             ],
             "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DIDReference",
+      "docs": [
+        "A struct that represents a DID, eg for use in a controller chain in a cryptid instruction",
+        "The account index is the index of the did account in the all_accounts array.",
+        "The DID may be generative or non-generative.",
+        "In the generative case, the did_account provides no information, as it is empty and owned",
+        "by the system program.",
+        "Therefore, the authority key is also needed in order to derive the did account with the correct identifier etc."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountIndex",
+            "docs": [
+              "The index in the all_accounts array for the DID Account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "authorityKey",
+            "docs": [
+              "The did authority key (did:sol:<authority_key>)."
+            ],
+            "type": "publicKey"
           }
         ]
       }
@@ -617,6 +665,12 @@ export const IDL: Cryptid = {
           }
         },
         {
+          "name": "controllerChain",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -665,7 +719,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "instructions",
@@ -739,7 +797,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -819,7 +881,11 @@ export const IDL: Cryptid = {
       "args": [
         {
           "name": "controllerChain",
-          "type": "bytes"
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
         },
         {
           "name": "cryptidAccountBump",
@@ -1017,6 +1083,36 @@ export const IDL: Cryptid = {
               "The data for the instruction"
             ],
             "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DIDReference",
+      "docs": [
+        "A struct that represents a DID, eg for use in a controller chain in a cryptid instruction",
+        "The account index is the index of the did account in the all_accounts array.",
+        "The DID may be generative or non-generative.",
+        "In the generative case, the did_account provides no information, as it is empty and owned",
+        "by the system program.",
+        "Therefore, the authority key is also needed in order to derive the did account with the correct identifier etc."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountIndex",
+            "docs": [
+              "The index in the all_accounts array for the DID Account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "authorityKey",
+            "docs": [
+              "The did authority key (did:sol:<authority_key>)."
+            ],
+            "type": "publicKey"
           }
         ]
       }

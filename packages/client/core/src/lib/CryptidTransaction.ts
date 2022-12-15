@@ -19,6 +19,11 @@ import { Program } from "@project-serum/anchor";
 import { Cryptid } from "@identity.com/cryptid-idl";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { CryptidAccountDetails } from "./CryptidAccountDetails";
+import {
+  ControllerAccountMetaInfo,
+  ControllerAccountReference,
+  ControllerPubkeys,
+} from "../types/cryptid";
 
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
@@ -33,13 +38,15 @@ export class CryptidTransaction {
     readonly cryptidAccount: CryptidAccountDetails,
     readonly authority: PublicKey,
     readonly instructions: InstructionData[],
-    readonly accountMetas: AccountMeta[]
+    readonly accountMetas: AccountMeta[],
+    readonly controllerChainReferences: ControllerAccountReference[]
   ) {}
 
   static fromSolanaInstructions(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
-    solanaInstructions: TransactionInstruction[]
+    solanaInstructions: TransactionInstruction[],
+    controllerChain: ControllerPubkeys[]
   ): CryptidTransaction {
     const accountMetas = extractAccountMetas(
       solanaInstructions,
@@ -78,19 +85,31 @@ export class CryptidTransaction {
           .map((account) => account.toBase58())
           .includes(a.pubkey.toBase58())
     );
+    const [controllersAccountMetas, controllerReferences] =
+      CryptidTransaction.controllerChainToRemainingAccounts(
+        controllerChain,
+        availableInstructionAccounts
+      );
+
+    const allAccountMetas = [
+      ...filteredAccountMetas,
+      ...controllersAccountMetas,
+    ];
 
     return new CryptidTransaction(
       cryptidAccount,
       authority,
       instructions,
-      filteredAccountMetas
+      allAccountMetas,
+      controllerReferences
     );
   }
 
   static fromTransactionAccount(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
-    transactionAccount: TransactionAccount
+    transactionAccount: TransactionAccount,
+    controllerChain: ControllerPubkeys[]
   ): CryptidTransaction {
     // TODO remove typecasting in this function
     const instructions = transactionAccount.instructions as InstructionData[];
@@ -117,12 +136,72 @@ export class CryptidTransaction {
           .includes(a.pubkey.toBase58())
     );
 
+    const [controllersAccountMetas, controllerIndices] =
+      CryptidTransaction.controllerChainToRemainingAccounts(
+        controllerChain,
+        allAccounts
+      );
+
+    const allAccountMetas = [
+      ...filteredAccountMetas,
+      ...controllersAccountMetas,
+    ];
+
     return new CryptidTransaction(
       cryptidAccount,
       authority,
       instructions,
-      filteredAccountMetas
+      allAccountMetas,
+      controllerIndices
     );
+  }
+
+  static controllerChainToRemainingAccounts(
+    controllerChain: ControllerPubkeys[],
+    allAccounts: PublicKey[]
+  ): ControllerAccountMetaInfo {
+    const reducer = (
+      [accounts, references]: ControllerAccountMetaInfo,
+      [controllerAccountMeta, controllerDidAuthorityKey]: [
+        AccountMeta,
+        PublicKey
+      ]
+    ): ControllerAccountMetaInfo => {
+      const accountIndex = allAccounts.findIndex(
+        (a) => a.toBase58() === controllerAccountMeta.pubkey.toBase58()
+      );
+
+      if (accountIndex >= 0) {
+        // controller is in the list of all accounts, no need to add an accountMeta, just push the reference
+        const reference: ControllerAccountReference = {
+          accountIndex,
+          authorityKey: controllerDidAuthorityKey,
+        };
+        return [accounts, [...references, reference]];
+      } else {
+        // controller is new (not in the list of all accounts), add an accountMeta at the end
+        const reference: ControllerAccountReference = {
+          accountIndex: allAccounts.length + accounts.length,
+          authorityKey: controllerDidAuthorityKey,
+        };
+        return [
+          [...accounts, controllerAccountMeta],
+          [...references, reference],
+        ];
+      }
+    };
+
+    const controllerAccountMetas: [AccountMeta, PublicKey][] =
+      controllerChain.map(([didAccount, didAuthorityKey]) => [
+        {
+          pubkey: didAccount,
+          isWritable: false,
+          isSigner: false,
+        },
+        didAuthorityKey,
+      ]);
+
+    return controllerAccountMetas.reduce(reducer, [[], []]);
   }
 
   // TODO move transactionAccountAddress into constructor?
@@ -131,7 +210,7 @@ export class CryptidTransaction {
   propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
       .proposeTransaction(
-        Buffer.from([]), // TODO, support controller chain,
+        this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
@@ -154,7 +233,7 @@ export class CryptidTransaction {
   execute(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
       .executeTransaction(
-        Buffer.from([]), // TODO, support controller chain,
+        this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
@@ -176,7 +255,7 @@ export class CryptidTransaction {
   directExecute(program: Program<Cryptid>) {
     return program.methods
       .directExecute(
-        Buffer.from([]), // TODO, support controller chain,
+        this.controllerChainReferences,
         this.instructions,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,

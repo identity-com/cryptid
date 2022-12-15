@@ -9,7 +9,7 @@
 // <<wait>>
 // Middleware.execute -> approves the transaction if enough time has passed
 // Cryptid.execute -> executes the transaction
-
+#![allow(clippy::result_large_err)]
 extern crate core;
 
 use anchor_lang::prelude::*;

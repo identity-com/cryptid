@@ -1,5 +1,6 @@
 import {
   BuildOptions,
+  CreateOptions,
   CryptidClient,
   CryptidOptions,
   FindAllOptions,
@@ -40,12 +41,13 @@ export class CryptidBuilder {
   static async create(
     details: CryptidAccountDetails,
     signer: Keypair | Wallet,
-    options: CryptidOptions
+    options: CreateOptions
   ): Promise<CryptidClient> {
     const service = new CryptidService(
       normalizeSigner(signer),
       options.connection,
-      options.confirmOptions
+      options.confirmOptions,
+      options.controllerChain
     );
     await service.createAccount(details);
     return CryptidBuilder.build(details, signer, options);
@@ -55,7 +57,7 @@ export class CryptidBuilder {
     did: string,
     signer: Keypair | Wallet,
     middleware: Middleware[],
-    options: CryptidOptions
+    options: CreateOptions
   ): Promise<CryptidClient> {
     const index = options.accountIndex === undefined ? 1 : options.accountIndex; // 0 is reserved for the default (generative) cryptid
     const didAccount = didToPDA(did);

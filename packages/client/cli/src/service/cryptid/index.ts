@@ -12,25 +12,14 @@ import { ExecuteArrayResult } from "@identity.com/cryptid-core/dist/types/crypti
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 
-export const build = async (
-  config: Config,
-  asDid: string | undefined
-): Promise<CryptidClient> => {
+export const build = async (config: Config): Promise<CryptidClient> => {
   const allCryptidAccountDetails = await Cryptid.findAll(config.did, {
     connection: config.connection,
   });
 
-  const cryptid = Cryptid.build(
-    allCryptidAccountDetails[config.index],
-    config.keypair,
-    {
-      connection: config.connection,
-    }
-  );
-
-  if (asDid) return cryptid.as(asDid);
-
-  return cryptid;
+  return Cryptid.build(allCryptidAccountDetails[config.index], config.keypair, {
+    connection: config.connection,
+  });
 };
 
 export const balance = async (

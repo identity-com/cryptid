@@ -18,12 +18,16 @@ import {
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { noSignWallet } from "../lib/crypto";
-import { getCryptidAccountAddress } from "../lib/cryptid";
+import { getCryptidAccountAddress, toAccountMeta } from "../lib/cryptid";
 import { range } from "ramda";
-import { didToPDA } from "../lib/did";
+import { didToPDA, didToPublicKey } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
-import { ExecuteResult, ProposalResult } from "../types/cryptid";
+import {
+  ExecuteResult,
+  ControllerPubkeys,
+  ProposalResult,
+} from "../types/cryptid";
 import { MiddlewareResult } from "../types/middleware";
 
 export class CryptidService {
@@ -31,6 +35,7 @@ export class CryptidService {
   readonly provider: AnchorProvider;
   readonly idlErrors: Map<number, string>;
   private authorityKey: PublicKey;
+  private controllerChainPubkeys: ControllerPubkeys[];
 
   static permissionless(
     connection: Connection,
@@ -42,12 +47,18 @@ export class CryptidService {
   constructor(
     private authority: Wallet,
     private connection: Connection,
-    private opts: ConfirmOptions = {}
+    private opts: ConfirmOptions = {},
+    controllerChain: string[] = []
   ) {
     this.provider = new AnchorProvider(connection, authority, opts);
     this.idlErrors = parseIdlErrors(CryptidIDL);
 
     this.authorityKey = authority.publicKey;
+
+    this.controllerChainPubkeys = controllerChain.map((did) => [
+      didToPDA(did)[0], // the did account
+      didToPublicKey(did), // the did authority key
+    ]);
 
     this.program = new Program<Cryptid>(
       CryptidIDL,
@@ -139,19 +150,27 @@ export class CryptidService {
       details.middlewares.length > 0
         ? details.middlewares[details.middlewares.length - 1]
         : undefined;
-    return this.program.methods
-      .create(
-        lastMiddleware?.address || null,
-        details.index,
-        details.didAccountBump
-      )
-      .accounts({
-        cryptidAccount: details.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: details.didAccount,
-        authority: this.authorityKey,
-      })
-      .rpc();
+    return (
+      this.program.methods
+        .create(
+          lastMiddleware?.address || null,
+          // Pass in the controller dids (if any)
+          this.controllerChainPubkeys.map((c) => c[1]),
+          details.index,
+          details.didAccountBump
+        )
+        .accounts({
+          cryptidAccount: details.address,
+          didProgram: DID_SOL_PROGRAM,
+          did: details.didAccount,
+          authority: this.authorityKey,
+        })
+        // Pass in the controller did accounts (if any)
+        .remainingAccounts(
+          this.controllerChainPubkeys.map((c) => toAccountMeta(c[0]))
+        )
+        .rpc()
+    );
   }
 
   private async executeMiddlewareInstructions(
@@ -207,7 +226,8 @@ export class CryptidService {
     return CryptidTransaction.fromTransactionAccount(
       account,
       this.authorityKey,
-      transactionAccount
+      transactionAccount,
+      this.controllerChainPubkeys
     );
   }
 
@@ -219,7 +239,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChainPubkeys
     );
 
     const middlewareResult = await this.executeMiddlewareInstructions(
@@ -254,7 +275,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChainPubkeys
     );
 
     const proposeInstruction = await cryptidTransaction
@@ -335,7 +357,8 @@ export class CryptidService {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
       this.authorityKey,
-      transaction.instructions
+      transaction.instructions,
+      this.controllerChainPubkeys
     );
     return await cryptidTransaction.directExecute(this.program).transaction();
   }

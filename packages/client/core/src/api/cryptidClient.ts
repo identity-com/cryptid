@@ -23,6 +23,12 @@ export type CryptidOptions = {
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
 };
+// The chain of controllers, from the top (inclusive), to the one that owns the cryptid account (exclusive)
+// For example, if did:sol:alice controls did:sol:bob which controls did:sol:carol,
+// If alice is creating a cryptid account for carol, the controller chain is [did:sol:alice, did:sol:bob]
+export type CreateOptions = CryptidOptions & {
+  controllerChain?: string[];
+};
 export type FindAllOptions = {
   connection: Connection;
 };
@@ -62,6 +68,11 @@ export interface CryptidClient {
    * The details behind the cryptid account (address, owner, etc).
    */
   readonly details: CryptidAccountDetails;
+
+  /**
+   * The options used when sending transactions with this cryptid account
+   */
+  readonly options: CryptidOptions;
 
   /**
    * Signs a transaction from the DID. Returns a meta-transaction
@@ -106,11 +117,13 @@ export interface CryptidClient {
   address(): PublicKey;
 
   /**
-   * Allows the current Cryptid instance to sign as another Cryptid account it is a controller of.
+   * Allows the current Cryptid instance to be controlled by another DID
    * A new Cryptid instance is returned.
    * @param did The DID of the account to sign on behalf of.
    */
-  as(did: string): CryptidClient;
+  controlWith(did: string): CryptidClient;
+
+  makeControllerChain(): string[];
 
   additionalKeys(): Promise<PublicKey[]>;
 

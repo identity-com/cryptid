@@ -1,14 +1,15 @@
 use crate::instructions::util::*;
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::cryptid_account::CryptidAccount;
+use crate::state::did_reference::DIDReference;
 use crate::util::cpi::CPI;
 use crate::util::*;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(
-/// A vector of the number of extras for each signer, signer count is the length
-controller_chain: Vec<u8>,
+/// A vector of controller account indices and their associated DID authority keys (to allow for generative cases).
+controller_chain: Vec<DIDReference>,
 /// The instructions to execute
 instructions: Vec<AbbreviatedInstructionData>,
 /// The bump seed for the Cryptid signer
@@ -25,7 +26,7 @@ pub struct DirectExecute<'info> {
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
         mut,
-        // TODO: Verification dones in instruction body. Move back with Anchor generator
+        // TODO: Verification done in instruction body. Move back with Anchor generator
         // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
         // bump = cryptid_account_bump
     )]
@@ -39,9 +40,6 @@ pub struct DirectExecute<'info> {
     pub signer: Signer<'info>,
 }
 /// Collect all accounts as a single vector so that they can be referenced by index by instructions
-// TODO: Note - I initially wanted to use some crate to iterate over a struct's fields, so I could define
-// this for all Contexts automatically, but failed. We could either leave it like this or try again.
-// Once decided, remove this comment.
 impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
     for Context<'a, 'b, 'c, 'info, DirectExecute<'info>>
 {
@@ -66,7 +64,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 /// Executes a transaction directly if all required keys sign
 pub fn direct_execute<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
-    controller_chain: Vec<u8>,
+    controller_chain: Vec<DIDReference>,
     instructions: Vec<AbbreviatedInstructionData>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,
@@ -83,7 +81,18 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
     // sol_did does that
-    let controlling_did_accounts = ctx.get_accounts_by_indexes(controller_chain.as_slice())?;
+    let all_accounts = ctx.all_accounts();
+    let controlling_did_accounts = controller_chain
+        .iter()
+        .map(|controller_reference| {
+            (
+                all_accounts[controller_reference.account_index as usize],
+                controller_reference.authority_key,
+            )
+        })
+        .collect::<Vec<(&AccountInfo, Pubkey)>>();
+
+    msg!("Controlling did accounts: {:?}", controlling_did_accounts);
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account

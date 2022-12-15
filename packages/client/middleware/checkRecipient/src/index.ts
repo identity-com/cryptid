@@ -2,8 +2,8 @@ import {
   CRYPTID_PROGRAM,
   ExecuteMiddlewareParams,
   GenericMiddlewareParams,
-  MiddlewareResult,
   MiddlewareClient,
+  MiddlewareResult,
 } from "@identity.com/cryptid-core";
 import {
   PublicKey,

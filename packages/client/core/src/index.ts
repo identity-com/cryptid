@@ -4,7 +4,11 @@ import {
   getCryptidAccountAddressFromDID,
 } from "./lib/cryptid";
 export { CryptidAccountDetails } from "./lib/CryptidAccountDetails";
-export { CryptidClient, CryptidOptions } from "./api/cryptidClient";
+export {
+  CryptidClient,
+  CryptidOptions,
+  CreateOptions,
+} from "./api/cryptidClient";
 export { MiddlewareRegistry } from "./service/middlewareRegistry";
 export { CRYPTID_PROGRAM } from "./constants";
 

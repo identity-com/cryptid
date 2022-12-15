@@ -22,7 +22,7 @@ import { translateError } from "@project-serum/anchor";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   readonly details: CryptidAccountDetails;
-  protected options: CryptidOptions;
+  readonly options: CryptidOptions;
 
   protected constructor(
     details: CryptidAccountDetails,
@@ -38,17 +38,22 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     };
   }
 
-  abstract as(did: string): CryptidClient;
+  abstract controlWith(controllerDid: string): CryptidClient;
 
   document(): Promise<DIDDocument> {
     return this.didClient().then((client) => client.resolve());
+  }
+
+  makeControllerChain(): string[] {
+    return [];
   }
 
   protected async service(): Promise<CryptidService> {
     return new CryptidService(
       this.wallet,
       this.options.connection,
-      this.options.confirmOptions
+      this.options.confirmOptions,
+      this.makeControllerChain()
     );
   }
 
@@ -148,6 +153,8 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         confirmOptions
       );
     } catch (err) {
+      // log on-chain errors if they exist
+      console.error((err as { logs: string[] }).logs);
       throw translateError(err, service.idlErrors);
     }
   }
