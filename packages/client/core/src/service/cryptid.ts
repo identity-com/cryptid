@@ -14,6 +14,7 @@ import {
   CryptidAccount,
   ExecuteMiddlewareParams,
   TransactionAccount,
+  TransactionState,
 } from "../types";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
@@ -152,7 +153,7 @@ export class CryptidService {
         : undefined;
     return (
       this.program.methods
-        .create(
+        .createCryptidAccount(
           lastMiddleware?.address || null,
           // Pass in the controller dids (if any)
           this.controllerChainPubkeys.map((c) => c[1]),
@@ -233,7 +234,8 @@ export class CryptidService {
 
   public async propose(
     account: CryptidAccountDetails,
-    transaction: Transaction
+    transaction: Transaction,
+    state?: TransactionState
   ): Promise<ProposalResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
@@ -250,7 +252,7 @@ export class CryptidService {
     );
 
     const unsignedProposeTransaction = await cryptidTransaction
-      .propose(this.program, transactionAccountKeypair.publicKey)
+      .propose(this.program, transactionAccountKeypair.publicKey, state)
       .signers(
         // The only signer in a proposal (other than an authority on the DID) is the transaction account
         [transactionAccountKeypair]

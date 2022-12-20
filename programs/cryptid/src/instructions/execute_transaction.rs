@@ -25,10 +25,10 @@ pub struct ExecuteTransaction<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
-        mut,
-        // TODO: Verification dones in instruction body. Move back with Anchor generator
-        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
-        // bump = cryptid_account_bump
+    mut,
+    // TODO: Verification dones in instruction body. Move back with Anchor generator
+    // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
+    // bump = cryptid_account_bump
     )]
     pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
@@ -43,14 +43,15 @@ pub struct ExecuteTransaction<'info> {
     pub destination: UncheckedAccount<'info>,
     /// The instruction to execute
     #[account(
-        mut,
-        close = destination,
-        has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
-        // safeguard to prevent double-spends in the case where the account is not closed for some reason
-        constraint = transaction_account.state != TransactionState::Executed @ CryptidError::InvalidTransactionState,
-        // the transaction account must have been approved by the middleware on the cryptid account, if present
-        // TODO: This moved to the instruction body
-        // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
+    mut,
+    close = destination,
+    has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
+    // safeguard to prevent double-spends in the case where the account is not closed for some reason
+    // only "Ready" transactions can be executed
+    constraint = transaction_account.state == TransactionState::Ready @ CryptidError::InvalidTransactionState,
+    // the transaction account must have been approved by the middleware on the cryptid account, if present
+    // TODO: This moved to the instruction body
+    // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
 }
@@ -96,7 +97,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
-    ctx.accounts.transaction_account.state = TransactionState::Executed;
+    // CHECK the authority is allowed to execute the transaction
 
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
@@ -121,6 +122,18 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         controlling_did_accounts,
     )?;
 
+    // CHECK the accounts have not been switched since the transaction was proposed
+    let account_pairs = all_accounts
+        .iter()
+        .zip(ctx.accounts.transaction_account.accounts.iter());
+    for (account, proposed_account) in account_pairs {
+        require_keys_eq!(
+            *account.key,
+            *proposed_account,
+            CryptidError::InvalidAccounts
+        )
+    }
+
     let cryptid_account = CryptidAccount::try_from(
         &ctx.accounts.cryptid_account,
         &ctx.accounts.did_program.key(),
@@ -129,6 +142,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         cryptid_account_bump,
     )?;
 
+    // CHECK All middleware have approved the transaction (specifically the last one)
     // TODO: Move back to constraint when anchor annotation for generative case is working
     require!(
         ctx.accounts.transaction_account.approved_middleware == cryptid_account.middleware,
@@ -146,6 +160,9 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         cryptid_account_bump,
         debug,
     )?;
+
+    // MArk the tx as executed to prevent double-spends
+    ctx.accounts.transaction_account.state = TransactionState::Executed;
 
     Ok(())
 }

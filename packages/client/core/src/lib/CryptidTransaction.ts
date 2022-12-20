@@ -23,6 +23,7 @@ import {
   ControllerAccountMetaInfo,
   ControllerAccountReference,
   ControllerPubkeys,
+  TransactionState,
 } from "../types/cryptid";
 
 // Used to replace the current signer
@@ -119,8 +120,8 @@ export class CryptidTransaction {
       DID_SOL_PROGRAM,
       authority,
     ];
-    const remainingAccounts = transactionAccount.accounts;
-    const allAccounts = [...namedAccounts, ...remainingAccounts];
+    // const remainingAccounts = transactionAccount.accounts;
+    const allAccounts = transactionAccount.accounts; //[...namedAccounts, ...remainingAccounts];
     const accountMetas = transactionAccountMetasToAccountMetas(
       instructions.flatMap((i) => [
         ...(i.accounts as TransactionAccountMeta[]),
@@ -207,13 +208,18 @@ export class CryptidTransaction {
   // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  propose(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
+  propose(
+    program: Program<Cryptid>,
+    transactionAccountAddress: PublicKey,
+    state = TransactionState.Ready
+  ) {
     return program.methods
       .proposeTransaction(
         this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
+        TransactionState.toBorsh(state),
         this.instructions,
         this.accountMetas.length
       )

@@ -102,7 +102,6 @@ describe("Middleware: CheckDid", () => {
       };
 
       [middlewareAccount] = deriveMiddlewareAccountAddress(params);
-      console.log(`middlewareAccount: ${middlewareAccount.toBase58()}`);
       const transaction = await new CheckDidMiddleware().createMiddleware(
         params
       );

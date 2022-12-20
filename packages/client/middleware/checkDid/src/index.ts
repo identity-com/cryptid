@@ -81,8 +81,6 @@ export class CheckDidMiddleware
 
     const [middlewareAccount] = deriveMiddlewareAccountAddress(params);
 
-    console.log(`middlewareAccount in: ${middlewareAccount.toBase58()}`);
-
     return program.methods
       .create(
         params.verificationMethodMatcher,

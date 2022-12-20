@@ -1,5 +1,9 @@
 #![allow(clippy::result_large_err)]
+#![allow(clippy::too_many_arguments)]
 extern crate core;
+
+#[macro_use]
+extern crate enum_display_derive;
 
 declare_id!("cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs");
 
@@ -12,20 +16,26 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use state::did_reference::DIDReference;
+use state::transaction_state::TransactionState;
 
 #[program]
 pub mod cryptid {
     use super::*;
-    pub use instructions::ApproveExecution;
 
-    pub fn create(
-        ctx: Context<Create>,
+    pub fn create_cryptid_account(
+        ctx: Context<CreateCryptidAccount>,
         middleware: Option<Pubkey>,
         controller_chain: Vec<Pubkey>,
         index: u32,
         did_account_bump: u8,
     ) -> Result<()> {
-        instructions::create(ctx, middleware, controller_chain, index, did_account_bump)
+        instructions::create_cryptid_account(
+            ctx,
+            middleware,
+            controller_chain,
+            index,
+            did_account_bump,
+        )
     }
 
     pub fn direct_execute<'a, 'b, 'c, 'info>(
@@ -54,6 +64,7 @@ pub mod cryptid {
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
         did_account_bump: u8,
+        state: TransactionState,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -63,7 +74,24 @@ pub mod cryptid {
             cryptid_account_bump,
             cryptid_account_index,
             did_account_bump,
+            state,
             instructions,
+        )
+    }
+
+    pub fn seal_transaction<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, SealTransaction<'info>>,
+        controller_authority_keys: Vec<Pubkey>,
+        cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
+    ) -> Result<()> {
+        instructions::seal_transaction(
+            ctx,
+            controller_authority_keys,
+            cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
         )
     }
 

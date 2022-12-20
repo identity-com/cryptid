@@ -7,6 +7,7 @@ export {
   ProposalResult,
   ExecuteResult,
   ExecuteArrayResult,
+  TransactionState,
 } from "./types/cryptid";
 export {
   MiddlewareClient,

@@ -15,7 +15,7 @@ index: u32,
 /// The bump seed for the Did Account
 did_account_bump: u8,
 )]
-pub struct Create<'info> {
+pub struct CreateCryptidAccount<'info> {
     #[account(
     init,
     payer = authority,
@@ -35,8 +35,8 @@ pub struct Create<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create(
-    ctx: Context<Create>,
+pub fn create_cryptid_account(
+    ctx: Context<CreateCryptidAccount>,
     middleware: Option<Pubkey>,
     controller_chain: Vec<Pubkey>,
     index: u32,

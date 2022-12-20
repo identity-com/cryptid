@@ -16,7 +16,7 @@ import { DidSolIdentifier, DidSolService } from "@identity.com/sol-did-client";
 import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
-import { TransactionAccount } from "../types";
+import { TransactionAccount, TransactionState } from "../types";
 import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
 
@@ -108,9 +108,12 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     };
   }
 
-  async propose(transaction: Transaction): Promise<ProposalResult> {
+  async propose(
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<ProposalResult> {
     return this.service().then((service) =>
-      service.propose(this.details, transaction)
+      service.propose(this.details, transaction, state)
     );
   }
 

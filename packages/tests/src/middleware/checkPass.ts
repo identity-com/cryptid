@@ -8,14 +8,14 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {
   cryptidTransferInstruction,
-  toAccountMeta,
   makeTransfer,
+  toAccountMeta,
 } from "../util/cryptid";
 import { addKeyToDID, initializeDIDAccount } from "../util/did";
 import {
-  fund,
-  createTestContext,
   balanceOf,
+  createTestContext,
+  fund,
   Wallet,
 } from "../util/anchorUtils";
 import { DID_SOL_PREFIX, DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
@@ -30,11 +30,12 @@ import { GatekeeperService } from "@identity.com/solana-gatekeeper-lib";
 import { getGatewayTokenAddressForOwnerAndGatekeeperNetwork } from "@identity.com/solana-gateway-ts";
 import { beforeEach } from "mocha";
 import {
+  CheckPassMiddleware,
+  Cryptid,
   CRYPTID_PROGRAM,
   CryptidClient,
   InstructionData,
-  Cryptid,
-  CheckPassMiddleware,
+  TransactionState,
 } from "@identity.com/cryptid";
 import { deriveMiddlewareAccountAddress } from "@identity.com/cryptid-middleware-check-pass";
 
@@ -148,10 +149,11 @@ describe("Middleware: checkPass", () => {
   ) =>
     program.methods
       .proposeTransaction(
-        Buffer.from([]), // no controller chain,
+        [], // no controller chain,
         cryptid.details.bump,
         cryptid.details.index,
         cryptid.details.didAccountBump,
+        TransactionState.toBorsh(TransactionState.Ready),
         [instruction],
         2
       )

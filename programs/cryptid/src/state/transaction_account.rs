@@ -13,7 +13,7 @@ pub struct TransactionAccount {
     pub cryptid_account: Pubkey,
     /// The owner of the cryptid account (Typically a DID account)
     pub did: Pubkey,
-    /// The accounts `instructions` references (excluding the cryptid account
+    /// The accounts `instructions` references (excluding the cryptid account)
     pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
     pub instructions: Vec<AbbreviatedInstructionData>,
@@ -36,7 +36,7 @@ impl TransactionAccount {
         DISCRIMINATOR_SIZE
             + 32 // cryptid_account
             + 32 // did (owner)
-            + 4 + 32 * num_accounts //accounts
+            + 4 + 32 * (num_accounts + 4) //accounts (+4 for the named accounts)
             + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 1 + 32 // approved_middleware
             + 1 // slot
@@ -73,23 +73,9 @@ impl TransactionAccount {
         Ok(())
     }
 
-    /// When an account index as defined in AbbreviatedInstructionData
-    /// is used to reference an entry in transactionAccount.accounts, it should
-    /// not include the implicit accounts that are passed to the ExecuteTransaction instruction
-    pub fn normalize_transaction_account_index(index: u8) -> usize {
-        // Implicit Execute Transaction Accounts:
-        // 0 - cryptid account
-        // 1 - did
-        // 2 - did program
-        // 3 - signer
-        // ... remaining accounts
-        (index - 4) as usize
-    }
-
     pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
-        let normalized_index = Self::normalize_transaction_account_index(index);
         require_keys_eq!(
-            self.accounts[normalized_index],
+            self.accounts[index as usize],
             *account,
             CryptidError::AccountMismatch
         );

@@ -19,13 +19,11 @@ cryptid_account_bump: u8,
 cryptid_account_index: u32,
 /// The bump seed for the Did Account
 did_account_bump: u8,
-/// The state in which to create the transaction
-state: TransactionState,
-/// The instructions to execute
+/// The instructions to add to the transaction
 instructions: Vec<AbbreviatedInstructionData>,
 num_accounts: u8,
 )]
-pub struct ProposeTransaction<'info> {
+pub struct ExtendTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
@@ -43,22 +41,28 @@ pub struct ProposeTransaction<'info> {
     #[account(mut)]
     authority: Signer<'info>,
     #[account(
-        init,
-        payer = authority,
-        space = TransactionAccount::calculate_size(
-            num_accounts.into(),
-            InstructionSize::from_iter_to_iter(
-                instructions.iter()
+        mut,
+        realloc = TryInto::<usize>::try_into(
+            TransactionAccount::calculate_size(
+                num_accounts.into(),
+                InstructionSize::from_iter_to_iter(
+                    instructions.iter()
                 )
-       ))
-    ]
+            )
+        ).unwrap(),
+        realloc::payer = authority,
+        realloc::zero = false,
+        has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
+        // only transactions in "not ready" state can be extended
+        constraint = transaction_account.state == TransactionState::NotReady @ CryptidError::InvalidTransactionState,
+    )]
     transaction_account: Account<'info, TransactionAccount>,
     system_program: Program<'info, System>,
 }
 
 /// Collect all accounts as a single vector so that they can be referenced by index by instructions
 impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
-    for Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>
+    for Context<'a, 'b, 'c, 'info, ExtendTransaction<'info>>
 {
     fn all_accounts(&self) -> Vec<&AccountInfo<'info>> {
         [
@@ -78,10 +82,10 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
     }
 }
 
-/// Propose a transaction to be executed by a cryptid account
-/// Note - at present, there is no constraint on who can propose a transaction.
-pub fn propose_transaction<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
+/// Extend a transaction to be executed by a cryptid account
+/// Note - at present, there is no constraint on who can extend a transaction.
+pub fn extend_transaction<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ExtendTransaction<'info>>,
     controller_chain: Vec<DIDReference>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,
@@ -121,36 +125,31 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
         cryptid_account_bump,
     )?;
 
-    // Accounts stored into the transaction account are referenced by
-    // the abbreviated instruction data by index
-    // The same accounts must be passed, in the correct order, to the ExecuteTransaction instruction
-    // Note - the order is retained between Propose and Execute, but some accounts are omitted during Propose
-    //
-    // Execute Transaction Accounts:
-    // 0 - cryptid account
-    // 1 - did
-    // 2 - did program
-    // 3 - signer
-    // ... remaining accounts
-    //
-    // Account indexes must reflect this, so the first entry
-    // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
-    // despite being index 0 in the remaining accounts.
-    // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
-    ctx.accounts.transaction_account.accounts = all_accounts.iter().map(|a| *a.key).collect();
-
     ctx.accounts.transaction_account.did = *ctx.accounts.did.key;
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
     ctx.accounts.transaction_account.approved_middleware = None;
-
-    // we cannot initiate a transaction in executed state.
-    require_neq!(
-        state,
-        TransactionState::Executed,
-        CryptidError::InvalidTransactionState
-    );
     ctx.accounts.transaction_account.state = state;
+
+    // Accounts stored into the transaction account are referenced by
+    // the abbreviated instruction data by index
+    // The same accounts must be passed, in the correct order, to the ExecuteTransaction instruction
+    // Note - the order is retained between Extend and Execute, but some accounts are omitted during Extend
+    //
+    // Execute Transaction Accounts:
+    // 0 - cryptid account
+    // 1 - did*
+    // 2 - did program*
+    // 3 - signer*
+    // ... remaining accounts
+    //
+    // * These accounts are omitted from the Extend Transaction Accounts
+    // Account indexes must reflect this, so the first entry
+    // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
+    // despite being index 0 in the remaining accounts.
+    // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
+    ctx.accounts.transaction_account.accounts =
+        ctx.remaining_accounts.iter().map(|a| *a.key).collect();
 
     Ok(())
 }

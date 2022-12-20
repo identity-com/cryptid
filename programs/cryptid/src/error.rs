@@ -46,4 +46,7 @@ pub enum CryptidError {
     /// The expected middleware did not approve the transaction
     #[msg("The expected middleware did not approve the transaction.")]
     IncorrectMiddleware,
+    /// The accounts passed to execute do not match those in the transaction account.
+    #[msg("The accounts passed to execute do not match those in the transaction account.")]
+    InvalidAccounts,
 }

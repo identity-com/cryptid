@@ -8,7 +8,7 @@ import {
 } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { Wallet } from "../types/crypto";
-import { ProposalResult, TransactionAccount } from "../types";
+import { ProposalResult, TransactionAccount, TransactionState } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
 import { ExecuteArrayResult } from "../types/cryptid";
@@ -100,7 +100,10 @@ export interface CryptidClient {
     forceSingleTx?: boolean
   ): Promise<ExecuteArrayResult>;
 
-  propose(transaction: Transaction): Promise<ProposalResult>;
+  propose(
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<ProposalResult>;
   execute(transactionAccountAddress: PublicKey): Promise<ExecuteArrayResult>;
 
   // TODO Reinstate
