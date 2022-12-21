@@ -219,6 +219,84 @@ export type Cryptid = {
       ]
     },
     {
+      "name": "extendTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance that can execute the transaction."
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": "AbbreviatedInstructionData"
+            }
+          }
+        },
+        {
+          "name": "numAccounts",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "sealTransaction",
       "accounts": [
         {
@@ -896,6 +974,84 @@ export const IDL: Cryptid = {
           "type": {
             "defined": "TransactionState"
           }
+        },
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": "AbbreviatedInstructionData"
+            }
+          }
+        },
+        {
+          "name": "numAccounts",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "extendTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance that can execute the transaction."
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
         },
         {
           "name": "instructions",

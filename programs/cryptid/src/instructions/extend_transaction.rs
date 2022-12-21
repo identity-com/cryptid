@@ -9,7 +9,6 @@ use crate::state::transaction_state::TransactionState;
 use crate::util::SolDID;
 use anchor_lang::prelude::*;
 use itertools::Itertools;
-use std::borrow::BorrowMut;
 
 #[derive(Accounts)]
 #[instruction(
@@ -50,7 +49,7 @@ pub struct ExtendTransaction<'info> {
         constraint = transaction_account.state == TransactionState::NotReady @ CryptidError::InvalidTransactionState,
         // resize the transaction account to fit the new instructions
         realloc = TransactionAccount::calculate_size(
-                (transaction_account.accounts.len() + num_accounts as usize).into(),
+                transaction_account.accounts.len() + num_accounts as usize,
                 InstructionSize::from_iter_to_iter(
                     instructions.iter().chain(transaction_account.instructions.iter())
                 )
@@ -87,7 +86,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 impl ExtendTransaction<'_> {
     fn update_instructions(
         transaction_account: &Account<TransactionAccount>,
-        new_instructions: &mut Vec<&mut AbbreviatedInstructionData>,
+        new_instructions: &mut [&mut AbbreviatedInstructionData],
         new_instruction_accounts: &[&AccountInfo],
     ) -> Vec<Pubkey> {
         let mut new_accounts_to_push = vec![];
@@ -97,11 +96,11 @@ impl ExtendTransaction<'_> {
         // if the account is not in all_accounts, add it to the transaction_accounts and update the index in the instruction
         new_instructions.iter_mut().for_each(
             |new_instruction: &mut &mut AbbreviatedInstructionData| {
-                new_instruction.accounts.iter_mut().map(
+                new_instruction.accounts.iter_mut().for_each(
                     |mut new_instruction_account_meta: &mut AbbreviatedAccountMeta| {
                         let account =
                             new_instruction_accounts[new_instruction_account_meta.key as usize];
-                        if let Some((index, key)) = transaction_account
+                        if let Some((index, _key)) = transaction_account
                             .accounts
                             .iter()
                             .find_position(|existing_account| *existing_account == account.key)
