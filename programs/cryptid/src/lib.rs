@@ -79,6 +79,25 @@ pub mod cryptid {
         )
     }
 
+    pub fn extend_transaction<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ExtendTransaction<'info>>,
+        controller_chain: Vec<DIDReference>,
+        cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
+        instructions: Vec<AbbreviatedInstructionData>,
+        _num_accounts: u8,
+    ) -> Result<()> {
+        instructions::extend_transaction(
+            ctx,
+            controller_chain,
+            cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
+            instructions,
+        )
+    }
+
     pub fn seal_transaction<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, SealTransaction<'info>>,
         controller_authority_keys: Vec<Pubkey>,

@@ -393,7 +393,7 @@ dependencies = [
  "anchor-lang",
  "cryptid",
  "num-traits",
- "sol-did 3.1.4 (git+https://github.com/identity-com/sol-did?rev=120b7729de1cc502778fb4c3ad53d0bc8661e26d)",
+ "sol-did 3.1.4",
  "solana-gateway",
 ]
 
@@ -404,7 +404,7 @@ dependencies = [
  "anchor-lang",
  "cryptid",
  "num-traits",
- "sol-did 3.1.0",
+ "sol-did 3.1.4",
  "solana-gateway",
 ]
 
@@ -509,8 +509,9 @@ dependencies = [
  "anchor-lang",
  "bitflags",
  "enum-display-derive",
+ "itertools",
  "num-traits",
- "sol-did 3.1.4 (git+https://github.com/identity-com/sol-did?branch=develop)",
+ "sol-did 3.1.4",
 ]
 
 [[package]]
@@ -690,9 +691,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
 dependencies = [
  "either",
 ]
@@ -1176,38 +1177,8 @@ dependencies = [
 
 [[package]]
 name = "sol-did"
-version = "3.1.0"
-source = "git+https://github.com/identity-com/sol-did?tag=3.1.0#267ffaf93327365351ac0cd8f53a04ba44703dc5"
-dependencies = [
- "anchor-lang",
- "bitflags",
- "borsh",
- "itertools",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-security-txt",
-]
-
-[[package]]
-name = "sol-did"
 version = "3.1.4"
 source = "git+https://github.com/identity-com/sol-did?branch=develop#64325e9ddbad631fb24721ce2906cf0b07f1f7fc"
-dependencies = [
- "anchor-lang",
- "bitflags",
- "borsh",
- "itertools",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-security-txt",
-]
-
-[[package]]
-name = "sol-did"
-version = "3.1.4"
-source = "git+https://github.com/identity-com/sol-did?rev=120b7729de1cc502778fb4c3ad53d0bc8661e26d#120b7729de1cc502778fb4c3ad53d0bc8661e26d"
 dependencies = [
  "anchor-lang",
  "bitflags",

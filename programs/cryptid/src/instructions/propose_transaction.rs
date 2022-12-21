@@ -48,7 +48,7 @@ pub struct ProposeTransaction<'info> {
             num_accounts.into(),
             InstructionSize::from_iter_to_iter(
                 instructions.iter()
-                )
+            )
        ))
     ]
     transaction_account: Account<'info, TransactionAccount>,

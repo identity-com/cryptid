@@ -1,5 +1,6 @@
 use crate::error::CryptidError;
 use crate::instructions::util::{get_cryptid_account_checked, resolve_by_index, AllAccounts};
+use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::did_reference::DIDReference;
 use crate::state::instruction_size::InstructionSize;
@@ -7,20 +8,23 @@ use crate::state::transaction_account::TransactionAccount;
 use crate::state::transaction_state::TransactionState;
 use crate::util::SolDID;
 use anchor_lang::prelude::*;
+use itertools::Itertools;
+use std::borrow::BorrowMut;
 
 #[derive(Accounts)]
 #[instruction(
-/// A vector of controller account indices and their associated DID authority keys (to allow for generative cases).
-controller_chain: Vec<DIDReference>,
-/// The bump seed for the Cryptid signer
-cryptid_account_bump: u8,
-/// Index of the cryptid account
-cryptid_account_index: u32,
-/// The bump seed for the Did Account
-did_account_bump: u8,
-/// The instructions to add to the transaction
-instructions: Vec<AbbreviatedInstructionData>,
-num_accounts: u8,
+    /// A vector of controller account indices and their associated DID authority keys (to allow for generative cases).
+    controller_chain: Vec<DIDReference>,
+    /// The bump seed for the Cryptid signer
+    cryptid_account_bump: u8,
+    /// Index of the cryptid account
+    cryptid_account_index: u32,
+    /// The bump seed for the Did Account
+    did_account_bump: u8,
+    /// The instructions to add to the transaction
+    instructions: Vec<AbbreviatedInstructionData>,
+    /// The number of new accounts referred to in the instructions
+    num_accounts: u8,
 )]
 pub struct ExtendTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
@@ -38,25 +42,24 @@ pub struct ExtendTransaction<'info> {
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     #[account(mut)]
-    authority: Signer<'info>,
+    pub authority: Signer<'info>,
     #[account(
         mut,
-        realloc = TryInto::<usize>::try_into(
-            TransactionAccount::calculate_size(
-                num_accounts.into(),
-                InstructionSize::from_iter_to_iter(
-                    instructions.iter()
-                )
-            )
-        ).unwrap(),
-        realloc::payer = authority,
-        realloc::zero = false,
         has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
         // only transactions in "not ready" state can be extended
         constraint = transaction_account.state == TransactionState::NotReady @ CryptidError::InvalidTransactionState,
+        // resize the transaction account to fit the new instructions
+        realloc = TransactionAccount::calculate_size(
+                (transaction_account.accounts.len() + num_accounts as usize).into(),
+                InstructionSize::from_iter_to_iter(
+                    instructions.iter().chain(transaction_account.instructions.iter())
+                )
+            ),
+        realloc::payer = authority,
+        realloc::zero = false,
     )]
-    transaction_account: Account<'info, TransactionAccount>,
-    system_program: Program<'info, System>,
+    pub transaction_account: Account<'info, TransactionAccount>,
+    pub system_program: Program<'info, System>,
 }
 
 /// Collect all accounts as a single vector so that they can be referenced by index by instructions
@@ -81,6 +84,47 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
     }
 }
 
+impl ExtendTransaction<'_> {
+    fn update_instructions(
+        transaction_account: &Account<TransactionAccount>,
+        new_instructions: &mut Vec<&mut AbbreviatedInstructionData>,
+        new_instruction_accounts: &[&AccountInfo],
+    ) -> Vec<Pubkey> {
+        let mut new_accounts_to_push = vec![];
+
+        // for each instruction, look at its accounts
+        // if the account is in transaction_account.accounts, update its index in the instruction
+        // if the account is not in all_accounts, add it to the transaction_accounts and update the index in the instruction
+        new_instructions.iter_mut().for_each(
+            |new_instruction: &mut &mut AbbreviatedInstructionData| {
+                new_instruction.accounts.iter_mut().map(
+                    |mut new_instruction_account_meta: &mut AbbreviatedAccountMeta| {
+                        let account =
+                            new_instruction_accounts[new_instruction_account_meta.key as usize];
+                        if let Some((index, key)) = transaction_account
+                            .accounts
+                            .iter()
+                            .find_position(|existing_account| *existing_account == account.key)
+                        {
+                            // The account from the new instruction is already in the transaction account
+                            // with index `index`
+                            new_instruction_account_meta.key = index as u8;
+                        } else {
+                            // The account from the new instruction is a new account
+                            // add it to the array of accounts, and set the index to the last index
+                            new_instruction_account_meta.key =
+                                transaction_account.accounts.len() as u8;
+                            new_accounts_to_push.push(*account.key);
+                        }
+                    },
+                );
+            },
+        );
+
+        new_accounts_to_push
+    }
+}
+
 /// Extend a transaction to be executed by a cryptid account
 /// Note - at present, there is no constraint on who can extend a transaction.
 pub fn extend_transaction<'a, 'b, 'c, 'info>(
@@ -89,10 +133,12 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
     cryptid_account_bump: u8,
     cryptid_account_index: u32,
     did_account_bump: u8,
-    instructions: Vec<AbbreviatedInstructionData>,
+    mut instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
+    let all_accounts = ctx.all_accounts();
+
     get_cryptid_account_checked(
-        &ctx.all_accounts(),
+        &all_accounts,
         &controller_chain,
         &ctx.accounts.cryptid_account,
         &ctx.accounts.did,
@@ -103,30 +149,24 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
         cryptid_account_bump,
     )?;
 
+    let mut mutable_references: Vec<&mut AbbreviatedInstructionData> =
+        instructions.iter_mut().collect();
+
+    let new_accounts_to_push = ExtendTransaction::update_instructions(
+        &ctx.accounts.transaction_account,
+        &mut mutable_references,
+        &all_accounts,
+    );
+
+    // we have updated all the instruction indices. Add them to the transaction account
+    ctx.accounts
+        .transaction_account
+        .accounts
+        .extend(new_accounts_to_push);
     ctx.accounts
         .transaction_account
         .instructions
         .extend(instructions);
-
-    // Accounts stored into the transaction account are referenced by
-    // the abbreviated instruction data by index
-    // The same accounts must be passed, in the correct order, to the ExecuteTransaction instruction
-    // Note - the order is retained between Extend and Execute, but some accounts are omitted during Extend
-    //
-    // Execute Transaction Accounts:
-    // 0 - cryptid account
-    // 1 - did*
-    // 2 - did program*
-    // 3 - signer*
-    // ... remaining accounts
-    //
-    // * These accounts are omitted from the Extend Transaction Accounts
-    // Account indexes must reflect this, so the first entry
-    // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
-    // despite being index 0 in the remaining accounts.
-    // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
-    ctx.accounts.transaction_account.accounts =
-        ctx.remaining_accounts.iter().map(|a| *a.key).collect();
 
     Ok(())
 }
