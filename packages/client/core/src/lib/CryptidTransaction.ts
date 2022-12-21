@@ -249,7 +249,7 @@ export class CryptidTransaction {
         cryptidAccount: this.cryptidAccount.address,
         didProgram: DID_SOL_PROGRAM,
         did: this.cryptidAccount.didAccount,
-        signer: this.authority,
+        authority: this.authority,
         destination: this.authority,
         transactionAccount: transactionAccountAddress,
       })
@@ -272,7 +272,7 @@ export class CryptidTransaction {
         cryptidAccount: this.cryptidAccount.address,
         did: this.cryptidAccount.didAccount,
         didProgram: DID_SOL_PROGRAM,
-        signer: this.authority,
+        authority: this.authority,
       })
       .remainingAccounts(this.accountMetas);
   }

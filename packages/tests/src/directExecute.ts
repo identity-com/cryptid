@@ -57,7 +57,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
           cryptidAccount: cryptid.address(),
           didProgram: DID_SOL_PROGRAM,
           did: didAccount,
-          signer: authority.publicKey,
+          authority: authority.publicKey,
         })
         .remainingAccounts([
           toAccountMeta(recipient.publicKey, true, false),

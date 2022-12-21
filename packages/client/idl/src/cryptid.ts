@@ -91,7 +91,7 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -311,7 +311,7 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -784,7 +784,7 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -1004,7 +1004,7 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [

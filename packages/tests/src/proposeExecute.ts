@@ -86,7 +86,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: authority.publicKey,
+            authority: authority.publicKey,
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })
@@ -207,7 +207,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: authority.publicKey,
+            authority: authority.publicKey,
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })
@@ -377,7 +377,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: bogusSigner.publicKey, // specify the bogus signer as the cryptid signer
+            authority: bogusSigner.publicKey, // specify the bogus signer as the cryptid signer
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })

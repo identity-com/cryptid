@@ -1,6 +1,5 @@
 use crate::error::CryptidError;
 use crate::instructions::util::*;
-use crate::state::cryptid_account::CryptidAccount;
 use crate::state::did_reference::DIDReference;
 use crate::state::transaction_account::TransactionAccount;
 use crate::state::transaction_state::TransactionState;
@@ -37,7 +36,7 @@ pub struct ExecuteTransaction<'info> {
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction
-    pub signer: Signer<'info>,
+    pub authority: Signer<'info>,
     /// CHECK: Rent destination account does not need to satisfy the any constraints.
     #[account(mut)]
     pub destination: UncheckedAccount<'info>,
@@ -68,7 +67,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
             self.accounts.cryptid_account.as_ref(),
             self.accounts.did.as_ref(),
             self.accounts.did_program.as_ref(),
-            self.accounts.signer.as_ref(),
+            self.accounts.authority.as_ref(),
         ]
         .into_iter()
         .chain(self.remaining_accounts.iter())
@@ -97,29 +96,18 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         ctx.accounts.print_keys();
     }
 
-    // CHECK the authority is allowed to execute the transaction
-
-    // convert the controller chain (an array of account indices) into an array of accounts
-    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
-    // sol_did does that.
     let all_accounts = ctx.all_accounts();
-    let controlling_did_accounts = controller_chain
-        .iter()
-        .map(|controller_reference| {
-            (
-                all_accounts[controller_reference.account_index as usize],
-                controller_reference.authority_key,
-            )
-        })
-        .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
-    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
-    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
-    verify_keys(
+    let cryptid_account = get_cryptid_account_checked(
+        &all_accounts,
+        &controller_chain,
+        &ctx.accounts.cryptid_account,
         &ctx.accounts.did,
-        Some(did_account_bump),
-        ctx.accounts.signer.to_account_info().key,
-        controlling_did_accounts,
+        &ctx.accounts.did_program,
+        &ctx.accounts.authority,
+        did_account_bump,
+        cryptid_account_index,
+        cryptid_account_bump,
     )?;
 
     // CHECK the accounts have not been switched since the transaction was proposed
@@ -133,14 +121,6 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
             CryptidError::InvalidAccounts
         )
     }
-
-    let cryptid_account = CryptidAccount::try_from(
-        &ctx.accounts.cryptid_account,
-        &ctx.accounts.did_program.key(),
-        &ctx.accounts.did.key(),
-        cryptid_account_index,
-        cryptid_account_bump,
-    )?;
 
     // CHECK All middleware have approved the transaction (specifically the last one)
     // TODO: Move back to constraint when anchor annotation for generative case is working
@@ -176,6 +156,6 @@ impl ExecuteTransaction<'_> {
         );
         msg!("did: {}", self.did.to_account_info().key);
         msg!("did_program: {}", self.did_program.to_account_info().key);
-        msg!("signer: {}", self.signer.to_account_info().key);
+        msg!("authority: {}", self.authority.to_account_info().key);
     }
 }

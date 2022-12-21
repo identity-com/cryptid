@@ -1,7 +1,6 @@
 use crate::error::CryptidError;
-use crate::instructions::util::{resolve_by_index, verify_keys, AllAccounts};
+use crate::instructions::util::{get_cryptid_account_checked, resolve_by_index, AllAccounts};
 use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
-use crate::state::cryptid_account::CryptidAccount;
 use crate::state::did_reference::DIDReference;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_account::TransactionAccount;
@@ -89,38 +88,19 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     state: TransactionState,
     instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
-    // convert the controller chain (an array of account indices) into an array of accounts
-    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
-    // sol_did does that.
     let all_accounts = ctx.all_accounts();
-    let controlling_did_accounts = controller_chain
-        .iter()
-        .map(|controller_reference| {
-            (
-                all_accounts[controller_reference.account_index as usize],
-                controller_reference.authority_key,
-            )
-        })
-        .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
-    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
-    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
-    verify_keys(
-        &ctx.accounts.did,
-        Some(did_account_bump),
-        ctx.accounts.authority.to_account_info().key,
-        controlling_did_accounts,
-    )?;
-
-    // For seed verification
-    CryptidAccount::try_from(
+    get_cryptid_account_checked(
+        &all_accounts,
+        &controller_chain,
         &ctx.accounts.cryptid_account,
-        &ctx.accounts.did_program.key(),
-        &ctx.accounts.did.key(),
+        &ctx.accounts.did,
+        &ctx.accounts.did_program,
+        &ctx.accounts.authority,
+        did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
     )?;
-
     // Accounts stored into the transaction account are referenced by
     // the abbreviated instruction data by index
     // The same accounts must be passed, in the correct order, to the ExecuteTransaction instruction

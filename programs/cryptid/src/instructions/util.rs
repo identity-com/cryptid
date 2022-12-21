@@ -1,4 +1,7 @@
 use crate::error::CryptidError;
+use crate::state::cryptid_account::CryptidAccount;
+use crate::state::did_reference::DIDReference;
+use crate::util::SolDID;
 use anchor_lang::prelude::*;
 use bitflags::bitflags;
 use num_traits::cast::ToPrimitive;
@@ -72,6 +75,53 @@ pub fn verify_keys<'info1, 'info2>(
         return err!(CryptidError::KeyMustBeSigner);
     }
     Ok(())
+}
+
+/// Check that the authority is allowed to access the cryptid account
+/// And if so, return it
+pub fn get_cryptid_account_checked<'info>(
+    all_accounts: &[&AccountInfo],
+    controller_chain: &[DIDReference],
+    cryptid_account: &UncheckedAccount<'info>,
+    did: &UncheckedAccount<'info>,
+    did_program: &Program<'info, SolDID>,
+    authority: &Signer<'info>,
+    did_account_bump: u8,
+    cryptid_account_index: u32,
+    cryptid_account_bump: u8,
+) -> Result<CryptidAccount> {
+    // Check that the authority has permissions on the DID
+
+    // convert the controller chain (an array of account indices) into an array of accounts
+    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
+    // sol_did does that.
+    let controlling_did_accounts = controller_chain
+        .iter()
+        .map(|controller_reference| {
+            (
+                all_accounts[controller_reference.account_index as usize],
+                controller_reference.authority_key,
+            )
+        })
+        .collect::<Vec<(&AccountInfo, Pubkey)>>();
+
+    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
+    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
+    verify_keys(
+        did,
+        Some(did_account_bump),
+        authority.to_account_info().key,
+        controlling_did_accounts,
+    )?;
+
+    // For seed verification
+    CryptidAccount::try_from(
+        cryptid_account,
+        &did_program.key(),
+        &did.key(),
+        cryptid_account_index,
+        cryptid_account_bump,
+    )
 }
 
 bitflags! {
