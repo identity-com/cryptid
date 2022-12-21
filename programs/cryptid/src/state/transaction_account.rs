@@ -43,36 +43,6 @@ impl TransactionAccount {
             + 1 // state
     }
 
-    /// Gets an instruction or errors if no instruction at index
-    pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut AbbreviatedInstructionData> {
-        require_gte!(
-            index as usize,
-            self.instructions.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(&mut self.instructions[index as usize])
-    }
-
-    /// Checks if a given index is valid for the instructions list
-    pub fn check_instruction_index(&self, index: u8) -> Result<()> {
-        require_gte!(
-            index as usize,
-            self.instructions.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(())
-    }
-
-    /// Checks of a given index is valid for the accounts list
-    pub fn check_account_index(&self, index: u8) -> Result<()> {
-        require_gte!(
-            index as usize,
-            self.accounts.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(())
-    }
-
     pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
         require_keys_eq!(
             self.accounts[index as usize],
