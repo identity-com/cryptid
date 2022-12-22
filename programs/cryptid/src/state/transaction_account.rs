@@ -3,6 +3,7 @@ use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_state::TransactionState;
 use anchor_lang::prelude::*;
+use std::fmt;
 
 pub const DISCRIMINATOR_SIZE: usize = 8;
 
@@ -49,6 +50,19 @@ impl TransactionAccount {
             *account,
             CryptidError::AccountMismatch
         );
+        Ok(())
+    }
+}
+impl fmt::Display for TransactionAccount {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Accounts:")?;
+        for (index, account) in self.accounts.iter().enumerate() {
+            writeln!(f, "{}: {}", index, account)?;
+        }
+        for (index, instruction) in self.instructions.iter().enumerate() {
+            writeln!(f, "Instruction {}:", index)?;
+            writeln!(f, "{}", instruction)?;
+        }
         Ok(())
     }
 }

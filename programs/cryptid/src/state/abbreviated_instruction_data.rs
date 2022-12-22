@@ -3,6 +3,7 @@ use crate::state::instruction_size::InstructionSize;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use std::collections::HashMap;
+use std::fmt;
 
 /// The data about an instruction to be executed. Similar to Solana's [`Instruction`](SolanaInstruction).
 /// Accounts are stored as indices in AbbreviatedAccountMeta to save space
@@ -62,5 +63,16 @@ impl AbbreviatedInstructionData {
             .into_iter()
             .map(|meta| account_infos[meta.key as usize].clone())
             .collect()
+    }
+}
+impl fmt::Display for AbbreviatedInstructionData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Program: {}", self.program_id)?;
+        writeln!(f, "Accounts:")?;
+        for account in self.accounts.iter() {
+            writeln!(f, "  {}", account)?;
+        }
+        write!(f, "Data: {:?}", self.data)?;
+        Ok(())
     }
 }

@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use std::fmt;
 
 bitflags! {
     /// The meta information about an instruction account
@@ -22,6 +23,16 @@ impl AccountMetaProps {
                 | ((is_writable as u8) * Self::IS_WRITABLE.bits),
         )
         .unwrap()
+    }
+}
+impl fmt::Display for AccountMetaProps {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Is Signer: {}, Is Writeable: {}",
+            self.contains(AccountMetaProps::IS_SIGNER),
+            self.contains(AccountMetaProps::IS_WRITABLE)
+        )
     }
 }
 

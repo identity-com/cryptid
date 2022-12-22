@@ -1,6 +1,7 @@
 use crate::state::account_meta_props::AccountMetaProps;
 use anchor_lang::prelude::*;
 use std::collections::HashMap;
+use std::fmt;
 
 /// An account for an instruction, similar to Solana's [`AccountMeta`](AccountMeta)
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -9,6 +10,16 @@ pub struct AbbreviatedAccountMeta {
     pub key: u8,
     /// Information about the account
     pub meta: u8,
+}
+impl fmt::Display for AbbreviatedAccountMeta {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Key: {}, meta: {} ",
+            self.key,
+            AccountMetaProps::from_bits(self.meta).unwrap()
+        )
+    }
 }
 
 impl AbbreviatedAccountMeta {

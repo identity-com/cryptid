@@ -129,6 +129,19 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         CryptidError::IncorrectMiddleware
     );
 
+    if debug {
+        msg!(
+            "Executing {} instructions",
+            ctx.accounts.transaction_account.instructions.len()
+        );
+        msg!(
+            "Transaction: {}",
+            <anchor_lang::prelude::Account<'info, TransactionAccount> as AsRef<
+                TransactionAccount,
+            >>::as_ref(&ctx.accounts.transaction_account)
+        );
+    }
+
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(
         &ctx.accounts.transaction_account.instructions,
