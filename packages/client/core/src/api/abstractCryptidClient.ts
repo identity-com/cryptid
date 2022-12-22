@@ -117,6 +117,21 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     );
   }
 
+  async extend(
+    transactionAccountAddress: PublicKey,
+    transaction: Transaction
+  ): Promise<Transaction> {
+    return this.service().then((service) =>
+      service.extend(this.details, transactionAccountAddress, transaction)
+    );
+  }
+
+  seal(transactionAccountAddress: PublicKey): Promise<Transaction> {
+    return this.service().then((service) =>
+      service.seal(this.details, transactionAccountAddress)
+    );
+  }
+
   async execute(
     transactionAccountAddress: PublicKey
   ): Promise<ExecuteArrayResult> {

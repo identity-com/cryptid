@@ -33,7 +33,7 @@ pub struct SealTransaction<'info> {
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction
-    pub signer: Signer<'info>,
+    pub authority: Signer<'info>,
     /// The transaction to seal
     #[account(
         mut,
@@ -59,11 +59,11 @@ pub fn seal_transaction<'a, 'b, 'c, 'info>(
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
-    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
+    // We now need to verify that the authority (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
         &ctx.accounts.did,
         Some(did_account_bump),
-        ctx.accounts.signer.to_account_info().key,
+        ctx.accounts.authority.to_account_info().key,
         controlling_did_accounts,
     )?;
 

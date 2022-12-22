@@ -104,6 +104,14 @@ export interface CryptidClient {
     transaction: Transaction,
     state?: TransactionState
   ): Promise<ProposalResult>;
+
+  extend(
+    transactionAccountAddress: PublicKey,
+    transaction: Transaction
+  ): Promise<Transaction>;
+
+  seal(transactionAccountAddress: PublicKey): Promise<Transaction>;
+
   execute(transactionAccountAddress: PublicKey): Promise<ExecuteArrayResult>;
 
   // TODO Reinstate

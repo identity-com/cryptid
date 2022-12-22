@@ -213,16 +213,31 @@ export class CryptidService {
     );
   }
 
+  private async getTransactionAccount(
+    transactionAccountAddress: PublicKey
+  ): Promise<TransactionAccount | null> {
+    const transactionAccount =
+      await this.program.account.transactionAccount.fetch(
+        transactionAccountAddress
+      );
+
+    if (transactionAccount === null) return null;
+
+    // TODO fix - the TransactionAccount type has `state` as type `never`
+    return transactionAccount as unknown as TransactionAccount;
+  }
+
   private async getCryptidTransaction(
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey
   ): Promise<CryptidTransaction> {
-    const txAccount = await this.program.account.transactionAccount.fetch(
+    const transactionAccount = await this.getTransactionAccount(
       transactionAccountAddress
     );
-    // TODO fix - the TransactionAccount type has `state` as type `never`
-    const transactionAccount: TransactionAccount =
-      txAccount as unknown as TransactionAccount;
+
+    if (transactionAccount === null) {
+      throw new Error("Transaction account not found");
+    }
 
     return CryptidTransaction.fromTransactionAccount(
       account,
@@ -235,7 +250,7 @@ export class CryptidService {
   public async propose(
     account: CryptidAccountDetails,
     transaction: Transaction,
-    state?: TransactionState
+    state = TransactionState.Ready
   ): Promise<ProposalResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
@@ -245,20 +260,25 @@ export class CryptidService {
       this.controllerChainPubkeys
     );
 
-    const middlewareResult = await this.executeMiddlewareInstructions(
-      account,
-      transactionAccountKeypair.publicKey,
-      "Propose"
-    );
+    // execute middleware if the transaction is proposed in "ready" state
+    // otherwise, wait until it is sealed
+    let middlewareResult: MiddlewareResult = { instructions: [], signers: [] };
+    if (state === TransactionState.Ready) {
+      middlewareResult = await this.executeMiddlewareInstructions(
+        account,
+        transactionAccountKeypair.publicKey,
+        "Propose"
+      );
+    }
 
     const unsignedProposeTransaction = await cryptidTransaction
       .propose(this.program, transactionAccountKeypair.publicKey, state)
       .signers(
-        // The only signer in a proposal (other than an authority on the DID) is the transaction account
-        [transactionAccountKeypair]
+        // The signers in a proposal (other than an authority on the DID) are the transaction account
+        // and any signers from the middleware
+        [transactionAccountKeypair, ...middlewareResult.signers]
       )
       .postInstructions(middlewareResult.instructions)
-      .signers(middlewareResult.signers)
       .transaction();
 
     return {
@@ -267,6 +287,46 @@ export class CryptidService {
       proposeSigners: [transactionAccountKeypair, ...middlewareResult.signers],
       cryptidTransactionRepresentation: cryptidTransaction,
     };
+  }
+
+  public async extend(
+    account: CryptidAccountDetails,
+    transactionAccountAddress: PublicKey,
+    transaction: Transaction
+  ): Promise<Transaction> {
+    const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
+      account,
+      this.authorityKey,
+      transaction.instructions,
+      this.controllerChainPubkeys
+    );
+
+    return cryptidTransaction
+      .extend(this.program, transactionAccountAddress)
+      .transaction();
+  }
+
+  public async seal(
+    account: CryptidAccountDetails,
+    transactionAccountAddress: PublicKey
+  ): Promise<Transaction> {
+    const transactionAccount = await this.getTransactionAccount(
+      transactionAccountAddress
+    );
+
+    if (transactionAccount === null) {
+      throw new Error("Transaction account not found");
+    }
+
+    const cryptidTransaction = CryptidTransaction.fromTransactionAccount(
+      account,
+      this.authorityKey,
+      transactionAccount,
+      this.controllerChainPubkeys
+    );
+    return cryptidTransaction
+      .seal(this.program, transactionAccountAddress)
+      .transaction();
   }
 
   public async proposeAndExecuteTransaction(

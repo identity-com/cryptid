@@ -93,7 +93,7 @@ impl ExtendTransaction<'_> {
 
         // for each instruction, look at its accounts
         // if the account is in transaction_account.accounts, update its index in the instruction
-        // if the account is not in all_accounts, add it to the transaction_accounts and update the index in the instruction
+        // if the account is not in transaction_account.accounts, add it to the transaction_accounts and update the index in the instruction
         new_instructions.iter_mut().for_each(
             |new_instruction: &mut &mut AbbreviatedInstructionData| {
                 new_instruction.accounts.iter_mut().for_each(

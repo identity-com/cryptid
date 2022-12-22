@@ -234,6 +234,46 @@ export class CryptidTransaction {
   }
 
   // TODO move transactionAccountAddress into constructor?
+  extend(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
+    return program.methods
+      .extendTransaction(
+        this.controllerChainReferences,
+        this.cryptidAccount.bump,
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump,
+        this.instructions,
+        this.accountMetas.length
+      )
+      .accounts({
+        cryptidAccount: this.cryptidAccount.address,
+        didProgram: DID_SOL_PROGRAM,
+        did: this.cryptidAccount.didAccount,
+        authority: this.authority,
+        transactionAccount: transactionAccountAddress,
+      })
+      .remainingAccounts(this.accountMetas);
+  }
+
+  // TODO move transactionAccountAddress into constructor?
+  seal(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
+    return program.methods
+      .sealTransaction(
+        this.controllerChainReferences.map((r) => r.authorityKey),
+        this.cryptidAccount.bump,
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump
+      )
+      .accounts({
+        cryptidAccount: this.cryptidAccount.address,
+        didProgram: DID_SOL_PROGRAM,
+        did: this.cryptidAccount.didAccount,
+        authority: this.authority,
+        transactionAccount: transactionAccountAddress,
+      })
+      .remainingAccounts(this.accountMetas);
+  }
+
+  // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   execute(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
