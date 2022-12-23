@@ -92,11 +92,18 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     let debug = ExecuteFlags::from_bits(flags)
         .unwrap()
         .contains(ExecuteFlags::DEBUG);
-    if debug {
-        ctx.accounts.print_keys();
-    }
 
     let all_accounts = ctx.all_accounts();
+
+    if debug {
+        ctx.accounts.print_keys();
+        ctx.remaining_accounts
+            .iter()
+            .enumerate()
+            .for_each(|(index, account)| {
+                msg!("Remaining account {}: {:?}", index, account.key);
+            });
+    }
 
     let cryptid_account = get_cryptid_account_checked(
         &all_accounts,
@@ -133,12 +140,6 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         msg!(
             "Executing {} instructions",
             ctx.accounts.transaction_account.instructions.len()
-        );
-        msg!(
-            "Transaction: {}",
-            <anchor_lang::prelude::Account<'info, TransactionAccount> as AsRef<
-                TransactionAccount,
-            >>::as_ref(&ctx.accounts.transaction_account)
         );
     }
 

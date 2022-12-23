@@ -11,7 +11,8 @@ import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount, TransactionState } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
-import { ExecuteArrayResult } from "../types/cryptid";
+import { ExecuteArrayResult, SealResult } from "../types/cryptid";
+import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -110,9 +111,12 @@ export interface CryptidClient {
     transaction: Transaction
   ): Promise<Transaction>;
 
-  seal(transactionAccountAddress: PublicKey): Promise<Transaction>;
+  seal(transactionAccountAddress: PublicKey): Promise<SealResult>;
 
-  execute(transactionAccountAddress: PublicKey): Promise<ExecuteArrayResult>;
+  execute(
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
+  ): Promise<ExecuteArrayResult>;
 
   // TODO Reinstate
   // cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;

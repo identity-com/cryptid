@@ -24,6 +24,11 @@ export type ProposalResult = {
   cryptidTransactionRepresentation: CryptidTransaction;
 };
 
+export type SealResult = {
+  sealTransaction: Transaction;
+  sealSigners: Signer[];
+};
+
 export type ExecuteResult = {
   executeTransaction: Transaction;
   executeSigners: Signer[];

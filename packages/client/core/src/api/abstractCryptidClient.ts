@@ -17,8 +17,13 @@ import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount, TransactionState } from "../types";
-import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
+import {
+  ProposalResult,
+  ExecuteArrayResult,
+  SealResult,
+} from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
+import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   readonly details: CryptidAccountDetails;
@@ -126,18 +131,23 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     );
   }
 
-  seal(transactionAccountAddress: PublicKey): Promise<Transaction> {
+  seal(transactionAccountAddress: PublicKey): Promise<SealResult> {
     return this.service().then((service) =>
       service.seal(this.details, transactionAccountAddress)
     );
   }
 
   async execute(
-    transactionAccountAddress: PublicKey
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
   ): Promise<ExecuteArrayResult> {
     return this.service()
       .then((service) =>
-        service.execute(this.details, transactionAccountAddress)
+        service.execute(
+          this.details,
+          transactionAccountAddress,
+          cryptidTransactionRepresentation
+        )
       )
       .then((result) => ({
         executeTransactions: [result.executeTransaction],

@@ -106,6 +106,14 @@ export class CryptidTransaction {
     );
   }
 
+  /**
+   * Given an existing transaction account, create a cryptidTransaction object which can be used to execute
+   * cryptid commands (extend, execute) on the underlying transaction account.
+   * @param cryptidAccount The cryptid account owner of the transaction
+   * @param authority An authority (signer) on this cryptid account (direct or via a controller DID)
+   * @param transactionAccount The underlying transaction account
+   * @param controllerChain The controller chain linking the authority to the DID owner of the cryptid account
+   */
   static fromTransactionAccount(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
@@ -122,7 +130,7 @@ export class CryptidTransaction {
     ];
     // const remainingAccounts = transactionAccount.accounts;
     const allAccounts = transactionAccount.accounts; //[...namedAccounts, ...remainingAccounts];
-    const accountMetas = transactionAccountMetasToAccountMetas(
+    const accountMetasFromInstructions = transactionAccountMetasToAccountMetas(
       instructions.flatMap((i) => [
         ...(i.accounts as TransactionAccountMeta[]),
         { key: i.programId, meta: 0 },
@@ -130,21 +138,25 @@ export class CryptidTransaction {
       allAccounts,
       cryptidAccount
     );
-    const filteredAccountMetas = accountMetas.filter(
-      (a) =>
-        !namedAccounts
-          .map((account) => account.toBase58())
-          .includes(a.pubkey.toBase58())
-    );
+    const filteredAccountMetasFromInstructionsExcludingNamedAccounts =
+      accountMetasFromInstructions.filter(
+        (a) =>
+          !namedAccounts
+            .map((account) => account.toBase58())
+            .includes(a.pubkey.toBase58())
+      );
 
     const [controllersAccountMetas, controllerIndices] =
       CryptidTransaction.controllerChainToRemainingAccounts(
         controllerChain,
+        // allAccounts includes all accounts in transactionAccount,
+        // therefore also including the controller accounts,
+        // so the controller account is filtered out
         allAccounts
       );
 
-    const allAccountMetas = [
-      ...filteredAccountMetas,
+    const allRemainingAccountMetas = [
+      ...filteredAccountMetasFromInstructionsExcludingNamedAccounts,
       ...controllersAccountMetas,
     ];
 
@@ -152,11 +164,17 @@ export class CryptidTransaction {
       cryptidAccount,
       authority,
       instructions,
-      allAccountMetas,
+      allRemainingAccountMetas,
       controllerIndices
     );
   }
 
+  /**
+   * Given an array of controllers, generate a set of accountMetas that will be
+   * added to the remainingAccounts of any cryptid commands
+   * @param controllerChain
+   * @param allAccounts
+   */
   static controllerChainToRemainingAccounts(
     controllerChain: ControllerPubkeys[],
     allAccounts: PublicKey[]
@@ -168,28 +186,26 @@ export class CryptidTransaction {
         PublicKey
       ]
     ): ControllerAccountMetaInfo => {
-      const accountIndex = allAccounts.findIndex(
+      const existingAccountIndex = allAccounts.findIndex(
         (a) => a.toBase58() === controllerAccountMeta.pubkey.toBase58()
       );
 
-      if (accountIndex >= 0) {
-        // controller is in the list of all accounts, no need to add an accountMeta, just push the reference
-        const reference: ControllerAccountReference = {
-          accountIndex,
-          authorityKey: controllerDidAuthorityKey,
-        };
-        return [accounts, [...references, reference]];
-      } else {
-        // controller is new (not in the list of all accounts), add an accountMeta at the end
-        const reference: ControllerAccountReference = {
-          accountIndex: allAccounts.length + accounts.length,
-          authorityKey: controllerDidAuthorityKey,
-        };
-        return [
-          [...accounts, controllerAccountMeta],
-          [...references, reference],
-        ];
-      }
+      // if the controller is in the list of all accounts, use that index
+      // otherwise, if the controller is new (not in the list of all accounts),
+      // its reference is the next available index
+      const accountIndex =
+        existingAccountIndex >= 0
+          ? existingAccountIndex
+          : allAccounts.length + accounts.length;
+      const reference = {
+        accountIndex,
+        authorityKey: controllerDidAuthorityKey,
+      };
+
+      return [
+        [...accounts, controllerAccountMeta],
+        [...references, reference],
+      ];
     };
 
     const controllerAccountMetas: [AccountMeta, PublicKey][] =
@@ -203,6 +219,10 @@ export class CryptidTransaction {
       ]);
 
     return controllerAccountMetas.reduce(reducer, [[], []]);
+  }
+
+  private flags(): number {
+    return process.env.DEBUG ? 1 : 0;
   }
 
   // TODO move transactionAccountAddress into constructor?
@@ -255,25 +275,6 @@ export class CryptidTransaction {
   }
 
   // TODO move transactionAccountAddress into constructor?
-  seal(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
-    return program.methods
-      .sealTransaction(
-        this.controllerChainReferences.map((r) => r.authorityKey),
-        this.cryptidAccount.bump,
-        this.cryptidAccount.index,
-        this.cryptidAccount.didAccountBump
-      )
-      .accounts({
-        cryptidAccount: this.cryptidAccount.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: this.cryptidAccount.didAccount,
-        authority: this.authority,
-        transactionAccount: transactionAccountAddress,
-      })
-      .remainingAccounts(this.accountMetas);
-  }
-
-  // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   execute(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
@@ -283,7 +284,7 @@ export class CryptidTransaction {
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
-        0
+        this.flags()
       )
       .accounts({
         cryptidAccount: this.cryptidAccount.address,
@@ -306,7 +307,7 @@ export class CryptidTransaction {
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
-        0
+        this.flags()
       )
       .accounts({
         cryptidAccount: this.cryptidAccount.address,

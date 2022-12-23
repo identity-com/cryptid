@@ -9,7 +9,11 @@ import {
   setControllersOnDid,
 } from "./util/did";
 import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
-import { Cryptid, CryptidClient } from "@identity.com/cryptid";
+import {
+  Cryptid,
+  CryptidClient,
+  TransactionState,
+} from "@identity.com/cryptid";
 import { toWallet } from "@identity.com/cryptid-core/dist/lib/crypto";
 import { Cryptid as Builder } from "@identity.com/cryptid-core";
 
@@ -96,6 +100,40 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       const currentBalance = await balanceOf(cryptidAccount);
 
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
+    });
+
+    it("can extend and seal a transaction with a controller", async () => {
+      const recipient = Keypair.generate();
+      const previousBalance = await balanceOf(cryptidAccount);
+
+      const { proposeTransaction, proposeSigners, transactionAccount } =
+        await cryptid.propose(
+          makeTransaction(recipient.publicKey),
+          TransactionState.NotReady
+        );
+      await cryptid.send(proposeTransaction, proposeSigners);
+
+      // extend the transaction with another transfer
+      const extendTx = await cryptid.extend(
+        transactionAccount,
+        makeTransaction(recipient.publicKey)
+      );
+      await cryptid.send(extendTx, []);
+
+      // seal the transaction
+      const { sealTransaction, sealSigners } = await cryptid.seal(
+        transactionAccount
+      );
+      await cryptid.send(sealTransaction, sealSigners);
+
+      // send the execute tx
+      const { executeTransactions } = await cryptid.execute(transactionAccount);
+      await cryptid.send(executeTransactions[0]);
+
+      const currentBalance = await balanceOf(cryptidAccount);
+
+      // Both transfers were sent
+      expect(previousBalance - currentBalance).to.equal(2 * LAMPORTS_PER_SOL);
     });
 
     it("cannot transfer if signed by a non-controller", async () => {
