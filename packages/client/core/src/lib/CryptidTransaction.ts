@@ -43,6 +43,14 @@ export class CryptidTransaction {
     readonly controllerChainReferences: ControllerAccountReference[]
   ) {}
 
+  /**
+   * Convert a set of instructions into a CryptidTransaction object that can execute the
+   * cryptid "propose" or "directExecute" commands on it.
+   * @param cryptidAccount The cryptid account owner of the transaction
+   * @param authority An authority (signer) on this cryptid account (direct or via a controller DID)
+   * @param solanaInstructions The standard solana instructions to execute via cryptid
+   * @param controllerChain The controller chain linking the authority to the DID owner of the cryptid account
+   */
   static fromSolanaInstructions(
     cryptidAccount: CryptidAccountDetails,
     authority: PublicKey,
@@ -56,12 +64,10 @@ export class CryptidTransaction {
     // The accounts available to the instructions are in the following order:
     // Execute Transaction Accounts:
     // 0 - cryptid account
-    // 1 - did*
-    // 2 - did program*
-    // 3 - signer*
+    // 1 - did
+    // 2 - did program
+    // 3 - signer
     // ... remaining accounts
-    //
-    // * These accounts are omitted from the Propose Transaction Accounts but included in the execute instructions
     const namedAccounts = [
       cryptidAccount.address,
       cryptidAccount.didAccount,
@@ -80,12 +86,13 @@ export class CryptidTransaction {
     const instructions = solanaInstructions.map(
       toInstructionData(availableInstructionAccounts)
     );
-    const filteredAccountMetas = accountMetas.filter(
-      (a) =>
-        !namedAccounts
-          .map((account) => account.toBase58())
-          .includes(a.pubkey.toBase58())
-    );
+    const filteredAccountMetasFromInstructionsExcludingNamedAccounts =
+      accountMetas.filter(
+        (a) =>
+          !namedAccounts
+            .map((account) => account.toBase58())
+            .includes(a.pubkey.toBase58())
+      );
     const [controllersAccountMetas, controllerReferences] =
       CryptidTransaction.controllerChainToRemainingAccounts(
         controllerChain,
@@ -93,7 +100,7 @@ export class CryptidTransaction {
       );
 
     const allAccountMetas = [
-      ...filteredAccountMetas,
+      ...filteredAccountMetasFromInstructionsExcludingNamedAccounts,
       ...controllersAccountMetas,
     ];
 
@@ -128,8 +135,7 @@ export class CryptidTransaction {
       DID_SOL_PROGRAM,
       authority,
     ];
-    // const remainingAccounts = transactionAccount.accounts;
-    const allAccounts = transactionAccount.accounts; //[...namedAccounts, ...remainingAccounts];
+    const allAccounts = transactionAccount.accounts;
     const accountMetasFromInstructions = transactionAccountMetasToAccountMetas(
       instructions.flatMap((i) => [
         ...(i.accounts as TransactionAccountMeta[]),
@@ -225,6 +231,12 @@ export class CryptidTransaction {
     return process.env.DEBUG ? 1 : 0;
   }
 
+  /**
+   * Create a proposal transaction for this cryptidTransaction
+   * @param program
+   * @param transactionAccountAddress
+   * @param state
+   */
   // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -253,6 +265,12 @@ export class CryptidTransaction {
       .remainingAccounts(this.accountMetas);
   }
 
+  /**
+   * Extend an existing cryptidTransaction
+   * @param program
+   * @param transactionAccountAddress
+   * @param state
+   */
   // TODO move transactionAccountAddress into constructor?
   extend(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
     return program.methods
@@ -274,6 +292,12 @@ export class CryptidTransaction {
       .remainingAccounts(this.accountMetas);
   }
 
+  /**
+   * Execute an existing cryptidTransaction
+   * @param program
+   * @param transactionAccountAddress
+   * @param state
+   */
   // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -297,6 +321,12 @@ export class CryptidTransaction {
       .remainingAccounts(this.accountMetas);
   }
 
+  /**
+   * Create and directly execute a cryptidTransaction
+   * @param program
+   * @param transactionAccountAddress
+   * @param state
+   */
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   directExecute(program: Program<Cryptid>) {

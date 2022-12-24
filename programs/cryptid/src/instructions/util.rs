@@ -132,3 +132,9 @@ bitflags! {
         const DEBUG = 1 << 0;
     }
 }
+
+/// The index of the authority key in the accounts array of an instruction
+/// This is a slightly "special" key as it is the only one that is allowed to change
+/// between "propose" and "execute".
+/// As long as the authority is valid for the DID, any authority can sign the transaction.
+pub const AUTHORITY_ACCOUNT_INDEX: usize = 3;

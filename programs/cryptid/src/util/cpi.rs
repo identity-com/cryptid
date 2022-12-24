@@ -107,7 +107,7 @@ impl CPI {
                             msg!("Invoking signed with seeds: {:?}", seeds);
                         }
 
-                        // Ohhh kay - time to try to turn Vec<Vec<u8>> into &[&[u8]]
+                        // Turn Vec<Vec<u8>> into &[&[u8]]
                         // TODO: do it better (presumably by changing the type of `seeds`)
                         let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
 

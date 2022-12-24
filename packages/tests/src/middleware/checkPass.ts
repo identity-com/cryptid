@@ -63,7 +63,6 @@ describe("Middleware: checkPass", () => {
   let cryptid: CryptidClient;
 
   let middlewareAccount: PublicKey;
-  // let middlewareBump: number;
 
   const recipient = Keypair.generate();
   const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
@@ -185,7 +184,7 @@ describe("Middleware: checkPass", () => {
         cryptidAccount: cryptid.address(),
         didProgram: DID_SOL_PROGRAM,
         did: didAccount,
-        signer: authority.publicKey,
+        authority: authority.publicKey,
         destination: authority.publicKey,
         transactionAccount: transactionAccount.publicKey,
       })

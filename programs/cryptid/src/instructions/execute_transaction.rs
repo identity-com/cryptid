@@ -120,13 +120,18 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     // CHECK the accounts have not been switched since the transaction was proposed
     let account_pairs = all_accounts
         .iter()
+        .enumerate()
         .zip(ctx.accounts.transaction_account.accounts.iter());
-    for (account, proposed_account) in account_pairs {
-        require_keys_eq!(
-            *account.key,
-            *proposed_account,
-            CryptidError::InvalidAccounts
-        )
+    for ((index, account), proposed_account) in account_pairs {
+        // The authority is allowed to change
+        // As long as the authority is valid for the DID (checked above), any authority can sign the transaction.
+        if index != AUTHORITY_ACCOUNT_INDEX {
+            require_keys_eq!(
+                *account.key,
+                *proposed_account,
+                CryptidError::InvalidAccounts
+            )
+        }
     }
 
     // CHECK All middleware have approved the transaction (specifically the last one)
