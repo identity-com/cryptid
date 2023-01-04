@@ -86,13 +86,12 @@ export class CryptidTransaction {
     const instructions = solanaInstructions.map(
       toInstructionData(availableInstructionAccounts)
     );
-    const filteredAccountMetasFromInstructionsExcludingNamedAccounts =
-      accountMetas.filter(
-        (a) =>
-          !namedAccounts
-            .map((account) => account.toBase58())
-            .includes(a.pubkey.toBase58())
-      );
+    const filteredRemainingAccountMetas = accountMetas.filter(
+      (a) =>
+        !namedAccounts
+          .map((account) => account.toBase58())
+          .includes(a.pubkey.toBase58())
+    );
     const [controllersAccountMetas, controllerReferences] =
       CryptidTransaction.controllerChainToRemainingAccounts(
         controllerChain,
@@ -100,7 +99,7 @@ export class CryptidTransaction {
       );
 
     const allAccountMetas = [
-      ...filteredAccountMetasFromInstructionsExcludingNamedAccounts,
+      ...filteredRemainingAccountMetas,
       ...controllersAccountMetas,
     ];
 
@@ -272,13 +271,19 @@ export class CryptidTransaction {
    * @param state
    */
   // TODO move transactionAccountAddress into constructor?
-  extend(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
+  extend(
+    program: Program<Cryptid>,
+    transactionAccountAddress: PublicKey,
+    // by default, extend the transaction and seal it at the same time
+    state = TransactionState.Ready
+  ) {
     return program.methods
       .extendTransaction(
         this.controllerChainReferences,
         this.cryptidAccount.bump,
         this.cryptidAccount.index,
         this.cryptidAccount.didAccountBump,
+        TransactionState.toBorsh(state),
         this.instructions,
         this.accountMetas.length
       )

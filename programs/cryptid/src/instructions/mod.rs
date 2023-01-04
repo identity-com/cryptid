@@ -7,7 +7,6 @@ pub mod direct_execute;
 pub mod execute_transaction;
 pub mod extend_transaction;
 pub mod propose_transaction;
-pub mod seal_transaction;
 
 pub mod util;
 
@@ -17,4 +16,3 @@ pub use direct_execute::*;
 pub use execute_transaction::*;
 pub use extend_transaction::*;
 pub use propose_transaction::*;
-pub use seal_transaction::*;

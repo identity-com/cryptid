@@ -46,7 +46,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
     ) =>
       program.methods
         .directExecute(
-          Buffer.from([]), // no controller chain
+          [], // no controller chain
           [instructionData],
           cryptid.details.bump,
           cryptid.details.index,

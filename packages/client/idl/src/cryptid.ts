@@ -283,6 +283,12 @@ export type Cryptid = {
           "type": "u8"
         },
         {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -292,71 +298,6 @@ export type Cryptid = {
         },
         {
           "name": "numAccounts",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "sealTransaction",
-      "accounts": [
-        {
-          "name": "cryptidAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The Cryptid instance to seal with"
-          ]
-        },
-        {
-          "name": "did",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The DID on the Cryptid instance"
-          ]
-        },
-        {
-          "name": "didProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The program for the DID"
-          ]
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The signer of the transaction"
-          ]
-        },
-        {
-          "name": "transactionAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The transaction to seal"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "controllerAuthorityKeys",
-          "type": {
-            "vec": "publicKey"
-          }
-        },
-        {
-          "name": "cryptidAccountBump",
-          "type": "u8"
-        },
-        {
-          "name": "cryptidAccountIndex",
-          "type": "u32"
-        },
-        {
-          "name": "didAccountBump",
           "type": "u8"
         }
       ]
@@ -1054,6 +995,12 @@ export const IDL: Cryptid = {
           "type": "u8"
         },
         {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -1063,71 +1010,6 @@ export const IDL: Cryptid = {
         },
         {
           "name": "numAccounts",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "sealTransaction",
-      "accounts": [
-        {
-          "name": "cryptidAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The Cryptid instance to seal with"
-          ]
-        },
-        {
-          "name": "did",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The DID on the Cryptid instance"
-          ]
-        },
-        {
-          "name": "didProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The program for the DID"
-          ]
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The signer of the transaction"
-          ]
-        },
-        {
-          "name": "transactionAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The transaction to seal"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "controllerAuthorityKeys",
-          "type": {
-            "vec": "publicKey"
-          }
-        },
-        {
-          "name": "cryptidAccountBump",
-          "type": "u8"
-        },
-        {
-          "name": "cryptidAccountIndex",
-          "type": "u32"
-        },
-        {
-          "name": "didAccountBump",
           "type": "u8"
         }
       ]

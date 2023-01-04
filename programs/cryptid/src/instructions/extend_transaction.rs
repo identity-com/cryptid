@@ -20,6 +20,8 @@ use itertools::Itertools;
     cryptid_account_index: u32,
     /// The bump seed for the Did Account
     did_account_bump: u8,
+    /// The state to set the transaction to
+    state: TransactionState,
     /// The instructions to add to the transaction
     instructions: Vec<AbbreviatedInstructionData>,
     /// The number of new accounts referred to in the instructions
@@ -132,6 +134,7 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
     cryptid_account_bump: u8,
     cryptid_account_index: u32,
     did_account_bump: u8,
+    state: TransactionState,
     mut instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
     let all_accounts = ctx.all_accounts();
@@ -166,6 +169,14 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
         .transaction_account
         .instructions
         .extend(instructions);
+
+    // Update the state of the transaction account (setting it to Ready as needed)
+    require_neq!(
+        state,
+        TransactionState::Executed,
+        CryptidError::InvalidTransactionState
+    );
+    ctx.accounts.transaction_account.state = state;
 
     Ok(())
 }

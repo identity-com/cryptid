@@ -102,7 +102,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Should have lost 1 SOL
     });
 
-    it("can extend and seal a transaction with a controller", async () => {
+    it("can extend a transaction with a controller", async () => {
       const recipient = Keypair.generate();
       const previousBalance = await balanceOf(cryptidAccount);
 
@@ -119,12 +119,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         makeTransaction(recipient.publicKey)
       );
       await cryptid.send(extendTx, []);
-
-      // seal the transaction
-      const { sealTransaction, sealSigners } = await cryptid.seal(
-        transactionAccount
-      );
-      await cryptid.send(sealTransaction, sealSigners);
 
       // send the execute tx
       const { executeTransactions } = await cryptid.execute(transactionAccount);

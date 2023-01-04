@@ -11,7 +11,7 @@ import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount, TransactionState } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
-import { ExecuteArrayResult, SealResult } from "../types/cryptid";
+import { ExecuteArrayResult } from "../types/cryptid";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
@@ -120,19 +120,13 @@ export interface CryptidClient {
    *
    * @param transactionAccountAddress The account representing the cryptid transaction proposal to extend
    * @param transaction The transaction to add
+   * @param state [TransactionState.Ready] The new state of the transaction. If NotReady, the transaction can be extended further.
    */
   extend(
     transactionAccountAddress: PublicKey,
-    transaction: Transaction
+    transaction: Transaction,
+    state?: TransactionState
   ): Promise<Transaction>;
-
-  /**
-   * Seal a proposed transaction so that it can be executed.
-   *
-   * A sealed transaction can no longer be extended.
-   * @param transactionAccountAddress The account representing the cryptid transaction proposal to seal
-   */
-  seal(transactionAccountAddress: PublicKey): Promise<SealResult>;
 
   /**
    * Execute a proposed transaction.

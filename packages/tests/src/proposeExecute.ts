@@ -197,7 +197,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
 
         const executeIx = await program.methods
           .executeTransaction(
-            Buffer.from([]), // no controller chain
+            [], // no controller chain
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
@@ -367,7 +367,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         // execute the Cryptid transaction
         const shouldFail = program.methods
           .executeTransaction(
-            Buffer.from([]), // no controller chain
+            [], // no controller chain
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,

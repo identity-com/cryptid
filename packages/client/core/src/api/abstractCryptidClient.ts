@@ -17,11 +17,7 @@ import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount, TransactionState } from "../types";
-import {
-  ProposalResult,
-  ExecuteArrayResult,
-  SealResult,
-} from "../types/cryptid";
+import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
@@ -124,16 +120,16 @@ export abstract class AbstractCryptidClient implements CryptidClient {
 
   async extend(
     transactionAccountAddress: PublicKey,
-    transaction: Transaction
+    transaction: Transaction,
+    state?: TransactionState
   ): Promise<Transaction> {
     return this.service().then((service) =>
-      service.extend(this.details, transactionAccountAddress, transaction)
-    );
-  }
-
-  seal(transactionAccountAddress: PublicKey): Promise<SealResult> {
-    return this.service().then((service) =>
-      service.seal(this.details, transactionAccountAddress)
+      service.extend(
+        this.details,
+        transactionAccountAddress,
+        transaction,
+        state
+      )
     );
   }
 

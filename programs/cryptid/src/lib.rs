@@ -85,6 +85,7 @@ pub mod cryptid {
         cryptid_account_bump: u8,
         cryptid_account_index: u32,
         did_account_bump: u8,
+        state: TransactionState,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -94,23 +95,8 @@ pub mod cryptid {
             cryptid_account_bump,
             cryptid_account_index,
             did_account_bump,
+            state,
             instructions,
-        )
-    }
-
-    pub fn seal_transaction<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, SealTransaction<'info>>,
-        controller_authority_keys: Vec<Pubkey>,
-        cryptid_account_bump: u8,
-        cryptid_account_index: u32,
-        did_account_bump: u8,
-    ) -> Result<()> {
-        instructions::seal_transaction(
-            ctx,
-            controller_authority_keys,
-            cryptid_account_bump,
-            cryptid_account_index,
-            did_account_bump,
         )
     }
 

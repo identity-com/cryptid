@@ -8,7 +8,7 @@ import {
   initializeDIDAccount,
   isDIDInitialized,
 } from "./util/did";
-import { fund, createTestContext, balanceOf } from "./util/anchorUtils";
+import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
 import { CryptidClient, TransactionState } from "@identity.com/cryptid";
 import { CryptidBuilder } from "@identity.com/cryptid-core/dist/api/cryptidBuilder";
@@ -66,12 +66,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         );
         await cryptid.send(extendTx, []);
 
-        // seal the transaction
-        const { sealTransaction, sealSigners } = await cryptid.seal(
-          transactionAccount
-        );
-        await cryptid.send(sealTransaction, sealSigners);
-
         // send the execute tx
         const { executeTransactions } = await cryptid.execute(
           transactionAccount
@@ -112,12 +106,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         );
         await cryptid.send(extendTx, []);
 
-        // seal the transaction
-        const { sealTransaction, sealSigners } = await cryptid.seal(
-          transactionAccount
-        );
-        await cryptid.send(sealTransaction, sealSigners);
-
         // send the execute tx
         const { executeTransactions } = await cryptid.execute(
           transactionAccount
@@ -132,7 +120,42 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         expect(recipient2Balance).to.equal(LAMPORTS_PER_SOL);
       });
 
-      it("can propose, extend, seal and execute in the same transaction", async () => {
+      it("can extend a transaction twice", async () => {
+        const previousBalance = await balanceOf(cryptid.address());
+
+        // send the propose tx (in unready state)
+        const { proposeTransaction, transactionAccount, proposeSigners } =
+          await cryptid.propose(makeTransaction(), TransactionState.NotReady);
+
+        await cryptid.send(proposeTransaction, proposeSigners);
+
+        // extend the transaction (keeping it in unready state)
+        const extendTx1 = await cryptid.extend(
+          transactionAccount,
+          makeTransaction(),
+          TransactionState.NotReady
+        );
+        await cryptid.send(extendTx1, []);
+
+        // extend the transaction 2
+        const extendTx2 = await cryptid.extend(
+          transactionAccount,
+          makeTransaction()
+        );
+        await cryptid.send(extendTx2, []);
+
+        // send the execute tx
+        const { executeTransactions } = await cryptid.execute(
+          transactionAccount
+        );
+        await cryptid.send(executeTransactions[0]);
+
+        const currentBalance = await balanceOf(cryptid.address());
+        // Both txes have been executed
+        expect(previousBalance - currentBalance).to.equal(3 * LAMPORTS_PER_SOL);
+      });
+
+      it("can propose, extend, and execute in the same transaction", async () => {
         const previousBalance = await balanceOf(cryptid.address());
 
         const superTransaction = new Transaction();
@@ -152,12 +175,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         );
         superTransaction.add(...extendTransaction.instructions);
 
-        // seal the transaction
-        const { sealTransaction, sealSigners } = await cryptid.seal(
-          transactionAccount
-        );
-        superTransaction.add(...sealTransaction.instructions);
-
         // execute the transaction
         const { executeTransactions, executeSigners } = await cryptid.execute(
           transactionAccount,
@@ -167,7 +184,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
 
         await cryptid.send(superTransaction, [
           ...proposeSigners,
-          ...sealSigners,
           ...executeSigners,
         ]);
 
@@ -198,7 +214,9 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const { authority: secondAuthority } = createTestContext();
         await fund(secondAuthority.publicKey, LAMPORTS_PER_SOL);
         await initializeDIDIfNecessary();
+        console.log("adding key", secondAuthority.publicKey.toBase58());
         await addKeyToDID(authority, secondAuthority.publicKey);
+        console.log("added key", secondAuthority.publicKey.toBase58());
 
         // create a cryptid client using the second authority as a signer
         const firstAuthorityCryptid = cryptid;
@@ -225,16 +243,11 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         );
         await secondAuthorityCryptid.send(extendTx, []);
 
-        // seal the transaction (with the first authority)
-        const { sealTransaction, sealSigners } =
-          await firstAuthorityCryptid.seal(transactionAccount);
-        await firstAuthorityCryptid.send(sealTransaction, sealSigners);
-
-        // send the execute tx (with the second authority)
-        const { executeTransactions } = await secondAuthorityCryptid.execute(
+        // send the execute tx (with the first authority)
+        const { executeTransactions } = await firstAuthorityCryptid.execute(
           transactionAccount
         );
-        await secondAuthorityCryptid.send(executeTransactions[0]);
+        await firstAuthorityCryptid.send(executeTransactions[0]);
 
         const currentBalance = await balanceOf(cryptid.address());
         // Both txes have been executed

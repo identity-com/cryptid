@@ -25,10 +25,9 @@ import { didToPDA, didToPublicKey } from "../lib/did";
 import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
 import {
-  ExecuteResult,
   ControllerPubkeys,
+  ExecuteResult,
   ProposalResult,
-  SealResult,
 } from "../types/cryptid";
 import { MiddlewareResult } from "../types/middleware";
 
@@ -293,7 +292,8 @@ export class CryptidService {
   public async extend(
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
-    transaction: Transaction
+    transaction: Transaction,
+    state?: TransactionState
   ): Promise<Transaction> {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -302,53 +302,27 @@ export class CryptidService {
       this.controllerChainPubkeys
     );
 
-    return cryptidTransaction
-      .extend(this.program, transactionAccountAddress)
-      .transaction();
-  }
-
-  public async seal(
-    account: CryptidAccountDetails,
-    transactionAccountAddress: PublicKey
-  ): Promise<SealResult> {
-    // include any "proposal" middleware as the transaction is now moving to "ready" state
-    // TODO are there any security issues if the middleware is executed twice?
-    const middlewareResult = await this.executeMiddlewareInstructions(
-      account,
+    let builder = cryptidTransaction.extend(
+      this.program,
       transactionAccountAddress,
-      "Propose"
+      state
     );
 
-    const remainingAccounts = this.controllerChainPubkeys.map((c) =>
-      toAccountMeta(c[0])
-    );
+    if (state === TransactionState.Ready) {
+      // include any "proposal" middleware as the transaction is now moving to "ready" state
+      // TODO are there any security issues if the middleware is executed twice?
+      const middlewareResult = await this.executeMiddlewareInstructions(
+        account,
+        transactionAccountAddress,
+        "Propose"
+      );
 
-    const sealTransaction = await this.program.methods
-      .sealTransaction(
-        // here we pass the authority keys for any controllers
-        // the controller did accounts are in the remainingAccounts list
-        // Note: the order must match.
-        this.controllerChainPubkeys.map((c) => c[1]), // authority keys only here
-        account.bump,
-        account.index,
-        account.didAccountBump
-      )
-      .accounts({
-        cryptidAccount: account.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: account.didAccount,
-        authority: this.authority.publicKey,
-        transactionAccount: transactionAccountAddress,
-      })
-      .remainingAccounts(remainingAccounts)
-      .signers(middlewareResult.signers)
-      .postInstructions(middlewareResult.instructions)
-      .transaction();
+      builder = builder
+        .signers(middlewareResult.signers)
+        .postInstructions(middlewareResult.instructions);
+    }
 
-    return {
-      sealTransaction,
-      sealSigners: middlewareResult.signers,
-    };
+    return builder.transaction();
   }
 
   public async proposeAndExecuteTransaction(

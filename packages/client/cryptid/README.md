@@ -69,11 +69,7 @@ await cryptid.send(proposeTransaction, proposeSigners);
 
 // Extend it with a second transaction
 const {extendTransaction, extendSigners} = await cryptid.extend(transactionAccount, tx2);
-await cryptid.send(extendTransaction, extendSigners);
-
-// Seal the transaction so that it cannot be modified
-const {sealTransaction, sealSigners} = await cryptid.seal(transactionAccount);
-await cryptid.send(sealTransaction, sealSigners);
+await cryptid.send(extendTransaction, extendSigners, TransactionState.Ready);
 
 // Execute the transaction
 const {executeTransactions, executeSigners} = await cryptid.execute(transactionAccount);
