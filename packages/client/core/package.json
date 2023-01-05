@@ -14,7 +14,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@identity.com/cryptid-idl": "0.3.0-alpha.11",
-    "@identity.com/sol-did-client": "^3.1.4",
+    "@identity.com/sol-did-client": "^3.3.0",
     "@project-serum/anchor": "^0.26.0",
     "@solana/web3.js": "^1.62.0",
     "ramda": "^0.28.0"

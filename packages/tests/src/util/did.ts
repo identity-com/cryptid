@@ -18,7 +18,7 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
   const newKeyVerificationMethod = {
     flags: [BitwiseVerificationMethodFlag.CapabilityInvocation],
     fragment: `key${Date.now()}`, // randomise fragment name, so that we can add multiple keys in multiple tests.
-    keyData: key.toBytes(),
+    keyData: key.toBuffer(),
     methodType: VerificationMethodType.Ed25519VerificationKey2018,
   };
 
