@@ -1,0 +1,25 @@
+[package]
+name = "cryptid"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cryptid"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.26.0"
+bitflags = "1.3.2"
+enum-display-derive = "0.1.1"
+itertools = "0.10.5"
+#sol-did = { git = "https://github.com/identity-com/sol-did", branch = "develop", features = ["no-entrypoint"] }
+sol-did = { version = "3.3.0", features = ["no-entrypoint"] }
+num-traits = "0.2.15"

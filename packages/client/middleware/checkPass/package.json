@@ -1,0 +1,21 @@
+{
+  "name": "@identity.com/cryptid-middleware-check-pass",
+  "version": "0.3.0-alpha.11",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
+    "build": "tsc --build",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@identity.com/cryptid-core": "0.3.0-alpha.11",
+    "@identity.com/solana-gateway-ts": "^0.8.2",
+    "@solana/web3.js": "^1.62.0",
+    "bn.js": "^5.2.1"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@identity.com/cryptid",
+  "version": "0.3.0-alpha.11",
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
+    "lint": "eslint src/**/*.ts",
+    "build": "tsc --build"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@identity.com/cryptid-core": "0.3.0-alpha.11",
+    "@identity.com/cryptid-middleware-check-did": "0.3.0-alpha.11",
+    "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.11",
+    "@identity.com/cryptid-middleware-check-recipient": "0.3.0-alpha.11",
+    "@identity.com/cryptid-middleware-time-delay": "0.3.0-alpha.11"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
+  }
+}

@@ -1,0 +1,107 @@
+use crate::error::CryptidError;
+use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+use crate::state::instruction_size::InstructionSize;
+use crate::state::transaction_state::TransactionState;
+use anchor_lang::prelude::*;
+use std::fmt;
+
+pub const DISCRIMINATOR_SIZE: usize = 8;
+
+/// A proposed transaction stored on-chain, in preparation to be executed
+#[account]
+pub struct TransactionAccount {
+    /// The cryptid account for the transaction
+    pub cryptid_account: Pubkey,
+    /// The owner of the cryptid account (Typically a DID account)
+    pub did: Pubkey,
+    /// The accounts `instructions` references (excluding the cryptid account)
+    pub accounts: Vec<Pubkey>,
+    /// The instructions that will be executed
+    pub instructions: Vec<AbbreviatedInstructionData>,
+    /// The most recent middleware PDA that approved the transaction
+    pub approved_middleware: Option<Pubkey>,
+    /// The slot in which the transaction was proposed
+    /// This is used to prevent replay attacks TODO: Do we need it?
+    pub slot: u8,
+    /// The transaction state, to prevent replay attacks
+    /// in case an executed transaction account is not immediately
+    /// garbage-collected by the runtime
+    pub state: TransactionState,
+}
+impl TransactionAccount {
+    /// Calculates the on-chain size of a [`TransactionAccount`]
+    pub fn calculate_size(
+        num_accounts: usize,
+        instruction_sizes: impl Iterator<Item = InstructionSize>,
+    ) -> usize {
+        DISCRIMINATOR_SIZE
+            + 32 // cryptid_account
+            + 32 // did (owner)
+            + 4 + 32 * (num_accounts + 4) //accounts (+4 for the named accounts)
+            + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
+            + 1 + 32 // approved_middleware
+            + 1 // slot
+            + 1 // state
+    }
+
+    pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
+        require_keys_eq!(
+            self.accounts[index as usize],
+            *account,
+            CryptidError::AccountMismatch
+        );
+        Ok(())
+    }
+}
+impl fmt::Display for TransactionAccount {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Accounts:")?;
+        for (index, account) in self.accounts.iter().enumerate() {
+            writeln!(f, "{}: {}", index, account)?;
+        }
+        for (index, instruction) in self.instructions.iter().enumerate() {
+            writeln!(f, "Instruction {}:", index)?;
+            writeln!(f, "{}", instruction)?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
+    use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
+    use crate::state::account_meta_props::AccountMetaProps;
+    use anchor_lang::prelude::borsh::BorshSerialize;
+    use std::iter::once;
+
+    #[test]
+    fn calculate_size() {
+        let size = TransactionAccount::calculate_size(
+            1,
+            once(InstructionSize {
+                accounts: 1,
+                data_len: 1,
+            }),
+        );
+        println!("Size: {}", size);
+
+        let account = TransactionAccount {
+            cryptid_account: Default::default(),
+            did: Default::default(),
+            accounts: vec![Default::default()],
+            instructions: vec![AbbreviatedInstructionData {
+                program_id: 0,
+                accounts: vec![AbbreviatedAccountMeta { key: 0, meta: 0 }],
+                data: vec![0],
+            }],
+            approved_middleware: None,
+            slot: 0,
+            state: TransactionState::Ready,
+        };
+        let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len();
+        println!("SerSize: {}", ser_size);
+        assert_eq!(size, ser_size);
+    }
+}

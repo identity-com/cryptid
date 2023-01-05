@@ -7,30 +7,39 @@ Traditionally, the way to identity yourself on the blockchain is through ownersh
 your private key. Assets are owned and transactions are signed using this key.
 
 Cryptid changes this, by establishing an identity layer on the blockchain, specifically on Solana. It does this by
-providing a general-purpose, flexible proxy account between the user and their private keys. Instead of assets being
+providing a general-purpose, flexible proxy accounts between the user and their private keys. Instead of assets being
 owned and transactions signed by a single private key, these assets are now owned and transactions are signed by a
 Cryptid account.
 
-Try it out at [cryptid.identity.com](https://cryptid.identity.com/) or install the [cli](./cli/).
+Cryptid is tightly coupled to `did:sol` ([Github](https://github.com/identity-com/sol-did)). A Cryptid account is
+controlled either
+1. directly by a DID or
+2. by a DID and a Middleware Account (that can be generically chained to an arbitary number of Middleware accounts)
 
-## Contents
+Middleware is useful to control access to a Cryptid Account with one or more additional constraints. Middleware programs
+are independent, native or third-party, programs that adhere to a predefined program and client interface. For example,
+Middlewares could do one of the following:
 
-* [Demo](#demo)
-* [Features](#features)
-* [On Our Roadmap](#on-our-roadmap)
-* [Frequently Asked Questions (FAQs)](#frequently-asked-questions-faqs)
-* [Getting started](#getting-started)
-* [Technical Details](#technical-details)
+- Only allow access to the Cryptid Account with an additional permissioned token present.
+- Only allow access to the Cryptid Account after a certain time has elapsed between proposing and executing a transaction
+- Only allow access to the Cryptid Account after passing more advanced multi-sig requirements
+- ...
 
-## Screengrabs
+Therefore, Cryptid represents a powerful general-purpose implementation of a wallet-abstraction that allows a user to
+control access to a Cryptid account in a flexible and extensible way.
 
-### Balances
+## Overview
 
-![Balances Screen](./docs/screen_balances.png)
+![Balances Screen](./docs/cryptid_overview.svg)
 
-### ID Overview
+Like DIDs, Cryptid has a powerful generative feature, where everyone with a DID also, by default, has a Cryptid account
+with Index 0. That means, that even without a subject interacting in any way with the chain they have a valid Cryptid
+account controlled by their DID. This is a useful transitive property, meaning, everyone with a valid Solana wallet
+`XYZ...` also has a generative DID `did:sol:XYZ...` and a generative Cryptid account `ABC...` (as PDA of DID and Index).
 
-![Balances Screen](./docs/screen_idoverview.png)
+Cryptid Accounts with higher indexes (> 0) are created explicitly and can (optionally) be configured to also adhere to
+Middleware constraints. Middleware Accounts can chain other Middleware accounts allowing for composable solutions 
+without rewriting any (often security-critical) code.
 
 ## Features
 
@@ -39,31 +48,14 @@ Try it out at [cryptid.identity.com](https://cryptid.identity.com/) or install t
 * Cryptid allows you to rotate your key if it becomes compromised, ensuring you can keep control of your identity even
   if your wallet is breached. Even your initial wallet key can be rotated!
 * Interact with dApps
-  * Cryptid behaves just like any other wallet 
-    (Visit [dex-cryptid.civic.finance](https://dex-cryptid.civic.finance) for a demo)
+  * Cryptid behaves just like any other wallet
 * Through the "controller" feature, Cryptid accounts can be connected together. This allows:
   * fully on-chain and secure trust accounts
   * individuals can control assets belonging to dependents
   * corporate wallets - company executives can share control of a company wallet without sharing keys
-
-## On Our Roadmap
-
-### M-of-N Multisig
-Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig.
-
-### Spending limits and restrictions
-
-An important part of the Cryptid model is the ability to add restrictions to a Cryptid account. We plan to support:
-
-* Spending limits
-* Recipient whitelists (all fully non-custodial and on-chain)
-
-This will allow use-cases such as:
-
-* "savings accounts" protected by cold-storage keys, with a "current account" balance on a hot wallet, all under the
-  same account
-* non-custodial account recovery, either social or via a third-party
-* subscriptions - secure and non-custodial standing orders for periodic payments on-chain.
+* Cryptid accounts can additionally be configured to adhere to Middleware program constraints.
+  * Middleware Accounts can be chained in order to reuse Middleware programs in a composable way
+  * Middleware programs can be native or third-party
 
 ### Self-Sovereign Identities
 
@@ -76,6 +68,26 @@ credentials, and add claims on your Cryptid account.
 As an example. We can have a verifiable way that an NFT creator that has created an NFT under key X is a 
 particular artists. We can add a verifiable credential to that identity, have it discoverable on-chain 
 (either directly on-chain, or via a link that's discoverable on-chain) - that attests to who they are.
+
+## On Our Roadmap
+
+### M-of-N Multisig
+Cryptid currently supports 1-of-N multisig. We plan to expand this to support threshold-multisig via Middleware.
+
+### Spending limits and restrictions
+
+An important part of the Cryptid model is the ability to add restrictions to a Cryptid account. We plan to support the
+following via Middleware:
+
+* Spending limits
+* ~~Recipient whitelists (all fully non-custodial and on-chain)~~ (implemented as native Middleware)
+
+This will allow use-cases such as:
+
+* "savings accounts" protected by cold-storage keys, with a "current account" balance on a hot wallet, all under the
+  same account
+* non-custodial account recovery, either social or via a third-party
+* subscriptions - secure and non-custodial standing orders for periodic payments on-chain.
 
 ## Frequently Asked Questions (FAQs)
 
@@ -94,8 +106,7 @@ entity. Accounts with multiple keys will allow a Cryptid account to preform acti
 ### How do I create a Cryptid account?
 
 All existing Solana wallets are automatically compatible with Cryptid. If you have a wallet, you have a Cryptid account
-automatically. Connect your wallet at [cryptid.identity.com](https://cryptid.identity.com) to test
-(devnet only at present). Your cryptid account has a new address, but is backed by your existing wallet, and
+automatically. Your default cryptid account has a new address, but is backed by your existing wallet, and
 transactions you make with it are signed with your existing wallet key.
 
 ### How much does a Cryptid account cost?
@@ -109,12 +120,12 @@ Solana. The details of these costs are explained in detail in the
 
 ### Do dApps need a special integration to use Crytpid?
 No! We are planning to include Cryptid as a supported wallet within 
-[Solana's Wallet Adapter](https://github.com/solana-labs/wallet-adapter) which would make the utilization of Cryptid 
+[Solana's Wallet Standard](https://github.com/solana-labs/wallet-standard) which would make the utilization of Cryptid 
 completely transparent towards the dApp. It's just one more option for the user to chose from.
 
 ### Who really owns the funds in my Cryptid address?
 On-chain your Cryptid address is owned by the System Program however the 
-[Cryptid Signer program](./programs/cryptid_signer) is the authority for it which makes sure that only keys and/or 
+[Cryptid Signer program](./programs/cryptid) is the authority for it which makes sure that only keys and/or 
 controllers in your Cryptid account are able to sign for it. Therefore, if the program is secure, your funds are too.
 
 Before launching Cryptid on Mainnet we will go through an extensive audit process, so that you don't only need to take
@@ -161,85 +172,42 @@ To build the Rust Solana program, please ensure:
 1. You have the Solana tool suite installed locally by following the
    steps [here](https://docs.solana.com/cli/install-solana-cli-tools).
 2. You have the Rust tool suite installed locally by following the steps [here](https://www.rust-lang.org/tools/install)
+3. You have the Anchor framework installed locally by following the steps [here](https://www.anchor-lang.com/docs/installation)
 
-Once Rust and Solana are installed, build using:
+Once Rust, Solana and anchor are installed, build using:
 
 ```sh
-cargo build-bpf
+anchor build
 ```
 
 Run the program functional tests using:
 
 ```sh
-cargo test-bpf
+anchor test
 ```
 
-### Client
+### Client and CLI
 
-The Cryptid client library provides functionality for signing transactions and managing Cryptid DID wallets. It is
-required by the [CLI](#cli) and [Wallet UI](#wallet-ui).
+The Cryptid client library provides functionality for signing transactions and managing Cryptid DID wallets. 
 
-1. Build the client:
+Build all client related backages (automatically also builds the program):
 
 ```sh
-yarn workspace @identity.com/cryptid build
+yarn build
 ```
 
-2. Run the unit tests:
+CLI usage instructions can be found in the [readme](./packages/client/cli/README.md).
 
-```sh
-yarn workspace @identity.com/cryptid test
-```
-
-3. Run the e2e tests (you must first compile the Cryptid Rust program (see [Program](#program) above):
-
-```shell
-yarn workspace @identity.com/cryptid test-e2e
-```
-
-### CLI
-
-The cli tool provides utilities for signing transactions and managing Cryptid DID wallets.
-
-1. Run the tests:
-
-```sh
-yarn workspace @identity.com/cryptid-cli test
-```
-
-2. Run the cli locally:
-
-```sh
-yarn workspace @identity.com/cryptid-cli cryptid
-```
-
-CLI usage instructions can be found in the [readme](./cli/README.md).
-
-### Wallet
-
-The wallet provides a user interface for signing transactions and managing Cryptid DID wallets.
-
-1. Start the test validator:
-
-```sh
-yarn start-validator
-```
-
-2. Start the Cryptid wallet:
-
-```sh
-yarn workspace @identity.com/cryptid-wallet start
-```
 
 # Technical Details
 
 Cryptid uses meta-transactions to abstract the key from the identity. Transactions signed by a Cryptid account are, in
 fact, wrapped in a meta-transaction. The meta-transaction is signed by a private key and then sent to
-the [Cryptid program](./programs/cryptid_signer)
+the [Cryptid program](./programs/cryptid)
 The Cryptid program validates that the private key has the permissions to sign the transaction from the Cryptid account,
 according to the associated identity stored on chain.
 
-The identity information is represented as a DID, using the SOL-DID program. It associates an identity with:
+The identity information is represented as a DID, using the `did:sol` program. It associates an identity with:
 
 * a set of rotatable keys
 * a set of permissions on those keys
