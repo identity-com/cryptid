@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import {
   BitwiseVerificationMethodFlag,
   DidSolIdentifier,
@@ -18,7 +18,7 @@ export const addKeyToDID = async (authority: Wallet, key: PublicKey) => {
   const newKeyVerificationMethod = {
     flags: [BitwiseVerificationMethodFlag.CapabilityInvocation],
     fragment: `key${Date.now()}`, // randomise fragment name, so that we can add multiple keys in multiple tests.
-    keyData: key.toBytes(),
+    keyData: key.toBuffer(),
     methodType: VerificationMethodType.Ed25519VerificationKey2018,
   };
 
@@ -72,6 +72,17 @@ export const addServiceToDID = async (authority: Wallet, service: Service) => {
   });
 
   await didSolService.addService(service).rpc();
+};
+
+export const isDIDInitialized = async (
+  did: string,
+  connection: Connection
+): Promise<boolean> => {
+  const didSolService = await DidSolService.build(DidSolIdentifier.parse(did), {
+    connection,
+  });
+  const account = await didSolService.getDidAccount();
+  return !!account;
 };
 
 export const initializeDIDAccount = async (

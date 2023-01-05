@@ -46,7 +46,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
     ) =>
       program.methods
         .directExecute(
-          Buffer.from([]), // no controller chain
+          [], // no controller chain
           [instructionData],
           cryptid.details.bump,
           cryptid.details.index,
@@ -57,7 +57,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
           cryptidAccount: cryptid.address(),
           didProgram: DID_SOL_PROGRAM,
           did: didAccount,
-          signer: authority.publicKey,
+          authority: authority.publicKey,
         })
         .remainingAccounts([
           toAccountMeta(recipient.publicKey, true, false),

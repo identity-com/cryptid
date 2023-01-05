@@ -3,7 +3,7 @@ export type Cryptid = {
   "name": "cryptid",
   "instructions": [
     {
-      "name": "create",
+      "name": "createCryptidAccount",
       "accounts": [
         {
           "name": "cryptidAccount",
@@ -91,7 +91,7 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -199,6 +199,96 @@ export type Cryptid = {
           "type": "u8"
         },
         {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": "AbbreviatedInstructionData"
+            }
+          }
+        },
+        {
+          "name": "numAccounts",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "extendTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance that can execute the transaction."
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -240,7 +330,7 @@ export type Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -358,7 +448,7 @@ export type Cryptid = {
           {
             "name": "accounts",
             "docs": [
-              "The accounts `instructions` references (excluding the cryptid account"
+              "The accounts `instructions` references (excluding the cryptid account)"
             ],
             "type": {
               "vec": "publicKey"
@@ -611,6 +701,11 @@ export type Cryptid = {
       "code": 6012,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAccounts",
+      "msg": "The accounts passed to execute do not match those in the transaction account."
     }
   ]
 };
@@ -620,7 +715,7 @@ export const IDL: Cryptid = {
   "name": "cryptid",
   "instructions": [
     {
-      "name": "create",
+      "name": "createCryptidAccount",
       "accounts": [
         {
           "name": "cryptidAccount",
@@ -708,7 +803,7 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -816,6 +911,96 @@ export const IDL: Cryptid = {
           "type": "u8"
         },
         {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": "AbbreviatedInstructionData"
+            }
+          }
+        },
+        {
+          "name": "numAccounts",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "extendTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance that can execute the transaction."
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The did account owner of the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "state",
+          "type": {
+            "defined": "TransactionState"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -857,7 +1042,7 @@ export const IDL: Cryptid = {
           ]
         },
         {
-          "name": "signer",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "docs": [
@@ -975,7 +1160,7 @@ export const IDL: Cryptid = {
           {
             "name": "accounts",
             "docs": [
-              "The accounts `instructions` references (excluding the cryptid account"
+              "The accounts `instructions` references (excluding the cryptid account)"
             ],
             "type": {
               "vec": "publicKey"
@@ -1228,6 +1413,11 @@ export const IDL: Cryptid = {
       "code": 6012,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAccounts",
+      "msg": "The accounts passed to execute do not match those in the transaction account."
     }
   ]
 };

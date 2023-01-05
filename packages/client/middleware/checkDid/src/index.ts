@@ -8,7 +8,6 @@ import {
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { Bytes } from "@identity.com/sol-did-client";
 import { CheckDid, CheckDidIDL } from "@identity.com/cryptid-idl";
 
 export const CHECK_DID_MIDDLEWARE_PROGRAM_ID = new PublicKey(
@@ -18,8 +17,8 @@ export const CHECK_DID_MIDDLEWARE_PROGRAM_ID = new PublicKey(
 export type VerificationMethodMatcher = {
   filterFragment: string | null;
   filterFlags: number | null;
-  filterTypes: Bytes | null;
-  filterKeyData: Bytes | null;
+  filterTypes: Buffer | null;
+  filterKeyData: Buffer | null;
 };
 
 export type ServiceMatcher = {
@@ -80,8 +79,6 @@ export class CheckDidMiddleware
     const program = CheckDidMiddleware.getProgram(params);
 
     const [middlewareAccount] = deriveMiddlewareAccountAddress(params);
-
-    console.log(`middlewareAccount in: ${middlewareAccount.toBase58()}`);
 
     return program.methods
       .create(

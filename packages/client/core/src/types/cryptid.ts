@@ -1,6 +1,22 @@
 import { AccountMeta, PublicKey, Signer, Transaction } from "@solana/web3.js";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
+// This should match transaction_state.rs
+export enum TransactionState {
+  NotReady,
+  Ready,
+  Executed,
+}
+// use namespace to add toBorsh to the above enum
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace TransactionState {
+  export function toBorsh(state: TransactionState): { [k in string]: unknown } {
+    // Replace the first character to lowercase and return an object with that value as the key
+    const key = TransactionState[state].replace(/^\w/, (c) => c.toLowerCase());
+    return { [key]: {} };
+  }
+}
+
 export type ProposalResult = {
   proposeTransaction: Transaction;
   transactionAccount: PublicKey;

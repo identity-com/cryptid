@@ -42,10 +42,8 @@ describe("Middleware: CheckDid", () => {
   let cryptid: CryptidClient;
 
   let middlewareAccount: PublicKey;
-  // let middlewareBump: number;
 
   const recipient = Keypair.generate();
-  // const transferInstructionData = cryptidTransferInstruction(LAMPORTS_PER_SOL); // 1 SOL
 
   const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
     const middleware = [
@@ -102,7 +100,6 @@ describe("Middleware: CheckDid", () => {
       };
 
       [middlewareAccount] = deriveMiddlewareAccountAddress(params);
-      console.log(`middlewareAccount: ${middlewareAccount.toBase58()}`);
       const transaction = await new CheckDidMiddleware().createMiddleware(
         params
       );

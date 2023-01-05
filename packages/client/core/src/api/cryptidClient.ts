@@ -8,10 +8,11 @@ import {
 } from "@solana/web3.js";
 import { DIDDocument } from "did-resolver";
 import { Wallet } from "../types/crypto";
-import { ProposalResult, TransactionAccount } from "../types";
+import { ProposalResult, TransactionAccount, TransactionState } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
 import { ExecuteArrayResult } from "../types/cryptid";
+import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
 export type CryptidOptions = {
@@ -23,10 +24,10 @@ export type CryptidOptions = {
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
 };
-// The chain of controllers, from the top (inclusive), to the one that owns the cryptid account (exclusive)
-// For example, if did:sol:alice controls did:sol:bob which controls did:sol:carol,
-// If alice is creating a cryptid account for carol, the controller chain is [did:sol:alice, did:sol:bob]
 export type CreateOptions = CryptidOptions & {
+  // The chain of controllers, from the top (inclusive), to the one that owns the cryptid account (exclusive)
+  // For example, if did:sol:alice controls did:sol:bob which controls did:sol:carol,
+  // If alice is creating a cryptid account for carol, the controller chain is [did:sol:alice, did:sol:bob]
   controllerChain?: string[];
 };
 export type FindAllOptions = {
@@ -47,7 +48,7 @@ export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
  * Clients have the following options when signing a transaction:
  *
  * 1. directExecute: Single instruction, no middleware.
- * 2. propose / execute: Two separate calls, middleware is executed as part of the execute call.
+ * 2. propose / execute: Two separate calls, middleware is typically executed as part of the execute call.
  * 3. proposeAndExecute: Single call, returns an array of transactions to be passed to the chain.
  * If forceSingleTx is set to true, this forces all instructions into a single transaction.
  * Note: At present, there are no checks to see if it fits.
@@ -100,8 +101,44 @@ export interface CryptidClient {
     forceSingleTx?: boolean
   ): Promise<ExecuteArrayResult>;
 
-  propose(transaction: Transaction): Promise<ProposalResult>;
-  execute(transactionAccountAddress: PublicKey): Promise<ExecuteArrayResult>;
+  /**
+   * Propose a transaction for execution by cryptid.
+   * @param transaction The transaction to propose
+   * @param state [TransactionState.Ready] The state to propose the transaction in. If NotReady, the transaction can be extended.
+   */
+  propose(
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<ProposalResult>;
+
+  /**
+   * Extend an existing cryptid transaction proposal by adding a transaction to it.
+   *
+   * The transaction must have previously been proposed in "NotReady" state.
+   *
+   * Any authority on the cryptid account can extend the transaction.
+   *
+   * @param transactionAccountAddress The account representing the cryptid transaction proposal to extend
+   * @param transaction The transaction to add
+   * @param state [TransactionState.Ready] The new state of the transaction. If NotReady, the transaction can be extended further.
+   */
+  extend(
+    transactionAccountAddress: PublicKey,
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<Transaction>;
+
+  /**
+   * Execute a proposed transaction.
+   *
+   * The transaction must be in "Ready" state.
+   * @param transactionAccountAddress
+   * @param cryptidTransactionRepresentation
+   */
+  execute(
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
+  ): Promise<ExecuteArrayResult>;
 
   // TODO Reinstate
   // cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;

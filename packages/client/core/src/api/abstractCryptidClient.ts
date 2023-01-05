@@ -16,9 +16,10 @@ import { DidSolIdentifier, DidSolService } from "@identity.com/sol-did-client";
 import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
-import { TransactionAccount } from "../types";
+import { TransactionAccount, TransactionState } from "../types";
 import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
+import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export abstract class AbstractCryptidClient implements CryptidClient {
   readonly details: CryptidAccountDetails;
@@ -108,18 +109,41 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     };
   }
 
-  async propose(transaction: Transaction): Promise<ProposalResult> {
+  async propose(
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<ProposalResult> {
     return this.service().then((service) =>
-      service.propose(this.details, transaction)
+      service.propose(this.details, transaction, state)
+    );
+  }
+
+  async extend(
+    transactionAccountAddress: PublicKey,
+    transaction: Transaction,
+    state?: TransactionState
+  ): Promise<Transaction> {
+    return this.service().then((service) =>
+      service.extend(
+        this.details,
+        transactionAccountAddress,
+        transaction,
+        state
+      )
     );
   }
 
   async execute(
-    transactionAccountAddress: PublicKey
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
   ): Promise<ExecuteArrayResult> {
     return this.service()
       .then((service) =>
-        service.execute(this.details, transactionAccountAddress)
+        service.execute(
+          this.details,
+          transactionAccountAddress,
+          cryptidTransactionRepresentation
+        )
       )
       .then((result) => ({
         executeTransactions: [result.executeTransaction],

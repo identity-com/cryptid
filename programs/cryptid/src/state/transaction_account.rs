@@ -3,6 +3,7 @@ use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
 use crate::state::instruction_size::InstructionSize;
 use crate::state::transaction_state::TransactionState;
 use anchor_lang::prelude::*;
+use std::fmt;
 
 pub const DISCRIMINATOR_SIZE: usize = 8;
 
@@ -13,7 +14,7 @@ pub struct TransactionAccount {
     pub cryptid_account: Pubkey,
     /// The owner of the cryptid account (Typically a DID account)
     pub did: Pubkey,
-    /// The accounts `instructions` references (excluding the cryptid account
+    /// The accounts `instructions` references (excluding the cryptid account)
     pub accounts: Vec<Pubkey>,
     /// The instructions that will be executed
     pub instructions: Vec<AbbreviatedInstructionData>,
@@ -36,63 +37,32 @@ impl TransactionAccount {
         DISCRIMINATOR_SIZE
             + 32 // cryptid_account
             + 32 // did (owner)
-            + 4 + 32 * num_accounts //accounts
+            + 4 + 32 * (num_accounts + 4) //accounts (+4 for the named accounts)
             + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 1 + 32 // approved_middleware
             + 1 // slot
             + 1 // state
     }
 
-    /// Gets an instruction or errors if no instruction at index
-    pub fn get_instruction_mut(&mut self, index: u8) -> Result<&mut AbbreviatedInstructionData> {
-        require_gte!(
-            index as usize,
-            self.instructions.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(&mut self.instructions[index as usize])
-    }
-
-    /// Checks if a given index is valid for the instructions list
-    pub fn check_instruction_index(&self, index: u8) -> Result<()> {
-        require_gte!(
-            index as usize,
-            self.instructions.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(())
-    }
-
-    /// Checks of a given index is valid for the accounts list
-    pub fn check_account_index(&self, index: u8) -> Result<()> {
-        require_gte!(
-            index as usize,
-            self.accounts.len(),
-            CryptidError::IndexOutOfRange
-        );
-        Ok(())
-    }
-
-    /// When an account index as defined in AbbreviatedInstructionData
-    /// is used to reference an entry in transactionAccount.accounts, it should
-    /// not include the implicit accounts that are passed to the ExecuteTransaction instruction
-    pub fn normalize_transaction_account_index(index: u8) -> usize {
-        // Implicit Execute Transaction Accounts:
-        // 0 - cryptid account
-        // 1 - did
-        // 2 - did program
-        // 3 - signer
-        // ... remaining accounts
-        (index - 4) as usize
-    }
-
     pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
-        let normalized_index = Self::normalize_transaction_account_index(index);
         require_keys_eq!(
-            self.accounts[normalized_index],
+            self.accounts[index as usize],
             *account,
             CryptidError::AccountMismatch
         );
+        Ok(())
+    }
+}
+impl fmt::Display for TransactionAccount {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Accounts:")?;
+        for (index, account) in self.accounts.iter().enumerate() {
+            writeln!(f, "{}: {}", index, account)?;
+        }
+        for (index, instruction) in self.instructions.iter().enumerate() {
+            writeln!(f, "Instruction {}:", index)?;
+            writeln!(f, "{}", instruction)?;
+        }
         Ok(())
     }
 }

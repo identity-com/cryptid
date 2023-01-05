@@ -20,6 +20,7 @@ import {
   CryptidClient,
   InstructionData,
   TransactionAccountMeta,
+  TransactionState,
 } from "@identity.com/cryptid";
 
 chai.use(chaiAsPromised);
@@ -32,7 +33,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       let didAccount: PublicKey;
       const did = DID_SOL_PREFIX + ":" + authority.publicKey;
 
-      const recipient = Keypair.generate();
+      let recipient = Keypair.generate();
 
       let cryptid: CryptidClient;
 
@@ -49,10 +50,11 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       ) =>
         program.methods
           .proposeTransaction(
-            Buffer.from([]), // no controller chain,
+            [], // no controller chain,
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
+            TransactionState.toBorsh(TransactionState.Ready),
             [instruction],
             2
           )
@@ -74,7 +76,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         // execute the Cryptid transaction
         program.methods
           .executeTransaction(
-            Buffer.from([]), // no controller chain,
+            [], // no controller chain,
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
@@ -84,7 +86,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: authority.publicKey,
+            authority: authority.publicKey,
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })
@@ -125,6 +127,22 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
       });
 
+      it("cannot change the accounts between propose and execute", async () => {
+        const transactionAccount = Keypair.generate();
+
+        // propose the Cryptid transaction sending funds to recipient A
+        await propose(transactionAccount);
+
+        // change the accounts to send funds to recipient B
+        recipient = Keypair.generate();
+
+        // attempt to execute the doctored transaction
+        const shouldFail = execute(transactionAccount);
+
+        // TODO expose the error message
+        return expect(shouldFail).to.be.rejected;
+      });
+
       it("can propose and execute a transfer using the Cryptid client", async () => {
         const previousBalance = await balanceOf(cryptid.address());
 
@@ -155,10 +173,11 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         // propose the Cryptid transaction
         const proposeIx = await program.methods
           .proposeTransaction(
-            Buffer.from([]), // no controller chain,
+            [], // no controller chain,
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
+            TransactionState.toBorsh(TransactionState.Ready),
             [transferInstructionData],
             2
           )
@@ -178,7 +197,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
 
         const executeIx = await program.methods
           .executeTransaction(
-            Buffer.from([]), // no controller chain
+            [], // no controller chain
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
@@ -188,7 +207,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: authority.publicKey,
+            authority: authority.publicKey,
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })
@@ -310,10 +329,11 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         // propose the Cryptid transaction
         const shouldFail = program.methods
           .proposeTransaction(
-            Buffer.from([]), // no controller chain,
+            [], // no controller chain,
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
+            TransactionState.toBorsh(TransactionState.Ready),
             [transferInstructionData],
             2
           )
@@ -347,7 +367,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         // execute the Cryptid transaction
         const shouldFail = program.methods
           .executeTransaction(
-            Buffer.from([]), // no controller chain
+            [], // no controller chain
             cryptid.details.bump,
             cryptid.details.index,
             cryptid.details.didAccountBump,
@@ -357,7 +377,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptidAccount: cryptid.address(),
             didProgram: DID_SOL_PROGRAM,
             did: didAccount,
-            signer: bogusSigner.publicKey, // specify the bogus signer as the cryptid signer
+            authority: bogusSigner.publicKey, // specify the bogus signer as the cryptid signer
             destination: authority.publicKey,
             transactionAccount: transactionAccount.publicKey,
           })

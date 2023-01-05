@@ -17,7 +17,7 @@
         "packages/tests"
     ],
     "devDependencies": {
-        "@project-serum/anchor-cli": "^0.25.0",
+        "@project-serum/anchor-cli": "^0.26.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-config-react-app": "^7.0.1",
         "eslint-plugin-prettier": "^4.2.1",

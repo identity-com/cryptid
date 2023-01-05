@@ -1,6 +1,5 @@
 use crate::error::CryptidError;
 use crate::instructions::util::*;
-use crate::state::cryptid_account::CryptidAccount;
 use crate::state::did_reference::DIDReference;
 use crate::state::transaction_account::TransactionAccount;
 use crate::state::transaction_state::TransactionState;
@@ -25,10 +24,10 @@ pub struct ExecuteTransaction<'info> {
     /// The Cryptid instance to execute with
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
-        mut,
-        // TODO: Verification dones in instruction body. Move back with Anchor generator
-        // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
-        // bump = cryptid_account_bump
+    mut,
+    // TODO: Verification dones in instruction body. Move back with Anchor generator
+    // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
+    // bump = cryptid_account_bump
     )]
     pub cryptid_account: UncheckedAccount<'info>,
     /// The DID on the Cryptid instance
@@ -37,20 +36,21 @@ pub struct ExecuteTransaction<'info> {
     /// The program for the DID
     pub did_program: Program<'info, SolDID>,
     /// The signer of the transaction
-    pub signer: Signer<'info>,
+    pub authority: Signer<'info>,
     /// CHECK: Rent destination account does not need to satisfy the any constraints.
     #[account(mut)]
     pub destination: UncheckedAccount<'info>,
     /// The instruction to execute
     #[account(
-        mut,
-        close = destination,
-        has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
-        // safeguard to prevent double-spends in the case where the account is not closed for some reason
-        constraint = transaction_account.state != TransactionState::Executed @ CryptidError::InvalidTransactionState,
-        // the transaction account must have been approved by the middleware on the cryptid account, if present
-        // TODO: This moved to the instruction body
-        // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
+    mut,
+    close = destination,
+    has_one = cryptid_account @ CryptidError::WrongCryptidAccount,
+    // safeguard to prevent double-spends in the case where the account is not closed for some reason
+    // only "Ready" transactions can be executed
+    constraint = transaction_account.state == TransactionState::Ready @ CryptidError::InvalidTransactionState,
+    // the transaction account must have been approved by the middleware on the cryptid account, if present
+    // TODO: This moved to the instruction body
+    // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
 }
@@ -67,7 +67,7 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
             self.accounts.cryptid_account.as_ref(),
             self.accounts.did.as_ref(),
             self.accounts.did_program.as_ref(),
-            self.accounts.signer.as_ref(),
+            self.accounts.authority.as_ref(),
         ]
         .into_iter()
         .chain(self.remaining_accounts.iter())
@@ -92,48 +92,61 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     let debug = ExecuteFlags::from_bits(flags)
         .unwrap()
         .contains(ExecuteFlags::DEBUG);
+
+    let all_accounts = ctx.all_accounts();
+
     if debug {
         ctx.accounts.print_keys();
+        ctx.remaining_accounts
+            .iter()
+            .enumerate()
+            .for_each(|(index, account)| {
+                msg!("Remaining account {}: {:?}", index, account.key);
+            });
     }
 
-    ctx.accounts.transaction_account.state = TransactionState::Executed;
-
-    // convert the controller chain (an array of account indices) into an array of accounts
-    // note - cryptid does not need to check that the chain is valid, or even that they are DIDs
-    // sol_did does that.
-    let all_accounts = ctx.all_accounts();
-    let controlling_did_accounts = controller_chain
-        .iter()
-        .map(|controller_reference| {
-            (
-                all_accounts[controller_reference.account_index as usize],
-                controller_reference.authority_key,
-            )
-        })
-        .collect::<Vec<(&AccountInfo, Pubkey)>>();
-
-    // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
-    // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
-    verify_keys(
-        &ctx.accounts.did,
-        Some(did_account_bump),
-        ctx.accounts.signer.to_account_info().key,
-        controlling_did_accounts,
-    )?;
-
-    let cryptid_account = CryptidAccount::try_from(
+    let cryptid_account = get_cryptid_account_checked(
+        &all_accounts,
+        &controller_chain,
         &ctx.accounts.cryptid_account,
-        &ctx.accounts.did_program.key(),
-        &ctx.accounts.did.key(),
+        &ctx.accounts.did,
+        &ctx.accounts.did_program,
+        &ctx.accounts.authority,
+        did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
     )?;
 
+    // CHECK the accounts have not been switched since the transaction was proposed
+    let account_pairs = all_accounts
+        .iter()
+        .enumerate()
+        .zip(ctx.accounts.transaction_account.accounts.iter());
+    for ((index, account), proposed_account) in account_pairs {
+        // The authority is allowed to change
+        // As long as the authority is valid for the DID (checked above), any authority can sign the transaction.
+        if index != AUTHORITY_ACCOUNT_INDEX {
+            require_keys_eq!(
+                *account.key,
+                *proposed_account,
+                CryptidError::InvalidAccounts
+            )
+        }
+    }
+
+    // CHECK All middleware have approved the transaction (specifically the last one)
     // TODO: Move back to constraint when anchor annotation for generative case is working
     require!(
         ctx.accounts.transaction_account.approved_middleware == cryptid_account.middleware,
         CryptidError::IncorrectMiddleware
     );
+
+    if debug {
+        msg!(
+            "Executing {} instructions",
+            ctx.accounts.transaction_account.instructions.len()
+        );
+    }
 
     // At this point, we are safe that the signer is a valid owner of the cryptid account. We can execute the instructions
     CPI::execute_instructions(
@@ -147,6 +160,9 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         debug,
     )?;
 
+    // MArk the tx as executed to prevent double-spends
+    ctx.accounts.transaction_account.state = TransactionState::Executed;
+
     Ok(())
 }
 
@@ -159,6 +175,6 @@ impl ExecuteTransaction<'_> {
         );
         msg!("did: {}", self.did.to_account_info().key);
         msg!("did_program: {}", self.did_program.to_account_info().key);
-        msg!("signer: {}", self.signer.to_account_info().key);
+        msg!("authority: {}", self.authority.to_account_info().key);
     }
 }

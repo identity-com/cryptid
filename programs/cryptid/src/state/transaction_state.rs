@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
+use std::fmt::Display;
 
 /// A [`TransactionAccount`]'s state
-#[derive(Clone, Debug, AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Display, AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
 pub enum TransactionState {
     /// Transaction account is not ready to execute - it is waiting for additional instructions to be added
     NotReady,

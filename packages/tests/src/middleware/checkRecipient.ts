@@ -1,11 +1,16 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { makeTransfer } from "../util/cryptid";
 import { initializeDIDAccount } from "../util/did";
-import { fund, createTestContext, balanceOf } from "../util/anchorUtils";
+import { balanceOf, createTestContext, fund } from "../util/anchorUtils";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
-import { Cryptid } from "@identity.com/cryptid";
+import { Cryptid, TransactionState } from "@identity.com/cryptid";
 import {
   CheckRecipientMiddleware,
   deriveMiddlewareAccountAddress,
@@ -126,6 +131,29 @@ describe("Middleware: checkRecipient", () => {
       makeTransaction()
     );
     const shouldFail = cryptid.send(proposeTransaction, proposeSigners);
+
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: InvalidRecipient."
+    );
+  });
+
+  it("blocks a transfer when proposing a transaction in NotReady state and later sealed (ie extended with no txes)", async () => {
+    // change the recipient
+    recipient = Keypair.generate();
+
+    // propose the Cryptid transaction. Since the checkRecipient middleware
+    // is not executed until the tx is marked as Ready, this tx will pass.
+    const { proposeTransaction, proposeSigners, transactionAccount } =
+      await cryptid.propose(makeTransaction(), TransactionState.NotReady);
+    await cryptid.send(proposeTransaction, proposeSigners);
+
+    // extend and seal the transaction
+    const extendTransaction = await cryptid.extend(
+      transactionAccount,
+      new Transaction(),
+      TransactionState.Ready
+    );
+    const shouldFail = cryptid.send(extendTransaction);
 
     return expect(shouldFail).to.be.rejectedWith(
       "Error Code: InvalidRecipient."
