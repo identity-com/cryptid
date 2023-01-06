@@ -25,6 +25,7 @@ pub mod cryptid {
     pub fn create_cryptid_account(
         ctx: Context<CreateCryptidAccount>,
         middleware: Option<Pubkey>,
+        superuser_middlewares: Vec<Pubkey>,
         controller_chain: Vec<Pubkey>,
         index: u32,
         did_account_bump: u8,
@@ -32,6 +33,7 @@ pub mod cryptid {
         instructions::create_cryptid_account(
             ctx,
             middleware,
+            superuser_middlewares,
             controller_chain,
             index,
             did_account_bump,

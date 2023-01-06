@@ -151,10 +151,14 @@ export class CryptidService {
       details.middlewares.length > 0
         ? details.middlewares[details.middlewares.length - 1]
         : undefined;
+    const superuserMiddlewares = details.middlewares
+      .filter((m) => m.isSuperuser)
+      .map((m) => m.address);
     return (
       this.program.methods
         .createCryptidAccount(
           lastMiddleware?.address || null,
+          superuserMiddlewares,
           // Pass in the controller dids (if any)
           this.controllerChainPubkeys.map((c) => c[1]),
           details.index,

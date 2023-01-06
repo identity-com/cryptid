@@ -48,6 +48,12 @@ export type Cryptid = {
           }
         },
         {
+          "name": "superuserMiddlewares",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "controllerChain",
           "type": {
             "vec": "publicKey"
@@ -419,6 +425,15 @@ export type Cryptid = {
               "The index of this cryptid account - allows multiple cryptid accounts per DID"
             ],
             "type": "u32"
+          },
+          {
+            "name": "superuserMiddleware",
+            "docs": [
+              "Middlewares that have \"Superuser\" status on the cryptid account"
+            ],
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -760,6 +775,12 @@ export const IDL: Cryptid = {
           }
         },
         {
+          "name": "superuserMiddlewares",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "controllerChain",
           "type": {
             "vec": "publicKey"
@@ -1131,6 +1152,15 @@ export const IDL: Cryptid = {
               "The index of this cryptid account - allows multiple cryptid accounts per DID"
             ],
             "type": "u32"
+          },
+          {
+            "name": "superuserMiddleware",
+            "docs": [
+              "Middlewares that have \"Superuser\" status on the cryptid account"
+            ],
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }

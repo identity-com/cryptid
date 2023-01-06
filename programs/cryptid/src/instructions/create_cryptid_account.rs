@@ -8,6 +8,8 @@ use anchor_lang::prelude::*;
 #[instruction(
 /// Optional middleware to be associated with the cryptid account
 middleware: Option<Pubkey>,
+/// Registered "Superuser" middlewares, if any
+superuser_middlewares: Vec<Pubkey>,
 /// The controller chain between the authority and the did
 controller_chain: Vec<Pubkey>,
 /// The index of this cryptid account - allows multiple cryptid accounts per DID
@@ -19,7 +21,7 @@ pub struct CreateCryptidAccount<'info> {
     #[account(
     init,
     payer = authority,
-    space = 8 + CryptidAccount::MAX_SIZE,
+    space = 8 + CryptidAccount::calculate_size(superuser_middlewares.len()),
     seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), index.to_le_bytes().as_ref()],
     bump,
     )]
@@ -38,6 +40,7 @@ pub struct CreateCryptidAccount<'info> {
 pub fn create_cryptid_account(
     ctx: Context<CreateCryptidAccount>,
     middleware: Option<Pubkey>,
+    superuser_middlewares: Vec<Pubkey>,
     controller_chain: Vec<Pubkey>,
     index: u32,
     did_account_bump: u8,
@@ -45,6 +48,7 @@ pub fn create_cryptid_account(
     require_gt!(index, 0, CryptidError::CreatingWithZeroIndex);
     ctx.accounts.cryptid_account.middleware = middleware;
     ctx.accounts.cryptid_account.index = index;
+    ctx.accounts.cryptid_account.superuser_middleware = superuser_middlewares;
 
     // convert the controller chain (an array of account indices) into an array of accounts
     // note - cryptid does not need to check that the chain is valid, or even that they are DIDs

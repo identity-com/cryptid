@@ -231,3 +231,43 @@ The initial instructions in a transaction are serialised and added as data to th
 serialization adds some overhead to the transaction size, meaning that some transactions that initially fit within the
 transaction size limit may now exceed it. On the roadmap are plans to allow transactions to be chunked to avoid this
 limitation.
+
+## Middleware
+
+Out-of-the-box Cryptid provides multi-key access to assets, based on a DID.
+
+The true power of Cryptid comes from the ability to extend its functionality with middleware.
+
+Middlewares are programs that intercept transactions before they are executed,
+and either allow or reject the transaction, based on their internal logic.
+
+They can be used to add security gates to transactions, to prevent fraud or error,
+or, in the case of "Superuser" middleware (see below), to allow a key to sign transactions
+that is not on the DID.
+
+Example middlewares, included in the Cryptid repo itself are:
+- CheckLimit: Rejects the transaction if the value exceeds a set limit.
+- CheckRecipient: Rejects a transaction if the recipient is not the expected one.
+- CheckPass: Requires a valid [pass](https://github.com/identity-com/on-chain-identity-gateway) to be associated with the sender wallet.
+- TimeDelay: Allows a transaction after a set delay.
+
+## Chaining Middleware
+
+Middleware can be composed together to create complex security policies.
+
+For example, by chaining the CheckLimit and CheckRecipient middleware, a transaction
+can be limited to a certain amount, and only allowed to be sent to a specific recipient.
+
+This allows use-cases such as "paying a bill", where a user can only send a certain amount
+to a specific recipient. Since a user may have a number of cryptid accounts, they may choose to set one
+up with these two middlewares, and use it to pay bills to a particular recipient.
+
+By chaining more complex middlewares with branching and "Superuser" middlewares, a complex set of
+constraints can be established in one single cryptid account.
+
+## Superuser Middleware
+
+The Superuser middleware allows a key to sign transactions that is not on the DID.
+It does this by bypassing the authority check in the core cryptid program. 
+This is naturally a highly risky operation, so superuser middlewares have to be listed explicitly
+in the Cryptid account, and cannot be changed after creation of the account.
