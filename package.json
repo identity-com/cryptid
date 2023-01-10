@@ -15,7 +15,9 @@
         "packages/client/cryptid",
         "packages/client/cli",
         "packages/tests",
-        "wallet-standard/dapp"
+        "wallet/cryptid-wallet-standard-library",
+        "wallet/cryptid-wallet-ui",
+        "wallet/sample-dapp"
     ],
     "devDependencies": {
         "@project-serum/anchor-cli": "^0.26.0",
