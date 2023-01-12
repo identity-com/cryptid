@@ -706,6 +706,11 @@ export type Cryptid = {
       "code": 6013,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidMiddlewareAccount",
+      "msg": "Invalid Middleware Account."
     }
   ]
 };
@@ -1418,6 +1423,11 @@ export const IDL: Cryptid = {
       "code": 6013,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidMiddlewareAccount",
+      "msg": "Invalid Middleware Account."
     }
   ]
 };
