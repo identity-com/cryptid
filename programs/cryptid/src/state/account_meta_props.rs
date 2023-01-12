@@ -39,7 +39,6 @@ impl fmt::Display for AccountMetaProps {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::iter::once;
 
     #[test]
     fn account_meta_from_bools() {

@@ -478,7 +478,7 @@ export type Cryptid = {
             "name": "slot",
             "docs": [
               "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks TODO: Do we need it?"
+              "This is used to prevent replay attacks"
             ],
             "type": "u8"
           },
@@ -1195,7 +1195,7 @@ export const IDL: Cryptid = {
             "name": "slot",
             "docs": [
               "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks TODO: Do we need it?"
+              "This is used to prevent replay attacks"
             ],
             "type": "u8"
           },

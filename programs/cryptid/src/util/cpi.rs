@@ -18,23 +18,21 @@ pub const TRANSFER_INSTRUCTION_INDEX: u8 = 2;
 
 pub fn is_transfer(solana_instruction: &Instruction) -> bool {
     solana_instruction.program_id == System::id()
-        // TODO fix: should check the first 4 bytes not just the first one
-        // this would fail if e.g. you have more than 256 instructions in the System Program
         && solana_instruction.data[0] == TRANSFER_INSTRUCTION_INDEX
 }
 
 pub struct CPI {}
 impl CPI {
-    // TODO remove once the account macro is added and we have reduced the amount of arguments
     #[allow(clippy::too_many_arguments)]
     pub fn execute_instructions(
         instructions: &Vec<AbbreviatedInstructionData>,
         accounts: &Vec<&AccountInfo>,
         did_program: &Pubkey,
         did: &Pubkey,
+        // TODO(ticket): Simplify if generative Accounts are supported
         // We pass these two parameters separately, because we don't know if the cryptid account is
         // generative or not. Therefore we cannot pass Account<CryptidAccount>
-        // TODO potentially, once the new macro is available, replace this with an account object
+        // potentially, once the new macro is available, replace this with an account object
         // like Account<CryptidAccount>, allowing us to call
         // cryptid_account.index and cryptid_account.key() on the same object
         // this would save us an extra parameter here.

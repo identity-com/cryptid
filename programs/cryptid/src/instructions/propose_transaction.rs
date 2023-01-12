@@ -28,7 +28,7 @@ pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
-        // TODO: Verification done in instruction body. Move back with Anchor generator
+        // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
         // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
         // bump = cryptid_account_bump
     )]
@@ -119,6 +119,8 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
     ctx.accounts.transaction_account.accounts = all_accounts.iter().map(|a| *a.key).collect();
 
+    // TODO: Set slot
+    // ctx.accounts.transaction_account.slot = Clock::get()?.slot;
     ctx.accounts.transaction_account.did = *ctx.accounts.did.key;
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
