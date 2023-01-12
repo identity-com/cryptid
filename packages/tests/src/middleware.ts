@@ -2,7 +2,7 @@ import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { cryptidTransferInstruction, makeTransfer } from "./util/cryptid";
+import { makeTransfer } from "./util/cryptid";
 import { initializeDIDAccount } from "./util/did";
 import { createTestContext, fund } from "./util/anchorUtils";
 import { Cryptid, CryptidClient } from "@identity.com/cryptid";

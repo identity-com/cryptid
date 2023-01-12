@@ -70,7 +70,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             toAccountMeta(SystemProgram.programId),
           ])
           .signers([transactionAccount])
-          .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+          .rpc();
 
       const execute = (transactionAccount: Keypair) =>
         // execute the Cryptid transaction
@@ -94,7 +94,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             toAccountMeta(recipient.publicKey, true, false),
             toAccountMeta(SystemProgram.programId),
           ])
-          .rpc({ skipPreflight: true }); // skip preflight so we see validator logs on error
+          .rpc();
 
       before(`Set up ${didType} DID account`, async () => {
         await fund(authority.publicKey, 10 * LAMPORTS_PER_SOL);
@@ -310,14 +310,14 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
           instructionDataWithInvalidAccountIndex.accounts as TransactionAccountMeta[]
         )[1].key = 100; // account 100 does not exist
 
-        // TODO this should fail on propose
-        await propose(
+        const shouldFail = propose(
           transactionAccount,
           instructionDataWithInvalidAccountIndex
         );
-        const shouldFail = execute(transactionAccount);
 
-        return expect(shouldFail).to.be.rejectedWith(/ProgramFailedToComplete/);
+        return expect(shouldFail).to.be.rejectedWith(
+          "Error Code: IndexOutOfRange"
+        );
       });
 
       it("rejects the propose if the signer is not a valid signer on the DID", async () => {
