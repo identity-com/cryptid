@@ -99,7 +99,7 @@ impl CPI {
                     let is_signed_by_cryptid = solana_instruction
                         .accounts
                         .iter()
-                        .any(|meta| meta.pubkey.eq(cryptid_account_info.key));
+                        .any(|meta| meta.pubkey.eq(cryptid_account_info.key) && meta.is_signer);
                     if is_signed_by_cryptid {
                         if debug {
                             msg!("Invoking signed with seeds: {:?}", seeds);
@@ -117,7 +117,7 @@ impl CPI {
                         .map_err(|_| error!(CryptidError::SubInstructionError))
                     } else {
                         msg!("Invoking without signature -  not yet supported");
-                        // TODO add tests
+                        // TODO: IDCOM-2103: Add tests
                         invoke(&solana_instruction, account_infos.as_slice())
                             .map_err(|_| error!(CryptidError::SubInstructionError))
                     }
