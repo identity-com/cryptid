@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start"
   },
   "dependencies": {
     "@heroicons/react": "^1.0.5",
@@ -24,9 +23,14 @@
     "bs58": "^5.0.0",
     "daisyui": "^1.24.3",
     "immer": "^9.0.12",
+    "next": "11.0.0",
+    "next-transpile-modules": "^10.0.0",
     "ramda": "^0.28.0",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
+    "react": "^18",
+    "react-dom": "^18",
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
     "zustand": "^3.6.9"
   },
   "devDependencies": {

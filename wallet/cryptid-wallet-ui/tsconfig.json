@@ -16,13 +16,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "composite": true,
     "incremental": true,
     "module": "esnext"
   },
   "include": [
-    "src"
+    "src",
+    "public"
   ],
   "references": [
     {
