@@ -360,8 +360,6 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         const transactionAccount = Keypair.generate();
 
         const bogusSigner = Keypair.generate();
-        // TODO: Why does it not need to be funded?
-        // await fund(bogusSigner.publicKey);
 
         await propose(transactionAccount);
         // execute the Cryptid transaction

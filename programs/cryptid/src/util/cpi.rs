@@ -115,7 +115,7 @@ impl CPI {
                         )
                         .map_err(|_| error!(CryptidError::SubInstructionError))
                     } else {
-                        msg!("Invoking without signature -  not yet supported");
+                        msg!("Invoking without signature");
                         // TODO: IDCOM-2103: Add tests
                         invoke(&solana_instruction, account_infos.as_slice())
                             .map_err(|_| error!(CryptidError::SubInstructionError))
