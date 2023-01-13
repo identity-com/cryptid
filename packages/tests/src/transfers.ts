@@ -1,10 +1,19 @@
 import { balanceOf, createTestContext, fund } from "./util/anchorUtils";
 import { Cryptid, CryptidClient } from "@identity.com/cryptid-core";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
 import { makeTransfer } from "./util/cryptid";
 import { initializeDIDAccount } from "./util/did";
-import { Account, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  Account,
+  createMint,
+  getOrCreateAssociatedTokenAccount,
+} from "@solana/spl-token";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -16,9 +25,9 @@ describe(`Native & SPL Transfer tests`, () => {
 
   let cryptid: CryptidClient;
   let cryptidAta: Account;
-  let mintAuthority = Keypair.generate();
+  const mintAuthority = Keypair.generate();
   let mint: PublicKey;
-  let thridParty = Keypair.generate();
+  const thridParty = Keypair.generate();
   let thirdPartyAta: Account;
 
   const did = DID_SOL_PREFIX + ":" + authority.publicKey;
@@ -67,27 +76,26 @@ describe(`Native & SPL Transfer tests`, () => {
     );
   });
 
+  it("can send SOL to CryptidAddress and CryptidAddress can send SOL out", async () => {
+    const previousBalance = await balanceOf(cryptid.address());
 
-    it("can send SOL to CryptidAddress and CryptidAddress can send SOL out", async () => {
-      const previousBalance = await balanceOf(cryptid.address());
+    const transaction = new Transaction().add(
+      makeTransfer(thridParty.publicKey, cryptid.address()),
+      makeTransfer(cryptid.address(), authority.publicKey)
+    );
 
-      const transaction = new Transaction().add(
-        makeTransfer(thridParty.publicKey, cryptid.address()),
-        makeTransfer(cryptid.address(), authority.publicKey)
-      );
+    const { proposeTransaction, proposeSigners, transactionAccount } =
+      await cryptid.propose(transaction);
+    await cryptid.send(proposeTransaction, [...proposeSigners, thridParty]); // TODO: Why do we need thridParty to sign the propose?
 
-      const {proposeTransaction, proposeSigners, transactionAccount} = await cryptid.propose(transaction);
-      await cryptid.send(proposeTransaction, [...proposeSigners, thridParty]); // TODO: Why do we need thridParty to sign the propose?
+    const { executeTransactions, executeSigners } = await cryptid.execute(
+      transactionAccount
+    );
+    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
 
-      const { executeTransactions, executeSigners } = await cryptid.execute(
-        transactionAccount
-      );
-      await cryptid.send(executeTransactions[0], [ ...executeSigners, thridParty]);
+    const currentBalance = await balanceOf(cryptid.address());
 
-      const currentBalance = await balanceOf(cryptid.address());
-
-      // No Change.
-      expect(previousBalance - currentBalance).to.equal(0);
-
-    });
+    // No Change.
+    expect(previousBalance - currentBalance).to.equal(0);
+  });
 });

@@ -83,7 +83,14 @@ impl CPI {
                 .cloned()
                 .collect::<Vec<_>>();
 
-            let sub_instruction_result =
+            // Check if the instruction needs cryptid to sign it
+            let is_signed_by_cryptid = solana_instruction
+                .accounts
+                .iter()
+                .any(|meta| meta.pubkey.eq(cryptid_account_info.key) && meta.is_signer);
+
+            let sub_instruction_result = if is_signed_by_cryptid {
+                // special case on Cryptid with a transfer instruction
                 if Self::is_native_transfer_needed(cryptid_account_info, &solana_instruction) {
                     // short-circuit for transfer instructions (see comment on execute_transfer)
                     Self::execute_safe_transfer(
@@ -94,33 +101,26 @@ impl CPI {
                     )
                 } else {
                     let seeds = seeder.seeds();
-
-                    // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
-                    let is_signed_by_cryptid = solana_instruction
-                        .accounts
-                        .iter()
-                        .any(|meta| meta.pubkey.eq(cryptid_account_info.key) && meta.is_signer);
-                    if is_signed_by_cryptid {
-                        if debug {
-                            msg!("Invoking signed with seeds: {:?}", seeds);
-                        }
-
-                        // Turn Vec<Vec<u8>> into &[&[u8]]
-                        let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
-
-                        invoke_signed(
-                            &solana_instruction,
-                            account_infos.as_slice(),
-                            &[&seeds_slices_vec[..]],
-                        )
-                        .map_err(|_| error!(CryptidError::SubInstructionError))
-                    } else {
-                        msg!("Invoking without signature");
-                        // TODO: IDCOM-2103: Add tests
-                        invoke(&solana_instruction, account_infos.as_slice())
-                            .map_err(|_| error!(CryptidError::SubInstructionError))
+                    if debug {
+                        msg!("Invoking signed with seeds: {:?}", seeds);
                     }
-                };
+
+                    // Turn Vec<Vec<u8>> into &[&[u8]]
+                    let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
+
+                    invoke_signed(
+                        &solana_instruction,
+                        account_infos.as_slice(),
+                        &[&seeds_slices_vec[..]],
+                    )
+                    .map_err(|_| error!(CryptidError::SubInstructionError))
+                }
+            } else {
+                msg!("Invoking without signature");
+                // TODO: IDCOM-2103: Add tests
+                invoke(&solana_instruction, account_infos.as_slice())
+                    .map_err(|_| error!(CryptidError::SubInstructionError))
+            };
 
             // If sub-instruction errored log the index and error
             if let Err(ref error) = sub_instruction_result {
