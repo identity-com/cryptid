@@ -20,6 +20,8 @@ cryptid_account_index: u32,
 did_account_bump: u8,
 /// The state in which to create the transaction
 state: TransactionState,
+/// True if the transaction account is being proposed by a non-authority on the DID
+allow_unauthorized: bool,
 /// The instructions to execute
 instructions: Vec<AbbreviatedInstructionData>,
 num_accounts: u8,
@@ -86,6 +88,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     cryptid_account_index: u32,
     did_account_bump: u8,
     state: TransactionState,
+    allow_unauthorized: bool,
     instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
     let all_accounts = ctx.all_accounts();
@@ -100,6 +103,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
         did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
+        allow_unauthorized,
     )?;
     // Accounts stored into the transaction account are referenced by
     // the abbreviated instruction data by index
@@ -123,6 +127,13 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
     ctx.accounts.transaction_account.approved_middleware = None;
+    ctx.accounts.transaction_account.unauthorized_signer = if allow_unauthorized {
+        Some(*ctx.accounts.authority.key)
+    } else {
+        None
+    };
+    ctx.accounts.transaction_account.authorized = !allow_unauthorized;
+
 
     // we cannot initiate a transaction in executed state.
     require_neq!(

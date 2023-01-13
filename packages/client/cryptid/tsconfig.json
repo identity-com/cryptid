@@ -23,6 +23,9 @@
     },
     {
       "path": "../middleware/checkRecipient"
+    },
+    {
+      "path": "../middleware/superuserCheckSigner"
     }
   ]
 }

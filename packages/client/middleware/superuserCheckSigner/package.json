@@ -1,0 +1,20 @@
+{
+  "name": "@identity.com/cryptid-middleware-superuser-check-signer",
+  "version": "0.3.0-alpha.11",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
+    "build": "tsc --build",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@identity.com/cryptid-core": "0.3.0-alpha.11",
+    "@solana/web3.js": "^1.62.0",
+    "bn.js": "^5.2.1"
+  }
+}

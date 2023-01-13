@@ -4,7 +4,8 @@ members = [
     "programs/middleware/check_recipient",
     "programs/middleware/check_pass",
     "programs/middleware/check_did",
-    "programs/middleware/time_delay"
+    "programs/middleware/time_delay",
+    "programs/middleware/superuser_check_signer"
 ]
 types = "packages/client/idl/src"
 
@@ -18,6 +19,7 @@ check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 check_did = "midb3GKX7wF1minPXeDKqGRKCK9NeR8ns9V8BQUMJDr"
 time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
+superuser_check_signer = "midsEy2qfSX1gguxZT3Kv4dGTDisi7iDMAJfSmyG5Y9"
 
 [programs.mainnet]
 cryptid = "cryptJTh61jY5kbUmBEXyc86tBUyueBDrLuNSZWmUcs"
@@ -25,6 +27,7 @@ check_recipient = "midcHDoZsxvMmNtUr8howe8MWFrJeHHPbAyJF1nHvyf"
 check_pass = "midpT1DeQGnKUjmGbEtUMyugXL5oEBeXU3myBMntkKo"
 check_did = "midb3GKX7wF1minPXeDKqGRKCK9NeR8ns9V8BQUMJDr"
 time_delay = "midttN2h6G2CBvt1kpnwUsFXM6Gv7gratVwuo2XhSNk"
+superuser_check_signer = "midsEy2qfSX1gguxZT3Kv4dGTDisi7iDMAJfSmyG5Y9"
 
 [registry]
 url = "https://api.apr.dev"

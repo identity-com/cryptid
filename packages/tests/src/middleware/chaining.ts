@@ -93,10 +93,12 @@ describe("Middleware chaining", () => {
       {
         programId: checkPassMiddlewareProgram.programId,
         address: checkPassMiddlewareAccount,
+        isSuperuser: false,
       },
       {
         programId: timeDelayMiddlewareProgram.programId,
         address: timeDelayMiddlewareAccount,
+        isSuperuser: false,
       },
     ];
 

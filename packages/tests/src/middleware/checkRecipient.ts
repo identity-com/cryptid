@@ -66,6 +66,7 @@ describe("Middleware: checkRecipient", () => {
         {
           programId: checkRecipientMiddlewareProgram.programId,
           address: middlewareAccount,
+          isSuperuser: false,
         },
       ],
       { connection: provider.connection, accountIndex: ++cryptidIndex }
@@ -110,7 +111,7 @@ describe("Middleware: checkRecipient", () => {
       await cryptidWithoutMiddleware.propose(makeTransaction());
     await cryptidWithoutMiddleware.send(proposeTransaction, proposeSigners);
 
-    // send the execute tx - this will fail since the middeware was not used
+    // send the execute tx - this will fail since the middleware was not used
     const { executeTransactions, executeSigners } = await cryptid.execute(
       transactionAccount
     );

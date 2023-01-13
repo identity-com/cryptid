@@ -4,3 +4,4 @@ export { CheckPass, IDL as CheckPassIDL } from "./check_pass";
 export { CheckDid, IDL as CheckDidIDL } from "./check_did";
 export { CheckRecipient, IDL as CheckRecipientIDL } from "./check_recipient";
 export { TimeDelay, IDL as TimeDelayIDL } from "./time_delay";
+export { SuperuserCheckSigner, IDL as SuperuserCheckSignerIDL } from "./superuser_check_signer";

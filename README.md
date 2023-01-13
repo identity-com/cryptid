@@ -271,3 +271,6 @@ The Superuser middleware allows a key to sign transactions that is not on the DI
 It does this by bypassing the authority check in the core cryptid program. 
 This is naturally a highly risky operation, so superuser middlewares have to be listed explicitly
 in the Cryptid account, and cannot be changed after creation of the account.
+
+An example superuser middleware in this repo is superuser-check-signer, which verifies that a particular key
+has signed the transaction. This key need not be on the DID.

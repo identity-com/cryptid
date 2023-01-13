@@ -23,6 +23,9 @@ pub enum CryptidError {
     /// Invalid transaction state
     #[msg("Invalid transaction state")]
     InvalidTransactionState,
+    /// The transaction was proposed by a non-authority on the DID and has not been authorized by a superuser middleware.
+    #[msg("The transaction was proposed by a non-authority on the DID and has not been authorized by a superuser middleware.")]
+    UnauthorizedTransaction,
     /// An account in the transaction accounts did not match what was expected
     #[msg("An account in the transaction accounts did not match what was expected")]
     AccountMismatch,
@@ -46,6 +49,9 @@ pub enum CryptidError {
     /// The expected middleware did not approve the transaction
     #[msg("The expected middleware did not approve the transaction.")]
     IncorrectMiddleware,
+    /// The middleware is not registered as a superuser middleware on the cryptid account
+    #[msg("The middleware is not registered as a superuser middleware on the cryptid account.")]
+    IncorrectSuperuserMiddleware,
     /// The accounts passed to execute do not match those in the transaction account.
     #[msg("The accounts passed to execute do not match those in the transaction account.")]
     InvalidAccounts,

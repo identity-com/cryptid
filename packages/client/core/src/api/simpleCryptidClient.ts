@@ -3,6 +3,7 @@ import { ControlledCryptidClient } from "./controlledCryptidClient";
 import { AbstractCryptidClient } from "./abstractCryptidClient";
 import { Wallet } from "../types/crypto";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
+import { UnauthorizedCryptidClient } from "./unauthorizedCryptidClient";
 
 export class SimpleCryptidClient extends AbstractCryptidClient {
   constructor(
@@ -19,5 +20,13 @@ export class SimpleCryptidClient extends AbstractCryptidClient {
 
   controlWith(controllerDid: string): CryptidClient {
     return new ControlledCryptidClient(controllerDid, this);
+  }
+
+  unauthorized(): CryptidClient {
+    return new UnauthorizedCryptidClient(
+      this.details,
+      this.wallet,
+      this.options
+    );
   }
 }

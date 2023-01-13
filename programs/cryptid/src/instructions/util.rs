@@ -3,6 +3,7 @@ use crate::state::cryptid_account::CryptidAccount;
 use crate::state::did_reference::DIDReference;
 use crate::util::SolDID;
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::Error::AnchorError;
 use bitflags::bitflags;
 use num_traits::cast::ToPrimitive;
 use sol_did::state::VerificationMethodType;
@@ -89,6 +90,7 @@ pub fn get_cryptid_account_checked<'info>(
     did_account_bump: u8,
     cryptid_account_index: u32,
     cryptid_account_bump: u8,
+    allow_unauthorized_signer: bool,
 ) -> Result<CryptidAccount> {
     // Check that the authority has permissions on the DID
 
@@ -105,6 +107,15 @@ pub fn get_cryptid_account_checked<'info>(
         })
         .collect::<Vec<(&AccountInfo, Pubkey)>>();
 
+    // Perform seed verification here
+    let cryptid_account_obj = CryptidAccount::try_from(
+        cryptid_account,
+        &did_program.key(),
+        &did.key(),
+        cryptid_account_index,
+        cryptid_account_bump,
+    )?;
+
     // Assume at this point that anchor has verified the cryptid account and did account (but not the controller chain)
     // We now need to verify that the signer (at the moment, only one is supported) is a valid signer for the cryptid account
     verify_keys(
@@ -112,16 +123,28 @@ pub fn get_cryptid_account_checked<'info>(
         Some(did_account_bump),
         authority.to_account_info().key,
         controlling_did_accounts,
-    )?;
+    ).or_else(|error| {
+        if allow_unauthorized_signer && !cryptid_account_obj.superuser_middleware.is_empty() {
+            match &error {
+                AnchorError(x) => {
+                    if x.error_code_number == CryptidError::KeyMustBeSigner.into() {
+                        msg!("Signer is not an authority on the DID, but the cryptid account has a superuser middleware. Allowing the transaction.");
+                        Ok(())
+                    } else {
+                        Err(error)
+                    }
+                },
+                _ => Err(error),
+            }
+        } else {
+            msg!("Signer is not an authority on the DID and the cryptid account has no superuser middleware. Rejecting transaction.");
+            msg!("Allow unauthorized: {}", allow_unauthorized_signer);
+            msg!("Superuser middleware: {:?}", cryptid_account_obj.superuser_middleware);
+            Err(error)
+        }
+    })?;
 
-    // For seed verification
-    CryptidAccount::try_from(
-        cryptid_account,
-        &did_program.key(),
-        &did.key(),
-        cryptid_account_index,
-        cryptid_account_bump,
-    )
+    Ok(cryptid_account_obj)
 }
 
 bitflags! {

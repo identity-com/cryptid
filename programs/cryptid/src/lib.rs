@@ -67,6 +67,7 @@ pub mod cryptid {
         cryptid_account_index: u32,
         did_account_bump: u8,
         state: TransactionState,
+        allow_unauthorized: bool,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -77,6 +78,7 @@ pub mod cryptid {
             cryptid_account_index,
             did_account_bump,
             state,
+            allow_unauthorized,
             instructions,
         )
     }
@@ -88,6 +90,7 @@ pub mod cryptid {
         cryptid_account_index: u32,
         did_account_bump: u8,
         state: TransactionState,
+        allow_unauthorized: bool,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -98,6 +101,7 @@ pub mod cryptid {
             cryptid_account_index,
             did_account_bump,
             state,
+            allow_unauthorized,
             instructions,
         )
     }
@@ -124,5 +128,11 @@ pub mod cryptid {
         ctx: Context<'a, 'b, 'c, 'info, ApproveExecution<'info>>,
     ) -> Result<()> {
         instructions::approve_execution(ctx)
+    }
+
+    pub fn superuser_approve_execution<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, SuperuserApproveExecution<'info>>,
+    ) -> Result<()> {
+        instructions::superuser_approve_execution(ctx)
     }
 }

@@ -50,6 +50,7 @@ describe("Middleware: CheckDid", () => {
       {
         programId: checkDidMiddlewareProgram.programId,
         address: middlewareAccount,
+        isSuperuser: false,
       },
     ];
 
