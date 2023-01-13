@@ -1,13 +1,5 @@
-# Cryptid Wallet UI
+Dapp: The cryptid user interface that allows transactions to be generated.
 
-A browser-based UI for managing your Cryptid accounts.
+React: Test app that displays connected wallets
 
-See [cryptid.identity.com](https://cryptid.identity.com) to try it out.
-
-Some features include:
-* Connect using your existing Solana wallet
-* Manage your keys and account control
-* Send SOL & SPL tokens
-* Interact with dApps
-
-See the Cryptid documentation [here](../README.md) for more information
+Unique-Cryptid: The wallet standard interface

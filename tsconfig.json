@@ -23,5 +23,6 @@
   ],
   "include": [
     "packages/**/src/*",
+    "wallet/**/src/*"
   ]
 }
