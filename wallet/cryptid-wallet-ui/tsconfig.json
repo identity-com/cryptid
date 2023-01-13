@@ -1,28 +1,35 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
-    "target": "es6",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
-    "strictNullChecks": false,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "composite": true,
+    "incremental": true,
+    "module": "esnext"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", ".next",],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"],
-    "compilerOptions": {
-      "module": "commonjs"
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/client/cryptid"
     }
-  }
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
