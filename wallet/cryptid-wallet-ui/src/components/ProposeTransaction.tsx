@@ -1,4 +1,4 @@
-import { Cryptid } from "@identity.com/cryptid";
+import { Cryptid } from "@identity.com/cryptid-core";
 import {
   useConnection,
   useWallet,

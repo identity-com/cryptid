@@ -1,4 +1,4 @@
-import { Cryptid } from "@identity.com/cryptid";
+import { Cryptid } from "@identity.com/cryptid-core";
 import {
   useConnection,
   useWallet,
@@ -14,7 +14,7 @@ import {
 import { FC, useCallback } from "react";
 import { Wallet } from "../types";
 import { notify } from "../utils/notifications";
-import { useCryptidAccount } from "../contexts/CryptidAccountProvider";
+// import { useCryptidAccount } from "../contexts/CryptidAccountProvider";
 const { connection } = useConnection();
 const { publicKey, sendTransaction, signTransaction, signAllTransactions } =
   useWallet();
@@ -30,7 +30,7 @@ const prepareAccounts = async (did: string) => {
   });
 };
 
-const BasicStatus: FC = async () => {
+const BasicStatus: FC = () => {
   //const { networkConfiguration, setNetworkConfiguration } =
   //useNetworkConfiguration();
 
@@ -39,23 +39,25 @@ const BasicStatus: FC = async () => {
   const cryptid = Cryptid.buildFromDID(did, reformWallet, {
     connection: connection,
   });
-  let accounts = await prepareAccounts(did);
 
-  const { cryptidAccount, setCryptidAccount } = useCryptidAccount();
+  // Load with useEffect hook
+  // let accounts = await prepareAccounts(did);
+
+  // const { cryptidAccount, setCryptidAccount } = useCryptidAccount();
 
   return (
     <div>
       <label className="cursor-pointer label">
         <a>Network</a>
-        <select
-          value={cryptidAccount}
-          onChange={(e) => setCryptidAccount(e.target.value)}
-          className="select max-w-xs"
-        >
-          <option value="1">{accounts[0]}</option>
-          <option value="2">{accounts[1] || "No additional accounts"}</option>
-          <option value="3">{accounts[2] || null}</option>
-        </select>
+        {/*<select*/}
+        {/*  value={cryptidAccount}*/}
+        {/*  onChange={(e) => setCryptidAccount(e.target.value)}*/}
+        {/*  className="select max-w-xs"*/}
+        {/*>*/}
+        {/*  <option value="1">{accounts[0]}</option>*/}
+        {/*  <option value="2">{accounts[1] || "No additional accounts"}</option>*/}
+        {/*  <option value="3">{accounts[2] || null}</option>*/}
+        {/*</select>*/}
       </label>
     </div>
   );

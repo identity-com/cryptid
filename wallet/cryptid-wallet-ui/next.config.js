@@ -1,4 +1,6 @@
-// next.config.js
-const withTM = require('next-transpile-modules')(['@identity.com/cryptid']); // pass the modules you would like to see transpiled
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
 
-module.exports = withTM({});
+module.exports = nextConfig
