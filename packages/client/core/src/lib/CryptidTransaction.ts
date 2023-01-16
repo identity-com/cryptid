@@ -29,9 +29,9 @@ import {
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
 // and not index 3. This is because the signer is not known at creation time.
-// TODO - PublicKey.default uses the default key 11111111111111111111111111111111 which is the same as the system program.
+// PublicKey.default uses the default key 11111111111111111111111111111111 which is the same as the system program.
 // This is unsuitable as it may be referenced in the instructions somewhere. So we generate a "single use" key here.
-// It feels hacky - is there a better alternative?
+// TODO - It feels hacky - is there a better alternative?
 const NULL_KEY = Keypair.generate().publicKey; // PublicKey.default;
 
 export class CryptidTransaction {
@@ -142,7 +142,12 @@ export class CryptidTransaction {
       cryptidAccount.address,
       cryptidAccount.didAccount,
       DID_SOL_PROGRAM,
-      authority,
+      // This key is added in place of the signer (aka authority),
+      // so that the InstructionData are required to reference the signer in a separate position in the array,
+      // and not index 3. This is because the signer at execute time is not known at creation time,
+      // and may be different to the authority here.
+      // TODO: This is not the case for DirectExecute, so we could optimise here.
+      NULL_KEY,
     ];
     const allAccounts = transactionAccount.accounts;
     const accountMetasFromInstructions = transactionAccountMetasToAccountMetas(
