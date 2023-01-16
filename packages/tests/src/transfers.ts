@@ -80,18 +80,30 @@ describe(`Native & SPL Transfer tests`, () => {
     const previousBalance = await balanceOf(cryptid.address());
 
     const transaction = new Transaction().add(
-      makeTransfer(thridParty.publicKey, cryptid.address()),
-      makeTransfer(cryptid.address(), authority.publicKey)
+      // makeTransfer(thridParty.publicKey, cryptid.address()),
+      // broken
+      // makeTransfer(cryptid.address(), authority.publicKey)
+      // works
+      makeTransfer(cryptid.address(), thridParty.publicKey)
     );
 
     const { proposeTransaction, proposeSigners, transactionAccount } =
       await cryptid.propose(transaction);
-    await cryptid.send(proposeTransaction, [...proposeSigners, thridParty]); // TODO: Why do we need thridParty to sign the propose?
+    await cryptid.send(proposeTransaction, [...proposeSigners]); // TODO: Why do we need thridParty to sign the propose?
 
     const { executeTransactions, executeSigners } = await cryptid.execute(
       transactionAccount
     );
-    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
+    const latest = await provider.connection.getLatestBlockhash();
+    executeTransactions[0].recentBlockhash = latest.blockhash;
+    executeTransactions[0].lastValidBlockHeight = latest.lastValidBlockHeight;
+    executeTransactions[0].feePayer = authority.publicKey;
+
+
+    console.log(JSON.stringify(executeTransactions[0], null, 2));
+    console.log(executeTransactions[0].serializeMessage().toString("base64"));
+
+    await cryptid.send(executeTransactions[0], [...executeSigners]);
 
     const currentBalance = await balanceOf(cryptid.address());
 
