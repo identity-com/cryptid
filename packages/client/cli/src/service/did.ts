@@ -23,7 +23,7 @@ export const addKeyToDID = async (
   const newKeyVerificationMethod = {
     flags: [BitwiseVerificationMethodFlag.CapabilityInvocation],
     fragment: name,
-    keyData: key.toBytes(),
+    keyData: key.toBuffer(),
     methodType: VerificationMethodType.Ed25519VerificationKey2018,
   };
 
