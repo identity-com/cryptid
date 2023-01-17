@@ -51,6 +51,8 @@ pub struct ExecuteTransaction<'info> {
     // only authorized transactions, ones that were proposed by a DID authority,
     // or authorized by a superuser middleware, can be executed
     constraint = transaction_account.authorized @ CryptidError::UnauthorizedTransaction,
+    // if the transaction was created
+    constraint = transaction_account.unauthorized_signer.unwrap_or(authority.key()) == authority.key() @ CryptidError::KeyMustBeSigner,
     // the transaction account must have been approved by the middleware on the cryptid account, if present
     // TODO: This moved to the instruction body
     // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,

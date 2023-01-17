@@ -23,7 +23,7 @@ import { TransactionMessage } from "@solana/web3.js";
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
-describe.only("Middleware: superuserCheckSigner", () => {
+describe("Middleware: superuserCheckSigner", () => {
   const {
     keypair,
     provider,
@@ -131,16 +131,8 @@ describe.only("Middleware: superuserCheckSigner", () => {
     }
   );
 
-  it.only("can execute a transfer if the tx is signed by the expected non-did signer", async () => {
+  it("can execute a transfer if the tx is signed by the expected non-did signer", async () => {
     const previousBalance = await balanceOf(cryptid.address());
-
-    console.log(
-      "Signer:",
-      signer.publicKey.toBase58(),
-      "balance",
-      await balanceOf(signer.publicKey)
-    );
-    console.log("Authority:", authority.publicKey.toBase58());
 
     // propose the Cryptid transaction
     const { proposeTransaction, transactionAccount, proposeSigners } =
@@ -164,9 +156,10 @@ describe.only("Middleware: superuserCheckSigner", () => {
         ...cryptid.details,
         middlewares: [],
       },
-      authority,
+      signer,
       { connection: provider.connection }
-    );
+    ).unauthorized();
+
     // propose the Cryptid transaction
     const { proposeTransaction, transactionAccount, proposeSigners } =
       await cryptidWithoutMiddleware.propose(makeTransaction());
@@ -174,10 +167,8 @@ describe.only("Middleware: superuserCheckSigner", () => {
 
     // send the execute tx - this will fail since the middleware was not used
     const { executeTransactions } = await cryptid.execute(transactionAccount);
-    const transaction = await convertToSignedVersionedTransaction(
-      executeTransactions[0]
-    );
-    await provider.connection.sendTransaction(transaction);
+    await cryptid.send(executeTransactions[0]);
+
     const shouldFail = cryptid.send(executeTransactions[0], [signer]);
 
     return expect(shouldFail).to.be.rejectedWith(

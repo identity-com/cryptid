@@ -154,6 +154,7 @@ describe("Middleware: checkPass", () => {
         cryptid.details.index,
         cryptid.details.didAccountBump,
         TransactionState.toBorsh(TransactionState.Ready),
+        false,
         [instruction],
         2
       )

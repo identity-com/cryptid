@@ -93,7 +93,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
 ) -> Result<()> {
     let all_accounts = ctx.all_accounts();
 
-    get_cryptid_account_checked(
+    let cryptid_account = get_cryptid_account_checked(
         &all_accounts,
         &controller_chain,
         &ctx.accounts.cryptid_account,
@@ -134,6 +134,13 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     };
     ctx.accounts.transaction_account.authorized = !allow_unauthorized;
 
+    // if the transaction is being created by an unauthorized signer,
+    // then the cryptid account must have superuser middleware registered
+    require!(
+        !allow_unauthorized // The transaction must be either created by an authorized signer
+        || !cryptid_account.superuser_middleware.is_empty(), // or the cryptid account must have superuser middleware registered that can authorize it
+        CryptidError::InvalidTransactionState
+    );
 
     // we cannot initiate a transaction in executed state.
     require_neq!(
