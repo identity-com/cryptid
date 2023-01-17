@@ -49,7 +49,7 @@ describe(`Middleware`, () => {
       .approveExecution()
       .accounts({
         transactionAccount,
-        middlewareAccount: authority, // not a correct middleware account
+        middlewareAccount: authority.publicKey, // not a correct middleware account
       })
       .rpc();
     return expect(shouldFail).to.be.rejectedWith(
