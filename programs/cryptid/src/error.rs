@@ -50,6 +50,6 @@ pub enum CryptidError {
     #[msg("The accounts passed to execute do not match those in the transaction account.")]
     InvalidAccounts,
     /// An invalid Middleware Account was passed.
-    #[msg("Invalid Middleware Account.")]
+    #[msg("Approve Execution needs to be called with a valid Middleware Account.")]
     InvalidMiddlewareAccount,
 }

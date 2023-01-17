@@ -710,7 +710,7 @@ export type Cryptid = {
     {
       "code": 6014,
       "name": "InvalidMiddlewareAccount",
-      "msg": "Invalid Middleware Account."
+      "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }
   ]
 };
@@ -1427,7 +1427,7 @@ export const IDL: Cryptid = {
     {
       "code": 6014,
       "name": "InvalidMiddlewareAccount",
-      "msg": "Invalid Middleware Account."
+      "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }
   ]
 };

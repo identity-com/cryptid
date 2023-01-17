@@ -131,9 +131,7 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
         .transaction_account
         .instructions
         .iter()
-        .map(|x| x.get_max_account_index())
-        .max()
-        .unwrap_or(0);
+        .fold(0, |acc, x| acc.max(x.get_max_account_index()));
     require_gt!(
         ctx.accounts.transaction_account.accounts.len(),
         max_account_reference as usize,
