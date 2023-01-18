@@ -31,6 +31,9 @@ pub mod superuser_check_signer {
     /// Note- there is no additional check needed here - the signer check is already verified
     /// by anchor.
     pub fn execute_middleware(ctx: Context<ExecuteMiddleware>) -> Result<()> {
+        msg!("Set signer: {}", ctx.accounts.middleware_account.signer);
+        msg!("Passed signer: {}", ctx.accounts.signer.key);
+
         // Check the previous middleware has passed the transaction
         if let Some(required_previous_middleware) =
             ctx.accounts.middleware_account.previous_middleware

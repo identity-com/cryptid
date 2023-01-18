@@ -274,6 +274,7 @@ export class CryptidService {
     // otherwise, wait until it is sealed
     let middlewareResult: MiddlewareResult = { instructions: [], signers: [] };
     if (state === TransactionState.Ready) {
+      console.log(`Executing MiddlewareInstructions`);
       middlewareResult = await this.executeMiddlewareInstructions(
         account,
         transactionAccountKeypair.publicKey,

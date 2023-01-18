@@ -111,15 +111,15 @@ export class CryptidTransaction {
       ...controllersAccountMetas,
     ];
 
-    console.log("fromSolanaInstructions", {
-      authority: authority.toBase58(),
-      accountMetas: accountMetas.map((a) => a.pubkey.toBase58()),
-      filteredRemainingAccountMetas: filteredRemainingAccountMetas.map((a) =>
-        a.pubkey.toBase58()
-      ),
-      instructions: instructions.map((i) => i.accounts.map((a) => a.key)),
-      namedAccounts: namedAccounts.map((a) => a.toBase58()),
-    });
+    // console.log("fromSolanaInstructions", {
+    //   authority: authority.toBase58(),
+    //   accountMetas: accountMetas.map((a) => a.pubkey.toBase58()),
+    //   filteredRemainingAccountMetas: filteredRemainingAccountMetas.map((a) =>
+    //     a.pubkey.toBase58()
+    //   ),
+    //   instructions: instructions.map((i) => i.accounts.map((a) => a.key)),
+    //   namedAccounts: namedAccounts.map((a) => a.toBase58()),
+    // });
 
     return new CryptidTransaction(
       cryptidAccount,

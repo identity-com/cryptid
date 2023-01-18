@@ -2,8 +2,8 @@ use crate::error::CryptidError;
 use crate::state::cryptid_account::CryptidAccount;
 use crate::state::did_reference::DIDReference;
 use crate::util::SolDID;
-use anchor_lang::prelude::*;
 use anchor_lang::prelude::Error::AnchorError;
+use anchor_lang::prelude::*;
 use bitflags::bitflags;
 use sol_did::state::VerificationMethodType;
 

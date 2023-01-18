@@ -1,10 +1,4 @@
-import {
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  Transaction,
-  Signer,
-} from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { makeTransfer } from "../util/cryptid";
@@ -17,8 +11,6 @@ import {
   deriveMiddlewareAccountAddress,
 } from "@identity.com/cryptid-middleware-superuser-check-signer";
 import { CryptidClient } from "@identity.com/cryptid-core";
-import { VersionedTransaction } from "@solana/web3.js";
-import { TransactionMessage } from "@solana/web3.js";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -40,21 +32,6 @@ describe("Middleware: superuserCheckSigner", () => {
 
   const makeTransaction = (to = signer.publicKey) =>
     makeTransfer(cryptid.address(), to);
-
-  const convertToSignedVersionedTransaction = async (
-    tx: Transaction,
-    signers: Signer[] = []
-  ): Promise<VersionedTransaction> => {
-    const latestBlockhash = await provider.connection.getLatestBlockhash();
-    const messageV0 = new TransactionMessage({
-      payerKey: signer.publicKey,
-      recentBlockhash: latestBlockhash.blockhash,
-      instructions: tx.instructions,
-    }).compileToV0Message();
-    const transaction = new VersionedTransaction(messageV0);
-    transaction.sign([signer, ...signers]);
-    return transaction;
-  };
 
   before("Fund the authority and signer", async () => {
     await Promise.all([
@@ -104,26 +81,30 @@ describe("Middleware: superuserCheckSigner", () => {
     }
   );
 
+  const buildCryptid = async () => {
+    cryptid = (
+      await Cryptid.buildFromDID(
+        DID_SOL_PREFIX + ":" + authority.publicKey,
+        signer,
+        {
+          connection: provider.connection,
+          accountIndex: cryptidIndex,
+          middlewares: [
+            {
+              programId: superuserCheckSignerMiddlewareProgram.programId,
+              address: middlewareAccount,
+              isSuperuser: true,
+            },
+          ],
+        }
+      )
+    ).unauthorized();
+  };
+
   before(
     "Create a cryptid client with the non-did signer as an authority (so that it can propose unauthorised transactions for the superuser middleware to authorise)",
     async () => {
-      cryptid = (
-        await Cryptid.buildFromDID(
-          DID_SOL_PREFIX + ":" + authority.publicKey,
-          signer,
-          {
-            connection: provider.connection,
-            accountIndex: cryptidIndex,
-            middlewares: [
-              {
-                programId: superuserCheckSignerMiddlewareProgram.programId,
-                address: middlewareAccount,
-                isSuperuser: true,
-              },
-            ],
-          }
-        )
-      ).unauthorized();
+      await buildCryptid();
 
       await fund(cryptid.address(), 20 * LAMPORTS_PER_SOL);
 
@@ -166,26 +147,37 @@ describe("Middleware: superuserCheckSigner", () => {
     await cryptidWithoutMiddleware.send(proposeTransaction, proposeSigners);
 
     // send the execute tx - this will fail since the middleware was not used
-    const { executeTransactions } = await cryptid.execute(transactionAccount);
-    await cryptid.send(executeTransactions[0]);
+    const { executeTransactions } = await cryptidWithoutMiddleware.execute(
+      transactionAccount
+    );
 
-    const shouldFail = cryptid.send(executeTransactions[0], [signer]);
+    const shouldFail = cryptidWithoutMiddleware.send(executeTransactions[0], [
+      signer,
+    ]);
 
+    // Unauthorized, because the transaction account was not authorized by the SuperUserMiddleware
     return expect(shouldFail).to.be.rejectedWith(
-      "Error Code: IncorrectMiddleware"
+      "Error Code: UnauthorizedTransaction."
     );
   });
 
   it("blocks a transfer not signed by the signer", async () => {
     // change the signer
     signer = Keypair.generate();
+    await fund(signer.publicKey);
+    await buildCryptid();
 
     // propose the Cryptid transaction. Since the superuserCheckSigner middleware
     // executes on propose, this tx will fail
-    const { proposeTransaction, proposeSigners } = await cryptid.propose(
-      makeTransaction()
+    const { proposeTransaction, transactionAccount, proposeSigners } =
+      await cryptid.propose(makeTransaction());
+    await cryptid.send(proposeTransaction, proposeSigners);
+
+    const { executeTransactions, executeSigners } = await cryptid.execute(
+      transactionAccount
     );
-    const shouldFail = cryptid.send(proposeTransaction, proposeSigners);
+
+    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
 
     return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidSigner.");
   });

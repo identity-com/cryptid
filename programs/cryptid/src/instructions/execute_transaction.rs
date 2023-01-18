@@ -52,7 +52,7 @@ pub struct ExecuteTransaction<'info> {
     // or authorized by a superuser middleware, can be executed
     constraint = transaction_account.authorized @ CryptidError::UnauthorizedTransaction,
     // if the transaction was created
-    constraint = transaction_account.unauthorized_signer.unwrap_or(authority.key()) == authority.key() @ CryptidError::KeyMustBeSigner,
+    constraint = transaction_account.unauthorized_signer.unwrap_or_else(|| authority.key()) == authority.key() @ CryptidError::KeyMustBeSigner,
     // the transaction account must have been approved by the middleware on the cryptid account, if present
     // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
     // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
@@ -126,7 +126,8 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     let allow_unauthorized_signer = ctx
         .accounts
         .transaction_account
-        .unauthorized_signer.is_some();
+        .unauthorized_signer
+        .is_some();
 
     let cryptid_account = get_cryptid_account_checked(
         &all_accounts,
@@ -138,7 +139,6 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
-
         allow_unauthorized_signer,
     )?;
 
