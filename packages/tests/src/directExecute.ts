@@ -99,7 +99,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         makeTransaction(recipient.publicKey)
       );
 
-      await cryptid.send(signedTransaction, [], { skipPreflight: true });
+      await cryptid.send(signedTransaction, []);
 
       const currentBalance = await balanceOf(cryptid.address());
 

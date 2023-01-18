@@ -205,7 +205,6 @@ pub struct ExecuteMiddleware<'info> {
     pub gateway_program: Program<'info, GatewayProgram>,
 }
 impl<'info> ExecuteMiddleware<'info> {
-    // TODO abstract this into shared?
     pub fn approve(ctx: Context<ExecuteMiddleware>) -> Result<()> {
         let cpi_program = ctx.accounts.cryptid_program.to_account_info();
         let cpi_accounts = ApproveExecution {

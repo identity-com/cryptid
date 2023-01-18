@@ -64,6 +64,10 @@ impl AbbreviatedInstructionData {
             .map(|meta| account_infos[meta.key as usize].clone())
             .collect()
     }
+
+    pub fn get_max_account_index(&self) -> u8 {
+        self.accounts.iter().map(|meta| meta.key).max().unwrap_or(0)
+    }
 }
 impl fmt::Display for AbbreviatedInstructionData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

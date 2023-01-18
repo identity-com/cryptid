@@ -4,7 +4,6 @@ use crate::state::did_reference::DIDReference;
 use crate::util::SolDID;
 use anchor_lang::prelude::*;
 use bitflags::bitflags;
-use num_traits::cast::ToPrimitive;
 use sol_did::state::VerificationMethodType;
 
 /// A trait that extracts all accounts from an anchor instruction context, combining
@@ -27,25 +26,6 @@ pub fn resolve_by_index<'c, 'info>(
         resolved_accounts.push(accounts[i]);
     }
     Ok(resolved_accounts)
-}
-
-/// A trait that indicates if an account represents a generative account (e.g. a Generative DID or Cryptid account)
-/// By Generative, we mean that the account is not on chain, but derived from a public key and has default properties.
-pub trait IsGenerative<T> {
-    fn is_generative(&self) -> bool;
-}
-
-impl<T: AccountSerialize + AccountDeserialize + Owner + Clone> IsGenerative<T> for Account<'_, T> {
-    fn is_generative(&self) -> bool {
-        // TODO: I just want to check that it is zero. Why is this so hard!?
-        self.to_account_info()
-            .try_borrow_lamports()
-            .unwrap()
-            .to_u64()
-            .unwrap()
-            == 0
-            && *self.to_account_info().owner == System::id()
-    }
 }
 
 /// Verifies that the signer has the permission to sign for the DID

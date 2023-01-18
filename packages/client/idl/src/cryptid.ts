@@ -478,7 +478,7 @@ export type Cryptid = {
             "name": "slot",
             "docs": [
               "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks TODO: Do we need it?"
+              "This is used to prevent replay attacks"
             ],
             "type": "u8"
           },
@@ -706,6 +706,11 @@ export type Cryptid = {
       "code": 6013,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidMiddlewareAccount",
+      "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }
   ]
 };
@@ -1190,7 +1195,7 @@ export const IDL: Cryptid = {
             "name": "slot",
             "docs": [
               "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks TODO: Do we need it?"
+              "This is used to prevent replay attacks"
             ],
             "type": "u8"
           },
@@ -1418,6 +1423,11 @@ export const IDL: Cryptid = {
       "code": 6013,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidMiddlewareAccount",
+      "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }
   ]
 };
