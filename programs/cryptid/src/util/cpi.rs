@@ -18,23 +18,21 @@ pub const TRANSFER_INSTRUCTION_INDEX: u8 = 2;
 
 pub fn is_transfer(solana_instruction: &Instruction) -> bool {
     solana_instruction.program_id == System::id()
-        // TODO fix: should check the first 4 bytes not just the first one
-        // this would fail if e.g. you have more than 256 instructions in the System Program
         && solana_instruction.data[0] == TRANSFER_INSTRUCTION_INDEX
 }
 
 pub struct CPI {}
 impl CPI {
-    // TODO remove once the account macro is added and we have reduced the amount of arguments
     #[allow(clippy::too_many_arguments)]
     pub fn execute_instructions(
         instructions: &Vec<AbbreviatedInstructionData>,
         accounts: &Vec<&AccountInfo>,
         did_program: &Pubkey,
         did: &Pubkey,
+        // TODO(ticket): Simplify if generative Accounts are supported
         // We pass these two parameters separately, because we don't know if the cryptid account is
         // generative or not. Therefore we cannot pass Account<CryptidAccount>
-        // TODO potentially, once the new macro is available, replace this with an account object
+        // potentially, once the new macro is available, replace this with an account object
         // like Account<CryptidAccount>, allowing us to call
         // cryptid_account.index and cryptid_account.key() on the same object
         // this would save us an extra parameter here.
@@ -85,7 +83,14 @@ impl CPI {
                 .cloned()
                 .collect::<Vec<_>>();
 
-            let sub_instruction_result =
+            // Check if the instruction needs cryptid to sign it
+            let is_signed_by_cryptid = solana_instruction
+                .accounts
+                .iter()
+                .any(|meta| meta.pubkey.eq(cryptid_account_info.key) && meta.is_signer);
+
+            let sub_instruction_result = if is_signed_by_cryptid {
+                // special case on Cryptid with a transfer instruction
                 if Self::is_native_transfer_needed(cryptid_account_info, &solana_instruction) {
                     // short-circuit for transfer instructions (see comment on execute_transfer)
                     Self::execute_safe_transfer(
@@ -96,34 +101,26 @@ impl CPI {
                     )
                 } else {
                     let seeds = seeder.seeds();
-
-                    // Check if the instruction needs cryptid to sign it, if so, invoke it with cryptid account PDA seeds, otherwise, just invoke it
-                    let is_signed_by_cryptid = solana_instruction
-                        .accounts
-                        .iter()
-                        .any(|meta| meta.pubkey.eq(cryptid_account_info.key));
-                    if is_signed_by_cryptid {
-                        if debug {
-                            msg!("Invoking signed with seeds: {:?}", seeds);
-                        }
-
-                        // Turn Vec<Vec<u8>> into &[&[u8]]
-                        // TODO: do it better (presumably by changing the type of `seeds`)
-                        let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
-
-                        invoke_signed(
-                            &solana_instruction,
-                            account_infos.as_slice(),
-                            &[&seeds_slices_vec[..]],
-                        )
-                        .map_err(|_| error!(CryptidError::SubInstructionError))
-                    } else {
-                        msg!("Invoking without signature -  not yet supported");
-                        // TODO add tests
-                        invoke(&solana_instruction, account_infos.as_slice())
-                            .map_err(|_| error!(CryptidError::SubInstructionError))
+                    if debug {
+                        msg!("Invoking signed with seeds: {:?}", seeds);
                     }
-                };
+
+                    // Turn Vec<Vec<u8>> into &[&[u8]]
+                    let seeds_slices_vec: Vec<&[u8]> = seeds.iter().map(|x| &x[..]).collect();
+
+                    invoke_signed(
+                        &solana_instruction,
+                        account_infos.as_slice(),
+                        &[&seeds_slices_vec[..]],
+                    )
+                    .map_err(|_| error!(CryptidError::SubInstructionError))
+                }
+            } else {
+                msg!("Invoking without signature");
+                // TODO: IDCOM-2103: Add tests
+                invoke(&solana_instruction, account_infos.as_slice())
+                    .map_err(|_| error!(CryptidError::SubInstructionError))
+            };
 
             // If sub-instruction errored log the index and error
             if let Err(ref error) = sub_instruction_result {

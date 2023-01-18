@@ -21,7 +21,7 @@ pub struct TransactionAccount {
     /// The most recent middleware PDA that approved the transaction
     pub approved_middleware: Option<Pubkey>,
     /// The slot in which the transaction was proposed
-    /// This is used to prevent replay attacks TODO: Do we need it?
+    /// This is used to prevent replay attacks
     pub slot: u8,
     /// The transaction state, to prevent replay attacks
     /// in case an executed transaction account is not immediately
@@ -80,7 +80,6 @@ mod test {
     use super::*;
     use crate::state::abbreviated_account_meta::AbbreviatedAccountMeta;
     use crate::state::abbreviated_instruction_data::AbbreviatedInstructionData;
-    use crate::state::account_meta_props::AccountMetaProps;
     use anchor_lang::prelude::borsh::BorshSerialize;
     use std::iter::once;
 

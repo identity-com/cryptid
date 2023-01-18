@@ -25,7 +25,7 @@ pub struct ExecuteTransaction<'info> {
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
     mut,
-    // TODO: Verification dones in instruction body. Move back with Anchor generator
+    // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
     // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
     // bump = cryptid_account_bump
     )]
@@ -54,7 +54,7 @@ pub struct ExecuteTransaction<'info> {
     // if the transaction was created
     constraint = transaction_account.unauthorized_signer.unwrap_or(authority.key()) == authority.key() @ CryptidError::KeyMustBeSigner,
     // the transaction account must have been approved by the middleware on the cryptid account, if present
-    // TODO: This moved to the instruction body
+    // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
     // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
@@ -161,7 +161,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     }
 
     // CHECK All middleware have approved the transaction (specifically the last one)
-    // TODO: Move back to constraint when anchor annotation for generative case is working
+    // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
     require!(
         ctx.accounts.transaction_account.approved_middleware == cryptid_account.middleware,
         CryptidError::IncorrectMiddleware

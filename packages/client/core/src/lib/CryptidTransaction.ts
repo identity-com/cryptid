@@ -43,6 +43,14 @@ export class CryptidTransaction {
     readonly controllerChainReferences: ControllerAccountReference[]
   ) {}
 
+  get accountMetasOnlyKeys(): AccountMeta[] {
+    return this.accountMetas.map((a) => ({
+      pubkey: a.pubkey,
+      isWritable: false,
+      isSigner: false,
+    }));
+  }
+
   /**
    * Convert a set of instructions into a CryptidTransaction object that can execute the
    * cryptid "propose" or "directExecute" commands on it.
@@ -146,7 +154,6 @@ export class CryptidTransaction {
       // so that the InstructionData are required to reference the signer in a separate position in the array,
       // and not index 3. This is because the signer at execute time is not known at creation time,
       // and may be different to the authority here.
-      // TODO: This is not the case for DirectExecute, so we could optimise here.
       NULL_KEY,
     ];
     const allAccounts = transactionAccount.accounts;
@@ -262,25 +269,28 @@ export class CryptidTransaction {
     state = TransactionState.Ready,
     allowUnauthorized = false
   ) {
-    return program.methods
-      .proposeTransaction(
-        this.controllerChainReferences,
-        this.cryptidAccount.bump,
-        this.cryptidAccount.index,
-        this.cryptidAccount.didAccountBump,
-        TransactionState.toBorsh(state),
-        allowUnauthorized,
-        this.instructions,
-        this.accountMetas.length
-      )
-      .accounts({
-        cryptidAccount: this.cryptidAccount.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: this.cryptidAccount.didAccount,
-        authority: this.authority,
-        transactionAccount: transactionAccountAddress,
-      })
-      .remainingAccounts(this.accountMetas);
+    return (
+      program.methods
+        .proposeTransaction(
+          this.controllerChainReferences,
+          this.cryptidAccount.bump,
+          this.cryptidAccount.index,
+          this.cryptidAccount.didAccountBump,
+          TransactionState.toBorsh(state),
+          allowUnauthorized,
+          this.instructions,
+          this.accountMetas.length
+        )
+        .accounts({
+          cryptidAccount: this.cryptidAccount.address,
+          didProgram: DID_SOL_PROGRAM,
+          did: this.cryptidAccount.didAccount,
+          authority: this.authority,
+          transactionAccount: transactionAccountAddress,
+        })
+        // Propose does not require remainingAccounts to be signers or writable
+        .remainingAccounts(this.accountMetasOnlyKeys)
+    );
   }
 
   /**
@@ -298,25 +308,28 @@ export class CryptidTransaction {
     state = TransactionState.Ready,
     allowUnauthorized = false
   ) {
-    return program.methods
-      .extendTransaction(
-        this.controllerChainReferences,
-        this.cryptidAccount.bump,
-        this.cryptidAccount.index,
-        this.cryptidAccount.didAccountBump,
-        TransactionState.toBorsh(state),
-        allowUnauthorized,
-        this.instructions,
-        this.accountMetas.length
-      )
-      .accounts({
-        cryptidAccount: this.cryptidAccount.address,
-        didProgram: DID_SOL_PROGRAM,
-        did: this.cryptidAccount.didAccount,
-        authority: this.authority,
-        transactionAccount: transactionAccountAddress,
-      })
-      .remainingAccounts(this.accountMetas);
+    return (
+      program.methods
+        .extendTransaction(
+          this.controllerChainReferences,
+          this.cryptidAccount.bump,
+          this.cryptidAccount.index,
+          this.cryptidAccount.didAccountBump,
+          TransactionState.toBorsh(state),
+          allowUnauthorized,
+          this.instructions,
+          this.accountMetas.length
+        )
+        .accounts({
+          cryptidAccount: this.cryptidAccount.address,
+          didProgram: DID_SOL_PROGRAM,
+          did: this.cryptidAccount.didAccount,
+          authority: this.authority,
+          transactionAccount: transactionAccountAddress,
+        })
+        // Extend does not require remainingAccounts to be signers or writable
+        .remainingAccounts(this.accountMetasOnlyKeys)
+    );
   }
 
   /**
@@ -350,8 +363,6 @@ export class CryptidTransaction {
   /**
    * Create and directly execute a cryptidTransaction
    * @param program
-   * @param transactionAccountAddress
-   * @param state
    */
   // The anchor MethodsBuilder type is not exposed
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

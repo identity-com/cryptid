@@ -30,7 +30,7 @@ pub struct ProposeTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
-        // TODO: Verification done in instruction body. Move back with Anchor generator
+        // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
         // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
         // bump = cryptid_account_bump
     )]
@@ -120,9 +120,10 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
     // Account indexes must reflect this, so the first entry
     // in the remaining accounts is referred to in the abbreviated instruction data as index 4,
     // despite being index 0 in the remaining accounts.
-    // TODO validate that the account indices are all valid, given the above i.e. that no index exceeds remaining_accounts.length + 4
     ctx.accounts.transaction_account.accounts = all_accounts.iter().map(|a| *a.key).collect();
 
+    // TODO: Set slot OR move any Slot / Expiry constraints to middleware
+    // ctx.accounts.transaction_account.slot = Clock::get()?.slot;
     ctx.accounts.transaction_account.did = *ctx.accounts.did.key;
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
@@ -140,6 +141,19 @@ pub fn propose_transaction<'a, 'b, 'c, 'info>(
         !allow_unauthorized // The transaction must be either created by an authorized signer
         || !cryptid_account.superuser_middleware.is_empty(), // or the cryptid account must have superuser middleware registered that can authorize it
         CryptidError::InvalidTransactionState
+    );
+
+    // Make sure that all instructions reference accounts in bound.
+    let max_account_reference = ctx
+        .accounts
+        .transaction_account
+        .instructions
+        .iter()
+        .fold(0, |acc, x| acc.max(x.get_max_account_index()));
+    require_gt!(
+        ctx.accounts.transaction_account.accounts.len(),
+        max_account_reference as usize,
+        CryptidError::IndexOutOfRange
     );
 
     // we cannot initiate a transaction in executed state.

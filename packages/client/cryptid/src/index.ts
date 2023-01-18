@@ -73,6 +73,6 @@ MiddlewareRegistry.get().register(
 );
 
 MiddlewareRegistry.get().register(
-    SUPERUSER_CHECK_SIGNER_MIDDLEWARE_PROGRAM_ID,
-    new SuperuserCheckSignerMiddleware()
+  SUPERUSER_CHECK_SIGNER_MIDDLEWARE_PROGRAM_ID,
+  new SuperuserCheckSignerMiddleware()
 );

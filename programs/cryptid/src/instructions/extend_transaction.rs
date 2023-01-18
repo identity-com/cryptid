@@ -33,7 +33,7 @@ pub struct ExtendTransaction<'info> {
     /// The Cryptid instance that can execute the transaction.
     /// CHECK: Cryptid Account can be generative and non-generative
     #[account(
-        // TODO: Verification done in instruction body. Move back with Anchor generator
+        // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
         // seeds = [CryptidAccount::SEED_PREFIX, did_program.key().as_ref(), did.key().as_ref(), cryptid_account_index.to_le_bytes().as_ref()],
         // bump = cryptid_account_bump
     )]

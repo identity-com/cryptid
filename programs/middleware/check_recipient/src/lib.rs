@@ -120,7 +120,6 @@ impl<'info> ExecuteMiddleware<'info> {
     /// https://docs.rs/solana-sdk/1.4.9/solana_sdk/system_instruction/enum.SystemInstruction.html
     pub const TRANSFER_INSTRUCTION_INDEX: u8 = 2;
 
-    // TODO abstract this into shared?
     pub fn approve(ctx: Context<ExecuteMiddleware>) -> Result<()> {
         let cpi_program = ctx.accounts.cryptid_program.to_account_info();
         let cpi_accounts = ApproveExecution {

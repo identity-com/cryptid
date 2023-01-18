@@ -97,7 +97,7 @@ describe("Middleware: checkPass", () => {
         middlewareAccount,
         authority: authority.publicKey,
       })
-      .rpc({ skipPreflight: true });
+      .rpc();
   };
 
   const setUpMiddlewareWithClient = async (failsafe?: PublicKey) => {
@@ -116,9 +116,7 @@ describe("Middleware: checkPass", () => {
       failsafe,
     });
 
-    await provider.sendAndConfirm(transaction, [keypair], {
-      skipPreflight: true,
-    });
+    await provider.sendAndConfirm(transaction, [keypair]);
   };
 
   const setUpCryptidClient = async (signer: Wallet | Keypair = authority) => {
