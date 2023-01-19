@@ -131,4 +131,9 @@ export class TimeDelayMiddleware
 
     return { instructions, signers: [] };
   }
+
+  public async onClose(): Promise<MiddlewareResult> {
+    // TODO: implement
+    return { instructions: [], signers: [] };
+  }
 }

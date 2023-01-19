@@ -17,7 +17,7 @@ import { didService } from "../lib/did";
 import { CryptidService } from "../service/cryptid";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { TransactionAccount, TransactionState } from "../types";
-import { ProposalResult, ExecuteArrayResult } from "../types/cryptid";
+import { ProposalResult, TransactionArrayResult } from "../types/cryptid";
 import { translateError } from "@project-serum/anchor";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
@@ -75,7 +75,7 @@ export abstract class AbstractCryptidClient implements CryptidClient {
   async proposeAndExecute(
     transaction: Transaction,
     forceSingleTx = false
-  ): Promise<ExecuteArrayResult> {
+  ): Promise<TransactionArrayResult> {
     const service = await this.service();
 
     // TODO this is likely temporary - we should not force the client to have to know whether
@@ -86,8 +86,8 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         transaction
       );
       return {
-        executeTransactions: [executeResult.executeTransaction],
-        executeSigners: executeResult.executeSigners,
+        transactions: [executeResult.transaction],
+        signers: executeResult.signers,
       };
     }
 
@@ -99,14 +99,11 @@ export abstract class AbstractCryptidClient implements CryptidClient {
     );
 
     return {
-      executeTransactions: [
+      transactions: [
         proposalResult.proposeTransaction,
-        executeResult.executeTransaction,
+        executeResult.transaction,
       ],
-      executeSigners: [
-        ...proposalResult.proposeSigners,
-        ...executeResult.executeSigners,
-      ],
+      signers: [...proposalResult.proposeSigners, ...executeResult.signers],
     };
   }
 
@@ -138,7 +135,7 @@ export abstract class AbstractCryptidClient implements CryptidClient {
   async execute(
     transactionAccountAddress: PublicKey,
     cryptidTransactionRepresentation?: CryptidTransaction
-  ): Promise<ExecuteArrayResult> {
+  ): Promise<TransactionArrayResult> {
     return this.service()
       .then((service) =>
         service.execute(
@@ -148,13 +145,28 @@ export abstract class AbstractCryptidClient implements CryptidClient {
         )
       )
       .then((result) => ({
-        executeTransactions: [result.executeTransaction],
-        executeSigners: result.executeSigners,
+        transactions: [result.transaction],
+        signers: result.signers,
       }));
   }
 
-  // TODO reinstate
-  // abstract cancelLarge(transactionAccount: PublicKey): Promise<string>;
+  async close(
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
+  ): Promise<TransactionArrayResult> {
+    return this.service()
+      .then((service) =>
+        service.close(
+          this.details,
+          transactionAccountAddress,
+          cryptidTransactionRepresentation
+        )
+      )
+      .then((result) => ({
+        transactions: [result.transaction],
+        signers: result.signers,
+      }));
+  }
 
   /**
    * Send a signed transaction, and optionally wait for it to be confirmed.

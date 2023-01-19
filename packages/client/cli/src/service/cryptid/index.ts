@@ -8,7 +8,7 @@ import {
   CryptidClient,
 } from "@identity.com/cryptid";
 import { util } from "@identity.com/cryptid-core";
-import { ExecuteArrayResult } from "@identity.com/cryptid-core/dist/types/cryptid";
+import { TransactionArrayResult } from "@identity.com/cryptid-core/dist/types/cryptid";
 
 const KEY_RESERVE_AIRDROP_LAMPORTS = 500_000;
 
@@ -109,15 +109,13 @@ export const airdrop = async (
 const createCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
-): Promise<ExecuteArrayResult> => {
+): Promise<TransactionArrayResult> => {
   if (cryptid.details.middlewares.length) {
     return cryptid.proposeAndExecute(transaction);
   } else {
     return {
-      executeTransactions: await cryptid
-        .directExecute(transaction)
-        .then((tx) => [tx]),
-      executeSigners: [],
+      transactions: await cryptid.directExecute(transaction).then((tx) => [tx]),
+      signers: [],
     };
   }
 };
@@ -126,13 +124,15 @@ export const signAndSendCryptidTransaction = async (
   cryptid: CryptidClient,
   transaction: Transaction
 ): Promise<string[]> => {
-  const { executeTransactions, executeSigners } =
-    await createCryptidTransaction(cryptid, transaction);
-  return executeTransactions.reduce(
+  const { transactions, signers } = await createCryptidTransaction(
+    cryptid,
+    transaction
+  );
+  return transactions.reduce(
     (promise, tx) =>
       // send the tx strictly after the previous one, and add the signature to the array
       promise.then((sigs) =>
-        cryptid.send(tx, executeSigners).then((sig) => [...sigs, sig])
+        cryptid.send(tx, signers).then((sig) => [...sigs, sig])
       ),
     Promise.resolve<string[]>([])
   );

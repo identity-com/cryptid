@@ -393,6 +393,78 @@ export type Cryptid = {
       ]
     },
     {
+      "name": "closeTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance to execute with"
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DID on the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The signer of the transaction"
+          ]
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The instruction to execute"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "approveExecution",
       "accounts": [
         {
@@ -1175,6 +1247,78 @@ export const IDL: Cryptid = {
         },
         {
           "name": "flags",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "closeTransaction",
+      "accounts": [
+        {
+          "name": "cryptidAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Cryptid instance to execute with"
+          ]
+        },
+        {
+          "name": "did",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DID on the Cryptid instance"
+          ]
+        },
+        {
+          "name": "didProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program for the DID"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The signer of the transaction"
+          ]
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The instruction to execute"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "controllerChain",
+          "type": {
+            "vec": {
+              "defined": "DIDReference"
+            }
+          }
+        },
+        {
+          "name": "cryptidAccountBump",
+          "type": "u8"
+        },
+        {
+          "name": "cryptidAccountIndex",
+          "type": "u32"
+        },
+        {
+          "name": "didAccountBump",
           "type": "u8"
         }
       ]

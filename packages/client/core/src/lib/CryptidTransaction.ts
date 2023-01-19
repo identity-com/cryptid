@@ -361,6 +361,33 @@ export class CryptidTransaction {
   }
 
   /**
+   * Close an existing cryptidTransaction
+   * @param program
+   * @param transactionAccountAddress
+   */
+  // TODO move transactionAccountAddress into constructor?
+  // The anchor MethodsBuilder type is not exposed
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  close(program: Program<Cryptid>, transactionAccountAddress: PublicKey) {
+    return program.methods
+      .closeTransaction(
+        this.controllerChainReferences,
+        this.cryptidAccount.bump,
+        this.cryptidAccount.index,
+        this.cryptidAccount.didAccountBump
+      )
+      .accounts({
+        cryptidAccount: this.cryptidAccount.address,
+        didProgram: DID_SOL_PROGRAM,
+        did: this.cryptidAccount.didAccount,
+        authority: this.authority,
+        destination: this.authority,
+        transactionAccount: transactionAccountAddress,
+      })
+      .remainingAccounts(this.accountMetasOnlyKeys);
+  }
+
+  /**
    * Create and directly execute a cryptidTransaction
    * @param program
    */

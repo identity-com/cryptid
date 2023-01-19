@@ -11,7 +11,7 @@ import { Wallet } from "../types/crypto";
 import { ProposalResult, TransactionAccount, TransactionState } from "../types";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
 import { Middleware } from "../lib/Middleware";
-import { ExecuteArrayResult } from "../types/cryptid";
+import { TransactionArrayResult } from "../types/cryptid";
 import { CryptidTransaction } from "../lib/CryptidTransaction";
 
 export type PayerOption = "DID_PAYS" | "SIGNER_PAYS";
@@ -104,7 +104,7 @@ export interface CryptidClient {
   proposeAndExecute(
     transaction: Transaction,
     forceSingleTx?: boolean
-  ): Promise<ExecuteArrayResult>;
+  ): Promise<TransactionArrayResult>;
 
   /**
    * Propose a transaction for execution by cryptid.
@@ -146,10 +146,19 @@ export interface CryptidClient {
   execute(
     transactionAccountAddress: PublicKey,
     cryptidTransactionRepresentation?: CryptidTransaction
-  ): Promise<ExecuteArrayResult>;
+  ): Promise<TransactionArrayResult>;
 
-  // TODO Reinstate
-  // cancelLarge(transactionAccount: PublicKey): Promise<TransactionSignature>;
+  /**
+   * Execute a proposed transaction.
+   *
+   * The transaction must be in "Ready" state.
+   * @param transactionAccountAddress
+   * @param cryptidTransactionRepresentation
+   */
+  close(
+    transactionAccountAddress: PublicKey,
+    cryptidTransactionRepresentation?: CryptidTransaction
+  ): Promise<TransactionArrayResult>;
 
   /**
    * Retrieves the DID document for this Cryptid account

@@ -34,4 +34,5 @@ export interface MiddlewareClient<C extends GenericMiddlewareParams> {
   createMiddleware(params: C): Promise<Transaction>;
   onPropose(params: ExecuteMiddlewareParams): Promise<MiddlewareResult>;
   onExecute(params: ExecuteMiddlewareParams): Promise<MiddlewareResult>;
+  onClose(params: ExecuteMiddlewareParams): Promise<MiddlewareResult>;
 }

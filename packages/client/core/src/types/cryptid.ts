@@ -24,14 +24,14 @@ export type ProposalResult = {
   cryptidTransactionRepresentation: CryptidTransaction;
 };
 
-export type ExecuteResult = {
-  executeTransaction: Transaction;
-  executeSigners: Signer[];
+export type TransactionResult = {
+  transaction: Transaction;
+  signers: Signer[];
 };
 
-export type ExecuteArrayResult = {
-  executeTransactions: Transaction[];
-  executeSigners: Signer[];
+export type TransactionArrayResult = {
+  transactions: Transaction[];
+  signers: Signer[];
 };
 
 export type ControllerAccountMetaInfo = [

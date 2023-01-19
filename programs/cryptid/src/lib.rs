@@ -124,6 +124,22 @@ pub mod cryptid {
         )
     }
 
+    pub fn close_transaction<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, CloseTransaction<'info>>,
+        controller_chain: Vec<DIDReference>,
+        cryptid_account_bump: u8,
+        cryptid_account_index: u32,
+        did_account_bump: u8,
+    ) -> Result<()> {
+        instructions::close_transaction(
+            ctx,
+            controller_chain,
+            cryptid_account_bump,
+            cryptid_account_index,
+            did_account_bump,
+        )
+    }
+
     pub fn approve_execution<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ApproveExecution<'info>>,
     ) -> Result<()> {

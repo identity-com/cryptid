@@ -124,8 +124,8 @@ describe("Middleware: superuserCheckSigner", () => {
     console.log("Proposed transaction", transactionAccount.toBase58());
 
     // send the execute tx
-    const { executeTransactions } = await cryptid.execute(transactionAccount);
-    await cryptid.send(executeTransactions[0]);
+    const { transactions } = await cryptid.execute(transactionAccount);
+    await cryptid.send(transactions[0]);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -147,13 +147,11 @@ describe("Middleware: superuserCheckSigner", () => {
     await cryptidWithoutMiddleware.send(proposeTransaction, proposeSigners);
 
     // send the execute tx - this will fail since the middleware was not used
-    const { executeTransactions } = await cryptidWithoutMiddleware.execute(
+    const { transactions } = await cryptidWithoutMiddleware.execute(
       transactionAccount
     );
 
-    const shouldFail = cryptidWithoutMiddleware.send(executeTransactions[0], [
-      signer,
-    ]);
+    const shouldFail = cryptidWithoutMiddleware.send(transactions[0], [signer]);
 
     // Unauthorized, because the transaction account was not authorized by the SuperUserMiddleware
     return expect(shouldFail).to.be.rejectedWith(
@@ -173,11 +171,9 @@ describe("Middleware: superuserCheckSigner", () => {
       await cryptid.propose(makeTransaction());
     await cryptid.send(proposeTransaction, proposeSigners);
 
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
 
-    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+    const shouldFail = cryptid.send(transactions[0], signers);
 
     return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidSigner.");
   });

@@ -111,10 +111,10 @@ describe("Middleware: timeDelay", () => {
     await slowCryptid.send(proposeTransaction, proposeSigners);
 
     // send the execute tx, which fails to pass through the middleware
-    const { executeTransactions, executeSigners } = await slowCryptid.execute(
+    const { transactions, signers } = await slowCryptid.execute(
       transactionAccount
     );
-    const shouldFail = slowCryptid.send(executeTransactions[0], executeSigners);
+    const shouldFail = slowCryptid.send(transactions[0], signers);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -132,10 +132,10 @@ describe("Middleware: timeDelay", () => {
     await sleep(2000);
 
     // execute the Cryptid transaction (passing the middleware)
-    const { executeTransactions, executeSigners } = await fastCryptid.execute(
+    const { transactions, signers } = await fastCryptid.execute(
       transactionAccount
     );
-    await fastCryptid.send(executeTransactions[0], executeSigners);
+    await fastCryptid.send(transactions[0], signers);
 
     const currentBalance = await balanceOf(fastCryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
