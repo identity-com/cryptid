@@ -89,6 +89,7 @@ pub fn direct_execute<'a, 'b, 'c, 'info>(
         did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
+        false,
     )?;
 
     // At this point, we are safe that the authority is a valid owner of the cryptid account. We can execute the instructions

@@ -21,6 +21,11 @@ export {
   CheckRecipientMiddleware,
   CheckRecipientParameters,
 } from "@identity.com/cryptid-middleware-check-recipient";
+export {
+  SUPERUSER_CHECK_SIGNER_MIDDLEWARE_PROGRAM_ID,
+  SuperuserCheckSignerMiddleware,
+  SuperuserCheckSignerParameters,
+} from "@identity.com/cryptid-middleware-superuser-check-signer";
 
 import {
   CheckPassMiddleware,
@@ -42,6 +47,11 @@ import {
   CHECK_RECIPIENT_MIDDLEWARE_PROGRAM_ID,
 } from "@identity.com/cryptid-middleware-check-recipient";
 
+import {
+  SuperuserCheckSignerMiddleware,
+  SUPERUSER_CHECK_SIGNER_MIDDLEWARE_PROGRAM_ID,
+} from "@identity.com/cryptid-middleware-superuser-check-signer";
+
 MiddlewareRegistry.get().register(
   CHECK_PASS_MIDDLEWARE_PROGRAM_ID,
   new CheckPassMiddleware()
@@ -60,4 +70,9 @@ MiddlewareRegistry.get().register(
 MiddlewareRegistry.get().register(
   CHECK_RECIPIENT_MIDDLEWARE_PROGRAM_ID,
   new CheckRecipientMiddleware()
+);
+
+MiddlewareRegistry.get().register(
+  SUPERUSER_CHECK_SIGNER_MIDDLEWARE_PROGRAM_ID,
+  new SuperuserCheckSignerMiddleware()
 );

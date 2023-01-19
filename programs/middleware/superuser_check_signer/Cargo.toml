@@ -1,0 +1,20 @@
+[package]
+name = "superuser_check_signer"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "superuser_check_signer"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.26.0"
+cryptid = { path = "../../cryptid", features = ["no-entrypoint", "cpi"] }

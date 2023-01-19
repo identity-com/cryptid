@@ -48,6 +48,12 @@ export type Cryptid = {
           }
         },
         {
+          "name": "superuserMiddlewares",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "controllerChain",
           "type": {
             "vec": "publicKey"
@@ -205,6 +211,10 @@ export type Cryptid = {
           }
         },
         {
+          "name": "allowUnauthorized",
+          "type": "bool"
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -287,6 +297,10 @@ export type Cryptid = {
           "type": {
             "defined": "TransactionState"
           }
+        },
+        {
+          "name": "allowUnauthorized",
+          "type": "bool"
         },
         {
           "name": "instructions",
@@ -393,6 +407,27 @@ export type Cryptid = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "superuserApproveExecution",
+      "accounts": [
+        {
+          "name": "middlewareAccount",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -419,6 +454,15 @@ export type Cryptid = {
               "The index of this cryptid account - allows multiple cryptid accounts per DID"
             ],
             "type": "u32"
+          },
+          {
+            "name": "superuserMiddleware",
+            "docs": [
+              "Middlewares that have \"Superuser\" status on the cryptid account"
+            ],
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -492,6 +536,22 @@ export type Cryptid = {
             "type": {
               "defined": "TransactionState"
             }
+          },
+          {
+            "name": "unauthorizedSigner",
+            "docs": [
+              "If the transaction account is proposed by an authority on the DID, (the standard case)",
+              "then this is set to None.",
+              "If the transaction account is proposed by an unauthorized cryptid client, then",
+              "it is set to to that signer, and only a `superUser` middleware can approve it."
+            ],
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "authorized",
+            "type": "bool"
           }
         ]
       }
@@ -669,46 +729,56 @@ export type Cryptid = {
     },
     {
       "code": 6006,
+      "name": "UnauthorizedTransaction",
+      "msg": "The transaction was proposed by a non-authority on the DID and has not been authorized by a superuser middleware."
+    },
+    {
+      "code": 6007,
       "name": "AccountMismatch",
       "msg": "An account in the transaction accounts did not match what was expected"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "CreatingWithZeroIndex",
       "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     },
     {
-      "code": 6013,
+      "code": 6014,
+      "name": "IncorrectSuperuserMiddleware",
+      "msg": "The middleware is not registered as a superuser middleware on the cryptid account."
+    },
+    {
+      "code": 6015,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "InvalidMiddlewareAccount",
       "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }
@@ -765,6 +835,12 @@ export const IDL: Cryptid = {
           }
         },
         {
+          "name": "superuserMiddlewares",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "controllerChain",
           "type": {
             "vec": "publicKey"
@@ -922,6 +998,10 @@ export const IDL: Cryptid = {
           }
         },
         {
+          "name": "allowUnauthorized",
+          "type": "bool"
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -1004,6 +1084,10 @@ export const IDL: Cryptid = {
           "type": {
             "defined": "TransactionState"
           }
+        },
+        {
+          "name": "allowUnauthorized",
+          "type": "bool"
         },
         {
           "name": "instructions",
@@ -1110,6 +1194,27 @@ export const IDL: Cryptid = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "superuserApproveExecution",
+      "accounts": [
+        {
+          "name": "middlewareAccount",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "transactionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cryptidAccount",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -1136,6 +1241,15 @@ export const IDL: Cryptid = {
               "The index of this cryptid account - allows multiple cryptid accounts per DID"
             ],
             "type": "u32"
+          },
+          {
+            "name": "superuserMiddleware",
+            "docs": [
+              "Middlewares that have \"Superuser\" status on the cryptid account"
+            ],
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -1209,6 +1323,22 @@ export const IDL: Cryptid = {
             "type": {
               "defined": "TransactionState"
             }
+          },
+          {
+            "name": "unauthorizedSigner",
+            "docs": [
+              "If the transaction account is proposed by an authority on the DID, (the standard case)",
+              "then this is set to None.",
+              "If the transaction account is proposed by an unauthorized cryptid client, then",
+              "it is set to to that signer, and only a `superUser` middleware can approve it."
+            ],
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "authorized",
+            "type": "bool"
           }
         ]
       }
@@ -1386,46 +1516,56 @@ export const IDL: Cryptid = {
     },
     {
       "code": 6006,
+      "name": "UnauthorizedTransaction",
+      "msg": "The transaction was proposed by a non-authority on the DID and has not been authorized by a superuser middleware."
+    },
+    {
+      "code": 6007,
       "name": "AccountMismatch",
       "msg": "An account in the transaction accounts did not match what was expected"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "KeyMustBeSigner",
       "msg": "Signer is not authorised to sign for this Cryptid account"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "CreatingWithZeroIndex",
       "msg": "Attempt to create a Cryptid account with index zero, reserved for the default account."
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "IndexOutOfRange",
       "msg": "Index out of range."
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "NoAccountFromSeeds",
       "msg": "No account from seeds."
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AccountNotFromSeeds",
       "msg": "Account not from seeds."
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "IncorrectMiddleware",
       "msg": "The expected middleware did not approve the transaction."
     },
     {
-      "code": 6013,
+      "code": 6014,
+      "name": "IncorrectSuperuserMiddleware",
+      "msg": "The middleware is not registered as a superuser middleware on the cryptid account."
+    },
+    {
+      "code": 6015,
       "name": "InvalidAccounts",
       "msg": "The accounts passed to execute do not match those in the transaction account."
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "InvalidMiddlewareAccount",
       "msg": "Approve Execution needs to be called with a valid Middleware Account."
     }

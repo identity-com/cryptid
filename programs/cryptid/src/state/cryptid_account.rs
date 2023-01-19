@@ -9,11 +9,16 @@ pub struct CryptidAccount {
     pub middleware: Option<Pubkey>,
     /// The index of this cryptid account - allows multiple cryptid accounts per DID
     pub index: u32,
+    /// Middlewares that have "Superuser" status on the cryptid account
+    pub superuser_middleware: Vec<Pubkey>,
 }
 impl CryptidAccount {
     pub const SEED_PREFIX: &'static [u8] = b"cryptid_account";
 
-    pub const MAX_SIZE: usize = (1 + 32) + 4;
+    pub const BASE_SIZE: usize = (1 + 32) + 4;
+    pub fn calculate_size(superuser_middleware_count: usize) -> usize {
+        Self::BASE_SIZE + 4 + (32 * superuser_middleware_count)
+    }
 
     // Support generative and non-generative accounts
     pub fn try_from(
@@ -34,6 +39,7 @@ impl CryptidAccount {
             return Ok(CryptidAccount {
                 middleware: None,
                 index,
+                superuser_middleware: vec![],
             });
         }
 

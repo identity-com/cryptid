@@ -27,6 +27,12 @@ pub struct TransactionAccount {
     /// in case an executed transaction account is not immediately
     /// garbage-collected by the runtime
     pub state: TransactionState,
+    /// If the transaction account is proposed by an authority on the DID, (the standard case)
+    /// then this is set to None.
+    /// If the transaction account is proposed by an unauthorized cryptid client, then
+    /// it is set to to that signer, and only a `superUser` middleware can approve it.
+    pub unauthorized_signer: Option<Pubkey>,
+    pub authorized: bool,
 }
 impl TransactionAccount {
     /// Calculates the on-chain size of a [`TransactionAccount`]
@@ -42,6 +48,8 @@ impl TransactionAccount {
             + 1 + 32 // approved_middleware
             + 1 // slot
             + 1 // state
+            + 1 + 32 // unauthorized signer
+            + 1 // authorized
     }
 
     pub fn check_account(&self, index: u8, account: &Pubkey) -> Result<()> {
@@ -98,6 +106,8 @@ mod test {
             approved_middleware: None,
             slot: 0,
             state: TransactionState::Ready,
+            unauthorized_signer: None,
+            authorized: true,
         };
         let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len();
         println!("SerSize: {}", ser_size);

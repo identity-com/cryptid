@@ -29,9 +29,9 @@ import {
 // Used to replace the current signer
 // so that the InstructionData are required to reference the signer in a separate position in the array,
 // and not index 3. This is because the signer is not known at creation time.
-// TODO - PublicKey.default uses the default key 11111111111111111111111111111111 which is the same as the system program.
+// PublicKey.default uses the default key 11111111111111111111111111111111 which is the same as the system program.
 // This is unsuitable as it may be referenced in the instructions somewhere. So we generate a "single use" key here.
-// It feels hacky - is there a better alternative?
+// TODO - It feels hacky - is there a better alternative?
 const NULL_KEY = Keypair.generate().publicKey; // PublicKey.default;
 
 export class CryptidTransaction {
@@ -111,6 +111,16 @@ export class CryptidTransaction {
       ...controllersAccountMetas,
     ];
 
+    // console.log("fromSolanaInstructions", {
+    //   authority: authority.toBase58(),
+    //   accountMetas: accountMetas.map((a) => a.pubkey.toBase58()),
+    //   filteredRemainingAccountMetas: filteredRemainingAccountMetas.map((a) =>
+    //     a.pubkey.toBase58()
+    //   ),
+    //   instructions: instructions.map((i) => i.accounts.map((a) => a.key)),
+    //   namedAccounts: namedAccounts.map((a) => a.toBase58()),
+    // });
+
     return new CryptidTransaction(
       cryptidAccount,
       authority,
@@ -140,6 +150,10 @@ export class CryptidTransaction {
       cryptidAccount.address,
       cryptidAccount.didAccount,
       DID_SOL_PROGRAM,
+      // This key is added in place of the signer (aka authority),
+      // so that the InstructionData are required to reference the signer in a separate position in the array,
+      // and not index 3. This is because the signer at execute time is not known at creation time,
+      // and may be different to the authority here.
       NULL_KEY,
     ];
     const allAccounts = transactionAccount.accounts;
@@ -243,6 +257,8 @@ export class CryptidTransaction {
    * @param program
    * @param transactionAccountAddress
    * @param state
+   * @param allowUnauthorized if true, transactions can be proposed by non-signers on the cryptid account.
+   * they can then be authorized by superuser middleware
    */
   // TODO move transactionAccountAddress into constructor?
   // The anchor MethodsBuilder type is not exposed
@@ -250,7 +266,8 @@ export class CryptidTransaction {
   propose(
     program: Program<Cryptid>,
     transactionAccountAddress: PublicKey,
-    state = TransactionState.Ready
+    state = TransactionState.Ready,
+    allowUnauthorized = false
   ) {
     return (
       program.methods
@@ -260,6 +277,7 @@ export class CryptidTransaction {
           this.cryptidAccount.index,
           this.cryptidAccount.didAccountBump,
           TransactionState.toBorsh(state),
+          allowUnauthorized,
           this.instructions,
           this.accountMetas.length
         )
@@ -280,13 +298,15 @@ export class CryptidTransaction {
    * @param program
    * @param transactionAccountAddress
    * @param state
+   * @param allowUnauthorized
    */
   // TODO move transactionAccountAddress into constructor?
   extend(
     program: Program<Cryptid>,
     transactionAccountAddress: PublicKey,
     // by default, extend the transaction and seal it at the same time
-    state = TransactionState.Ready
+    state = TransactionState.Ready,
+    allowUnauthorized = false
   ) {
     return (
       program.methods
@@ -296,6 +316,7 @@ export class CryptidTransaction {
           this.cryptidAccount.index,
           this.cryptidAccount.didAccountBump,
           TransactionState.toBorsh(state),
+          allowUnauthorized,
           this.instructions,
           this.accountMetas.length
         )

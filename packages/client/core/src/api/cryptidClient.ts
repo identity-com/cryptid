@@ -23,6 +23,10 @@ export type CryptidOptions = {
   confirmOptions?: ConfirmOptions;
   waitForConfirmation?: boolean;
   rentPayer?: PayerOption;
+  // If the authority is a signer on the DID, authorized should be true.
+  // If this is an unauthorized client, authorized should be false.
+  // Should be set by the builder and not directly manipulated by the user.
+  authorized?: boolean;
 };
 export type CreateOptions = CryptidOptions & {
   // The chain of controllers, from the top (inclusive), to the one that owns the cryptid account (exclusive)
@@ -40,6 +44,7 @@ export type BuildOptions = CryptidOptions & {
 export const DEFAULT_CRYPTID_OPTIONS: Partial<CryptidOptions> = {
   accountIndex: 0,
   rentPayer: "DID_PAYS",
+  authorized: true,
 };
 
 /**
@@ -105,10 +110,13 @@ export interface CryptidClient {
    * Propose a transaction for execution by cryptid.
    * @param transaction The transaction to propose
    * @param state [TransactionState.Ready] The state to propose the transaction in. If NotReady, the transaction can be extended.
+   * @param allowUnauthorized If true, allows the transaction to be proposed even if the client authority is not a signer on the DID.
+   * It can then only be executed if a superuser middleware approves it.
    */
   propose(
     transaction: Transaction,
-    state?: TransactionState
+    state?: TransactionState,
+    allowUnauthorized?: boolean
   ): Promise<ProposalResult>;
 
   /**
@@ -159,6 +167,8 @@ export interface CryptidClient {
    * @param did The DID of the account to sign on behalf of.
    */
   controlWith(did: string): CryptidClient;
+
+  unauthorized(): CryptidClient;
 
   makeControllerChain(): string[];
 

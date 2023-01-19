@@ -11,6 +11,7 @@
         "packages/client/middleware/checkDid",
         "packages/client/middleware/timeDelay",
         "packages/client/middleware/checkRecipient",
+        "packages/client/middleware/superuserCheckSigner",
         "packages/client/core",
         "packages/client/cryptid",
         "packages/client/cli",

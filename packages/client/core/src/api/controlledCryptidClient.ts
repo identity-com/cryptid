@@ -1,6 +1,7 @@
 import { CryptidClient } from "./cryptidClient";
 import { AbstractCryptidClient } from "./abstractCryptidClient";
 import { Wallet } from "../types/crypto";
+import { UnauthorizedCryptidClient } from "./unauthorizedCryptidClient";
 
 export class ControlledCryptidClient extends AbstractCryptidClient {
   /**
@@ -23,6 +24,14 @@ export class ControlledCryptidClient extends AbstractCryptidClient {
 
   controlWith(controllerDid: string): CryptidClient {
     return new ControlledCryptidClient(controllerDid, this);
+  }
+
+  unauthorized(): CryptidClient {
+    return new UnauthorizedCryptidClient(
+      this.details,
+      this.wallet,
+      this.options
+    );
   }
 
   makeControllerChain(): string[] {

@@ -17,7 +17,8 @@
     "@identity.com/cryptid-middleware-check-did": "0.3.0-alpha.11",
     "@identity.com/cryptid-middleware-check-pass": "0.3.0-alpha.11",
     "@identity.com/cryptid-middleware-check-recipient": "0.3.0-alpha.11",
-    "@identity.com/cryptid-middleware-time-delay": "0.3.0-alpha.11"
+    "@identity.com/cryptid-middleware-time-delay": "0.3.0-alpha.11",
+    "@identity.com/cryptid-middleware-superuser-check-signer": "0.3.0-alpha.11"
   },
   "devDependencies": {
     "rimraf": "^3.0.2"

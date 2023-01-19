@@ -40,6 +40,7 @@ export abstract class AbstractCryptidClient implements CryptidClient {
   }
 
   abstract controlWith(controllerDid: string): CryptidClient;
+  abstract unauthorized(): CryptidClient;
 
   document(): Promise<DIDDocument> {
     return this.didClient().then((client) => client.resolve());
@@ -111,10 +112,11 @@ export abstract class AbstractCryptidClient implements CryptidClient {
 
   async propose(
     transaction: Transaction,
-    state?: TransactionState
+    state?: TransactionState,
+    allowUnauthorized = false
   ): Promise<ProposalResult> {
     return this.service().then((service) =>
-      service.propose(this.details, transaction, state)
+      service.propose(this.details, transaction, state, allowUnauthorized)
     );
   }
 

@@ -25,6 +25,7 @@ pub mod cryptid {
     pub fn create_cryptid_account(
         ctx: Context<CreateCryptidAccount>,
         middleware: Option<Pubkey>,
+        superuser_middlewares: Vec<Pubkey>,
         controller_chain: Vec<Pubkey>,
         index: u32,
         did_account_bump: u8,
@@ -32,6 +33,7 @@ pub mod cryptid {
         instructions::create_cryptid_account(
             ctx,
             middleware,
+            superuser_middlewares,
             controller_chain,
             index,
             did_account_bump,
@@ -65,6 +67,7 @@ pub mod cryptid {
         cryptid_account_index: u32,
         did_account_bump: u8,
         state: TransactionState,
+        allow_unauthorized: bool,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -75,6 +78,7 @@ pub mod cryptid {
             cryptid_account_index,
             did_account_bump,
             state,
+            allow_unauthorized,
             instructions,
         )
     }
@@ -86,6 +90,7 @@ pub mod cryptid {
         cryptid_account_index: u32,
         did_account_bump: u8,
         state: TransactionState,
+        allow_unauthorized: bool,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -96,6 +101,7 @@ pub mod cryptid {
             cryptid_account_index,
             did_account_bump,
             state,
+            allow_unauthorized,
             instructions,
         )
     }
@@ -122,5 +128,11 @@ pub mod cryptid {
         ctx: Context<'a, 'b, 'c, 'info, ApproveExecution<'info>>,
     ) -> Result<()> {
         instructions::approve_execution(ctx)
+    }
+
+    pub fn superuser_approve_execution<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, SuperuserApproveExecution<'info>>,
+    ) -> Result<()> {
+        instructions::superuser_approve_execution(ctx)
     }
 }

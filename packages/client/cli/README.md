@@ -20,7 +20,7 @@ $ npm install -g @identity.com/cryptid-cli
 $ cryptid COMMAND
 running command...
 $ cryptid (--version)
-@identity.com/cryptid-cli/0.3.0-alpha.11 darwin-arm64 node-v16.17.1
+@identity.com/cryptid-cli/0.3.0-alpha.11 darwin-arm64 node-v16.13.0
 $ cryptid --help [COMMAND]
 USAGE
   $ cryptid COMMAND
@@ -29,7 +29,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`cryptid [DID]`](#cryptid-did)
+* [`cryptid`](#cryptid)
 * [`cryptid accounts`](#cryptid-accounts)
 * [`cryptid accounts set INDEX`](#cryptid-accounts-set-index)
 * [`cryptid address`](#cryptid-address)
@@ -39,9 +39,7 @@ USAGE
 * [`cryptid base`](#cryptid-base)
 * [`cryptid config`](#cryptid-config)
 * [`cryptid config set [KEY] [VALUE]`](#cryptid-config-set-key-value)
-* [`cryptid config show`](#cryptid-config-show)
 * [`cryptid controller [DID]`](#cryptid-controller-did)
-* [`cryptid controller show [DID]`](#cryptid-controller-show-did)
 * [`cryptid document`](#cryptid-document)
 * [`cryptid help [COMMAND]`](#cryptid-help-command)
 * [`cryptid init`](#cryptid-init)
@@ -63,13 +61,13 @@ USAGE
 * [`cryptid token transfer TO AMOUNT`](#cryptid-token-transfer-to-amount)
 * [`cryptid transfer TO AMOUNT`](#cryptid-transfer-to-amount)
 
-## `cryptid [DID]`
+## `cryptid`
 
-Show the controllers of a cryptid account
+List keys attached to the cryptid account
 
 ```
 USAGE
-  $ cryptid [DID] [-h] [-c <value>] [-s <value>]
+  $ cryptid [-h] [-c <value>] [-s <value>]
 
 FLAGS
   -c, --config=<value>  Path to config file
@@ -77,7 +75,7 @@ FLAGS
   -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
 
 DESCRIPTION
-  Show the controllers of a cryptid account
+  List keys attached to the cryptid account
 
 ALIASES
   $ cryptid
@@ -252,23 +250,6 @@ DESCRIPTION
   Set a Cryptid configuration value
 ```
 
-## `cryptid config show`
-
-Show Cryptid configuration
-
-```
-USAGE
-  $ cryptid config show [-h] [-c <value>] [-s <value>]
-
-FLAGS
-  -c, --config=<value>  Path to config file
-  -h, --help            Show CLI help.
-  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
-
-DESCRIPTION
-  Show Cryptid configuration
-```
-
 ## `cryptid controller [DID]`
 
 Show the controllers of a cryptid account
@@ -290,26 +271,6 @@ ALIASES
 ```
 
 _See code: [dist/commands/controller/index.ts](https://github.com/identity-com/cryptid/blob/v0.3.0-alpha.11/dist/commands/controller/index.ts)_
-
-## `cryptid controller show [DID]`
-
-Show the controllers of a cryptid account
-
-```
-USAGE
-  $ cryptid controller show [DID] [-h] [-c <value>] [-s <value>]
-
-FLAGS
-  -c, --config=<value>  Path to config file
-  -h, --help            Show CLI help.
-  -s, --as=<value>      Execute transactions as a controlled identity (alias or did)
-
-DESCRIPTION
-  Show the controllers of a cryptid account
-
-ALIASES
-  $ cryptid
-```
 
 ## `cryptid document`
 

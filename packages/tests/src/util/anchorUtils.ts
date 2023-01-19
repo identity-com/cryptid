@@ -7,6 +7,7 @@ import {
   CheckRecipient,
   Cryptid,
   TimeDelay,
+  SuperuserCheckSigner,
 } from "@identity.com/cryptid-idl";
 
 const envProvider = anchor.AnchorProvider.env();
@@ -20,6 +21,8 @@ const envCheckDidMiddlewareProgram = anchor.workspace
   .CheckDid as Program<CheckDid>;
 const envTimeDelayMiddlewareProgram = anchor.workspace
   .TimeDelay as Program<TimeDelay>;
+const envSuperuserCheckSignerMiddlewareProgram = anchor.workspace
+  .SuperuserCheckSigner as Program<SuperuserCheckSigner>;
 
 if (!process.env.QUIET) {
   const logListener = envProvider.connection.onLogs("all", (log) =>
@@ -66,6 +69,7 @@ export type CryptidTestContext = {
     checkPass: Program<CheckPass>;
     checkDid: Program<CheckDid>;
     timeDelay: Program<TimeDelay>;
+    superuserCheckSigner: Program<SuperuserCheckSigner>;
   };
 };
 
@@ -105,6 +109,12 @@ export const createTestContext = (): CryptidTestContext => {
     envTimeDelayMiddlewareProgram.programId,
     anchorProvider
   );
+  const superuserCheckSignerMiddlewareProgram =
+    new Program<SuperuserCheckSigner>(
+      envSuperuserCheckSignerMiddlewareProgram.idl,
+      envSuperuserCheckSignerMiddlewareProgram.programId,
+      anchorProvider
+    );
 
   return {
     program,
@@ -116,6 +126,7 @@ export const createTestContext = (): CryptidTestContext => {
       checkPass: checkPassMiddlewareProgram,
       checkDid: checkDidMiddlewareProgram,
       timeDelay: timeDelayMiddlewareProgram,
+      superuserCheckSigner: superuserCheckSignerMiddlewareProgram,
     },
   };
 };

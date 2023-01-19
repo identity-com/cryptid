@@ -103,7 +103,7 @@ Each middleware requires the injection of a client SDK which creates the
 middleware instructions.
 
 The cryptid client supports the registration of custom middleware through
-a global signleton MiddlewareRegistry.
+a global singleton MiddlewareRegistry.
 
 To register a middleware client:
 

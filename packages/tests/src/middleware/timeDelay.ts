@@ -80,6 +80,7 @@ describe("Middleware: timeDelay", () => {
         {
           programId: timeDelayMiddlewareProgram.programId,
           address: slowMiddlewareAccount,
+          isSuperuser: false,
         },
       ],
       { connection: provider.connection, accountIndex: ++cryptidIndex }
@@ -92,6 +93,7 @@ describe("Middleware: timeDelay", () => {
         {
           programId: timeDelayMiddlewareProgram.programId,
           address: fastMiddlewareAccount,
+          isSuperuser: false,
         },
       ],
       { connection: provider.connection, accountIndex: ++cryptidIndex }

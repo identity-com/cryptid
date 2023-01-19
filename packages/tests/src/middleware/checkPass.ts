@@ -124,6 +124,7 @@ describe("Middleware: checkPass", () => {
       {
         programId: checkPassMiddlewareProgram.programId,
         address: middlewareAccount,
+        isSuperuser: false,
       },
     ];
 
@@ -151,6 +152,7 @@ describe("Middleware: checkPass", () => {
         cryptid.details.index,
         cryptid.details.didAccountBump,
         TransactionState.toBorsh(TransactionState.Ready),
+        false,
         [instruction],
         2
       )
@@ -172,7 +174,7 @@ describe("Middleware: checkPass", () => {
     // execute the Cryptid transaction
     program.methods
       .executeTransaction(
-        Buffer.from([]), // no controller chain
+        [], // no controller chain
         cryptid.details.bump,
         cryptid.details.index,
         cryptid.details.didAccountBump,

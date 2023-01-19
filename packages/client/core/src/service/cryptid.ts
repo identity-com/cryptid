@@ -151,10 +151,14 @@ export class CryptidService {
       details.middlewares.length > 0
         ? details.middlewares[details.middlewares.length - 1]
         : undefined;
+    const superuserMiddlewares = details.middlewares
+      .filter((m) => m.isSuperuser)
+      .map((m) => m.address);
     return (
       this.program.methods
         .createCryptidAccount(
           lastMiddleware?.address || null,
+          superuserMiddlewares,
           // Pass in the controller dids (if any)
           this.controllerChainPubkeys.map((c) => c[1]),
           details.index,
@@ -181,6 +185,8 @@ export class CryptidService {
   ): Promise<MiddlewareResult> {
     const middlewareContexts =
       MiddlewareRegistry.get().getMiddlewareContexts(account);
+
+    // Parameters passed to each middleware
     const executeParameters: Omit<
       ExecuteMiddlewareParams,
       "middlewareAccount"
@@ -192,16 +198,19 @@ export class CryptidService {
       cryptidAccountDetails: account,
     };
 
+    // Middlewares may have functions taht are executed on propose stage, on execute stage, or both
     const middlewareFn = stage === "Propose" ? "onPropose" : "onExecute";
 
-    return Promise.all(
-      middlewareContexts.map(({ client, accounts }) =>
+    // For each middleware, execute their onPropose or onExecute function
+    const middlewareExecutions = middlewareContexts.map(
+      ({ client, accounts }) =>
         client[middlewareFn]({
           ...executeParameters,
           middlewareAccount: accounts.address,
         })
-      )
-    ).then((results) =>
+    );
+
+    return Promise.all(middlewareExecutions).then((results) =>
       // Flatten into single MiddlewareResult
       results.reduce(
         (acc, currentValue) => ({
@@ -250,7 +259,8 @@ export class CryptidService {
   public async propose(
     account: CryptidAccountDetails,
     transaction: Transaction,
-    state = TransactionState.Ready
+    state = TransactionState.Ready,
+    allowUnauthorized = false
   ): Promise<ProposalResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
@@ -264,6 +274,7 @@ export class CryptidService {
     // otherwise, wait until it is sealed
     let middlewareResult: MiddlewareResult = { instructions: [], signers: [] };
     if (state === TransactionState.Ready) {
+      console.log(`Executing MiddlewareInstructions`);
       middlewareResult = await this.executeMiddlewareInstructions(
         account,
         transactionAccountKeypair.publicKey,
@@ -272,7 +283,12 @@ export class CryptidService {
     }
 
     const unsignedProposeTransaction = await cryptidTransaction
-      .propose(this.program, transactionAccountKeypair.publicKey, state)
+      .propose(
+        this.program,
+        transactionAccountKeypair.publicKey,
+        state,
+        allowUnauthorized
+      )
       .signers(
         // The signers in a proposal (other than an authority on the DID) are the transaction account
         // and any signers from the middleware
@@ -293,7 +309,8 @@ export class CryptidService {
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
     transaction: Transaction,
-    state?: TransactionState
+    state?: TransactionState,
+    allowUnauthorized = false
   ): Promise<Transaction> {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -305,7 +322,8 @@ export class CryptidService {
     let builder = cryptidTransaction.extend(
       this.program,
       transactionAccountAddress,
-      state
+      state,
+      allowUnauthorized
     );
 
     if (state === TransactionState.Ready) {

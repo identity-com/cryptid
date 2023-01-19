@@ -25,6 +25,7 @@ import {
 import BN from "bn.js";
 import { Wallet } from "./anchorUtils";
 import { TestType } from "./did";
+import { BuildOptions } from "@identity.com/cryptid-core/dist/api/cryptidClient";
 
 export const toAccountMeta = (
   publicKey: PublicKey,
@@ -174,7 +175,7 @@ export const cryptidTestCases = [
     getCryptidClient: async (
       did: string,
       authority: Wallet | Keypair,
-      options: CryptidOptions
+      options: BuildOptions
     ) => Builder.buildFromDID(did, authority, options),
   },
   {

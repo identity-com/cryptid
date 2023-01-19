@@ -55,6 +55,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.index,
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
+            false,
             [instruction],
             2
           )
@@ -178,6 +179,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.index,
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
+            false,
             [transferInstructionData],
             2
           )
@@ -334,6 +336,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.index,
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
+            false,
             [transferInstructionData],
             2
           )

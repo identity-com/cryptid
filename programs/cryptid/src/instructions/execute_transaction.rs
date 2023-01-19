@@ -48,6 +48,11 @@ pub struct ExecuteTransaction<'info> {
     // safeguard to prevent double-spends in the case where the account is not closed for some reason
     // only "Ready" transactions can be executed
     constraint = transaction_account.state == TransactionState::Ready @ CryptidError::InvalidTransactionState,
+    // only authorized transactions, ones that were proposed by a DID authority,
+    // or authorized by a superuser middleware, can be executed
+    constraint = transaction_account.authorized @ CryptidError::UnauthorizedTransaction,
+    // if the transaction was created
+    constraint = transaction_account.unauthorized_signer.unwrap_or_else(|| authority.key()) == authority.key() @ CryptidError::KeyMustBeSigner,
     // the transaction account must have been approved by the middleware on the cryptid account, if present
     // TODO(ticket): Verification done in instruction body. Move back with Anchor generator
     // constraint = transaction_account.approved_middleware == cryptid_account.middleware @ CryptidError::IncorrectMiddleware,
@@ -93,6 +98,16 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         .unwrap()
         .contains(ExecuteFlags::DEBUG);
 
+    // if there is an unauthorized signer, it must be the one executing the transaction
+    // in this case, a superuser middleware must have authorized the transaction
+    if let Some(unauthorized_signer) = ctx.accounts.transaction_account.unauthorized_signer {
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            unauthorized_signer,
+            CryptidError::KeyMustBeSigner
+        );
+    }
+
     let all_accounts = ctx.all_accounts();
 
     if debug {
@@ -105,6 +120,15 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
             });
     }
 
+    // At this point, the transaction account signer has been checked to be the same as the authority
+    // and the tx has been approved by the middleware
+    // so we can assume that the transaction can be executed by the unauthorized signer, if there is one.
+    let allow_unauthorized_signer = ctx
+        .accounts
+        .transaction_account
+        .unauthorized_signer
+        .is_some();
+
     let cryptid_account = get_cryptid_account_checked(
         &all_accounts,
         &controller_chain,
@@ -115,6 +139,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
         did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
+        allow_unauthorized_signer,
     )?;
 
     // CHECK the accounts have not been switched since the transaction was proposed
@@ -125,6 +150,7 @@ pub fn execute_transaction<'a, 'b, 'c, 'info>(
     for ((index, account), proposed_account) in account_pairs {
         // The authority is allowed to change
         // As long as the authority is valid for the DID (checked above), any authority can sign the transaction.
+        msg!("Checking account {} {:?}", index, account.key);
         if index != AUTHORITY_ACCOUNT_INDEX {
             require_keys_eq!(
                 *account.key,
