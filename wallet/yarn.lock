@@ -1615,21 +1615,23 @@
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.5.tgz#2fe4df9d33eb6ce6d5178a0f862e97b61c01e27d"
   integrity sha512-UDMyLM2KavIu2vlWfMspapw9yii7aoLwzI2Hudx4fyoPwfKfxU8r3cL8dEBXOjcLG0/oOONZzbT14M1HoNtEcg==
 
-"@identity.com/cryptid@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@identity.com/cryptid/-/cryptid-0.1.1.tgz#a4e8758b5fe8cb0679b56a0ba53befb295394eb3"
-  integrity sha512-W9Qse85Es8Y3ODW83Oo/MMoXBDmsUX+r0yrJCDrt+6NDA7JR/yAsfnuySXm4J+VzLbKKGX16UZBMFIFxAWhFzg==
+"@identity.com/cryptid@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@identity.com/cryptid/-/cryptid-0.2.0.tgz#17267651c544ad02a552197348134abb87659963"
+  integrity sha512-s5EHN9gm61mw5jqNrAXorP1L37aoTCqcUTMAWFxbkyjFtiQL9N3qEYQ4Ie9CRIVlKPKww6MzexPn7SY6HhdTzg==
   dependencies:
-    "@identity.com/sol-did-client" "1.0.0-beta"
+    "@identity.com/sol-did-client" "^2.0.0"
     "@solana/web3.js" "^1.27.0"
-    "@types/ramda" "^0.27.1"
+    "@types/ramda" "^0.28.0"
+    borsh "^0.6.0"
     did-resolver "^3.1.0"
+    ramda "^0.28.0"
     uint8arrays "^3.0.0"
 
-"@identity.com/sol-did-client@1.0.0-beta":
-  version "1.0.0-beta"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-1.0.0-beta.tgz#0fa3f3328f813eeffd216c5588b660f2f47c108d"
-  integrity sha512-uzIo8B5ScUTnr4SAJrxruLb+yu8EtJUvNHaftYBfoJ5RYKZ0e+5kjpVuVlR66yoycOacjNF1o4c/MVzvGMG86g==
+"@identity.com/sol-did-client@^2.0.0":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-2.0.2.tgz#001aa84f8975f149852da45b50c8f8b769ea6891"
+  integrity sha512-1JP5JGGCB2z18/gEMVUpkZKHv2RZ8DCktr2WAiUZ4gUMMyfuDzu1JOeL1XDZl9BE8BSzyKIY0PRvWxubykt7Mw==
   dependencies:
     "@solana/web3.js" "^1.21.0"
     bn.js "^4.12.0"
@@ -1637,6 +1639,11 @@
     bs58 "^4.0.1"
     did-resolver "^3.0.1"
     ramda "^0.27.1"
+
+"@identity.com/wallet-adapter-cryptid@^0.7.0":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@identity.com/wallet-adapter-cryptid/-/wallet-adapter-cryptid-0.7.1.tgz#da3b0c46041f0af9b0ff9c151593e412c3a2b77c"
+  integrity sha512-PGT2XHP71pPfJjQl8nmWPl1u1lfY8qVzzZ/uFKCZUcF5IoQJaJ6DDTZOg0aGLt9koK68RhjoX9peVVpFdp4mVw==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -2924,10 +2931,10 @@
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.5.tgz#434711bdd49eb5ee69d90c1d67c354a9a8ecb18b"
   integrity sha512-/JHkVHtx/REVG0VVToGRGH2+23hsYLHdyG+GrvoUGlGAd0ErauXDyvHtRI/7H7mzLm+tBCKA7pfcpkQ1lf58iQ==
 
-"@types/ramda@^0.27.1":
-  version "0.27.49"
-  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.27.49.tgz#cc39877f343bdb65f26e16b355453cc3e624d4b7"
-  integrity sha512-kPMKn68EhHsYqzlR+r9HiQ0w1bokQvMjS2U5BFY7oBT6DE2TYNuah1XGbmFIGMcRTCxe09Fly+9wjklTitavtw==
+"@types/ramda@^0.28.0":
+  version "0.28.20"
+  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.28.20.tgz#df93bb5674f0051464c075480ca3075d1c1361ba"
+  integrity sha512-MeUhzGSXQTRsY19JGn5LIBTLxVEnyF6HDNr08KSJqybsm4DlfLIgK1jBHjhpiSyk252tXYmp+UOe0UFg0UiFsA==
   dependencies:
     ts-toolbelt "^6.15.1"
 
@@ -4146,6 +4153,11 @@ bn.js@^5.1.0, bn.js@^5.1.3:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.2.0.tgz#358860674396c6997771a9d051fcc1b57d4ae002"
   integrity sha512-D7iWRBvnZE8ecXiLj/9wbxH7Tk79fAh8IHaTNq1RWRixsS02W+5qS+iE9yq6RYl0asXx5tw0bLhmT5pIfbSquw==
 
+bn.js@^5.2.0:
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.2.1.tgz#0bc527a6a0d18d0aa8d5b0538ce4a77dccfa7b70"
+  integrity sha512-eXRvHzWyYPBuB4NBy0cmYQjGitUrtqwbvlzP3G6VFnNRbsZQIxQ10PbKKHt8gZ/HW/D/747aDl+QkDqg3KQLMQ==
+
 body-parser@1.19.0, body-parser@^1.16.0:
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.19.0.tgz#96b2709e57c9c4e09a6fd66a8fd979844f69f08a"
@@ -4196,6 +4208,15 @@ borsh@^0.4.0:
   dependencies:
     "@types/bn.js" "^4.11.5"
     bn.js "^5.0.0"
+    bs58 "^4.0.0"
+    text-encoding-utf-8 "^1.0.2"
+
+borsh@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/borsh/-/borsh-0.6.0.tgz#a7c9eeca6a31ca9e0607cb49f329cb659eb791e1"
+  integrity sha512-sl5k89ViqsThXQpYa9XDtz1sBl3l1lI313cFUY1HKr+wvMILnb+58xpkqTNrYbelh99dY7K8usxoCusQmqix9Q==
+  dependencies:
+    bn.js "^5.2.0"
     bs58 "^4.0.0"
     text-encoding-utf-8 "^1.0.2"
 
@@ -12030,9 +12051,9 @@ qs@6.7.0:
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
 
 qs@~6.5.2:
-  version "6.5.2"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
-  integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
+  version "6.5.3"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.3.tgz#3aeeffc91967ef6e35c0e488ef46fb296ab76aad"
+  integrity sha512-qxXIEh4pCGfHICj1mAJQ2/2XVZkjCDTcEgfoSQxc/fYivUZxTkk7L3bDBJSoNrEzXI17oUO5Dp07ktqE5KzczA==
 
 query-string@^4.1.0, query-string@^4.2.2:
   version "4.3.4"
@@ -12082,6 +12103,11 @@ ramda@^0.27.1:
   version "0.27.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.27.1.tgz#66fc2df3ef873874ffc2da6aa8984658abacf5c9"
   integrity sha512-PgIdVpn5y5Yns8vqb8FzBUEYn98V3xcPgawAkkgj0YJ0qDsnHCiNmZYfOGMgOvoB0eWFLpYbhxUR3mxfDIMvpw==
+
+ramda@^0.28.0:
+  version "0.28.0"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.28.0.tgz#acd785690100337e8b063cab3470019be427cc97"
+  integrity sha512-9QnLuG/kPVgWvMQ4aODhsBUFKOUmnbUnsSXACv+NCQZcHbeb+v8Lodp8OVxtRULN1/xOyYLLaL6npE6dMq5QTA==
 
 randombytes@^2.0.0, randombytes@^2.0.1, randombytes@^2.0.5, randombytes@^2.1.0:
   version "2.1.0"
