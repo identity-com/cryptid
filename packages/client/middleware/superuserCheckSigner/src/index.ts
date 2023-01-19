@@ -121,4 +121,8 @@ export class SuperuserCheckSignerMiddleware
 
     return { instructions: [executeInstruction], signers: [] };
   }
+
+  public async onClose(): Promise<MiddlewareResult> {
+    return { instructions: [], signers: [] };
+  }
 }

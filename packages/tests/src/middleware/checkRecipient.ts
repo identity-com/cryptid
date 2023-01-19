@@ -88,10 +88,8 @@ describe("Middleware: checkRecipient", () => {
     await cryptid.send(proposeTransaction, proposeSigners);
 
     // send the execute tx
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
-    await cryptid.send(executeTransactions[0], executeSigners);
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+    await cryptid.send(transactions[0], signers);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -112,10 +110,8 @@ describe("Middleware: checkRecipient", () => {
     await cryptidWithoutMiddleware.send(proposeTransaction, proposeSigners);
 
     // send the execute tx - this will fail since the middleware was not used
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
-    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+    const shouldFail = cryptid.send(transactions[0], signers);
 
     return expect(shouldFail).to.be.rejectedWith(
       "Error Code: IncorrectMiddleware"

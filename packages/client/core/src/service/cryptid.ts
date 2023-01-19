@@ -26,7 +26,7 @@ import { DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
 import { MiddlewareRegistry } from "./middlewareRegistry";
 import {
   ControllerPubkeys,
-  ExecuteResult,
+  TransactionResult,
   ProposalResult,
 } from "../types/cryptid";
 import { MiddlewareResult } from "../types/middleware";
@@ -181,7 +181,7 @@ export class CryptidService {
   private async executeMiddlewareInstructions(
     account: CryptidAccountDetails,
     transactionAccount: PublicKey,
-    stage: "Propose" | "Execute"
+    stage: "Propose" | "Execute" | "Close"
   ): Promise<MiddlewareResult> {
     const middlewareContexts =
       MiddlewareRegistry.get().getMiddlewareContexts(account);
@@ -198,8 +198,13 @@ export class CryptidService {
       cryptidAccountDetails: account,
     };
 
-    // Middlewares may have functions taht are executed on propose stage, on execute stage, or both
-    const middlewareFn = stage === "Propose" ? "onPropose" : "onExecute";
+    // Middlewares may have functions interface functions for propose, execute and close.
+    const middlewareFn =
+      stage === "Propose"
+        ? "onPropose"
+        : stage === "Close"
+        ? "onClose"
+        : "onExecute";
 
     // For each middleware, execute their onPropose or onExecute function
     const middlewareExecutions = middlewareContexts.map(
@@ -346,7 +351,7 @@ export class CryptidService {
   public async proposeAndExecuteTransaction(
     account: CryptidAccountDetails,
     transaction: Transaction
-  ): Promise<ExecuteResult> {
+  ): Promise<TransactionResult> {
     const transactionAccountKeypair = Keypair.generate();
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -390,8 +395,8 @@ export class CryptidService {
     );
 
     return {
-      executeTransaction,
-      executeSigners: [
+      transaction: executeTransaction,
+      signers: [
         transactionAccountKeypair,
         ...middlewareProposeResults.signers,
         ...middlewareExecuteResults.signers,
@@ -403,7 +408,7 @@ export class CryptidService {
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
     cryptidTransaction?: CryptidTransaction
-  ): Promise<ExecuteResult> {
+  ): Promise<TransactionResult> {
     const middlewareResult = await this.executeMiddlewareInstructions(
       account,
       transactionAccountAddress,
@@ -421,8 +426,35 @@ export class CryptidService {
       .transaction();
 
     return {
-      executeTransaction,
-      executeSigners: [...middlewareResult.signers],
+      transaction: executeTransaction,
+      signers: [...middlewareResult.signers],
+    };
+  }
+
+  public async close(
+    account: CryptidAccountDetails,
+    transactionAccountAddress: PublicKey,
+    cryptidTransaction?: CryptidTransaction
+  ): Promise<TransactionResult> {
+    const middlewareResult = await this.executeMiddlewareInstructions(
+      account,
+      transactionAccountAddress,
+      "Close"
+    );
+
+    const resolvedCryptidTransaction =
+      cryptidTransaction ||
+      (await this.getCryptidTransaction(account, transactionAccountAddress));
+
+    const closeTransaction = await resolvedCryptidTransaction
+      .close(this.program, transactionAccountAddress)
+      .preInstructions(middlewareResult.instructions)
+      .signers(middlewareResult.signers)
+      .transaction();
+
+    return {
+      transaction: closeTransaction,
+      signers: [...middlewareResult.signers],
     };
   }
 

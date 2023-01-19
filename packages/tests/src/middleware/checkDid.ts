@@ -119,10 +119,10 @@ describe("Middleware: CheckDid", () => {
       await cryptid.send(proposeTransaction, proposeSigners);
 
       // send the execute tx, which fails to pass through the middleware
-      const { executeTransactions, executeSigners } = await cryptid.execute(
+      const { transactions, signers } = await cryptid.execute(
         transactionAccount
       );
-      const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+      const shouldFail = cryptid.send(transactions[0], signers);
 
       return expect(shouldFail).to.be.rejectedWith(
         "Error Code: VerificationMethodMatcherError."
@@ -141,10 +141,10 @@ describe("Middleware: CheckDid", () => {
       await cryptid.send(proposeTransaction, proposeSigners);
 
       // send the execute tx, which fails to pass through the middleware
-      const { executeTransactions, executeSigners } = await cryptid.execute(
+      const { transactions, signers } = await cryptid.execute(
         transactionAccount
       );
-      const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+      const shouldFail = cryptid.send(transactions[0], signers);
 
       return expect(shouldFail).to.be.rejectedWith(
         "Error Code: ServiceMatcherError."
@@ -168,10 +168,10 @@ describe("Middleware: CheckDid", () => {
       await cryptid.send(proposeTransaction, proposeSigners);
 
       // send the execute tx (executing the middleware)
-      const { executeTransactions, executeSigners } = await cryptid.execute(
+      const { transactions, signers } = await cryptid.execute(
         transactionAccount
       );
-      await cryptid.send(executeTransactions[0], executeSigners);
+      await cryptid.send(transactions[0], signers);
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -180,10 +180,12 @@ describe("Middleware: CheckDid", () => {
     it("transfers in a single transaction if the DID succeeds all matches.", async () => {
       const previousBalance = await balanceOf(cryptid.address());
 
-      const { executeTransactions, executeSigners } =
-        await cryptid.proposeAndExecute(makeTransaction(), true);
-      expect(executeTransactions.length).to.equal(1);
-      await cryptid.send(executeTransactions[0], executeSigners);
+      const { transactions, signers } = await cryptid.proposeAndExecute(
+        makeTransaction(),
+        true
+      );
+      expect(transactions.length).to.equal(1);
+      await cryptid.send(transactions[0], signers);
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed

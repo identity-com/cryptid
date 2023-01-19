@@ -67,10 +67,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         await cryptid.send(extendTx, []);
 
         // send the execute tx
-        const { executeTransactions } = await cryptid.execute(
-          transactionAccount
-        );
-        await cryptid.send(executeTransactions[0]);
+        const { transactions } = await cryptid.execute(transactionAccount);
+        await cryptid.send(transactions[0]);
 
         const currentBalance = await balanceOf(cryptid.address());
         // Both txes have been executed
@@ -107,10 +105,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         await cryptid.send(extendTx, []);
 
         // send the execute tx
-        const { executeTransactions } = await cryptid.execute(
-          transactionAccount
-        );
-        await cryptid.send(executeTransactions[0]);
+        const { transactions } = await cryptid.execute(transactionAccount);
+        await cryptid.send(transactions[0]);
 
         const recipient1Balance = await balanceOf(recipient1.publicKey);
         const recipient2Balance = await balanceOf(recipient2.publicKey);
@@ -145,10 +141,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         await cryptid.send(extendTx2, []);
 
         // send the execute tx
-        const { executeTransactions } = await cryptid.execute(
-          transactionAccount
-        );
-        await cryptid.send(executeTransactions[0]);
+        const { transactions } = await cryptid.execute(transactionAccount);
+        await cryptid.send(transactions[0]);
 
         const currentBalance = await balanceOf(cryptid.address());
         // Both txes have been executed
@@ -176,16 +170,13 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         superTransaction.add(...extendTransaction.instructions);
 
         // execute the transaction
-        const { executeTransactions, executeSigners } = await cryptid.execute(
+        const { transactions, signers } = await cryptid.execute(
           transactionAccount,
           cryptidTransactionRepresentation
         );
-        superTransaction.add(...executeTransactions[0].instructions);
+        superTransaction.add(...transactions[0].instructions);
 
-        await cryptid.send(superTransaction, [
-          ...proposeSigners,
-          ...executeSigners,
-        ]);
+        await cryptid.send(superTransaction, [...proposeSigners, ...signers]);
 
         const currentBalance = await balanceOf(cryptid.address());
 
@@ -201,10 +192,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         await cryptid.send(proposeTransaction, proposeSigners);
 
         // send the execute tx
-        const { executeTransactions } = await cryptid.execute(
-          transactionAccount
-        );
-        const shouldFail = cryptid.send(executeTransactions[0]);
+        const { transactions } = await cryptid.execute(transactionAccount);
+        const shouldFail = cryptid.send(transactions[0]);
 
         return expect(shouldFail).to.be.rejected;
       });
@@ -244,10 +233,10 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
         await secondAuthorityCryptid.send(extendTx, []);
 
         // send the execute tx (with the first authority)
-        const { executeTransactions } = await firstAuthorityCryptid.execute(
+        const { transactions } = await firstAuthorityCryptid.execute(
           transactionAccount
         );
-        await firstAuthorityCryptid.send(executeTransactions[0]);
+        await firstAuthorityCryptid.send(transactions[0]);
 
         const currentBalance = await balanceOf(cryptid.address());
         // Both txes have been executed

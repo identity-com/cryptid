@@ -134,11 +134,9 @@ describe(`Native & SPL Transfer tests`, () => {
       await cryptid.propose(transaction);
     await cryptid.send(proposeTransaction, [...proposeSigners]);
 
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
 
-    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
+    await cryptid.send(transactions[0], [...signers, thridParty]);
 
     const currentBalance = await balanceOf(cryptid.address());
 
@@ -166,11 +164,9 @@ describe(`Native & SPL Transfer tests`, () => {
       await cryptid.propose(transaction);
     await cryptid.send(proposeTransaction, [...proposeSigners]);
 
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
 
-    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
+    await cryptid.send(transactions[0], [...signers, thridParty]);
 
     const currentBalance = await splBalanceOf(cryptidAta.address);
 
@@ -190,11 +186,9 @@ describe(`Native & SPL Transfer tests`, () => {
       await cryptid.propose(transaction);
     await cryptid.send(proposeTransaction, [...proposeSigners]);
 
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
 
-    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
+    await cryptid.send(transactions[0], [...signers, thridParty]);
 
     const currentBalance = await balanceOf(cryptid.address());
 
@@ -221,11 +215,9 @@ describe(`Native & SPL Transfer tests`, () => {
       await cryptid.propose(transaction);
     await cryptid.send(proposeTransaction, [...proposeSigners]);
 
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
 
-    await cryptid.send(executeTransactions[0], [...executeSigners, thridParty]);
+    await cryptid.send(transactions[0], [...signers, thridParty]);
 
     const currentBalance = await splBalanceOf(cryptidAta.address);
 

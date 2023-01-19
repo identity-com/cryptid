@@ -89,13 +89,13 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       const previousBalance = await balanceOf(cryptidAccount);
 
       const {
-        executeTransactions: [tx],
-        executeSigners,
+        transactions: [tx],
+        signers,
       } = await cryptid.proposeAndExecute(
         makeTransaction(recipient.publicKey),
         true
       );
-      await cryptid.send(tx, executeSigners);
+      await cryptid.send(tx, signers);
 
       const currentBalance = await balanceOf(cryptidAccount);
 
@@ -121,8 +121,8 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
       await cryptid.send(extendTx, []);
 
       // send the execute tx
-      const { executeTransactions } = await cryptid.execute(transactionAccount);
-      await cryptid.send(executeTransactions[0]);
+      const { transactions } = await cryptid.execute(transactionAccount);
+      await cryptid.send(transactions[0]);
 
       const currentBalance = await balanceOf(cryptidAccount);
 

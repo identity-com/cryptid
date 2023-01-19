@@ -5,8 +5,8 @@ export { ExtendedCluster } from "./types/solana";
 export { Wallet } from "./types/crypto";
 export {
   ProposalResult,
-  ExecuteResult,
-  ExecuteArrayResult,
+  TransactionResult,
+  TransactionArrayResult,
   TransactionState,
 } from "./types/cryptid";
 export {

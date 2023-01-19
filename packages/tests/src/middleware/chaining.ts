@@ -155,10 +155,8 @@ describe("Middleware chaining", () => {
     await cryptid.send(proposeTransaction, proposeSigners);
 
     // send the execute tx, which fails to pass through the middleware
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
-    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+    const shouldFail = cryptid.send(transactions[0], signers);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -174,10 +172,8 @@ describe("Middleware chaining", () => {
     await cryptid.send(proposeTransaction, proposeSigners);
 
     // send the execute tx, which fails to pass through the middleware
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
-    const shouldFail = cryptid.send(executeTransactions[0], executeSigners);
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+    const shouldFail = cryptid.send(transactions[0], signers);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -198,10 +194,8 @@ describe("Middleware chaining", () => {
     await sleep((TIME_DELAY_SECONDS + 2) * 1000);
 
     // send the execute tx (executing the middleware)
-    const { executeTransactions, executeSigners } = await cryptid.execute(
-      transactionAccount
-    );
-    await cryptid.send(executeTransactions[0], executeSigners);
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+    await cryptid.send(transactions[0], signers);
 
     const currentBalance = await balanceOf(cryptid.address());
     expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
@@ -230,12 +224,10 @@ describe("Middleware chaining", () => {
 
     // send the execute tx, which fails to pass through the middleware because
     // the time-delay middleware expects the check-pass middleware to have been executed first
-    const { executeTransactions, executeSigners } =
-      await backwardsCryptid.execute(transactionAccount);
-    const shouldFail = backwardsCryptid.send(
-      executeTransactions[0],
-      executeSigners
+    const { transactions, signers } = await backwardsCryptid.execute(
+      transactionAccount
     );
+    const shouldFail = backwardsCryptid.send(transactions[0], signers);
 
     // TODO expose the error message
     return expect(shouldFail).to.be.rejected;
@@ -262,12 +254,10 @@ describe("Middleware chaining", () => {
 
     // send the execute tx, which fails to pass through the middleware because
     // the time-delay middleware expects the check-pass middleware to have been executed first
-    const { executeTransactions, executeSigners } =
-      await cryptidWithoutTimeDelay.execute(transactionAccount);
-    const shouldFail = cryptidWithoutTimeDelay.send(
-      executeTransactions[0],
-      executeSigners
+    const { transactions, signers } = await cryptidWithoutTimeDelay.execute(
+      transactionAccount
     );
+    const shouldFail = cryptidWithoutTimeDelay.send(transactions[0], signers);
 
     return expect(shouldFail).to.be.rejectedWith(
       "Error Code: IncorrectMiddleware"
