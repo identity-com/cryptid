@@ -11715,10 +11715,10 @@ mongoose@*:
     ms "2.1.3"
     sift "16.0.0"
 
-mongoose@^5.12.15:
-  version "5.13.14"
-  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-5.13.14.tgz#ffc9704bd022dd018fbddcbe27dc802c77719fb4"
-  integrity sha512-j+BlQjjxgZg0iWn42kLeZTB91OejcxWpY2Z50bsZTiKJ7HHcEtcY21Godw496GMkBqJMTzmW7G/kZ04mW+Cb7Q==
+mongoose@^5.13.15:
+  version "5.13.15"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-5.13.15.tgz#ba2cd0f22c1a5dd9ae15aaf6b10f03c59a4202dd"
+  integrity sha512-cxp1Gbb8yUWkaEbajdhspSaKzAvsIvOtRlYD87GN/P2QEUhpd6bIvebi36T6M0tIVAMauNaK9SPA055N3PwF8Q==
   dependencies:
     "@types/bson" "1.x || 4.0.x"
     "@types/mongodb" "^3.5.27"
