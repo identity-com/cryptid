@@ -65,11 +65,11 @@ impl fmt::Display for TransactionAccount {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "Accounts:")?;
         for (index, account) in self.accounts.iter().enumerate() {
-            writeln!(f, "{}: {}", index, account)?;
+            writeln!(f, "{index}: {account}")?;
         }
         for (index, instruction) in self.instructions.iter().enumerate() {
-            writeln!(f, "Instruction {}:", index)?;
-            writeln!(f, "{}", instruction)?;
+            writeln!(f, "Instruction {index}:",)?;
+            writeln!(f, "{instruction}",)?;
         }
         Ok(())
     }
@@ -92,7 +92,7 @@ mod test {
                 data_len: 1,
             }),
         );
-        println!("Size: {}", size);
+        println!("Size: {size}");
 
         let account = TransactionAccount {
             cryptid_account: Default::default(),
@@ -110,7 +110,7 @@ mod test {
             authorized: true,
         };
         let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len();
-        println!("SerSize: {}", ser_size);
+        println!("SerSize: {ser_size}");
         assert_eq!(size, ser_size);
     }
 }

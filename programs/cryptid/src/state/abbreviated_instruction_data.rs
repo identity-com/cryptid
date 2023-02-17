@@ -74,7 +74,7 @@ impl fmt::Display for AbbreviatedInstructionData {
         writeln!(f, "Program: {}", self.program_id)?;
         writeln!(f, "Accounts:")?;
         for account in self.accounts.iter() {
-            writeln!(f, "  {}", account)?;
+            writeln!(f, "  {account}")?;
         }
         write!(f, "Data: {:?}", self.data)?;
         Ok(())

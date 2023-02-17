@@ -81,8 +81,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 
 /// Propose a transaction to be executed by a cryptid account
 /// Note - at present, there is no constraint on who can propose a transaction.
-pub fn propose_transaction<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ProposeTransaction<'info>>,
+pub fn propose_transaction<'info>(
+    ctx: Context<'_, '_, '_, 'info, ProposeTransaction<'info>>,
     controller_chain: Vec<DIDReference>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,

@@ -1,7 +1,7 @@
 import { CryptidClient, CryptidOptions } from "./cryptidClient";
 import { Wallet } from "../types/crypto";
 import { CryptidAccountDetails } from "../lib/CryptidAccountDetails";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { Transaction } from "@solana/web3.js";
 import { ProposalResult, TransactionState } from "../types/cryptid";
 import { AbstractCryptidClient } from "./abstractCryptidClient";
 import { ControlledCryptidClient } from "./controlledCryptidClient";
@@ -39,22 +39,6 @@ export class UnauthorizedCryptidClient extends AbstractCryptidClient {
   ): Promise<ProposalResult> {
     return this.service().then((service) =>
       service.propose(this.details, transaction, state, true)
-    );
-  }
-
-  async extend(
-    transactionAccountAddress: PublicKey,
-    transaction: Transaction,
-    state?: TransactionState
-  ): Promise<Transaction> {
-    return this.service().then((service) =>
-      service.extend(
-        this.details,
-        transactionAccountAddress,
-        transaction,
-        state,
-        true
-      )
     );
   }
 

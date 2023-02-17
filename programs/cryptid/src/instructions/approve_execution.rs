@@ -15,8 +15,8 @@ pub struct ApproveExecution<'info> {
 }
 
 /// Executes a transaction directly if all required keys sign
-pub fn approve_execution<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ApproveExecution<'info>>,
+pub fn approve_execution<'info>(
+    ctx: Context<'_, '_, '_, 'info, ApproveExecution<'info>>,
 ) -> Result<()> {
     // Make sure owner is NOT the System Program
     // TODO(ticket): Consider implementing an approval registry on middleware

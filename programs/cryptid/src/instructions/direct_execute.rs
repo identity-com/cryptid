@@ -61,8 +61,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 }
 
 /// Executes a transaction directly if all required keys sign
-pub fn direct_execute<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, DirectExecute<'info>>,
+pub fn direct_execute<'info>(
+    ctx: Context<'_, '_, '_, 'info, DirectExecute<'info>>,
     controller_chain: Vec<DIDReference>,
     instructions: Vec<AbbreviatedInstructionData>,
     cryptid_account_bump: u8,
