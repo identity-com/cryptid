@@ -278,6 +278,7 @@ export class CryptidTransaction {
           this.cryptidAccount.didAccountBump,
           TransactionState.toBorsh(state),
           allowUnauthorized,
+          this.cryptidAccount.middlewares.map((m) => m.programId),
           this.instructions,
           this.accountMetas.length
         )

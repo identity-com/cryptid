@@ -54,7 +54,8 @@ pub struct ExtendTransaction<'info> {
                 transaction_account.accounts.len() + num_accounts as usize,
                 InstructionSize::from_iter_to_iter(
                     instructions.iter().chain(transaction_account.instructions.iter())
-                )
+                ),
+                transaction_account.whitelisted_middleware_programs.len()
             ),
         realloc::payer = authority,
         realloc::zero = false,

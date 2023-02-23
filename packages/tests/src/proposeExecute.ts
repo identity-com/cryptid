@@ -56,6 +56,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
             false,
+            [], // no whitelisted middleware programs
             [instruction],
             2
           )
@@ -178,6 +179,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
             false,
+            [], // no whitelisted middleware programs
             [transferInstructionData],
             2
           )
@@ -337,6 +339,7 @@ didTestCases.forEach(({ didType, getDidAccount }) => {
             cryptid.details.didAccountBump,
             TransactionState.toBorsh(TransactionState.Ready),
             false,
+            [], // no whitelisted middleware programs
             [transferInstructionData],
             2
           )

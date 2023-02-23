@@ -215,6 +215,12 @@ export type Cryptid = {
           "type": "bool"
         },
         {
+          "name": "whitelistedMiddlewarePrograms",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -587,14 +593,6 @@ export type Cryptid = {
             }
           },
           {
-            "name": "slot",
-            "docs": [
-              "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks"
-            ],
-            "type": "u8"
-          },
-          {
             "name": "state",
             "docs": [
               "The transaction state, to prevent replay attacks",
@@ -615,6 +613,17 @@ export type Cryptid = {
             ],
             "type": {
               "option": "publicKey"
+            }
+          },
+          {
+            "name": "whitelistedMiddlewarePrograms",
+            "docs": [
+              "This vector contains a list of middleware program ids that are allowed to",
+              "approve the execution. Important, is not used for passing transactions execution",
+              "checks. (approved_middleware: Option<Pubkey>) is used for that."
+            ],
+            "type": {
+              "vec": "publicKey"
             }
           },
           {
@@ -853,7 +862,7 @@ export type Cryptid = {
     {
       "code": 6017,
       "name": "AlreadyAuthorizedTransactionAccount",
-      "msg": "Already authorized Transaction Account."
+      "msg": "Transaction Account is already authorized and cannot be authorized again."
     }
   ]
 };
@@ -1075,6 +1084,12 @@ export const IDL: Cryptid = {
           "type": "bool"
         },
         {
+          "name": "whitelistedMiddlewarePrograms",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -1447,14 +1462,6 @@ export const IDL: Cryptid = {
             }
           },
           {
-            "name": "slot",
-            "docs": [
-              "The slot in which the transaction was proposed",
-              "This is used to prevent replay attacks"
-            ],
-            "type": "u8"
-          },
-          {
             "name": "state",
             "docs": [
               "The transaction state, to prevent replay attacks",
@@ -1475,6 +1482,17 @@ export const IDL: Cryptid = {
             ],
             "type": {
               "option": "publicKey"
+            }
+          },
+          {
+            "name": "whitelistedMiddlewarePrograms",
+            "docs": [
+              "This vector contains a list of middleware program ids that are allowed to",
+              "approve the execution. Important, is not used for passing transactions execution",
+              "checks. (approved_middleware: Option<Pubkey>) is used for that."
+            ],
+            "type": {
+              "vec": "publicKey"
             }
           },
           {
@@ -1713,7 +1731,7 @@ export const IDL: Cryptid = {
     {
       "code": 6017,
       "name": "AlreadyAuthorizedTransactionAccount",
-      "msg": "Already authorized Transaction Account."
+      "msg": "Transaction Account is already authorized and cannot be authorized again."
     }
   ]
 };
