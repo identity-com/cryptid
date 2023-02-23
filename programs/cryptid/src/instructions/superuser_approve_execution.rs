@@ -12,7 +12,7 @@ pub struct SuperuserApproveExecution<'info> {
         // ensure the transaction is not approved until it is ready to be approved, and is not executed
         constraint = transaction_account.state == TransactionState::Ready @ CryptidError::InvalidTransactionState,
         has_one = cryptid_account,
-        constraint = !transaction_account.authorized,
+        constraint = !transaction_account.authorized @ CryptidError::AlreadyAuthorizedTransactionAccount,
     )]
     pub transaction_account: Account<'info, TransactionAccount>,
     #[account(
@@ -22,8 +22,8 @@ pub struct SuperuserApproveExecution<'info> {
     pub cryptid_account: Account<'info, CryptidAccount>,
 }
 
-pub fn superuser_approve_execution<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, SuperuserApproveExecution<'info>>,
+pub fn superuser_approve_execution<'info>(
+    ctx: Context<'_, '_, '_, 'info, SuperuserApproveExecution<'info>>,
 ) -> Result<()> {
     // Make sure owner is NOT the System Program
     // TODO(ticket): Consider implementing an approval registry on middleware

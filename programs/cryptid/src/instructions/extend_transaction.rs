@@ -23,8 +23,6 @@ use itertools::Itertools;
     /// The state to set the transaction to
     state: TransactionState,
     /// The instructions to add to the transaction
-    /// True if the transaction account is being proposed by a non-authority on the DID
-    allow_unauthorized: bool,
     instructions: Vec<AbbreviatedInstructionData>,
     /// The number of new accounts referred to in the instructions
     num_accounts: u8,
@@ -130,14 +128,13 @@ impl ExtendTransaction<'_> {
 
 /// Extend a transaction to be executed by a cryptid account
 /// Note - at present, there is no constraint on who can extend a transaction.
-pub fn extend_transaction<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ExtendTransaction<'info>>,
+pub fn extend_transaction<'info>(
+    ctx: Context<'_, '_, '_, 'info, ExtendTransaction<'info>>,
     controller_chain: Vec<DIDReference>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,
     did_account_bump: u8,
     state: TransactionState,
-    allow_unauthorized: bool,
     mut instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
     if let Some(unauthorized_signer) = ctx.accounts.transaction_account.unauthorized_signer {
@@ -147,6 +144,13 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
             CryptidError::KeyMustBeSigner
         );
     }
+
+    let allow_unauthorized_signer = ctx
+        .accounts
+        .transaction_account
+        .unauthorized_signer
+        .is_some();
+
     let all_accounts = ctx.all_accounts();
 
     get_cryptid_account_checked(
@@ -159,7 +163,7 @@ pub fn extend_transaction<'a, 'b, 'c, 'info>(
         did_account_bump,
         cryptid_account_index,
         cryptid_account_bump,
-        allow_unauthorized,
+        allow_unauthorized_signer,
     )?;
 
     let mut mutable_references: Vec<&mut AbbreviatedInstructionData> =

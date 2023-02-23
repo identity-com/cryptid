@@ -298,15 +298,13 @@ export class CryptidTransaction {
    * @param program
    * @param transactionAccountAddress
    * @param state
-   * @param allowUnauthorized
    */
   // TODO move transactionAccountAddress into constructor?
   extend(
     program: Program<Cryptid>,
     transactionAccountAddress: PublicKey,
     // by default, extend the transaction and seal it at the same time
-    state = TransactionState.Ready,
-    allowUnauthorized = false
+    state = TransactionState.Ready
   ) {
     return (
       program.methods
@@ -316,7 +314,6 @@ export class CryptidTransaction {
           this.cryptidAccount.index,
           this.cryptidAccount.didAccountBump,
           TransactionState.toBorsh(state),
-          allowUnauthorized,
           this.instructions,
           this.accountMetas.length
         )

@@ -314,8 +314,7 @@ export class CryptidService {
     account: CryptidAccountDetails,
     transactionAccountAddress: PublicKey,
     transaction: Transaction,
-    state?: TransactionState,
-    allowUnauthorized = false
+    state?: TransactionState
   ): Promise<Transaction> {
     const cryptidTransaction = CryptidTransaction.fromSolanaInstructions(
       account,
@@ -327,8 +326,7 @@ export class CryptidService {
     let builder = cryptidTransaction.extend(
       this.program,
       transactionAccountAddress,
-      state,
-      allowUnauthorized
+      state
     );
 
     if (state === TransactionState.Ready) {

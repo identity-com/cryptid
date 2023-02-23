@@ -58,4 +58,7 @@ pub enum CryptidError {
     /// An invalid Middleware Account was passed.
     #[msg("Approve Execution needs to be called with a valid Middleware Account.")]
     InvalidMiddlewareAccount,
+    /// Already authorized Transaction Account.
+    #[msg("Transaction Account is already authorized and cannot be authorized again.")]
+    AlreadyAuthorizedTransactionAccount,
 }

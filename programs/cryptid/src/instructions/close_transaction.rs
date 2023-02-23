@@ -77,8 +77,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 }
 
 /// Close an existing transaction account
-pub fn close_transaction<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, CloseTransaction<'info>>,
+pub fn close_transaction<'info>(
+    ctx: Context<'_, '_, '_, 'info, CloseTransaction<'info>>,
     controller_chain: Vec<DIDReference>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,

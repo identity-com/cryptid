@@ -32,11 +32,11 @@ pub fn resolve_by_index<'c, 'info>(
 /// Verifies that the signer has the permission to sign for the DID
 /// If the controller-chain is empty, it expects the signer to be a key on the did itself
 /// Otherwise, the signer is a signer on a controller of the DID (either directly or indirectly)
-pub fn verify_keys<'info1, 'info2>(
-    did: &AccountInfo<'info1>,
+pub fn verify_keys(
+    did: &AccountInfo<'_>,
     did_account_bump: Option<u8>,
     signer: &Pubkey,
-    controlling_did_accounts: Vec<(&AccountInfo<'info2>, Pubkey)>,
+    controlling_did_accounts: Vec<(&AccountInfo<'_>, Pubkey)>,
 ) -> Result<()> {
     let signer_is_authority = sol_did::integrations::is_authority(
         did,

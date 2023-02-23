@@ -299,10 +299,6 @@ export type Cryptid = {
           }
         },
         {
-          "name": "allowUnauthorized",
-          "type": "bool"
-        },
-        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -853,6 +849,11 @@ export type Cryptid = {
       "code": 6016,
       "name": "InvalidMiddlewareAccount",
       "msg": "Approve Execution needs to be called with a valid Middleware Account."
+    },
+    {
+      "code": 6017,
+      "name": "AlreadyAuthorizedTransactionAccount",
+      "msg": "Already authorized Transaction Account."
     }
   ]
 };
@@ -1158,10 +1159,6 @@ export const IDL: Cryptid = {
           }
         },
         {
-          "name": "allowUnauthorized",
-          "type": "bool"
-        },
-        {
           "name": "instructions",
           "type": {
             "vec": {
@@ -1712,6 +1709,11 @@ export const IDL: Cryptid = {
       "code": 6016,
       "name": "InvalidMiddlewareAccount",
       "msg": "Approve Execution needs to be called with a valid Middleware Account."
+    },
+    {
+      "code": 6017,
+      "name": "AlreadyAuthorizedTransactionAccount",
+      "msg": "Already authorized Transaction Account."
     }
   ]
 };

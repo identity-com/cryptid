@@ -86,8 +86,8 @@ impl<'a, 'b, 'c, 'info> AllAccounts<'a, 'b, 'c, 'info>
 }
 
 /// Executes a transaction directly if all required keys sign
-pub fn execute_transaction<'a, 'b, 'c, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ExecuteTransaction<'info>>,
+pub fn execute_transaction<'info>(
+    ctx: Context<'_, '_, '_, 'info, ExecuteTransaction<'info>>,
     controller_chain: Vec<DIDReference>,
     cryptid_account_bump: u8,
     cryptid_account_index: u32,

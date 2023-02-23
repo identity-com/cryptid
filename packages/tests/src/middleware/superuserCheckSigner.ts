@@ -1,11 +1,16 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+} from "@solana/web3.js";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { makeTransfer } from "../util/cryptid";
+import { makeTransfer, toAccountMeta } from "../util/cryptid";
 import { initializeDIDAccount } from "../util/did";
 import { balanceOf, createTestContext, fund } from "../util/anchorUtils";
-import { DID_SOL_PREFIX } from "@identity.com/sol-did-client";
-import { Cryptid } from "@identity.com/cryptid";
+import { DID_SOL_PREFIX, DID_SOL_PROGRAM } from "@identity.com/sol-did-client";
+import { Cryptid, TransactionState } from "@identity.com/cryptid";
 import {
   SuperuserCheckSignerMiddleware,
   deriveMiddlewareAccountAddress,
@@ -17,6 +22,7 @@ const { expect } = chai;
 
 describe("Middleware: superuserCheckSigner", () => {
   const {
+    program,
     keypair,
     provider,
     authority,
@@ -24,6 +30,8 @@ describe("Middleware: superuserCheckSigner", () => {
   } = createTestContext();
 
   let cryptid: CryptidClient;
+  let authorizedCryptid: CryptidClient;
+
   const cryptidIndex = 1;
 
   let middlewareAccount: PublicKey;
@@ -32,6 +40,31 @@ describe("Middleware: superuserCheckSigner", () => {
 
   const makeTransaction = (to = signer.publicKey) =>
     makeTransfer(cryptid.address(), to);
+
+  const execute = (transactionAccount: PublicKey) =>
+    // execute the Cryptid transaction
+    program.methods
+      .executeTransaction(
+        [], // no controller chain
+        cryptid.details.bump,
+        cryptid.details.index,
+        cryptid.details.didAccountBump,
+        0
+      )
+      .accounts({
+        cryptidAccount: cryptid.address(),
+        didProgram: DID_SOL_PROGRAM,
+        did: cryptid.details.didAccount,
+        authority: signer.publicKey,
+        destination: signer.publicKey,
+        transactionAccount,
+      })
+      .remainingAccounts([
+        toAccountMeta(signer.publicKey, true, false),
+        toAccountMeta(SystemProgram.programId),
+      ])
+      .signers([signer])
+      .rpc();
 
   before("Fund the authority and signer", async () => {
     await Promise.all([
@@ -99,6 +132,22 @@ describe("Middleware: superuserCheckSigner", () => {
         }
       )
     ).unauthorized();
+
+    authorizedCryptid = await Cryptid.buildFromDID(
+      DID_SOL_PREFIX + ":" + authority.publicKey,
+      authority,
+      {
+        connection: provider.connection,
+        accountIndex: cryptidIndex,
+        middlewares: [
+          {
+            programId: superuserCheckSignerMiddlewareProgram.programId,
+            address: middlewareAccount,
+            isSuperuser: true,
+          },
+        ],
+      }
+    );
   };
 
   before(
@@ -159,6 +208,37 @@ describe("Middleware: superuserCheckSigner", () => {
     );
   });
 
+  it("cannot execute with an unauthorized signer if the transaction was proposed by none (middleware error)", async () => {
+    // propose the Cryptid transaction
+    const { proposeTransaction, transactionAccount, proposeSigners } =
+      await authorizedCryptid.propose(makeTransaction());
+    // this will be signed by a DID authority
+    await authorizedCryptid.send(proposeTransaction, proposeSigners);
+
+    // This should fail!
+    const { transactions, signers } = await cryptid.execute(transactionAccount);
+
+    const shouldFail = cryptid.send(transactions[0], signers);
+
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: AlreadyAuthorizedTransactionAccount"
+    );
+  });
+
+  it("cannot execute with an unauthorized signer if the transaction was proposed by none (execute error)", async () => {
+    // propose the Cryptid transaction
+    const { proposeTransaction, transactionAccount, proposeSigners } =
+      await authorizedCryptid.propose(makeTransaction());
+    // this will be signed by a DID authority
+    await authorizedCryptid.send(proposeTransaction, proposeSigners);
+
+    // This should fail!
+    // Manual execute skips the middleware execution. (which would fail)
+    const shouldFail = execute(transactionAccount);
+
+    return expect(shouldFail).to.be.rejectedWith("Error Code: KeyMustBeSigner");
+  });
+
   it("blocks a transfer not signed by the signer", async () => {
     // change the signer
     signer = Keypair.generate();
@@ -176,5 +256,27 @@ describe("Middleware: superuserCheckSigner", () => {
     const shouldFail = cryptid.send(transactions[0], signers);
 
     return expect(shouldFail).to.be.rejectedWith("Error Code: InvalidSigner.");
+  });
+
+  it("cannot extend with an unauthorized signer of the transaction was proposed by none", async () => {
+    // propose the Cryptid transaction
+    const { proposeTransaction, transactionAccount, proposeSigners } =
+      await authorizedCryptid.propose(
+        makeTransaction(),
+        TransactionState.NotReady
+      );
+    // this will be signed by the non-did signer
+    await authorizedCryptid.send(proposeTransaction, proposeSigners);
+
+    // This should fail!
+    const extendTx = await cryptid.extend(
+      transactionAccount,
+      makeTransaction()
+    );
+    const shouldFail = cryptid.send(extendTx, []);
+
+    return expect(shouldFail).to.be.rejectedWith(
+      "Error Code: KeyMustBeSigner."
+    );
   });
 });
