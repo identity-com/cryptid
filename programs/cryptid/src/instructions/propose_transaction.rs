@@ -22,6 +22,8 @@ did_account_bump: u8,
 state: TransactionState,
 /// True if the transaction account is being proposed by a non-authority on the DID
 allow_unauthorized: bool,
+/// A list of middleware programs that are allowed to approve this transaction account.
+whitelisted_middleware_programs: Vec<Pubkey>,
 /// The instructions to execute
 instructions: Vec<AbbreviatedInstructionData>,
 num_accounts: u8,
@@ -50,7 +52,8 @@ pub struct ProposeTransaction<'info> {
             num_accounts.into(),
             InstructionSize::from_iter_to_iter(
                 instructions.iter()
-            )
+            ),
+            whitelisted_middleware_programs.len()
        ))
     ]
     transaction_account: Account<'info, TransactionAccount>,
@@ -89,6 +92,7 @@ pub fn propose_transaction<'info>(
     did_account_bump: u8,
     state: TransactionState,
     allow_unauthorized: bool,
+    whitelisted_middleware_programs: Vec<Pubkey>,
     instructions: Vec<AbbreviatedInstructionData>,
 ) -> Result<()> {
     let all_accounts = ctx.all_accounts();
@@ -122,8 +126,6 @@ pub fn propose_transaction<'info>(
     // despite being index 0 in the remaining accounts.
     ctx.accounts.transaction_account.accounts = all_accounts.iter().map(|a| *a.key).collect();
 
-    // TODO: Set slot OR move any Slot / Expiry constraints to middleware
-    // ctx.accounts.transaction_account.slot = Clock::get()?.slot;
     ctx.accounts.transaction_account.did = *ctx.accounts.did.key;
     ctx.accounts.transaction_account.instructions = instructions;
     ctx.accounts.transaction_account.cryptid_account = *ctx.accounts.cryptid_account.key;
@@ -134,6 +136,9 @@ pub fn propose_transaction<'info>(
         None
     };
     ctx.accounts.transaction_account.authorized = !allow_unauthorized;
+    ctx.accounts
+        .transaction_account
+        .whitelisted_middleware_programs = whitelisted_middleware_programs;
 
     // if the transaction is being created by an unauthorized signer,
     // then the cryptid account must have superuser middleware registered

@@ -68,6 +68,7 @@ pub mod cryptid {
         did_account_bump: u8,
         state: TransactionState,
         allow_unauthorized: bool,
+        whitelisted_middleware_programs: Vec<Pubkey>,
         instructions: Vec<AbbreviatedInstructionData>,
         _num_accounts: u8,
     ) -> Result<()> {
@@ -79,6 +80,7 @@ pub mod cryptid {
             did_account_bump,
             state,
             allow_unauthorized,
+            whitelisted_middleware_programs,
             instructions,
         )
     }

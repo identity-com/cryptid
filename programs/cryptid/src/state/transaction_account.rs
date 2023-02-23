@@ -20,9 +20,6 @@ pub struct TransactionAccount {
     pub instructions: Vec<AbbreviatedInstructionData>,
     /// The most recent middleware PDA that approved the transaction
     pub approved_middleware: Option<Pubkey>,
-    /// The slot in which the transaction was proposed
-    /// This is used to prevent replay attacks
-    pub slot: u8,
     /// The transaction state, to prevent replay attacks
     /// in case an executed transaction account is not immediately
     /// garbage-collected by the runtime
@@ -32,6 +29,10 @@ pub struct TransactionAccount {
     /// If the transaction account is proposed by an unauthorized cryptid client, then
     /// it is set to to that signer, and only a `superUser` middleware can approve it.
     pub unauthorized_signer: Option<Pubkey>,
+    /// This vector contains a list of middleware program ids that are allowed to
+    /// approve the execution. Important, is not used for passing transactions execution
+    /// checks. (approved_middleware: Option<Pubkey>) is used for that.
+    pub whitelisted_middleware_programs: Vec<Pubkey>,
     pub authorized: bool,
 }
 impl TransactionAccount {
@@ -39,6 +40,7 @@ impl TransactionAccount {
     pub fn calculate_size(
         num_accounts: usize,
         instruction_sizes: impl Iterator<Item = InstructionSize>,
+        num_whitelisted_middleware_programs: usize,
     ) -> usize {
         DISCRIMINATOR_SIZE
             + 32 // cryptid_account
@@ -46,9 +48,9 @@ impl TransactionAccount {
             + 4 + 32 * (num_accounts + 4) //accounts (+4 for the named accounts)
             + 4 + instruction_sizes.into_iter().map(AbbreviatedInstructionData::calculate_size).sum::<usize>() //transaction_instructions
             + 1 + 32 // approved_middleware
-            + 1 // slot
             + 1 // state
             + 1 + 32 // unauthorized signer
+            + 4 + 32 * num_whitelisted_middleware_programs // whitelisted_middleware_programs
             + 1 // authorized
     }
 
@@ -91,6 +93,7 @@ mod test {
                 accounts: 1,
                 data_len: 1,
             }),
+            1,
         );
         println!("Size: {size}");
 
@@ -104,9 +107,9 @@ mod test {
                 data: vec![0],
             }],
             approved_middleware: None,
-            slot: 0,
             state: TransactionState::Ready,
             unauthorized_signer: None,
+            whitelisted_middleware_programs: vec![Default::default()],
             authorized: true,
         };
         let ser_size = BorshSerialize::try_to_vec(&account).unwrap().len();

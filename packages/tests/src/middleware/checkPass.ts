@@ -143,7 +143,8 @@ describe("Middleware: checkPass", () => {
 
   const propose = async (
     transactionAccount: Keypair,
-    instruction: InstructionData = transferInstructionData
+    instruction: InstructionData = transferInstructionData,
+    whitelistedMiddleware: PublicKey[] = [checkPassMiddlewareProgram.programId]
   ) =>
     program.methods
       .proposeTransaction(
@@ -153,6 +154,7 @@ describe("Middleware: checkPass", () => {
         cryptid.details.didAccountBump,
         TransactionState.toBorsh(TransactionState.Ready),
         false,
+        whitelistedMiddleware,
         [instruction],
         2
       )
@@ -444,6 +446,22 @@ describe("Middleware: checkPass", () => {
 
       const currentBalance = await balanceOf(cryptid.address());
       expect(previousBalance - currentBalance).to.equal(LAMPORTS_PER_SOL); // Now the tx has been executed
+    });
+
+    it("fails a transfer if the middleware program has not been whitelisted in the propose", async () => {
+      const transactionAccount = Keypair.generate();
+
+      // issue a gateway token to the authority
+      const gatewayToken = await createGatewayToken(authority.publicKey);
+
+      // propose the Cryptid transaction without whitelisting the middleware
+      await propose(transactionAccount, transferInstructionData, []);
+
+      // pass through the middleware
+      const shouldFail = checkPass(transactionAccount, gatewayToken.publicKey);
+      return expect(shouldFail).to.be.rejectedWith(
+        "Error Code: InvalidMiddlewareAccount"
+      );
     });
 
     it("allows a transfer if the DID account has a valid gateway token", async () => {

@@ -18,12 +18,11 @@ pub struct ApproveExecution<'info> {
 pub fn approve_execution<'info>(
     ctx: Context<'_, '_, '_, 'info, ApproveExecution<'info>>,
 ) -> Result<()> {
-    // Make sure owner is NOT the System Program
-    // TODO(ticket): Consider implementing an approval registry on middleware
     require!(
-        !anchor_lang::solana_program::system_program::check_id(
-            ctx.accounts.middleware_account.owner
-        ),
+        ctx.accounts
+            .transaction_account
+            .whitelisted_middleware_programs
+            .contains(ctx.accounts.middleware_account.owner),
         CryptidError::InvalidMiddlewareAccount
     );
 
